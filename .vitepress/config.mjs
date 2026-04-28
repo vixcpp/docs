@@ -13,7 +13,32 @@ export default defineConfig({
   },
 
   head: [
-    ["link", { rel: "icon", href: "/assets/pwa/icon-192.png" }],
+    // Favicon
+    ["link", { rel: "icon", href: "/assets/pwa/favicon.ico" }],
+    [
+      "link",
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        href: "/assets/pwa/favicon-16x16.png",
+      },
+    ],
+    [
+      "link",
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        href: "/assets/pwa/favicon-32x32.png",
+      },
+    ],
+    [
+      "link",
+      { rel: "apple-touch-icon", href: "/assets/pwa/apple-touch-icon.png" },
+    ],
+
+    // Theme
     ["meta", { name: "theme-color", content: "#0b0e14" }],
     ["meta", { name: "mobile-web-app-capable", content: "yes" }],
   ],
