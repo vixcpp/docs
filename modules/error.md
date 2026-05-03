@@ -60,7 +60,7 @@ Error err(
 );
 ```
 
-## Using Result<T>
+## Using `Result<T>`
 
 `Result<T>` is the primary abstraction for returning values.
 
@@ -112,7 +112,7 @@ auto result =
 
 This allows building pipelines with clear error propagation.
 
-## Result<void>
+## `Result<void>`
 
 Operations without a return value use:
 

@@ -208,4 +208,4 @@ Call `next()` when the request should continue. Return without `next()` when you
 
 The core idea: **middleware keeps repeated route behavior in one place.**
 
-Next: [Authentication](/examples/authentication)
+Next: [Authentication](/examples/auth)

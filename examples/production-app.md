@@ -447,4 +447,4 @@ Request → middleware → route → service → repository → database → JSO
 
 The core idea: **a production app is not only code that works — it is code that can be configured, monitored, deployed, and maintained.**
 
-Back to [Examples](/examples)
+Back to [Examples](/examples/index)

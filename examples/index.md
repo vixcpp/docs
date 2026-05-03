@@ -26,7 +26,7 @@ vix run main.cpp --with-mysql    # MySQL examples
 | 1 | [Hello HTTP](/examples/hello-http) | Build the simplest HTTP server |
 | 2 | [JSON API](/examples/json-api) | Return structured JSON responses |
 | 3 | [Middleware](/examples/middleware) | Add logic around routes |
-| 4 | [Authentication](/examples/authentication) | Protect routes |
+| 4 | [Authentication](/examples/auth) | Protect routes |
 | 5 | [Database](/examples/database) | Store and read persistent data |
 | 6 | [WebSocket](/examples/websocket) | Add realtime communication |
 | 7 | [Cache](/examples/cache) | Add fast reads and resilience |

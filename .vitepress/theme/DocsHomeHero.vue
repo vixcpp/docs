@@ -77,7 +77,7 @@ function iconPath(name) {
       </p>
 
       <div class="actions">
-        <a class="primary" href="//book/05-run-your-first-file">
+        <a class="primary" href="/book/05-run-your-first-file">
           Get started
           <span class="cta-arrow">→</span>
         </a>
