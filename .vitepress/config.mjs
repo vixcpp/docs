@@ -138,341 +138,149 @@ export default defineConfig({
 
     sidebar: [
       {
-        text: "Start Here",
+        text: "The Vix Book",
         collapsed: false,
         items: [
           {
             text: "Introduction",
-            link: "/",
-          },
-          {
-            text: "What is Vix.cpp?",
-            link: "/introduction/what-is-vix",
+            link: "/book/01-introduction",
           },
           {
             text: "Why Vix Exists",
-            link: "/introduction/why-vix-exists",
+            link: "/book/02-why-vix",
           },
           {
-            text: "Vix Mental Model",
-            link: "/introduction/mental-model",
+            text: "Mental Model",
+            link: "/book/03-mental-model",
           },
           {
-            text: "Vix vs Frameworks",
-            link: "/introduction/vix-vs-frameworks",
-          },
-        ],
-      },
-
-      {
-        text: "Getting Started",
-        collapsed: false,
-        items: [
-          {
-            text: "Install Vix",
-            link: "/getting-started/install",
+            text: "Installation",
+            link: "/book/04-installation",
           },
           {
-            text: "Create a Project",
-            link: "/getting-started/create-project",
+            text: "Run Your First C++ File",
+            link: "/book/05-run-your-first-file",
           },
           {
-            text: "Run a C++ File",
-            link: "/getting-started/run-cpp-file",
+            text: "Create Your First Project",
+            link: "/book/06-create-your-first-project",
           },
           {
             text: "Your First HTTP Server",
-            link: "/getting-started/first-http-server",
-          },
-          {
-            text: "Project Structure",
-            link: "/getting-started/project-structure",
-          },
-        ],
-      },
-
-      {
-        text: "Learn Vix",
-        collapsed: false,
-        items: [
-          {
-            text: "The App Object",
-            link: "/learn/app",
+            link: "/book/07-first-http-server",
           },
           {
             text: "Routes",
-            link: "/learn/routes",
+            link: "/book/08-routes",
           },
           {
             text: "Request and Response",
-            link: "/learn/request-response",
+            link: "/book/09-request-response",
           },
           {
-            text: "Route Parameters",
-            link: "/learn/route-parameters",
-          },
-          {
-            text: "Query Parameters",
-            link: "/learn/query-parameters",
-          },
-          {
-            text: "JSON Responses",
-            link: "/learn/json-responses",
+            text: "Build a JSON API",
+            link: "/book/10-json-api",
           },
           {
             text: "Middleware",
-            link: "/learn/middleware",
-          },
-          {
-            text: "Configuration",
-            link: "/learn/configuration",
-          },
-          {
-            text: "Error Handling",
-            link: "/learn/error-handling",
-          },
-          {
-            text: "Logging",
-            link: "/learn/logging",
-          },
-        ],
-      },
-
-      {
-        text: "Build APIs",
-        collapsed: false,
-        items: [
-          {
-            text: "REST API from Scratch",
-            link: "/api-guides/rest-api-from-scratch",
+            link: "/book/11-middleware",
           },
           {
             text: "Validation",
-            link: "/api-guides/validation",
+            link: "/book/12-validation",
+          },
+          {
+            text: "Errors and Logging",
+            link: "/book/13-errors-and-logging",
+          },
+          {
+            text: "Database",
+            link: "/book/14-database",
+          },
+          {
+            text: "Realtime WebSocket",
+            link: "/book/15-realtime-websocket",
+          },
+          {
+            text: "Async Runtime",
+            link: "/book/16-async-runtime",
+          },
+          {
+            text: "Cache",
+            link: "/book/17-cache",
+          },
+          {
+            text: "Offline-first Sync",
+            link: "/book/18-offline-first-sync",
+          },
+          {
+            text: "P2P",
+            link: "/book/19-p2p",
+          },
+          {
+            text: "Production Deployment",
+            link: "/book/20-production-deployment",
+          },
+          {
+            text: "Next Steps",
+            link: "/book/21-next-steps",
+          },
+        ],
+      },
+
+      {
+        text: "Guides",
+        collapsed: true,
+        items: [
+          {
+            text: "Build a REST API",
+            link: "/guides/build-rest-api",
           },
           {
             text: "Authentication",
-            link: "/api-guides/authentication",
+            link: "/guides/authentication",
           },
           {
             text: "Sessions",
-            link: "/api-guides/sessions",
-          },
-          {
-            text: "JWT",
-            link: "/api-guides/jwt",
+            link: "/guides/sessions",
           },
           {
             text: "CORS",
-            link: "/api-guides/cors",
+            link: "/guides/cors",
           },
           {
             text: "Rate Limiting",
-            link: "/api-guides/rate-limiting",
-          },
-          {
-            text: "OpenAPI",
-            link: "/api-guides/openapi",
-          },
-        ],
-      },
-
-      {
-        text: "Realtime",
-        collapsed: true,
-        items: [
-          {
-            text: "WebSocket Introduction",
-            link: "/realtime/websocket-introduction",
-          },
-          {
-            text: "Chat Server",
-            link: "/realtime/chat-server",
-          },
-          {
-            text: "Presence",
-            link: "/realtime/presence",
-          },
-          {
-            text: "Notifications",
-            link: "/realtime/notifications",
-          },
-          {
-            text: "Streaming",
-            link: "/realtime/streaming",
-          },
-        ],
-      },
-
-      {
-        text: "Data",
-        collapsed: true,
-        items: [
-          {
-            text: "Database Basics",
-            link: "/data/database-basics",
-          },
-          {
-            text: "SQLite",
-            link: "/data/sqlite",
-          },
-          {
-            text: "MySQL",
-            link: "/data/mysql",
-          },
-          {
-            text: "ORM",
-            link: "/data/orm",
-          },
-          {
-            text: "Repository Pattern",
-            link: "/data/repository-pattern",
-          },
-          {
-            text: "Transactions",
-            link: "/data/transactions",
-          },
-        ],
-      },
-
-      {
-        text: "Runtime",
-        collapsed: true,
-        items: [
-          {
-            text: "How Vix Runs an App",
-            link: "/runtime/how-vix-runs-an-app",
-          },
-          {
-            text: "Executor",
-            link: "/runtime/executor",
-          },
-          {
-            text: "Thread Pool",
-            link: "/runtime/thread-pool",
-          },
-          {
-            text: "Async Tasks",
-            link: "/runtime/async-tasks",
-          },
-          {
-            text: "Graceful Shutdown",
-            link: "/runtime/graceful-shutdown",
-          },
-          {
-            text: "Performance Model",
-            link: "/runtime/performance-model",
-          },
-        ],
-      },
-
-      {
-        text: "Offline-first",
-        collapsed: true,
-        items: [
-          {
-            text: "What Offline-first Means",
-            link: "/offline-first/what-offline-first-means",
-          },
-          {
-            text: "WAL",
-            link: "/offline-first/wal",
-          },
-          {
-            text: "Outbox",
-            link: "/offline-first/outbox",
-          },
-          {
-            text: "Retry Policy",
-            link: "/offline-first/retry-policy",
-          },
-          {
-            text: "Sync Engine",
-            link: "/offline-first/sync-engine",
-          },
-          {
-            text: "P2P Nodes",
-            link: "/offline-first/p2p-nodes",
-          },
-          {
-            text: "Failure Handling",
-            link: "/offline-first/failure-handling",
-          },
-        ],
-      },
-
-      {
-        text: "Deployment",
-        collapsed: true,
-        items: [
-          {
-            text: "Production Build",
-            link: "/deployment/production-build",
-          },
-          {
-            text: "Environment Variables",
-            link: "/deployment/environment-variables",
-          },
-          {
-            text: "Run Behind Nginx",
-            link: "/deployment/nginx",
-          },
-          {
-            text: "systemd Service",
-            link: "/deployment/systemd",
-          },
-          {
-            text: "TLS",
-            link: "/deployment/tls",
-          },
-          {
-            text: "Observability",
-            link: "/deployment/observability",
-          },
-        ],
-      },
-
-      {
-        text: "Examples",
-        collapsed: true,
-        items: [
-          {
-            text: "Hello HTTP",
-            link: "/examples/hello-http",
-          },
-          {
-            text: "JSON API",
-            link: "/examples/json-api",
-          },
-          {
-            text: "REST API",
-            link: "/examples/rest-api",
-          },
-          {
-            text: "Auth API",
-            link: "/examples/auth-api",
-          },
-          {
-            text: "WebSocket Chat",
-            link: "/examples/websocket-chat",
+            link: "/guides/rate-limiting",
           },
           {
             text: "SQLite API",
-            link: "/examples/sqlite-api",
+            link: "/guides/sqlite-api",
           },
           {
-            text: "Offline Sync Demo",
-            link: "/examples/offline-sync-demo",
+            text: "MySQL API",
+            link: "/guides/mysql-api",
           },
           {
-            text: "Production App",
-            link: "/examples/production-app",
+            text: "WebSocket Chat",
+            link: "/guides/websocket-chat",
+          },
+          {
+            text: "Static Files",
+            link: "/guides/static-files",
+          },
+          {
+            text: "Templates",
+            link: "/guides/templates",
+          },
+          {
+            text: "Nginx + systemd",
+            link: "/guides/production-nginx-systemd",
           },
         ],
       },
 
       {
-        text: "CLI Reference",
+        text: "CLI",
         collapsed: true,
         items: [
           {
@@ -510,6 +318,188 @@ export default defineConfig({
           {
             text: "vix publish",
             link: "/cli/publish",
+          },
+          {
+            text: "All Commands",
+            link: "/cli/commands",
+          },
+        ],
+      },
+
+      {
+        text: "Examples",
+        collapsed: true,
+        items: [
+          {
+            text: "Overview",
+            link: "/examples/",
+          },
+          {
+            text: "Hello HTTP",
+            link: "/examples/hello-http",
+          },
+          {
+            text: "JSON API",
+            link: "/examples/json-api",
+          },
+          {
+            text: "Middleware",
+            link: "/examples/middleware",
+          },
+          {
+            text: "Authentication",
+            link: "/examples/auth",
+          },
+          {
+            text: "WebSocket",
+            link: "/examples/websocket",
+          },
+          {
+            text: "Database",
+            link: "/examples/database",
+          },
+          {
+            text: "Cache",
+            link: "/examples/cache",
+          },
+          {
+            text: "Sync",
+            link: "/examples/sync",
+          },
+          {
+            text: "P2P",
+            link: "/examples/p2p",
+          },
+          {
+            text: "Production App",
+            link: "/examples/production-app",
+          },
+        ],
+      },
+
+      {
+        text: "Modules",
+        collapsed: true,
+        items: [
+          {
+            text: "Overview",
+            link: "/modules/",
+          },
+          {
+            text: "Core",
+            link: "/modules/core",
+          },
+          {
+            text: "Async",
+            link: "/modules/async",
+          },
+          {
+            text: "Cache",
+            link: "/modules/cache",
+          },
+          {
+            text: "CLI",
+            link: "/modules/cli",
+          },
+          {
+            text: "Conversion",
+            link: "/modules/conversion",
+          },
+          {
+            text: "Crypto",
+            link: "/modules/crypto",
+          },
+          {
+            text: "Database",
+            link: "/modules/db",
+          },
+          {
+            text: "Environment",
+            link: "/modules/env",
+          },
+          {
+            text: "Error",
+            link: "/modules/error",
+          },
+          {
+            text: "Filesystem",
+            link: "/modules/fs",
+          },
+          {
+            text: "IO",
+            link: "/modules/io",
+          },
+          {
+            text: "JSON",
+            link: "/modules/json",
+          },
+          {
+            text: "Log",
+            link: "/modules/log",
+          },
+          {
+            text: "Middleware",
+            link: "/modules/middleware",
+          },
+          {
+            text: "Network",
+            link: "/modules/net",
+          },
+          {
+            text: "ORM",
+            link: "/modules/orm",
+          },
+          {
+            text: "OS",
+            link: "/modules/os",
+          },
+          {
+            text: "P2P",
+            link: "/modules/p2p",
+          },
+          {
+            text: "P2P HTTP",
+            link: "/modules/p2p-http",
+          },
+          {
+            text: "Path",
+            link: "/modules/path",
+          },
+          {
+            text: "Process",
+            link: "/modules/process",
+          },
+          {
+            text: "Sync",
+            link: "/modules/sync",
+          },
+          {
+            text: "Template",
+            link: "/modules/template",
+          },
+          {
+            text: "Tests",
+            link: "/modules/tests",
+          },
+          {
+            text: "Time",
+            link: "/modules/time",
+          },
+          {
+            text: "Utils",
+            link: "/modules/utils",
+          },
+          {
+            text: "Validation",
+            link: "/modules/validation",
+          },
+          {
+            text: "WebRPC",
+            link: "/modules/webrpc",
+          },
+          {
+            text: "WebSocket",
+            link: "/modules/websocket",
           },
         ],
       },
@@ -562,52 +552,36 @@ export default defineConfig({
       },
 
       {
-        text: "Modules",
+        text: "Internals",
         collapsed: true,
         items: [
           {
-            text: "Core",
-            link: "/modules/core/",
+            text: "Architecture",
+            link: "/internals/architecture",
           },
           {
-            text: "CLI",
-            link: "/modules/cli/",
+            text: "Runtime Model",
+            link: "/internals/runtime-model",
           },
           {
-            text: "WebSocket",
-            link: "/modules/websocket/",
+            text: "Direct Compile",
+            link: "/internals/direct-compile",
           },
           {
-            text: "Async",
-            link: "/modules/async/",
+            text: "Cache System",
+            link: "/internals/cache-system",
           },
           {
-            text: "JSON",
-            link: "/modules/json/",
+            text: "Error Diagnostics",
+            link: "/internals/error-diagnostics",
           },
           {
-            text: "Database",
-            link: "/modules/db/",
+            text: "Performance",
+            link: "/internals/performance",
           },
           {
-            text: "ORM",
-            link: "/modules/orm/",
-          },
-          {
-            text: "Cache",
-            link: "/modules/cache/",
-          },
-          {
-            text: "Sync",
-            link: "/modules/sync/",
-          },
-          {
-            text: "P2P",
-            link: "/modules/p2p/",
-          },
-          {
-            text: "Crypto",
-            link: "/modules/crypto/",
+            text: "Design Decisions",
+            link: "/internals/design-decisions",
           },
         ],
       },
