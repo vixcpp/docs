@@ -591,43 +591,35 @@ export default defineConfig({
         items: [
           {
             text: "Overview",
-            link: "/reference/",
+            link: "/api/index",
           },
           {
-            text: "App",
-            link: "/reference/app",
-          },
-          {
-            text: "Request",
-            link: "/reference/request",
-          },
-          {
-            text: "Response",
-            link: "/reference/response",
-          },
-          {
-            text: "Router",
-            link: "/reference/router",
-          },
-          {
-            text: "Middleware",
-            link: "/reference/middleware",
+            text: "HTTP",
+            link: "/api/http",
           },
           {
             text: "JSON",
-            link: "/reference/json",
+            link: "/api/json",
           },
           {
-            text: "WebSocket",
-            link: "/reference/websocket",
-          },
-          {
-            text: "Async",
-            link: "/reference/async",
+            text: "Middleware",
+            link: "/api/middleware",
           },
           {
             text: "Config",
-            link: "/reference/config",
+            link: "/api/config",
+          },
+          {
+            text: "WebSocket",
+            link: "/api/websocket",
+          },
+          {
+            text: "Async",
+            link: "/api/async",
+          },
+          {
+            text: "P2P",
+            link: "/api/p2p",
           },
         ],
       },
