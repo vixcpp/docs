@@ -1278,3 +1278,24 @@ html, body,
   position: relative;
   z-index: 1;
 }
+.vix-footerbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #ecfdf5;
+  font-size: 0.95rem;
+  font-weight: 800;
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.vix-footerbar__logo {
+  width: 28px;
+  height: 28px;
+  color: #22c55e;
+  flex: 0 0 auto;
+}
+
+.vix-footerbar__brand:hover {
+  color: #ffffff;
+}

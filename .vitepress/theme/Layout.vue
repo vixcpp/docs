@@ -7,7 +7,6 @@ const links = [
   { text: "Guides", href: "/guide" },
   { text: "Registry", href: "https://registry.vixcpp.com" },
   { text: "Examples", href: "/examples" },
-  { text: "Services", href: "/services" },
 ];
 </script>
 

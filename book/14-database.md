@@ -51,7 +51,7 @@ auto db = vix::db::Database::mysql("tcp://127.0.0.1:3306", "root", "", "vixdb");
 
 ## Database from .env
 
-```env
+```dotenv
 DATABASE_ENGINE=sqlite
 DATABASE_DEFAULT_NAME=vix.db
 ```

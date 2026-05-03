@@ -2,14 +2,15 @@
 import CodeBlock from "./CodeBlock.vue";
 
 const heroCode = `#include <vix.hpp>
+
 using namespace vix;
 
 int main()
 {
   App app;
 
-  app.get("/", [](Request&, Response& res){
-    res.send("Hello");
+  app.get("/", [](Request&, Response& res) {
+    res.send("Hello from Vix.cpp");
   });
 
   app.run(8080);
@@ -18,27 +19,27 @@ int main()
 const features = [
   {
     title: "HTTP APIs",
-    desc: "Build fast endpoints with explicit routing, predictable performance, and zero hidden magic.",
+    desc: "Build fast C++ APIs with clear routing, predictable behavior, and low overhead.",
     icon: "swap",
-    href: "/modules/core/example.html",
+    href: "/modules/core",
   },
   {
     title: "WebSockets",
-    desc: "Real time channels with robust connection handling and backpressure friendly design.",
+    desc: "Create real-time services with connection handling designed for production workloads.",
     icon: "bolt",
     href: "/modules/websocket",
   },
   {
     title: "Async Tasks",
-    desc: "A unified runtime for scheduling, timers, and concurrency in performance critical workloads.",
+    desc: "Run timers, background jobs, and concurrent workloads with a unified async runtime.",
     icon: "chip",
     href: "/modules/async",
   },
   {
-    title: "P2P",
-    desc: "Peer to peer communication primitives designed for unstable networks and local first systems.",
+    title: "Local-first Systems",
+    desc: "Build reliable applications that keep working under unstable networks and failure conditions.",
     icon: "p2p",
-    href: "/modules/p2p",
+    href: "/book/18-offline-first-sync",
   },
 ];
 
@@ -46,16 +47,17 @@ function iconPath(name) {
   if (name === "swap") {
     return "M7 7h11l-2-2m2 2l-2 2M17 17H6l2 2m-2-2l2-2";
   }
+
   if (name === "bolt") {
     return "M13 2L4 14h7l-1 8 9-12h-7l1-8z";
   }
+
   if (name === "chip") {
     return "M9 9h6v6H9V9zm-5 3h2m12 0h2M12 4v2m0 12v2M6.5 6.5l1.4 1.4m8.2 8.2l1.4 1.4m0-12.4l-1.4 1.4M7.9 16.1l-1.4 1.4";
   }
-  // P2P (nodes + links)
+
   return "M6 12a2 2 0 114 0 2 2 0 01-4 0zm8-6a2 2 0 114 0 2 2 0 01-4 0zm0 12a2 2 0 114 0 2 2 0 01-4 0zM10 12l4-6M10 12l4 6";
 }
-
 </script>
 
 <template>
@@ -64,26 +66,28 @@ function iconPath(name) {
       <h1 class="vix-docs-h1">Vix.cpp Documentation</h1>
 
       <p class="vix-docs-lead">
-        A modern C++ runtime for building fast, explicit,
-        and offline-first applications.
+        A modern C++ runtime for building fast and reliable applications.
       </p>
 
       <p class="vix-docs-body">
-        Vix.cpp is designed for real-world conditions:
-        unstable networks, constrained environments,
-        and performance-critical workloads. It provides a unified runtime for HTTP APIs, WebSockets,
-        async tasks, and local-first systems, without garbage collection or hidden magic.
+        Vix.cpp helps you build real applications in C++ with a clean runtime for
+        HTTP APIs, WebSockets, async tasks, and local-first systems. It is built
+        for explicit code, predictable performance, and production environments
+        where reliability matters.
       </p>
 
       <div class="actions">
-        <a class="primary" href="/quick-start">Get started <span class="cta-arrow">→</span></a>
+        <a class="primary" href="//book/05-run-your-first-file">
+          Get started
+          <span class="cta-arrow">→</span>
+        </a>
       </div>
     </div>
 
     <div class="vix-docs-hero__right">
       <div class="vix-hero-annot vix-hint">
-        Your runtime endpoint <br>
-        works with the Vix.cpp API
+        Define an endpoint, return a response,<br />
+        and run your C++ application.
       </div>
 
       <CodeBlock
@@ -96,7 +100,6 @@ function iconPath(name) {
     </div>
   </div>
 
-  <!-- Feature boxes like Modular -->
   <div class="vix-hero-cards">
     <a
       v-for="f in features"

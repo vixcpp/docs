@@ -164,7 +164,7 @@ vix::db::Database db{cfg};
 ```
 
 Environment variables:
-```env
+```dotenv
 SERVER_PORT=8080
 DATABASE_ENGINE=sqlite
 DATABASE_DEFAULT_NAME=vix.db

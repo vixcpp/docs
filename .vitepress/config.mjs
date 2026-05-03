@@ -119,20 +119,8 @@ export default defineConfig({
 
     nav: [
       {
-        text: "Home",
-        link: "https://vixcpp.com/",
-      },
-      {
-        text: "Docs",
-        link: "/",
-      },
-      {
         text: "Registry",
         link: "https://registry.vixcpp.com/",
-      },
-      {
-        text: "GitHub",
-        link: "https://github.com/vixcpp/vix",
       },
     ],
 
@@ -432,12 +420,12 @@ export default defineConfig({
             link: "/examples/auth",
           },
           {
-            text: "WebSocket",
-            link: "/examples/websocket",
-          },
-          {
             text: "Database",
             link: "/examples/database",
+          },
+          {
+            text: "WebSocket",
+            link: "/examples/websocket",
           },
           {
             text: "Cache",
@@ -521,10 +509,6 @@ export default defineConfig({
           {
             text: "Middleware",
             link: "/modules/middleware",
-          },
-          {
-            text: "Network",
-            link: "/modules/net",
           },
           {
             text: "ORM",

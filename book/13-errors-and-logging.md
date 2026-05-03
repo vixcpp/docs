@@ -321,7 +321,7 @@ if (!result.ok()) {
 
 ## Production config
 
-```env
+```dotenv
 VIX_LOG_LEVEL=info
 VIX_LOG_FORMAT=json
 VIX_COLOR=never

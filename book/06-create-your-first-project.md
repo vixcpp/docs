@@ -145,7 +145,7 @@ vix run api.vix
 
 ## `.env`
 
-```env
+```dotenv
 SERVER_PORT=8080
 DATABASE_ENGINE=mysql
 DATABASE_DEFAULT_HOST=127.0.0.1

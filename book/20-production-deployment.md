@@ -54,7 +54,7 @@ sudo chown -R vix:vix /home/vix/apps
 sudo -u vix nano /home/vix/apps/myapp/.env
 ```
 
-```env
+```dotenv
 SERVER_PORT=8080
 SERVER_HOST=127.0.0.1
 SERVER_TLS_ENABLED=false
@@ -263,7 +263,7 @@ sudo ufw enable
 
 **SQLite:**
 
-```env
+```dotenv
 DATABASE_ENGINE=sqlite
 DATABASE_DEFAULT_NAME=/home/vix/apps/myapp/data/app.db
 ```
@@ -311,7 +311,7 @@ Relative paths (`.env`, `public/`, `data/`) depend on this.
 
 ### Using debug logs forever
 
-```env
+```dotenv
 VIX_LOG_LEVEL=info
 ```
 

@@ -60,7 +60,7 @@ int main()
 
 ## .env for WebSocket
 
-```env
+```dotenv
 SERVER_PORT=8080
 SERVER_TLS_ENABLED=false
 WEBSOCKET_MAX_MESSAGE_SIZE=65536

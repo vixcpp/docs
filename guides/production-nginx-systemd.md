@@ -35,7 +35,7 @@ curl -i http://127.0.0.1:8080/health
 
 ## Use .env
 
-```env
+```dotenv
 SERVER_PORT=8080
 SERVER_TLS_ENABLED=false
 VIX_LOG_LEVEL=info

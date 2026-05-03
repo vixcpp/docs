@@ -133,7 +133,7 @@ vix::serve_http_and_ws(".env", 8080, [](auto &app, auto &ws) {
 
 ## Add .env
 
-```env
+```dotenv
 SERVER_PORT=8080
 WEBSOCKET_PORT=9090
 SERVER_TLS_ENABLED=false

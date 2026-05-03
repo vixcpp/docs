@@ -72,7 +72,7 @@ vix::config::Config cfg{".env"};
 vix::db::Database db{cfg};
 ```
 
-```env
+```dotenv
 DATABASE_ENGINE=mysql
 DATABASE_DEFAULT_HOST=127.0.0.1
 DATABASE_DEFAULT_PORT=3306

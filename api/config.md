@@ -33,7 +33,7 @@ Typical files: `.env`, `.env.local`, `.env.production`.
 
 ## Complete .env reference
 
-```env
+```dotenv
 # Server
 SERVER_PORT=8080
 SERVER_REQUEST_TIMEOUT=2000
@@ -169,7 +169,7 @@ vix::run_http_and_ws(app, ws, executor, cfg);
 
 ## Production recommendations
 
-```env
+```dotenv
 SERVER_PORT=8080
 SERVER_TLS_ENABLED=false    # let Nginx handle TLS
 WAF_MODE=basic
@@ -179,7 +179,7 @@ LOGGING_DROP_ON_OVERFLOW=true
 
 For direct TLS (without Nginx):
 
-```env
+```dotenv
 SERVER_TLS_ENABLED=true
 SERVER_TLS_CERT_FILE=/etc/letsencrypt/live/example.com/fullchain.pem
 SERVER_TLS_KEY_FILE=/etc/letsencrypt/live/example.com/privkey.pem
@@ -187,7 +187,7 @@ SERVER_TLS_KEY_FILE=/etc/letsencrypt/live/example.com/privkey.pem
 
 ## Recommended .env.example
 
-```env
+```dotenv
 DATABASE_ENGINE=sqlite
 DATABASE_SQLITE_PATH=vix.db
 DATABASE_DEFAULT_HOST=127.0.0.1
