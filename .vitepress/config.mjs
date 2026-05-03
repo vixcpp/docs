@@ -288,8 +288,16 @@ export default defineConfig({
             link: "/cli/",
           },
           {
+            text: "REPL",
+            link: "/cli/repl",
+          },
+          {
             text: "vix new",
             link: "/cli/new",
+          },
+          {
+            text: "vix make",
+            link: "/cli/make",
           },
           {
             text: "vix run",
@@ -304,20 +312,120 @@ export default defineConfig({
             link: "/cli/build",
           },
           {
+            text: "vix check",
+            link: "/cli/check",
+          },
+          {
             text: "vix tests",
             link: "/cli/tests",
           },
           {
-            text: "vix add",
-            link: "/cli/add",
+            text: "vix fmt",
+            link: "/cli/fmt",
           },
           {
-            text: "vix install",
-            link: "/cli/install",
+            text: "vix clean",
+            link: "/cli/clean",
           },
           {
-            text: "vix publish",
-            link: "/cli/publish",
+            text: "vix reset",
+            link: "/cli/reset",
+          },
+          {
+            text: "vix task",
+            link: "/cli/task",
+          },
+          {
+            text: "Dependencies",
+            items: [
+              {
+                text: "vix add",
+                link: "/cli/add",
+              },
+              {
+                text: "vix install",
+                link: "/cli/install",
+              },
+              {
+                text: "vix update",
+                link: "/cli/update",
+              },
+              {
+                text: "vix outdated",
+                link: "/cli/outdated",
+              },
+              {
+                text: "vix remove",
+                link: "/cli/remove",
+              },
+              {
+                text: "vix list",
+                link: "/cli/list",
+              },
+            ],
+          },
+          {
+            text: "Packaging",
+            items: [
+              {
+                text: "vix pack",
+                link: "/cli/pack",
+              },
+              {
+                text: "vix verify",
+                link: "/cli/verify",
+              },
+              {
+                text: "vix cache",
+                link: "/cli/cache",
+              },
+            ],
+          },
+          {
+            text: "Advanced",
+            items: [
+              {
+                text: "vix registry",
+                link: "/cli/registry",
+              },
+              {
+                text: "vix store",
+                link: "/cli/store",
+              },
+              {
+                text: "vix orm",
+                link: "/cli/orm",
+              },
+              {
+                text: "vix p2p",
+                link: "/cli/p2p",
+              },
+            ],
+          },
+          {
+            text: "System",
+            items: [
+              {
+                text: "vix info",
+                link: "/cli/info",
+              },
+              {
+                text: "vix doctor",
+                link: "/cli/doctor",
+              },
+              {
+                text: "vix upgrade",
+                link: "/cli/upgrade",
+              },
+              {
+                text: "vix uninstall",
+                link: "/cli/uninstall",
+              },
+              {
+                text: "vix completion",
+                link: "/cli/completion",
+              },
+            ],
           },
           {
             text: "All Commands",
@@ -325,7 +433,6 @@ export default defineConfig({
           },
         ],
       },
-
       {
         text: "Examples",
         collapsed: true,
