@@ -379,6 +379,10 @@ export default defineConfig({
                 text: "vix cache",
                 link: "/cli/cache",
               },
+              {
+                text: "vix publish",
+                link: "/cli/publish",
+              },
             ],
           },
           {
