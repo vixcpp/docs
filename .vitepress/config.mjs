@@ -230,50 +230,20 @@ export default defineConfig({
 
       {
         text: "Guides",
-        collapsed: true,
         items: [
+          { text: "Build a REST API", link: "/guides/build-rest-api" },
+          { text: "Validation", link: "/guides/validation" },
+          { text: "Authentication", link: "/guides/authentication" },
+          { text: "Sessions", link: "/guides/sessions" },
+          { text: "CORS", link: "/guides/cors" },
+          { text: "Rate limiting", link: "/guides/rate-limiting" },
+          { text: "SQLite API", link: "/guides/sqlite-api" },
+          { text: "MySQL API", link: "/guides/mysql-api" },
+          { text: "WebSocket chat", link: "/guides/websocket-chat" },
+          { text: "Static files", link: "/guides/static-files" },
+          { text: "Templates", link: "/guides/templates" },
           {
-            text: "Build a REST API",
-            link: "/guides/build-rest-api",
-          },
-          {
-            text: "Authentication",
-            link: "/guides/authentication",
-          },
-          {
-            text: "Sessions",
-            link: "/guides/sessions",
-          },
-          {
-            text: "CORS",
-            link: "/guides/cors",
-          },
-          {
-            text: "Rate Limiting",
-            link: "/guides/rate-limiting",
-          },
-          {
-            text: "SQLite API",
-            link: "/guides/sqlite-api",
-          },
-          {
-            text: "MySQL API",
-            link: "/guides/mysql-api",
-          },
-          {
-            text: "WebSocket Chat",
-            link: "/guides/websocket-chat",
-          },
-          {
-            text: "Static Files",
-            link: "/guides/static-files",
-          },
-          {
-            text: "Templates",
-            link: "/guides/templates",
-          },
-          {
-            text: "Nginx + systemd",
+            text: "Production: Nginx + systemd",
             link: "/guides/production-nginx-systemd",
           },
         ],
