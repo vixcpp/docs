@@ -53,12 +53,12 @@ Route:
 
 ```cpp
 app.get("/", [](Request &, Response &res)
-        {
-          vix::template_::Context ctx;
-          ctx.set("title", "Vix Templates");
-          ctx.set("user", "Gaspard");
-          res.render("index.html", ctx);
-        });
+{
+  vix::template_::Context ctx;
+  ctx.set("title", "Vix Templates");
+  ctx.set("user", "Gaspard");
+  res.render("index.html", ctx);
+});
 ```
 
 ## Passing variables
@@ -192,21 +192,22 @@ ctx.set("recent_orders", orders);
 ## Templates with database data
 
 ```cpp
-app.get("/users", [&db](Request &, Response &res)
-        {
-          vix::template_::Context ctx;
-          vix::template_::Array users;
-          auto rows = db.query("SELECT id, name FROM users");
-          while (rows->next())
-          {
-            vix::template_::Object user;
-            user["id"] = rows->row().getInt64(0);
-            user["name"] = rows->row().getString(1);
-            users.emplace_back(user);
-          }
-          ctx.set("users", users);
-          res.render("users.html", ctx);
-        });
+app.get("/users", [&db](Request &, Response &res){
+  vix::template_::Context ctx;
+  vix::template_::Array users;
+
+  auto rows = db.query("SELECT id, name FROM users");
+  while (rows->next())
+  {
+    vix::template_::Object user;
+    user["id"] = rows->row().getInt64(0);
+    user["name"] = rows->row().getString(1);
+    users.emplace_back(user);
+  }
+
+  ctx.set("users", users);
+  res.render("users.html", ctx);
+});
 ```
 
 ## Templates and static files

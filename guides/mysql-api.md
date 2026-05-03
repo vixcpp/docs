@@ -127,7 +127,10 @@ Create a dedicated database user with only the permissions needed by the app.
 
 ```cpp
 // Log the real error server-side, return a generic message to clients
-res.status(500).json(json::kv({{"ok", json::Json(false)}, {"error", json::Json("database_error")}}));
+res.status(500).json(json::kv({
+  {"ok", json::Json(false)},
+  {"error", json::Json("database_error")}
+}));
 ```
 
 ## What to use next

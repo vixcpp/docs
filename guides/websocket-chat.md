@@ -106,10 +106,15 @@ int main()
 
 ```cpp
 vix::serve_http_and_ws(".env", 8080, [](auto &app, auto &ws) {
-  app.get("/", [](auto &, auto &res) { res.json({{"framework", "Vix.cpp"}}); });
+
+  app.get("/", [](auto &, auto &res) {
+    res.json({"framework", "Vix.cpp"});
+  });
+
   ws.on_typed_message([&ws](auto &, const std::string &type, const vix::json::kvs &payload) {
     if (type == "chat.message") ws.broadcast_json("chat.message", payload);
   });
+
 });
 ```
 
@@ -140,7 +145,14 @@ SERVER_TLS_ENABLED=false
 
 ```cpp
 const std::string text = payload.get_string_or("text", "");
-if (text.empty()) { ws.broadcast_json("chat.error", {"error", "text is required"}); return; }
+if (text.empty()) {
+  ws.broadcast_json(
+    "chat.error",
+    {"error", "text is required"}
+  );
+
+  return;
+}
 ws.broadcast_json("chat.message", payload);
 ```
 

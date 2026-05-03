@@ -89,6 +89,7 @@ struct User
                    .required()
                    .email()
                    .length_max(120))
+
         .field("password", &User::password,
                vix::validation::field<std::string>()
                    .required()
@@ -101,15 +102,12 @@ struct User
 ## Cross-field validation
 
 ```cpp
-.check([](const ResetPassword &obj, vix::validation::ValidationErrors &errors)
-       {
-         if (!obj.password.empty() && !obj.confirm.empty() &&
-             obj.password != obj.confirm)
-         {
-           errors.add("confirm", vix::validation::ValidationErrorCode::Custom,
-                      "passwords do not match");
-         }
-       });
+.check([](const ResetPassword &obj, vix::validation::ValidationErrors &errors){
+  if (!obj.password.empty() && !obj.confirm.empty() && obj.password != obj.confirm){
+    errors.add("confirm", vix::validation::ValidationErrorCode::Custom,
+                "passwords do not match");
+  }
+});
 ```
 
 ## BaseModel
@@ -127,6 +125,7 @@ struct LoginBody : vix::validation::BaseModel<LoginBody>
                vix::validation::field<std::string>()
                    .required("email is required")
                    .email("invalid email format"))
+
         .field("password", &LoginBody::password,
                vix::validation::field<std::string>()
                    .required("password is required")
@@ -155,6 +154,7 @@ static void respond_validation_errors(
         {"message", json::Json(std::string(error.message))},
     }));
   }
+
   res.status(400).json(json::kv({
       {"ok", json::Json(false)},
       {"error", json::Json("validation_failed")},
@@ -166,58 +166,67 @@ static void respond_validation_errors(
 ### Validate JSON body route
 
 ```cpp
-app.post("/register", [](Request &req, Response &res)
-         {
-           const auto &j = req.json();
+app.post("/register", [](Request &req, Response &res){
+  const auto &j = req.json();
 
-           RegisterBody body;
-           body.email = json_string_or(j, "email");
-           body.password = json_string_or(j, "password");
-           body.confirm = json_string_or(j, "confirm");
+  RegisterBody body;
+  body.email = json_string_or(j, "email");
+  body.password = json_string_or(j, "password");
+  body.confirm = json_string_or(j, "confirm");
 
-           auto result = RegisterBody::schema().validate(body);
-           if (!result.ok()) { respond_validation_errors(res, result.errors); return; }
+  auto result = RegisterBody::schema().validate(body);
+  if (!result.ok()) { respond_validation_errors(res, result.errors); return; }
 
-           res.status(201).json(json::kv({{"ok", json::Json(true)},
-                                          {"message", json::Json("registered")},
-                                          {"email", json::Json(body.email)}}));
-         });
+  res.status(201).json(json::kv({
+        {"ok", json::Json(true)},
+        {"message", json::Json("registered")},
+        {"email", json::Json(body.email)}
+  }));
+});
 ```
 
 ## Validate query params
 
 ```cpp
-app.get("/register/check", [](Request &req, Response &res)
-        {
-          RegisterBody body;
-          body.email = req.query_value("email", "");
-          body.password = req.query_value("password", "");
-          body.confirm = req.query_value("confirm", "");
+app.get("/register/check", [](Request &req, Response &res){
+  RegisterBody body;
+  body.email = req.query_value("email", "");
+  body.password = req.query_value("password", "");
+  body.confirm = req.query_value("confirm", "");
 
-          auto result = RegisterBody::schema().validate(body);
-          if (!result.ok()) { respond_validation_errors(res, result.errors); return; }
+  auto result = RegisterBody::schema().validate(body);
+  if (!result.ok()) {
+    respond_validation_errors(res, result.errors);
+    return;
+  }
 
-          res.json(json::kv({{"ok", json::Json(true)},
-                             {"email", json::Json(body.email)}}));
-        });
+  res.json(json::kv({
+    {"ok", json::Json(true)},
+    {"email", json::Json(body.email)}
+  }));
+});
 ```
 
 ## Validate path params
 
 ```cpp
-app.get("/users/{id}", [](Request &req, Response &res)
-        {
-          const std::string id_text = req.param("id", "0");
+app.get("/users/{id}", [](Request &req, Response &res){
+  const std::string id_text = req.param("id", "0");
 
-          auto parsed = vix::validation::validate_parsed<int>("id", id_text)
-                            .min(1, "id must be >= 1")
-                            .result("id must be a number");
+  auto parsed = vix::validation::validate_parsed<int>("id", id_text)
+                    .min(1, "id must be >= 1")
+                    .result("id must be a number");
 
-          if (!parsed.ok()) { respond_validation_errors(res, parsed.errors); return; }
+  if (!parsed.ok()) {
+    respond_validation_errors(res, parsed.errors);
+    return;
+  }
 
-          res.json(json::kv({{"ok", json::Json(true)},
-                             {"id", json::Json(std::stoi(id_text))}}));
-        });
+  res.json(json::kv({
+    {"ok", json::Json(true)},
+    {"id", json::Json(std::stoi(id_text))}
+  }));
+});
 ```
 
 ## Common validation patterns
@@ -259,7 +268,11 @@ create_user(req.json());
 
 // Correct
 auto result = RegisterBody::schema().validate(body);
-if (!result.ok()) { respond_validation_errors(res, result.errors); return; }
+if (!result.ok()) {
+  respond_validation_errors(res, result.errors);
+  return;
+}
+
 create_user(body);
 ```
 
@@ -267,11 +280,16 @@ create_user(body);
 
 ```cpp
 // Wrong
-if (!result.ok()) { respond_validation_errors(res, result.errors); }
+if (!result.ok()) {
+  respond_validation_errors(res, result.errors);
+}
 res.json({"ok", true});
 
 // Correct
-if (!result.ok()) { respond_validation_errors(res, result.errors); return; }
+if (!result.ok()) {
+  respond_validation_errors(res, result.errors);
+  return;
+}
 res.json({"ok", true});
 ```
 

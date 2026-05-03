@@ -69,7 +69,10 @@ static std::optional<json::Json> find_user_by_id(vix::db::Database &db, std::int
   auto stmt = conn->prepare("SELECT id, name, email, role FROM users WHERE id = ?");
   stmt->bind(1, id);
   auto rows = stmt->query();
-  if (!rows->next()) return std::nullopt;
+
+  if (!rows->next())
+    return std::nullopt;
+
   const auto &row = rows->row();
   return json::kv({
       {"id", json::Json(row.getInt64(0))},
@@ -88,10 +91,13 @@ static std::int64_t create_user(vix::db::Database &db,
 {
   vix::db::PooledConn conn(db.pool());
   auto stmt = conn->prepare("INSERT INTO users (name, email, role) VALUES (?, ?, ?)");
-  stmt->bind(1, name); stmt->bind(2, email); stmt->bind(3, role);
+  stmt->bind(1, name);
+  stmt->bind(2, email); stmt->bind(3, role);
   stmt->exec();
   auto rows = conn->prepare("SELECT last_insert_rowid()")->query();
-  if (!rows->next()) throw std::runtime_error("failed to read inserted id");
+  if (!rows->next())
+    throw std::runtime_error("failed to read inserted id");
+
   return rows->row().getInt64(0);
 }
 ```
@@ -99,13 +105,13 @@ static std::int64_t create_user(vix::db::Database &db,
 ## Use transactions
 
 ```cpp
-db.transaction([&](vix::db::Connection &conn)
-               {
-                 conn.prepare("INSERT INTO users (name, email, role) VALUES (?, ?, ?)")
-                     ->bind(1, "Alice")->bind(2, "alice@example.com")->bind(3, "admin")->exec();
-                 conn.prepare("INSERT INTO users (name, email, role) VALUES (?, ?, ?)")
-                     ->bind(1, "Bob")->bind(2, "bob@example.com")->bind(3, "user")->exec();
-               });
+db.transaction([&](vix::db::Connection &conn){
+  conn.prepare("INSERT INTO users (name, email, role) VALUES (?, ?, ?)")
+    ->bind(1, "Alice")->bind(2, "alice@example.com")->bind(3, "admin")->exec();
+
+  conn.prepare("INSERT INTO users (name, email, role) VALUES (?, ?, ?)")
+    ->bind(1, "Bob")->bind(2, "bob@example.com")->bind(3, "user")->exec();
+});
 ```
 
 ## Test the API

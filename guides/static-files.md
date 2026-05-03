@@ -23,7 +23,9 @@ mkdir -p public
 ## Serve a single file
 
 ```cpp
-app.get("/", [](Request &, Response &res) { res.file("public/index.html"); });
+app.get("/", [](Request &, Response &res) {
+  res.file("public/index.html");
+});
 ```
 
 ## Serve a full directory
@@ -43,11 +45,23 @@ int main()
 
   app.static_dir("public");
 
-  app.get("/", [](Request &, Response &res) { res.file("public/index.html"); });
-  app.get("/health", [](Request &, Response &res) { res.json({"ok", true}); });
-  app.get("/api/ping", [](Request &, Response &res) { res.json({"ok", true, "message", "pong"}); });
+  app.get("/", [](Request &, Response &res) {
+    res.file("public/index.html");
+  });
+
+  app.get("/health", [](Request &, Response &res) {
+    res.json({"ok", true});
+  });
+
+  app.get("/api/ping", [](Request &, Response &res) {
+    res.json({
+      "ok", true,
+      "message", "pong"
+    });
+  });
 
   app.run(8080);
+
   return 0;
 }
 ```
@@ -55,12 +69,11 @@ int main()
 ## Manual wildcard static route
 
 ```cpp
-app.get("/*", [](Request &req, Response &res)
-        {
-          std::string path = "public" + req.path();
-          res.header("Cache-Control", "public, max-age=86400");
-          res.file(path);
-        });
+app.get("/*", [](Request &req, Response &res){
+  std::string path = "public" + req.path();
+  res.header("Cache-Control", "public, max-age=86400");
+  res.file(path);
+});
 ```
 
 ## Cache headers
@@ -80,30 +93,35 @@ app.get("/*", [](Request &req, Response &res)
 #include <vix/middleware/performance/static_files.hpp>
 
 app.use(vix::middleware::app::adapt_ctx(
-    vix::middleware::performance::static_files(
-        std::filesystem::path{"public"},
-        {
-            .mount = "/",
-            .index_file = "index.html",
-            .add_cache_control = true,
-            .cache_control = "public, max-age=3600",
-            .fallthrough = true,
-        })));
+  vix::middleware::performance::static_files(
+    std::filesystem::path{"public"},
+    {
+      .mount = "/",
+      .index_file = "index.html",
+      .add_cache_control = true,
+      .cache_control = "public, max-age=3600",
+      .fallthrough = true,
+    }
+  )
+));
 ```
 
 ## SPA fallback
 
 ```cpp
-app.get("/*", [](Request &req, Response &res)
-        {
-          const std::string path = req.path();
-          if (path.rfind("/api/", 0) == 0)
-          {
-            res.status(404).json({"ok", false, "error", "api route not found"});
-            return;
-          }
-          res.file("public/index.html");
-        });
+app.get("/*", [](Request &req, Response &res){
+  const std::string path = req.path();
+  if (path.rfind("/api/", 0) == 0)
+  {
+    res.status(404).json({
+      "ok", false,
+      "error", "api route not found"
+    });
+    return;
+  }
+
+  res.file("public/index.html");
+});
 ```
 
 ## Production with Nginx

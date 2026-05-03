@@ -31,13 +31,12 @@ int main()
 {
   App app;
 
-  app.get("/", [](Request &, Response &res)
-          {
-            res.json({
-                "message", "Hello from Vix",
-                "framework", "Vix.cpp"
-            });
-          });
+  app.get("/", [](Request &, Response &res){
+    res.json({
+        "message", "Hello from Vix",
+        "framework", "Vix.cpp"
+    });
+  });
 
   app.run(8080);
   return 0;
@@ -63,76 +62,80 @@ curl -i http://127.0.0.1:8080/
 ## Create a health route
 
 ```cpp
-app.get("/health", [](Request &, Response &res)
-        {
-          res.json({
-              "ok", true,
-              "service", "rest-api"
-          });
-        });
+app.get("/health", [](Request &, Response &res){
+  res.json({
+      "ok", true,
+      "service", "rest-api"
+  });
+});
 ```
 
 ## Add an in-memory users list
 
 ```cpp
 std::vector<json::Json> users = {
-    {{"id", 1}, {"name", "Alice"}, {"role", "admin"}},
-    {{"id", 2}, {"name", "Bob"}, {"role", "user"}}};
+    { {"id", 1}, {"name", "Alice"}, {"role", "admin"} },
+    { {"id", 2}, {"name", "Bob"}, {"role", "user"}}
+};
 ```
 
 ## Add GET /users
 
 ```cpp
-app.get("/users", [&users](Request &, Response &res)
-        {
-          res.json({
-              "ok", true,
-              "count", users.size(),
-              "data", users
-          });
-        });
+app.get("/users", [&users](Request &, Response &res){
+  res.json({
+      "ok", true,
+      "count", users.size(),
+      "data", users
+  });
+});
 ```
 
 ## Add GET /users/{id}
 
 ```cpp
-app.get("/users/{id}", [&users](Request &req, Response &res)
-        {
-          const std::string id = req.param("id");
+app.get("/users/{id}", [&users](Request &req, Response &res){
 
-          for (const auto &user : users)
-          {
-            if (std::to_string(user.value("id", 0)) == id)
-            {
-              res.json({"ok", true, "data", user});
-              return;
-            }
-          }
+  const std::string id = req.param("id");
+  for (const auto &user : users)
+  {
+    if (std::to_string(user.value("id", 0)) == id)
+    {
+      res.json({
+        "ok", true,
+        "data", user
+      });
 
-          res.status(404).json({
-              "ok", false,
-              "error", "user not found",
-              "id", id
-          });
-        });
+      return;
+    }
+  }
+
+  res.status(404).json({
+      "ok", false,
+      "error", "user not found",
+      "id", id
+  });
+
+});
 ```
 
 ## Add query params
 
 ```cpp
-app.get("/users", [&users](Request &req, Response &res)
-        {
-          const std::string page = req.query_value("page", "1");
-          const std::string limit = req.query_value("limit", "10");
+app.get("/users", [&users](Request &req, Response &res){
 
-          res.json({
-              "ok", true,
-              "page", page,
-              "limit", limit,
-              "count", users.size(),
-              "data", users
-          });
-        });
+  const std::string page = req.query_value("page", "1");
+  const std::string limit = req.query_value("limit", "10");
+
+  res.json({
+      "ok", true,
+      "page", page,
+      "limit", limit,
+      "count", users.size(),
+      "data", users
+  });
+
+});
 ```
 
 Useful request APIs:
@@ -150,32 +153,48 @@ Useful request APIs:
 ## Add POST /users
 
 ```cpp
-app.post("/users", [&users](Request &req, Response &res)
-         {
-           const auto &body = req.json();
+app.post("/users", [&users](Request &req, Response &res){
 
-           if (!body.is_object())
-           {
-             res.status(400).json({"ok", false, "error", "expected JSON object body"});
-             return;
-           }
+  const auto &body = req.json();
+  if (!body.is_object())
+  {
+    res.status(400).json({
+      "ok", false,
+      "error", "expected JSON object body"
+    });
 
-           const std::string name = body.value("name", "");
-           const std::string role = body.value("role", "user");
+    return;
+  }
 
-           if (name.empty())
-           {
-             res.status(400).json({"ok", false, "error", "field 'name' is required"});
-             return;
-           }
+  const std::string name = body.value("name", "");
+  const std::string role = body.value("role", "user");
+  if (name.empty())
+  {
+    res.status(400).json({
+      "ok", false,
+      "error", "field 'name' is required"
+    });
 
-           const int new_id = users.empty() ? 1 : users.back().value("id", 0) + 1;
+    return;
+  }
 
-           json::Json user = {{"id", new_id}, {"name", name}, {"role", role}};
-           users.push_back(user);
+  const int new_id = users.empty() ? 1 : users.back().value("id", 0) + 1;
 
-           res.status(201).json({"ok", true, "message", "user created", "data", user});
-         });
+  json::Json user = {
+    {"id", new_id},
+    {"name", name},
+    {"role", role}
+  };
+
+  users.push_back(user);
+
+  res.status(201).json({
+    "ok", true,
+    "message", "user created",
+    "data", user
+  });
+
+});
 ```
 
 ```bash
@@ -203,74 +222,125 @@ struct AppState
 static AppState create_state()
 {
   AppState state;
+
   state.users = {
-      {{"id", 1}, {"name", "Alice"}, {"role", "admin"}},
-      {{"id", 2}, {"name", "Bob"}, {"role", "user"}}};
+    { {"id", 1}, {"name", "Alice"}, {"role", "admin"} },
+    { {"id", 2}, {"name", "Bob"}, {"role", "user"} }
+  };
+
   return state;
 }
 
 static void register_public_routes(App &app)
 {
-  app.get("/", [](Request &, Response &res)
-          { res.json({"message", "Vix REST API", "framework", "Vix.cpp"}); });
+  app.get("/", [](Request &, Response &res){
+    res.json({
+      "message", "Vix REST API",
+      "framework", "Vix.cpp"
+    });
+  });
 
-  app.get("/health", [](Request &, Response &res)
-          { res.json({"ok", true, "service", "rest-api"}); });
+  app.get("/health", [](Request &, Response &res){
+    res.json({
+      "ok", true,
+      "service", "rest-api"
+    });
+  });
 }
 
 static void register_user_routes(App &app, AppState &state)
 {
-  app.get("/users", [&state](Request &req, Response &res)
-          {
-            const std::string page = req.query_value("page", "1");
-            const std::string limit = req.query_value("limit", "10");
-            res.json({"ok", true, "page", page, "limit", limit,
-                      "count", state.users.size(), "data", state.users});
-          });
+  app.get("/users", [&state](Request &req, Response &res){
+    const std::string page = req.query_value("page", "1");
+    const std::string limit = req.query_value("limit", "10");
 
-  app.get("/users/{id}", [&state](Request &req, Response &res)
-          {
-            const std::string id = req.param("id");
-            for (const auto &user : state.users)
-            {
-              if (std::to_string(user.value("id", 0)) == id)
-              {
-                res.json({"ok", true, "data", user});
-                return;
-              }
-            }
-            res.status(404).json({"ok", false, "error", "user not found", "id", id});
-          });
+    res.json({
+      "ok", true,
+      "page", page,
+      "limit", limit,
+      "count", state.users.size(),
+      "data", state.users
+    });
+  });
 
-  app.post("/users", [&state](Request &req, Response &res)
-           {
-             const auto &body = req.json();
-             if (!body.is_object())
-             {
-               res.status(400).json({"ok", false, "error", "expected JSON object body"});
-               return;
-             }
-             const std::string name = body.value("name", "");
-             const std::string role = body.value("role", "user");
-             if (name.empty())
-             {
-               res.status(400).json({"ok", false, "error", "field 'name' is required"});
-               return;
-             }
-             const int new_id = state.users.empty() ? 1 : state.users.back().value("id", 0) + 1;
-             json::Json user = {{"id", new_id}, {"name", name}, {"role", role}};
-             state.users.push_back(user);
-             res.status(201).json({"ok", true, "message", "user created", "data", user});
-           });
+  app.get("/users/{id}", [&state](Request &req, Response &res){
+
+    const std::string id = req.param("id");
+    for (const auto &user : state.users)
+    {
+      if (std::to_string(user.value("id", 0)) == id)
+      {
+        res.json({
+          "ok", true,
+          "data", user
+        });
+
+        return;
+      }
+    }
+
+    res.status(404).json({
+      "ok", false,
+      "error", "user not found",
+      "id", id
+    });
+
+  });
+
+  app.post("/users", [&state](Request &req, Response &res){
+
+    const auto &body = req.json();
+    if (!body.is_object())
+    {
+      res.status(400).json({
+        "ok", false,
+        "error", "expected JSON object body"
+      });
+
+      return;
+    }
+
+    const std::string name = body.value("name", "");
+    const std::string role = body.value("role", "user");
+    if (name.empty())
+    {
+      res.status(400).json({
+        "ok", false,
+        "error", "field 'name' is required"
+      });
+
+      return;
+    }
+
+    const int new_id = state.users.empty() ? 1 : state.users.back().value("id", 0) + 1;
+
+    json::Json user = {
+      {"id", new_id},
+      {"name", name},
+      {"role", role}
+    };
+
+    state.users.push_back(user);
+
+    res.status(201).json({
+      "ok", true,
+      "message", "user created",
+      "data", user
+    });
+
+  });
 }
 
 int main()
 {
   App app;
+
   AppState state = create_state();
   register_public_routes(app);
   register_user_routes(app, state);
+
   app.run(8080);
+
   return 0;
 }
 ```
@@ -324,11 +394,22 @@ res.file("public/index.html");                 // File
 
 ```cpp
 // Wrong
-if (name.empty()) { res.status(400).json({"error", "name is required"}); }
+if (name.empty()) {
+  res.status(400).json({
+    "error", "name is required"
+  });
+}
+
 res.json({"ok", true});
 
 // Correct
-if (name.empty()) { res.status(400).json({"error", "name is required"}); return; }
+if (name.empty()) {
+  res.status(400).json({
+    "error", "name is required"
+  });
+  return;
+}
+
 res.json({"ok", true});
 ```
 

@@ -65,9 +65,14 @@ static std::string session_id_from_request(Request &req)
 static Session *current_session(AppState &state, Request &req)
 {
   const std::string session_id = session_id_from_request(req);
-  if (session_id.empty()) return nullptr;
+
+  if (session_id.empty())
+    return nullptr;
+
   auto it = state.sessions.find(session_id);
-  if (it == state.sessions.end() || !it->second.authenticated) return nullptr;
+  if (it == state.sessions.end() || !it->second.authenticated)
+    return nullptr;
+
   return &it->second;
 }
 ```
@@ -134,7 +139,10 @@ Reading a cookie:
 
 ```cpp
 auto value = vix::middleware::cookies::get(req, "session_id");
-if (!value) { respond_error(res, 401, "missing session"); return; }
+if (!value) {
+  respond_error(res, 401, "missing session");
+  return;
+}
 const std::string session_id = *value;
 ```
 
@@ -167,11 +175,17 @@ cookie.http_only = true;   // prevents JS from reading the cookie
 
 ```cpp
 // Wrong
-if (session == nullptr) { respond_error(res, 401, "unauthorized"); }
+if (session == nullptr) {
+  respond_error(res, 401, "unauthorized");
+}
+
 res.json({"ok", true});
 
 // Correct
-if (session == nullptr) { respond_error(res, 401, "unauthorized"); return; }
+if (session == nullptr) {
+  respond_error(res, 401, "unauthorized");
+  return;
+}
 ```
 
 ### Expecting in-memory sessions to survive restart

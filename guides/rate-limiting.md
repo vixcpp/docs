@@ -113,7 +113,10 @@ Without a rate limit, attackers can retry many passwords quickly.
 ### Returning 403 instead of 429
 
 ```cpp
-res.status(429).json({"ok", false, "error", "rate_limit_exceeded"});
+res.status(429).json({
+  "ok", false,
+  "error", "rate_limit_exceeded"
+});
 ```
 
 ### Making local limits too high during testing

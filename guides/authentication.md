@@ -63,13 +63,15 @@ struct RegisterBody
     using namespace vix::validation;
     return vix::validation::schema<RegisterBody>()
         .field("email", &RegisterBody::email, field<std::string>().required("email is required").email("invalid email format").length_max(120))
+
         .field("password", &RegisterBody::password, field<std::string>().required("password is required").length_min(8).length_max(64))
+
         .field("confirm", &RegisterBody::confirm, field<std::string>().required("confirm is required"))
-        .check([](const RegisterBody &body, ValidationErrors &errors)
-               {
-                 if (!body.password.empty() && !body.confirm.empty() && body.password != body.confirm)
-                   errors.add("confirm", ValidationErrorCode::Custom, "passwords do not match");
-               });
+
+        .check([](const RegisterBody &body, ValidationErrors &errors){
+          if (!body.password.empty() && !body.confirm.empty() && body.password != body.confirm)
+            errors.add("confirm", ValidationErrorCode::Custom, "passwords do not match");
+        });
   }
 };
 
@@ -83,6 +85,7 @@ struct LoginBody : vix::validation::BaseModel<LoginBody>
     using namespace vix::validation;
     return vix::validation::schema<LoginBody>()
         .field("email", &LoginBody::email, field<std::string>().required("email is required").email("invalid email format"))
+
         .field("password", &LoginBody::password, field<std::string>().required("password is required").length_min(8));
   }
 };
@@ -123,26 +126,34 @@ static User *current_user(AppState &state, Request &req)
 
 ```cpp
 // POST /auth/register
-app.post("/auth/register", [&state](Request &req, Response &res)
-         {
-           // read body, validate, check duplicate, create user, return 201
-         });
+app.post("/auth/register", [&state](Request &req, Response &res){
+  // read body, validate, check duplicate, create user, return 201
+});
 
 // POST /auth/login
-app.post("/auth/login", [&state](Request &req, Response &res)
-         {
-           // validate, check credentials, create token, return token
-         });
+app.post("/auth/login", [&state](Request &req, Response &res){
+  / validate, check credentials, create token, return token
+});
 
 // GET /auth/me
-app.get("/auth/me", [&state](Request &req, Response &res)
-        {
-          User *user = current_user(state, req);
-          if (user == nullptr) { respond_error(res, 401, "unauthorized"); return; }
-          res.json(json::kv({{"ok", json::Json(true)}, {"user", json::kv({
-              {"id", json::Json(user->id)}, {"email", json::Json(user->email)}, {"role", json::Json(user->role)}
-          })}}));
-        });
+app.get("/auth/me", [&state](Request &req, Response &res){
+  User *user = current_user(state, req);
+  if (user == nullptr) {
+    respond_error(res, 401, "unauthorized");
+    return;
+  }
+
+  res.json(json::kv({
+        {"ok", json::Json(true)},
+        {"user",  json::kv({
+                    {"id", json::Json(user->id)},
+                    {"email", json::Json(user->email)},
+                    {"role", json::Json(user->role)}
+                  })
+        }
+      })
+  );
+});
 ```
 
 ## Protecting routes
@@ -150,10 +161,16 @@ app.get("/auth/me", [&state](Request &req, Response &res)
 ```cpp
 // Route-level protection
 User *user = current_user(state, req);
-if (user == nullptr) { respond_error(res, 401, "unauthorized"); return; }
+if (user == nullptr) {
+  respond_error(res, 401, "unauthorized");
+  return;
+}
 
 // Role-based protection
-if (user->role != "admin") { respond_error(res, 403, "admin role required"); return; }
+if (user->role != "admin") {
+  respond_error(res, 403, "admin role required");
+  return;
+}
 ```
 
 ## Test the API
@@ -214,11 +231,17 @@ Use `401` when not authenticated. Use `403` when authenticated but not allowed.
 
 ```cpp
 // Wrong
-if (user == nullptr) { respond_error(res, 401, "unauthorized"); }
+if (user == nullptr) {
+  respond_error(res, 401, "unauthorized");
+}
+
 res.json({"ok", true});
 
 // Correct
-if (user == nullptr) { respond_error(res, 401, "unauthorized"); return; }
+if (user == nullptr) {
+  respond_error(res, 401, "unauthorized");
+  return;
+}
 ```
 
 ## What to use next
