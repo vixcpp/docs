@@ -73,9 +73,9 @@ function iconPath(name) {
       </h1>
 
       <p class="vdh-lead">
-        Vix.cpp is a modern C++ runtime for HTTP APIs, WebSockets,
-        async tasks, and local-first systems — with explicit code and
-        predictable performance.
+        Learn how to build HTTP APIs, WebSocket services, async tasks,
+        and local-first systems with Vix.cpp, a modern C++ runtime focused
+        on clarity and predictable performance.
       </p>
 
       <div class="vdh-actions">
@@ -370,5 +370,39 @@ function iconPath(name) {
   .vdh-stat-div { display: none; }
   .vdh-card-tag { opacity: 1; }
   .vdh-card-arrow { opacity: 1; transform: translateX(0); }
+}
+
+@media (max-width: 640px) {
+  .vdh {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .vdh-left,
+  .vdh-right {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .vdh-right :deep(.code-block),
+  .vdh-right :deep(.vix-code-block),
+  .vdh-right :deep(pre),
+  .vdh-right :deep(code) {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .vdh-right :deep(pre) {
+    overflow-x: auto;
+  }
+
+  .vdh-run {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
 }
 </style>

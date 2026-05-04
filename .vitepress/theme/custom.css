@@ -425,3 +425,14 @@ html:not(.dark) .vp-doc [class*="language-"] pre {
 .VPSidebarItem.is-active > .item::before {
   left: 4px !important;
 }
+@media (max-width: 640px) {
+  .VPDoc {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .VPDoc .container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+}
