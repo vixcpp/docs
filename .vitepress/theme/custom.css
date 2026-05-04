@@ -466,3 +466,48 @@ html:not(.dark) .vp-doc [class*="language-"] pre {
   font-size: .875rem !important;
   font-family: "JetBrains Mono", ui-monospace, monospace !important;
 }
+@media (max-width: 960px) {
+  body.vix-local-nav-fixed .VPSidebar {
+    top: var(--vp-local-nav-height, 30px) !important;
+    height: calc(100vh - var(--vp-local-nav-height, 30px)) !important;
+  }
+
+  body.vix-local-nav-fixed .VPSidebar .curtain,
+  body.vix-local-nav-fixed .VPSidebar .content,
+  body.vix-local-nav-fixed .VPSidebar .nav {
+    padding-top: 8px !important;
+  }
+}
+/* Desktop sidebar scrollbar */
+@media (min-width: 961px) {
+  .VPSidebar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(34, 197, 94, 0.45) transparent;
+  }
+
+  .VPSidebar::-webkit-scrollbar,
+  .VPSidebar .content::-webkit-scrollbar,
+  .VPSidebar .nav::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .VPSidebar::-webkit-scrollbar-track,
+  .VPSidebar .content::-webkit-scrollbar-track,
+  .VPSidebar .nav::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .VPSidebar::-webkit-scrollbar-thumb,
+  .VPSidebar .content::-webkit-scrollbar-thumb,
+  .VPSidebar .nav::-webkit-scrollbar-thumb {
+    background: rgba(34, 197, 94, 0.35);
+    border-radius: 999px;
+    border: 2px solid var(--vp-c-bg);
+  }
+
+  .VPSidebar::-webkit-scrollbar-thumb:hover,
+  .VPSidebar .content::-webkit-scrollbar-thumb:hover,
+  .VPSidebar .nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(34, 197, 94, 0.65);
+  }
+}
