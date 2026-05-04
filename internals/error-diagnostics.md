@@ -15,11 +15,20 @@ undefined reference to ...
 terminate called without an active exception
 ```
 
-and not know what to do. Vix diagnostics answer three questions: **what happened, where, and what to try next.**
+and not know what to do. Vix diagnostics answer three questions:
+**what happened, where, and what to try next.**
 
 ## Diagnostic layers
 
-Vix handles: compile errors, link errors, build system errors, runtime crashes, sanitizer reports, known C++ mistakes, unclassified failures.
+Vix handles:
+
+- Compile errors
+- Link errors
+- Build system errors
+- Runtime crashes
+- Sanitizer reports
+- Known C++ mistakes
+- Unclassified failures
 
 ## Build error flow
 
@@ -46,6 +55,7 @@ main.cpp:8:3
 ```txt
 error: expected ';'
 hint: missing ';' (often the previous line)
+
 error: use of undeclared identifier 'std'
 hint: std is not visible here (include the required standard header)
 ```
@@ -129,8 +139,10 @@ hint: index out of bounds (check vector/string indexing)
 ```txt
 runtime error: heap-buffer-overflow
 hint: heap out-of-bounds (check vector/string indexing and sizes)
+
 runtime error: heap-use-after-free
 hint: you used memory after it was freed (dangling pointer/reference)
+
 runtime error: double free
 hint: the same allocation was freed twice (double owner or duplicate delete/free)
 ```
@@ -221,13 +233,13 @@ parsed compiler errors → try specialized rules → if handled: print friendly 
 
 ## Design principles
 
-1. First error matters most — show it clearly
-2. Show source context — code frames over long logs
-3. Hide repeated noise — deduplicate
-4. Prefer specific explanations — "division by zero" beats "runtime error"
-5. Give next action — include a practical hint
-6. Keep fallback honest — show raw log if unknown
-7. Do not hide C++ — explain errors, don't remove the need to understand them
+1. **First error matters most:** show the first meaningful error clearly.
+2. **Show source context:** prefer code frames over long raw logs.
+3. **Hide repeated noise:** deduplicate repeated diagnostics.
+4. **Prefer specific explanations:** `division by zero` is better than `runtime error`.
+5. **Give the next action:** include a practical hint when possible.
+6. **Keep fallback honest:** show the raw log when the error is unknown.
+7. **Do not hide C++:** explain errors without removing the need to understand them.
 
 ## What you should remember
 
@@ -235,7 +247,12 @@ parsed compiler errors → try specialized rules → if handled: print friendly 
 raw log → parse → classify → deduplicate → code frame → hint
 ```
 
-Vix handles: compiler errors, linker errors, runtime crashes, sanitizer reports, common C++ mistakes.
+Vix handles:
+- compiler errors,
+- linker errors,
+- runtime crashes,
+- sanitizer reports,
+- common C++ mistakes.
 
 The core idea: **a good error message should teach the next step.**
 

@@ -45,11 +45,11 @@ vix command → read arguments → detect mode → resolve build strategy
 
 ## Mode detection
 
-| Mode | Trigger | Optimized for |
-|------|---------|--------------|
-| Script | Single .cpp file | Learning, examples, small tools |
-| Project | CMakeLists.txt, vix.json, src/ | Real multi-file applications |
-| Manifest | app.vix present | Stable application description |
+| Mode     | Trigger                         | Optimized for                          |
+|----------|---------------------------------|----------------------------------------|
+| Script   | A single `.cpp` file.           | Learning, examples, and small tools.   |
+| Project  | `CMakeLists.txt`, `vix.json`, or `src/`. | Real multi-file applications. |
+| Manifest | An `app.vix` file.              | Stable application descriptions.       |
 
 ## Runtime arguments vs compiler flags
 
@@ -201,11 +201,11 @@ Environment=SERVER_TLS_ENABLED=false
 
 ## Runtime design principles
 
-1. **Fast feedback** — simple files run quickly
-2. **Application-first** — think about the app, not build details
-3. **Explicit lifecycle** — start, run, tick, stop, wait, shutdown
-4. **Recoverability** — persisted state survives failures
-5. **Normal native deployment** — binary + systemd + Nginx
+1. **Fast feedback:** simple files run quickly.
+2. **Application-first:** think about the application, not build details.
+3. **Explicit lifecycle:** start, run, tick, stop, wait, and shutdown.
+4. **Recoverability:** persisted state survives failures.
+5. **Normal native deployment:** deploy as a binary with systemd and Nginx.
 
 ## Common mistakes
 
@@ -225,9 +225,14 @@ app.run(8080);
 
 ## What you should remember
 
-Developer runtime: commands, mode detection, build pipeline, diagnostics.
+Developer runtime:
+- commands,
+- mode detection,
+- build pipeline,
+- diagnostics.
 
-Application runtime: `App → routes → middleware → server loop → modules → shutdown`.
+Application runtime:
+`App → routes → middleware → server loop → modules → shutdown`.
 
 The core idea: **Vix makes the development loop direct, while the application remains a normal explicit C++ runtime.**
 

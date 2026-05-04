@@ -1,6 +1,7 @@
 # Direct Compile
 
-Direct compile is the fast path behind `vix run main.cpp`. It allows a single C++ file to be compiled and run immediately.
+Direct compile is the fast path behind `vix run main.cpp`.
+It allows a single C++ file to be compiled and run immediately.
 
 ```txt
 main.cpp → detect script mode → compile directly → cache binary → run
@@ -8,7 +9,8 @@ main.cpp → detect script mode → compile directly → cache binary → run
 
 ## The problem direct compile solves
 
-Traditional C++ requires build setup even for small files. Direct compile removes this friction:
+Traditional C++ requires build setup even for small files.
+Direct compile removes this friction:
 
 ```bash
 mkdir -p ~/tmp/vix-demo
@@ -27,10 +29,10 @@ read CLI arguments → detect that main.cpp is a file → enter script mode
 
 ## Script mode vs project mode
 
-| Mode | Best for | Build strategy |
-|------|----------|---------------|
-| Direct compile | One .cpp file | Compile file directly |
-| Project build | Real app/project | Use project config and build system |
+| Mode           | Best for                   | Build strategy                         |
+|----------------|----------------------------|----------------------------------------|
+| Direct compile | A single `.cpp` file.      | Compiles the file directly.            |
+| Project build  | A real application project.| Uses project config and build system.  |
 
 Direct compile answers: "Can I quickly compile and run this one file?"
 
@@ -120,7 +122,8 @@ Docs examples should use public headers, not internal repository paths.
 
 ## Working directory
 
-The program runs from the current working directory. Relative paths depend on where you run the command:
+The program runs from the current working directory.
+Relative paths depend on where you run the command:
 
 ```cpp
 res.file("public/index.html");  // looks for ./public/index.html
@@ -204,11 +207,11 @@ cd ~/my-app && vix run main.cpp
 
 ## Design principles
 
-1. **Fast simple path** — `vix run main.cpp` should just work
-2. **Keep C++ explicit** — Vix makes the workflow smoother, not invisible
-3. **Cache safely** — never reuse stale binaries incorrectly
-4. **Fall back when needed** — project mode exists for complex cases
-5. **Good diagnostics** — when compilation fails, explain what to try next
+1. **Fast simple path:** `vix run main.cpp` should just work.
+2. **Keep C++ explicit:** Vix makes the workflow smoother, not invisible.
+3. **Cache safely:** never reuse stale binaries incorrectly.
+4. **Fall back when needed:** project mode exists for complex cases.
+5. **Good diagnostics:** when compilation fails, explain what to try next.
 
 ## What you should remember
 

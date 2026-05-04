@@ -1,6 +1,14 @@
 # Architecture
 
-Vix is not only an HTTP framework. Internally, it is composed of several layers: developer workflow, runtime core, application APIs, module system, diagnostics, build pipeline, and production runtime.
+Vix is not only an HTTP framework.
+Internally, it is composed of several layers:
+- developer workflow,
+- runtime core,
+- application APIs,
+- module system,
+- diagnostics,
+- build pipeline,
+- and production runtime.
 
 ```txt
 CLI → project detection → build/run pipeline → runtime modules → application
@@ -51,11 +59,11 @@ Application code
 
 ## Execution modes
 
-| Mode | Used when | Build strategy |
-|------|-----------|---------------|
-| Script mode | `vix run main.cpp` — one .cpp file | Direct compile |
-| Project mode | CMakeLists.txt, vix.json, src/ present | CMake / project build |
-| Manifest mode | `app.vix` manifest present | Manifest-described build |
+| Mode          | Used when                              | Build strategy                    |
+|---------------|---------------------------------------- |-----------------------------------|
+| Script mode   | Running one `.cpp` file with `vix run`. | Uses direct compilation.          |
+| Project mode  | `CMakeLists.txt`, `vix.json`, or `src/` is present. | Uses the project build system. |
+| Manifest mode | An `app.vix` manifest is present.      | Uses the manifest-defined build.  |
 
 ## Public API layer
 
@@ -167,17 +175,19 @@ HTTP may use JSON. JSON should not depend on HTTP. Avoid circular dependencies.
 
 ## Design principles
 
-1. **Application-first** — start from what you want to build, not from build config
-2. **Explicit C++** — ownership, lifetimes, types, and errors remain understandable
-3. **Fast path for simple cases** — one file should be fast to run
-4. **Modules are focused** — each module solves a clear problem
-5. **Reliability matters** — safe errors, durable operations, retries, health checks
-6. **No unnecessary magic** — the system should remain debuggable
+1. **Application-first:** start from what you want to build, not from build configuration.
+2. **Explicit C++:** ownership, lifetimes, types, and errors remain understandable.
+3. **Fast path for simple cases:** a single file should run quickly.
+4. **Modules are focused:** each module solves a clear, well-defined problem.
+5. **Reliability matters:** handle errors safely with durable operations, retries, and health checks.
+6. **No unnecessary magic:** the system should remain transparent and debuggable.
 
 ## What you should remember
 
-The main layers are: CLI workflow → public APIs → runtime modules → core foundation → system layer.
+The main layers are:
+CLI workflow → public APIs → runtime modules → core foundation → system layer.
 
-The core idea: **make C++ applications easier to build without hiding C++.**
+The core idea:
+**make C++ applications easier to build without hiding C++.**
 
 Next: [Runtime Model](/internals/runtime-model)

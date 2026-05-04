@@ -8,22 +8,22 @@ C++ should feel direct for application development without losing its power.
 
 ## Summary of key decisions
 
-| Decision | Reason |
-|----------|--------|
-| Runtime, not new language | Keep C++ power and improve workflow |
-| Direct compile | Make single-file C++ fast and simple |
-| CMake support | Keep real project builds correct |
-| Explicit APIs | Avoid hidden behavior |
-| Public module headers | Keep docs stable and learnable |
-| Middleware | Keep shared logic out of routes |
-| Config via .env | Change runtime behavior without recompiling |
-| Prepared statements | Safer database access |
-| Cache is temporary | Avoid treating cache as durable state |
-| Sync persists first | Prevent lost operations |
-| P2P as transport | Keep connection logic separate from delivery logic |
-| Diagnostics | Make C++ errors easier to act on |
-| Benchmark mode | Measure performance with less noise |
-| Native deployment | Run as a normal Linux service |
+| Decision                  | Reason                                           |
+|---------------------------|--------------------------------------------------|
+| Runtime, not new language | Keeps the power of C++ while improving workflow. |
+| Direct compile            | Makes single-file C++ fast and simple.           |
+| CMake support             | Keeps real project builds correct and portable.  |
+| Explicit APIs             | Avoids hidden behavior and unexpected magic.     |
+| Public module headers     | Keeps documentation stable and learnable.        |
+| Middleware                | Keeps shared logic out of route handlers.        |
+| Config via `.env`         | Changes runtime behavior without recompiling.    |
+| Prepared statements       | Provides safer database access.                  |
+| Cache is temporary        | Avoids treating cache as durable state.          |
+| Sync persists first       | Prevents local operations from being lost.       |
+| P2P as transport          | Separates connection logic from delivery logic.  |
+| Diagnostics               | Makes C++ errors easier to understand and fix.   |
+| Benchmark mode            | Measures performance with less runtime noise.    |
+| Native deployment         | Runs applications as normal Linux services.      |
 
 ## 1. Vix is a runtime, not a new language
 
@@ -32,6 +32,7 @@ Vix keeps C++, improves the workflow around it:
 ```cpp
 #include <vix.hpp>
 using namespace vix;
+
 int main()
 {
   App app;
@@ -274,9 +275,22 @@ Production readiness is part of normal app design.
 
 ## 26. Logs must be safe
 
-Good logs: startup, request method/path, error code, duration, sync failure, P2P stats.
+Good logs include:
 
-Never log: passwords, tokens, cookies, private keys, authorization headers.
+- Startup events
+- Request method and path
+- Error codes
+- Request duration
+- Sync failures
+- P2P statistics
+
+Never log:
+
+- Passwords
+- Tokens
+- Cookies
+- Private keys
+- Authorization headers
 
 ## 27. One-file docs are intentional
 
@@ -308,7 +322,8 @@ Vix is designed around a balance:
 simple workflow + explicit C++ + production reliability
 ```
 
-The core design idea: **make C++ application development feel direct without hiding how the system works.**
+The core design idea:
+**make C++ application development feel direct without hiding how the system works.**
 
 Vix helps developers move from:
 

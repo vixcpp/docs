@@ -1,6 +1,7 @@
 # Performance
 
-Performance in Vix is not only about raw speed. It is about keeping the runtime fast, predictable, observable, and safe under sustained load.
+Performance in Vix is not only about raw speed.
+It is about keeping the runtime fast, predictable, observable, and safe under sustained load.
 
 ```txt
 measure → identify bottleneck → optimize carefully → measure again
@@ -13,7 +14,8 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DVIX_BENCH_MODE=ON
 cmake --build build -j
 ```
 
-`VIX_BENCH_MODE=ON` removes development overhead (extra logs, debug checks, diagnostics) to measure the runtime path more clearly. Always benchmark release builds.
+`VIX_BENCH_MODE=ON` removes development overhead (extra logs, debug checks, diagnostics) to measure the runtime path more clearly.
+Always benchmark release builds.
 
 ## HTTP benchmark shape
 
@@ -56,13 +58,13 @@ Use separate routes for separate questions — `/bench` for raw HTTP, `/json` fo
 
 ## Important metrics
 
-| Metric | What it tells you                   |
-|--------|-------------------------------------|
-| Requests/sec | Throughput                    |
-| Avg Latency  | Average response time         |
-| P99 Latency  | Tail latency (99% of requests)|
-| Error count  | Failures under load |
-| Stability    | Behavior during sustained load|
+| Metric       | What it tells you                         |
+|--------------|-------------------------------------------|
+| Requests/sec | Measures request throughput.              |
+| Avg latency  | Shows the average response time.          |
+| P99 latency  | Shows tail latency for 99% of requests.   |
+| Error count  | Counts failures during the load test.     |
+| Stability    | Shows behavior under sustained load.      |
 
 P99 matters because real users feel tail latency. High throughput with bad P99 is not a good result.
 
@@ -122,7 +124,8 @@ app.get("/bench", [](Request &, Response &res) { res.text("OK"); });
 
 ## JSON overhead
 
-JSON serialization costs CPU. Use plain text for raw HTTP benchmarks, JSON for realistic API benchmarks — compare them separately.
+JSON serialization costs CPU.
+Use plain text for raw HTTP benchmarks, JSON for realistic API benchmarks — compare them separately.
 
 ## WAF and security overhead
 
@@ -132,7 +135,8 @@ WAF_MAX_TARGET_LEN=4096
 WAF_MAX_BODY_BYTES=1048576
 ```
 
-WAF adds protection but also work on the hot path. `VIX_BENCH_MODE=ON` gives a cleaner measurement.
+WAF adds protection but also work on the hot path.
+`VIX_BENCH_MODE=ON` gives a cleaner measurement.
 
 ## Memory and file descriptors
 
@@ -145,15 +149,30 @@ ulimit -n
 # LimitNOFILE=65535
 ```
 
-Watch for: unbounded buffers, memory leaks, cache growth, unreleased resources.
+Watch for:
+- unbounded buffers,
+- memory leaks,
+- cache growth,
+- unreleased resources.
 
 ## Benchmarking context
 
 Always document:
 
 ```txt
-Vix version, build type, benchmark mode, machine, CPU, RAM, OS,
-benchmark tool, threads, connections, duration, route tested,
+- Vix version,
+- build type,
+- benchmark mode,
+- machine,
+- CPU,
+- RAM,
+- OS,
+- benchmark tool,
+- threads,
+- connections,
+- duration,
+- route tested,
+
 whether Nginx was used, whether TLS was used
 ```
 

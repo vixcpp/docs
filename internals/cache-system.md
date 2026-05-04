@@ -22,12 +22,12 @@ Goal: **do not repeat expensive work when the inputs did not change.**
 
 ## Main cache areas
 
-| Area | Path | Purpose |
-|------|------|---------|
-| Registry index | `~/.vix/registry/index` | Package metadata |
-| Store cache | `~/.vix/store/git` | Downloaded packages and commits |
-| Global packages | `~/.vix/global` | Globally installed packages |
-| Artifact cache | `~/.vix/cache/build` | Build artifacts |
+| Area            | Path                    | Purpose                                 |
+|-----------------|-------------------------|-----------------------------------------|
+| Registry index  | `~/.vix/registry/index` | Stores package metadata.                |
+| Store cache     | `~/.vix/store/git`      | Stores downloaded packages and commits. |
+| Global packages | `~/.vix/global`         | Stores globally installed packages.     |
+| Artifact cache  | `~/.vix/cache/build`    | Stores build artifacts.                 |
 
 ## vix info
 
@@ -169,11 +169,11 @@ Cache accelerates repeated work. Source code, manifests, lock files, and package
 
 ## Design principles
 
-1. **Invisible when healthy** — developers shouldn't think about cache during normal work
-2. **Visible when debugging** — `vix info` exposes cache state clearly
-3. **Safe** — never reuse if inputs don't match
-4. **Rebuildable** — artifact cache can always be regenerated
-5. **Correctness over speed** — a fast but wrong cache is worse than no cache
+1. **Invisible when healthy:** developers should not think about cache during normal work.
+2. **Visible when debugging:** `vix info` exposes cache state clearly.
+3. **Safe:** never reuse cached data when inputs do not match.
+4. **Rebuildable:** artifact cache can always be regenerated.
+5. **Correctness over speed:** a fast but wrong cache is worse than no cache.
 
 ## What you should remember
 
@@ -184,7 +184,8 @@ Cache accelerates repeated work. Source code, manifests, lock files, and package
 ~/.vix/cache/build     → build artifacts
 ```
 
-Use `vix info` to inspect cache state. Use `vix --version` and the failing command for bug reports.
+Use `vix info` to inspect cache state.
+Use `vix --version` and the failing command for bug reports.
 
 The core idea: **cache makes Vix faster, but correctness always comes first.**
 
