@@ -2,11 +2,19 @@
 
 This guide shows how to validate input in Vix.
 
-You will learn how to validate: single values, query params, path params, JSON request bodies, forms, structs with schemas, and models with `BaseModel`.
+You will learn how to validate:
+- single values,
+- query params,
+- path params,
+- JSON request bodies,
+- forms,
+- structs with schemas,
+- and models with `BaseModel`.
 
 ## Why validation matters
 
-A REST API should not trust input. Clients can send missing fields, invalid emails, weak passwords, wrong types, invalid ids, or malformed form data.
+A REST API should not trust input.
+Clients can send missing fields, invalid emails, weak passwords, wrong types, invalid ids, or malformed form data.
 
 A good API should return errors like this:
 
@@ -40,16 +48,16 @@ auto result = vix::validation::validate("email", email)
 
 ## Common value rules
 
-| Rule | Purpose |
-|------|---------|
-| `required()` | Value must be present or non-empty |
-| `email()` | Value must be an email |
-| `length_min(n)` | String length must be at least n |
-| `length_max(n)` | String length must be at most n |
-| `min(n)` | Numeric value must be at least n |
-| `max(n)` | Numeric value must be at most n |
-| `between(a, b)` | Numeric value must be between a and b |
-| `in_set(...)` | Value must be one of the allowed values |
+| Rule              | Purpose                                      |
+|-------------------|----------------------------------------------|
+| `required()`      | Requires a present and non-empty value.      |
+| `email()`         | Requires a valid email address.              |
+| `length_min(n)`   | Requires a string length of at least `n`.    |
+| `length_max(n)`   | Requires a string length of at most `n`.     |
+| `min(n)`          | Requires a numeric value of at least `n`.    |
+| `max(n)`          | Requires a numeric value of at most `n`.     |
+| `between(a, b)`   | Requires a numeric value between `a` and `b`.|
+| `in_set(...)`     | Requires one of the allowed values.          |
 
 ## Read validation errors
 
@@ -250,13 +258,13 @@ parsed<int>().between(18, 120, "age must be between 18 and 120").parse_message("
 
 ## When to use each validation tool
 
-| Tool | Use when |
-|------|---------|
-| `validate(...)` | Validate one value |
-| `validate_parsed<T>(...)` | Parse and validate a string |
-| `Schema<T>` | Validate a struct |
-| `BaseModel<T>` | Want `body.validate()` or `T::validate(body)` |
-| `Form<T>` | Bind raw key/value input |
+| Tool                      | Use when                                          |
+|---------------------------|----------------------------------------------------|
+| `validate(...)`           | You need to validate one value.                    |
+| `validate_parsed<T>(...)` | You need to parse and validate a string.           |
+| `Schema<T>`               | You need to validate a struct.                     |
+| `BaseModel<T>`            | You want `body.validate()` or `T::validate(body)`. |
+| `Form<T>`                 | You need to bind raw key-value input.              |
 
 ## Common mistakes
 

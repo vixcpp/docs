@@ -41,7 +41,10 @@ app.templates("./views");
 ```html
 <!doctype html>
 <html lang="en">
-  <head><meta charset="utf-8" /><title>{{ title }}</title></head>
+  <head>
+    <meta charset="utf-8" />
+      <title>{{ title }}</title>
+    </head>
   <body>
     <h1>{{ title }}</h1>
     <p>Hello {{ user }}.</p>
@@ -105,8 +108,15 @@ ctx.set("features", features);
 ```html
 <!doctype html>
 <html lang="en">
-  <head><meta charset="utf-8" /><title>{{ title }}</title></head>
-  <body><main>{% block content %}{% endblock %}</main></body>
+  <head>
+    <meta charset="utf-8" />
+      <title>{{ title }}</title>
+    </head>
+  <body>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </body>
 </html>
 ```
 
@@ -127,7 +137,10 @@ ctx.set("features", features);
 ```html
 <header>
   <strong>{{ app_name }}</strong>
-  <nav><a href="/">Home</a> <a href="/dashboard">Dashboard</a></nav>
+  <nav>
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+  </nav>
 </header>
 ```
 
@@ -180,14 +193,14 @@ ctx.set("recent_orders", orders);
 
 ## Template features
 
-| Feature | Example |
-|---------|---------|
-| Variable | `{{ title }}` |
-| Condition | `{% if logged_in %}` |
-| Loop | `{% for item in items %}` |
-| Include | `{% include "header.html" %}` |
-| Layout | `{% extends "base.html" %}` |
-| Block | `{% block content %}` |
+| Feature    | Example                         |
+|------------|---------------------------------|
+| Variable   | `{{ title }}`                   |
+| Condition  | `{% if logged_in %}`            |
+| Loop       | `{% for item in items %}`       |
+| Include    | `{% include "header.html" %}`   |
+| Layout     | `{% extends "base.html" %}`     |
+| Block      | `{% block content %}`           |
 
 ## Templates with database data
 
@@ -231,7 +244,8 @@ app.templates("./views");  // required before res.render(...)
 
 ### Putting all logic in the template
 
-Keep calculations and database queries in C++. Pass simple, ready-to-render values to the template.
+Keep calculations and database queries in C++.
+Pass simple, ready-to-render values to the template.
 
 ### Forgetting layout variables
 

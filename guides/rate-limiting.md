@@ -60,13 +60,13 @@ app.use(vix::middleware::app::adapt_ctx(
 
 ## Where to apply rate limiting
 
-| Endpoint | Suggested limit |
-|----------|----------------|
-| `GET /health` | high or no limit |
-| `GET /api/*` | normal limit |
-| `POST /auth/login` | strict limit |
-| `POST /auth/register` | strict limit |
-| `POST /password/reset` | very strict limit |
+| Endpoint                 | Suggested limit              |
+|--------------------------|------------------------------|
+| `GET /health`            | High limit or no limit.      |
+| `GET /api/*`             | Normal application limit.    |
+| `POST /auth/login`       | Strict authentication limit. |
+| `POST /auth/register`    | Strict registration limit.   |
+| `POST /password/reset`   | Very strict recovery limit.  |
 
 ## Test rate limiting
 

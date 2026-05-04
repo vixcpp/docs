@@ -10,7 +10,8 @@ You will build:
 - protected routes
 - bearer token style authentication
 
-> This guide keeps the implementation simple and in-memory. For production, store users in SQLite or MySQL, hash passwords, and use real JWT/session middleware.
+> This guide keeps the implementation simple and in-memory.
+For production, store users in SQLite or MySQL, hash passwords, and use real JWT/session middleware.
 
 ## Goal
 
@@ -199,13 +200,13 @@ curl -i http://127.0.0.1:8080/private
 
 ## Authentication status codes
 
-| Status | Meaning | Example |
-|--------|---------|---------|
-| 201 | Created | User registered |
-| 400 | Bad Request | Invalid input |
-| 401 | Unauthorized | Missing or invalid token |
-| 403 | Forbidden | Authenticated but not allowed |
-| 409 | Conflict | Email already registered |
+| Status | Meaning       | Example                           |
+|--------|---------------|-----------------------------------|
+| `201`  | Created.      | User registered successfully.     |
+| `400`  | Bad Request.  | Invalid input was provided.       |
+| `401`  | Unauthorized. | Missing or invalid auth token.    |
+| `403`  | Forbidden.    | User is authenticated but denied. |
+| `409`  | Conflict.     | Email is already registered.      |
 
 ## Important production notes
 

@@ -11,7 +11,8 @@ API:      http://localhost:8080
 
 ## What is CORS?
 
-An origin is composed of scheme + host + port. The browser uses CORS to decide whether frontend JavaScript is allowed to call an API on another origin.
+An origin is composed of scheme + host + port.
+The browser uses CORS to decide whether frontend JavaScript is allowed to call an API on another origin.
 
 ## Setup
 
@@ -98,13 +99,13 @@ curl -i -X OPTIONS http://127.0.0.1:8080/api/messages \
 
 ## CORS headers explained
 
-| Header | Purpose |
-|--------|---------|
-| `Access-Control-Allow-Origin` | Which origin is allowed |
-| `Access-Control-Allow-Methods` | Which methods are allowed |
-| `Access-Control-Allow-Headers` | Which request headers are allowed |
-| `Access-Control-Allow-Credentials` | Whether credentials are allowed |
-| `Access-Control-Expose-Headers` | Which response headers JS can read |
+| Header                             | Purpose                                      |
+|------------------------------------|----------------------------------------------|
+| `Access-Control-Allow-Origin`      | Defines which origin is allowed.             |
+| `Access-Control-Allow-Methods`     | Defines which HTTP methods are allowed.      |
+| `Access-Control-Allow-Headers`     | Defines which request headers are allowed.   |
+| `Access-Control-Allow-Credentials` | Defines whether credentials are allowed.     |
+| `Access-Control-Expose-Headers`    | Defines which response headers JS can read.  |
 
 ## Common mistakes
 

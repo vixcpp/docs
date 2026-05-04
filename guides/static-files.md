@@ -78,13 +78,13 @@ app.get("/*", [](Request &req, Response &res){
 
 ## Cache headers
 
-| Header value | Meaning |
-|-------------|---------|
-| `no-store` | Do not cache |
-| `no-cache` | Revalidate before reuse |
-| `public, max-age=3600` | Cache for 1 hour |
-| `public, max-age=86400` | Cache for 1 day |
-| `public, max-age=31536000, immutable` | Cache versioned assets for 1 year |
+| Header value                            | Meaning                                      |
+|-----------------------------------------|----------------------------------------------|
+| `no-store`                              | Does not store the response in any cache.    |
+| `no-cache`                              | Revalidates the response before reuse.       |
+| `public, max-age=3600`                  | Caches the response for one hour.            |
+| `public, max-age=86400`                 | Caches the response for one day.             |
+| `public, max-age=31536000, immutable`   | Caches versioned assets for one year.        |
 
 ## Advanced static files middleware
 

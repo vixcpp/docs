@@ -202,7 +202,8 @@ curl -i https://example.com/health
 
 ### 502 Bad Gateway
 
-App is not running. Check: `sudo systemctl status vix-myapp` and `curl -i http://127.0.0.1:8080/health`.
+App is not running.
+Check: `sudo systemctl status vix-myapp` and `curl -i http://127.0.0.1:8080/health`.
 
 ### 504 Gateway Timeout
 

@@ -120,16 +120,16 @@ vix::serve_http_and_ws(".env", 8080, [](auto &app, auto &ws) {
 
 ## Recommended event protocol
 
-| Event | Direction | Purpose |
-|-------|-----------|---------|
-| `chat.join` | client → server | User joins |
-| `chat.leave` | client → server | User leaves |
-| `chat.message` | both | Chat message |
-| `chat.error` | server → client | Error |
-| `app.ping` | client → server | Health check |
-| `app.pong` | server → client | Health response |
-| `system.connected` | server → client | Client connected |
-| `system.disconnected` | server → client | Client disconnected |
+| Event                 | Direction        | Purpose                           |
+|-----------------------|------------------|-----------------------------------|
+| `chat.join`           | Client -> server | Joins a chat room or session.     |
+| `chat.leave`          | Client -> server | Leaves a chat room or session.    |
+| `chat.message`        | Both directions  | Sends or receives chat content.   |
+| `chat.error`          | Server -> client | Reports a chat-related error.     |
+| `app.ping`            | Client -> server | Sends a health check request.     |
+| `app.pong`            | Server -> client | Returns a health check response.  |
+| `system.connected`    | Server -> client | Confirms the client connected.    |
+| `system.disconnected` | Server -> client | Confirms the client disconnected. |
 
 ## Add .env
 

@@ -105,11 +105,11 @@ curl -i -X POST http://127.0.0.1:8080/users \
 
 ## SQLite vs MySQL
 
-| Feature | SQLite | MySQL |
-|---------|--------|-------|
-| Deployment | Local file | Server database |
-| Setup | Very simple | Requires server |
-| Best for | local apps, small APIs | multi-user production APIs |
+| Feature     | SQLite                             | MySQL                             |
+|-------------|------------------------------------|-----------------------------------|
+| Deployment  | Stores data in a local file.       | Stores data in a server database. |
+| Setup       | Very simple, no server required.   | Requires a database server.       |
+| Best for    | Local apps, small APIs, and MVPs.  | Multi-user production APIs.       |
 
 ## Common mistakes
 

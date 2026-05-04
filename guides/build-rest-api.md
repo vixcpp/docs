@@ -50,14 +50,14 @@ curl -i http://127.0.0.1:8080/
 
 ## Basic Vix HTTP structure
 
-| Part | Purpose |
-|------|---------|
-| `App app;` | Creates the HTTP application |
-| `app.get(...)` | Registers a GET route |
-| `Request &req` | Gives access to request data |
-| `Response &res` | Sends the response |
-| `res.json(...)` | Sends JSON |
-| `app.run(8080)` | Starts the server on port 8080 |
+| Part             | Purpose                                  |
+|------------------|------------------------------------------|
+| `App app;`       | Creates the HTTP application instance.   |
+| `app.get(...)`   | Registers a `GET` route handler.         |
+| `Request &req`   | Provides access to request data.         |
+| `Response &res`  | Provides methods for sending responses.  |
+| `res.json(...)`  | Sends a JSON response.                   |
+| `app.run(8080)`  | Starts the server on port `8080`.        |
 
 ## Create a health route
 
@@ -140,15 +140,15 @@ app.get("/users", [&users](Request &req, Response &res){
 
 Useful request APIs:
 
-| API | Purpose |
-|-----|---------|
-| `req.param("id")` | Read path param |
-| `req.param("id", "0")` | Read path param with fallback |
-| `req.query_value("page", "1")` | Read query param with fallback |
-| `req.query()` | Read all query params |
-| `req.body()` | Read raw body |
-| `req.json()` | Read parsed JSON body |
-| `req.header("Authorization")` | Read request header |
+| API                              | Purpose                                  |
+|----------------------------------|------------------------------------------|
+| `req.param("id")`                | Reads a route path parameter.            |
+| `req.param("id", "0")`           | Reads a route parameter with fallback.   |
+| `req.query_value("page", "1")`   | Reads a query parameter with fallback.   |
+| `req.query()`                    | Reads all query parameters.              |
+| `req.body()`                     | Reads the raw request body.              |
+| `req.json()`                     | Reads the parsed JSON body.              |
+| `req.header("Authorization")`    | Reads a request header value.            |
 
 ## Add POST /users
 
@@ -370,15 +370,15 @@ res.file("public/index.html");                 // File
 
 ## Status codes
 
-| Status | Meaning | Example |
-|--------|---------|---------|
-| 200 | OK | Successful GET |
-| 201 | Created | Successful POST |
-| 400 | Bad Request | Invalid input |
-| 401 | Unauthorized | Missing auth |
-| 403 | Forbidden | Not allowed |
-| 404 | Not Found | Missing resource |
-| 500 | Internal Server Error | Server failure |
+| Status | Meaning                 | Example                         |
+|--------|-------------------------|---------------------------------|
+| `200`  | OK.                     | Successful `GET` request.       |
+| `201`  | Created.                | Successful `POST` request.      |
+| `400`  | Bad Request.            | Invalid input was provided.     |
+| `401`  | Unauthorized.           | Authentication is missing.      |
+| `403`  | Forbidden.              | Access is not allowed.          |
+| `404`  | Not Found.              | Requested resource is missing.  |
+| `500`  | Internal Server Error.  | Server-side failure occurred.   |
 
 ## Recommended JSON shape
 
@@ -422,7 +422,9 @@ vix run main.cpp -- --port 8080      # wrong: -- is for compiler flags
 
 ### Expecting in-memory data to persist
 
-The `users` vector is in memory. If the server restarts, created users are lost. For persistence, use SQLite or MySQL.
+The `users` vector is in memory.
+If the server restarts, created users are lost.
+For persistence, use SQLite or MySQL.
 
 ## What to use next
 
