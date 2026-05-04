@@ -468,8 +468,8 @@ html:not(.dark) .vp-doc [class*="language-"] pre {
 }
 @media (max-width: 960px) {
   body.vix-local-nav-fixed .VPSidebar {
-    top: var(--vp-local-nav-height, 48px) !important;
-    height: calc(100vh - var(--vp-local-nav-height, 48px)) !important;
+    top: var(--vp-local-nav-height, 20px) !important;
+    height: calc(100vh - var(--vp-local-nav-height, 20px)) !important;
   }
 
   body.vix-local-nav-fixed .VPSidebar .curtain,
