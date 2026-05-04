@@ -8,8 +8,35 @@ import CodeTabs from "./CodeTabs.vue";
 export default {
   ...DefaultTheme,
   Layout,
-  enhanceApp({ app }) {
+
+  enhanceApp(ctx) {
+    DefaultTheme.enhanceApp?.(ctx);
+
+    const { app } = ctx;
+
     app.component("DocsHomeHero", DocsHomeHero);
     app.component("CodeTabs", CodeTabs);
+
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateLocalNavState = () => {
+      const nav = document.querySelector(".VPNavBar");
+      const localNav = document.querySelector(".VPLocalNav");
+
+      if (!nav || !localNav) {
+        return;
+      }
+
+      const navHeight = nav.getBoundingClientRect().height;
+      const shouldFix = window.scrollY > navHeight;
+
+      document.body.classList.toggle("vix-local-nav-fixed", shouldFix);
+    };
+
+    window.addEventListener("scroll", updateLocalNavState, { passive: true });
+    window.addEventListener("resize", updateLocalNavState);
+    window.requestAnimationFrame(updateLocalNavState);
   },
 };
