@@ -21,6 +21,14 @@ export default {
       return;
     }
 
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    window.addEventListener("load", () => {
+      window.scrollTo(0, 0);
+    });
+
     const updateLocalNavState = () => {
       const nav = document.querySelector(".VPNavBar");
       const localNav = document.querySelector(".VPLocalNav");
