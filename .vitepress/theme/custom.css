@@ -436,3 +436,33 @@ html:not(.dark) .vp-doc [class*="language-"] pre {
     padding-right: 0 !important;
   }
 }
+/* Fix VitePress code line numbers vertical alignment */
+.vp-doc div[class*="language-"].line-numbers-mode .line-numbers-wrapper,
+.vp-doc [class*="language-"].line-numbers-mode .line-numbers-wrapper {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+  line-height: 1.7 !important;
+}
+
+.vp-doc div[class*="language-"].line-numbers-mode pre,
+.vp-doc [class*="language-"].line-numbers-mode pre {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+@media (max-width: 640px) {
+  .vp-doc div[class*="language-"].line-numbers-mode .line-numbers-wrapper,
+  .vp-doc [class*="language-"].line-numbers-mode .line-numbers-wrapper {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .vp-doc div[class*="language-"].line-numbers-mode pre,
+  .vp-doc [class*="language-"].line-numbers-mode pre {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+}
+.vp-doc .line-numbers-wrapper {
+  font-size: .875rem !important;
+  font-family: "JetBrains Mono", ui-monospace, monospace !important;
+}
