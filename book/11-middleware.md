@@ -1,8 +1,10 @@
 # Middleware
 
-In the previous chapter, you built a JSON API. Now you will learn middleware.
+In the previous chapter, you built a JSON API.
+Now you will learn middleware.
 
-Middleware is code that runs around your routes. It can inspect the request before the route handler runs, and modify the response before it is sent.
+Middleware is code that runs around your routes.
+It can inspect the request before the route handler runs, and modify the response before it is sent.
 
 ```txt
 request → middleware → route handler → response
@@ -252,15 +254,14 @@ curl -i http://127.0.0.1:8080/api/data -H "Origin: http://localhost:5173"
 
 ## Middleware and route responsibility
 
-| Middleware | Routes |
-|-----------|--------|
-| CORS | Create user |
-| Rate limiting | List products |
-| Authentication | Return dashboard data |
-| Request ids | Login user |
-| Logging | Fetch order details |
-| Body limits | |
-
+| Middleware       | Example route action          |
+|------------------|-------------------------------|
+| CORS             | Allows browser API calls.     |
+| Rate limiting    | Protects public endpoints.    |
+| Authentication   | Guards dashboard routes.      |
+| Request IDs      | Tracks each request in logs.  |
+| Logging          | Records request activity.     |
+| Body limits      | Rejects oversized requests.   |
 ## Common mistakes
 
 ### Registering middleware after routes
@@ -277,7 +278,8 @@ register_routes(app);
 
 ### Making CORS too open in production
 
-Development CORS can allow localhost. Production should allow your real frontend only.
+Development CORS can allow localhost.
+Production should allow your real frontend only.
 
 ### Using one rate limit for everything
 
@@ -289,7 +291,8 @@ Rate limit failures should return `429 Too Many Requests`.
 
 ## What you should remember
 
-Middleware wraps route handlers. Use it for shared behavior: CORS, rate limiting, authentication, logging, security, body limits, static files.
+Middleware wraps route handlers. Use it for shared behavior:
+CORS, rate limiting, authentication, logging, security, body limits, static files.
 
 ```cpp
 int main()
@@ -303,7 +306,8 @@ int main()
 }
 ```
 
-The core idea: middleware keeps route handlers clean by moving shared request behavior into one reusable layer.
+The core idea:
+middleware keeps route handlers clean by moving shared request behavior into one reusable layer.
 
 ## Next chapter
 

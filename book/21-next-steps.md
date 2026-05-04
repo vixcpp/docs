@@ -1,7 +1,6 @@
 # Next steps
 
 You have reached the end of the Vix book.
-
 You started with one simple idea:
 
 ```txt
@@ -48,18 +47,18 @@ int main()
 
 ## The path you completed
 
-| Stage | What you learned |
-|-------|-----------------|
-| Start | What Vix is and why it exists |
-| CLI | Run files, create projects, build, test, check |
-| HTTP | Routes with App, Request, and Response |
-| APIs | JSON APIs |
-| Layers | Middleware, validation, errors, logging |
-| Data | SQLite, MySQL, database access |
-| Realtime | WebSocket and async runtime |
-| Reliability | Cache and offline-first sync |
-| Distributed | P2P |
-| Production | Nginx, systemd, TLS, logs, health checks |
+| Stage       | What you learned                                                        |
+|-------------|-------------------------------------------------------------------------|
+| Start       | What Vix is and why it exists.                                          |
+| CLI         | Running files, creating projects, building, testing, and checking code. |
+| HTTP        | Building routes with `App`, `Request`, and `Response`.                  |
+| APIs        | Building JSON APIs.                                                     |
+| Layers      | Adding middleware, validation, errors, and logging.                     |
+| Data        | Using SQLite, MySQL, and database access.                               |
+| Realtime    | Using WebSocket and the async runtime.                                  |
+| Reliability | Using cache and offline-first synchronization.                          |
+| Distributed | Building P2P features.                                                  |
+| Production  | Deploying with Nginx, systemd, TLS, logs, and health checks.            |
 
 ## What to build next
 
@@ -78,7 +77,12 @@ POST /auth/login
 GET  /auth/me
 ```
 
-With: validation, SQLite storage, structured errors, logs, production deployment.
+With:
+- validation,
+- SQLite storage,
+- structured errors,
+- logs,
+- production deployment.
 
 ## Recommended project
 
@@ -102,7 +106,8 @@ Build step by step:
 
 ## Use the Guides section
 
-The book teaches the story. The guides help you solve specific problems:
+The book teaches the story.
+The guides help you solve specific problems:
 
 - [Build a REST API](/guides/build-rest-api)
 - [Validation](/guides/validation)
@@ -219,21 +224,21 @@ Use predictable response shapes:
 
 ## When to use each runtime feature
 
-| Feature | Use when |
-|---------|---------|
-| `vix run` | Run one file quickly |
-| `vix new` | Start a real project |
-| HTTP | APIs or web routes |
-| JSON | Structured API responses |
-| Middleware | Shared request behavior |
-| Validation | Accepting user input |
-| Database | Durable application state |
-| WebSocket | Realtime client updates |
-| Async | Timers, signals, non-blocking primitives |
-| Cache | Speed or stale data under failure |
-| Sync | Must not lose local operations |
-| P2P | Nodes discover, connect, or replicate |
-| Production | App must run as a service |
+| Feature      | Use when                                           |
+|--------------|----------------------------------------------------|
+| `vix run`    | You need to run one file quickly.                  |
+| `vix new`    | You want to start a real project.                  |
+| HTTP         | You are building APIs or web routes.               |
+| JSON         | You need structured API responses.                 |
+| Middleware   | You need shared request behavior.                  |
+| Validation   | You are accepting user input.                      |
+| Database     | You need durable application state.                |
+| WebSocket    | You need realtime client updates.                  |
+| Async        | You need timers, signals, or non-blocking I/O.     |
+| Cache        | You need speed or stale data under failure.        |
+| Sync         | You must not lose local operations.                |
+| P2P          | You need nodes to discover, connect, or replicate. |
+| Production   | Your app must run as a service.                    |
 
 ## A final example direction
 
@@ -248,7 +253,8 @@ DELETE /notes/{id}
 GET    /health
 ```
 
-Grow it: authentication → WebSocket updates → offline-first outbox → P2P sync → production deployment.
+Grow it:
+authentication → WebSocket updates → offline-first outbox → P2P sync → production deployment.
 
 This kind of project uses almost everything you learned.
 
@@ -281,7 +287,5 @@ Vix is a modern C++ runtime for building fast and reliable applications.
 ```
 
 The final idea: **start simple, build progressively, deploy for real.**
-
----
 
 *End of the Vix Book. You are ready to build real applications with Vix. Choose one project and build it completely.*

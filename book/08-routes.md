@@ -1,6 +1,7 @@
 # Routes
 
-Routes are the heart of a Vix HTTP application. They connect an HTTP request to C++ code:
+Routes are the heart of a Vix HTTP application.
+They connect an HTTP request to C++ code:
 
 ```txt
 GET /users/42  →  app.get("/users/{id}", handler);
@@ -339,9 +340,7 @@ Specific routes must be registered before wildcard routes.
 ## What you should remember
 
 A route connects: HTTP method + path → C++ handler.
-
 Use path params for resource identity, query params for options, grouped functions as the app grows.
-
 The core idea: routes are the public shape of your application — keep them clear, predictable, and organized.
 
 ## Next chapter

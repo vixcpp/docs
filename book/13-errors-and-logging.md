@@ -1,6 +1,7 @@
 # Errors and logging
 
-In the previous chapter, you learned validation. Now you will learn errors and logging.
+In the previous chapter, you learned validation.
+Now you will learn errors and logging.
 
 ```txt
 request → validation → business logic → error or success → structured response → structured logs
@@ -10,7 +11,8 @@ A production application should return clear responses to clients and keep usefu
 
 ## Why error handling matters
 
-If every route returns a different error shape, the API becomes hard to use. A Vix API should use one predictable shape.
+If every route returns a different error shape, the API becomes hard to use.
+A Vix API should use one predictable shape.
 
 ## Recommended error shape
 
@@ -22,17 +24,17 @@ If every route returns a different error shape, the API becomes hard to use. A V
 
 ## HTTP status codes
 
-| Status | Meaning |
-|--------|---------|
-| 200 | OK |
-| 201 | Created |
-| 400 | Bad Request |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 404 | Not Found |
-| 409 | Conflict |
-| 429 | Too Many Requests |
-| 500 | Internal Error |
+| Status | Meaning                           |
+|--------|-----------------------------------|
+| `200`  | OK, request succeeded.            |
+| `201`  | Created, resource added.          |
+| `400`  | Bad Request, invalid input.       |
+| `401`  | Unauthorized, auth required.      |
+| `403`  | Forbidden, access denied.         |
+| `404`  | Not Found, resource missing.      |
+| `409`  | Conflict, state mismatch.         |
+| `429`  | Too Many Requests, rate limited.  |
+| `500`  | Internal Server Error.            |
 
 Do not return 200 for errors.
 
@@ -67,9 +69,20 @@ if (name.empty()) {
 Use stable codes for production APIs:
 
 ```txt
-invalid_request, validation_failed, unauthorized, forbidden, not_found,
-conflict, rate_limited, internal_error, user_not_found, email_already_used,
-invalid_credentials, product_not_found, invalid_token, session_expired
+invalid_request,
+validation_failed,
+unauthorized,
+forbidden,
+not_found,
+conflict,
+rate_limited,
+internal_error,
+user_not_found,
+email_already_used,
+invalid_credentials,
+product_not_found,
+invalid_token,
+session_expired
 ```
 
 ## Do not leak internal errors
@@ -106,14 +119,14 @@ vix::log::critical("critical message");
 
 ## Log levels
 
-| Level | Use |
-|-------|-----|
-| `trace` | Very detailed debugging |
-| `debug` | Debugging information |
-| `info` | Normal application events |
-| `warn` | Unusual but not fatal |
-| `error` | Operation failed |
-| `critical` | Serious failure |
+| Level      | Use                                      |
+|------------|------------------------------------------|
+| `trace`    | Records very detailed debugging events.  |
+| `debug`    | Records useful debugging information.    |
+| `info`     | Records normal application events.       |
+| `warn`     | Records unusual but non-fatal events.    |
+| `error`    | Records failed operations.               |
+| `critical` | Records serious system failures.         |
 
 Recommended: `info` in production, `debug` or `trace` during development.
 
@@ -158,9 +171,18 @@ vix::log::set_level(vix::log::LogLevel::Info);  // in code
 
 ## What to log
 
-Good: app started, user registered, login failed, database connection failed, unexpected exception.
+Good:
+app started,
+user registered,
+login failed,
+database connection failed,
+unexpected exception.
 
-Never log: passwords, tokens, private keys, sensitive personal data.
+Never log:
+passwords,
+tokens,
+private keys,
+sensitive personal data.
 
 ## Complete example
 
@@ -329,13 +351,12 @@ VIX_COLOR=never
 
 ## What you should remember
 
-Errors are for clients. Logs are for developers and operators.
-
+Errors are for clients.
+Logs are for developers and operators.
 API errors should be consistent: `{ "ok": false, "error": "stable_code", "message": "Safe message" }`
-
 Logs should keep useful internal context with structured fields.
-
-The core idea: a reliable app does not only work when everything succeeds — it also explains what happened when something fails.
+The core idea:
+a reliable app does not only work when everything succeeds — it also explains what happened when something fails.
 
 ## Next chapter
 

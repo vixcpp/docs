@@ -18,10 +18,10 @@ irm https://vixcpp.com/install.ps1 | iex
 
 ## SDK mode vs CLI-only mode
 
-| Mode | What it installs | Use when |
-|------|-----------------|---------|
-| SDK mode (default) | CLI + headers + libraries | You want to compile Vix applications |
-| CLI-only mode | `vix` binary only | You only need the CLI without compiling |
+| Mode                 | What it installs                 | Use when                                  |
+|----------------------|----------------------------------|-------------------------------------------|
+| SDK mode, default    | CLI, headers, and libraries.     | You want to compile Vix applications.     |
+| CLI-only mode        | The `vix` binary only.           | You only need the CLI without compiling.  |
 
 For this book, install the full SDK (default). CLI-only mode cannot compile projects that use `#include <vix.hpp>`.
 

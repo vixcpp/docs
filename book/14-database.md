@@ -1,12 +1,14 @@
 # Database
 
-In the previous chapter, you learned errors and logging. Now you will connect a Vix application to a database.
+In the previous chapter, you learned errors and logging.
+Now you will connect a Vix application to a database.
 
 ```txt
 Request → validation → database query → JSON Response
 ```
 
-Memory disappears when the app restarts. A database gives your application durable state.
+Memory disappears when the app restarts.
+A database gives your application durable state.
 
 ## Public header
 
@@ -16,11 +18,11 @@ Memory disappears when the app restarts. A database gives your application durab
 
 ## SQLite or MySQL?
 
-| | SQLite | MySQL |
-|-|--------|-------|
-| Best for | local dev, small apps, MVPs | multi-user production APIs |
-| Setup | Very simple | Requires server |
-| Persistence | Local file | Server database |
+| Criteria     | SQLite                               | MySQL                             |
+|--------------|------------------------------        |-----------------------------------|
+| Best for     | Local development, small apps, MVPs. | Multi-user production APIs.       |
+| Setup        | Very simple, no server required.     | Requires a database server.       |
+| Persistence  | Stores data in a local file.         | Stores data in a server database. |
 
 Start with SQLite for learning.
 
@@ -85,7 +87,8 @@ db.exec(
 db.exec("INSERT INTO users (name, role) VALUES (?, ?)", "Alice", "admin");
 ```
 
-Always use parameterized queries. Never build SQL with string concatenation.
+Always use parameterized queries.
+Never build SQL with string concatenation.
 
 ## Query data
 
@@ -107,7 +110,13 @@ stmt->bind(1, static_cast<std::int64_t>(1));
 auto rows = stmt->query();
 ```
 
-Use prepared statements for: user input, route parameters, query filters, inserts, updates, deletes.
+Use prepared statements for:
+user input,
+route parameters,
+query filters,
+inserts,
+updates,
+deletes.
 
 ## Connection pool
 
@@ -127,7 +136,11 @@ db.transaction([&](vix::db::Connection &conn){
 });
 ```
 
-Use transactions for: orders + items, user + profile, money transfers, any multi-step write.
+Use transactions for:
+orders + items,
+user + profile,
+money transfers,
+any multi-step write.
 
 ## Complete database API
 
@@ -157,7 +170,10 @@ static json::Json user_to_json(const User &u)
   });
 }
 
-static void respond_error(Response &res, int status, const std::string &code, const std::string &msg)
+static void respond_error(Response &res,
+                          int status,
+                          const std::string &code,
+                          const std::string &msg)
 {
   res.status(status).json(json::kv({
     {"ok", json::Json(false)},
@@ -382,9 +398,12 @@ Always validate input before database writes.
 
 ## What you should remember
 
-The Vix DB model is explicit: connect → prepare → bind → query → read rows → commit when needed.
+The Vix DB model is explicit:
+connect → prepare → bind → query → read rows → commit when needed.
 
-Use prepared statements for user input. Use transactions for multi-step writes. Routes should validate input, call database logic, and return safe JSON responses.
+Use prepared statements for user input.
+Use transactions for multi-step writes.
+Routes should validate input, call database logic, and return safe JSON responses.
 
 ## Next chapter
 

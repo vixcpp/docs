@@ -1,16 +1,24 @@
 # Offline-first sync
 
-In the previous chapter, you learned cache. Now you will learn offline-first sync.
+In the previous chapter, you learned cache.
+Now you will learn offline-first sync.
 
 ```txt
 local write → WAL → outbox → sync engine → transport → done
 ```
 
-The core idea: **write locally first, persist the operation, sync when the network is available.**
+The core idea:
+**write locally first, persist the operation, sync when the network is available.**
 
 ## Why offline-first sync exists
 
-Real applications do not run in perfect conditions. Networks fail, servers restart, requests timeout, devices go offline. A normal online-first flow fails when the network is unavailable:
+Real applications do not run in perfect conditions.
+Networks fail,
+servers restart,
+requests timeout,
+devices go offline.
+
+A normal online-first flow fails when the network is unavailable:
 
 ```txt
 user action → network request → server response → local state updated
@@ -28,11 +36,11 @@ user action → local write → durable log → outbox → sync later
 Never depend on the network to preserve user intent.
 ```
 
-| Property | Meaning |
-|----------|---------|
-| Durable | The operation survives process restart |
-| Retryable | Failed operations can be attempted again |
-| Offline-first | The app can continue working without network |
+| Property        | Meaning                                               |
+|-----------------|-------------------------------------------------------|
+| `Durable`       | The operation survives a process restart.             |
+| `Retryable`     | Failed operations can be attempted again safely.      |
+| `Offline-first` | The app can continue working without network access.  |
 
 ## Vix Sync architecture
 
@@ -40,16 +48,16 @@ Never depend on the network to preserve user intent.
 Local Write → WAL → Outbox → SyncWorker → Transport → Done / Retry / Failed
 ```
 
-| Component | Purpose |
-|-----------|---------|
-| `Operation` | Describes one durable unit of work |
-| `Wal` | Stores append-only history |
-| `Outbox` | Stores operations waiting to be synced |
-| `RetryPolicy` | Decides when failed operations retry |
-| `NetworkProbe` | Checks whether the network is available |
-| `SyncWorker` | Processes ready operations |
-| `SyncEngine` | Orchestrates workers and recovery |
-| `ISyncTransport` | Sends operations to HTTP, P2P, or custom targets |
+| Component        | Purpose                                                    |
+|------------------|------------------------------------------------------------|
+| `Operation`      | Describes one durable unit of work.                        |
+| `Wal`            | Stores an append-only operation history.                   |
+| `Outbox`         | Stores operations waiting to be synchronized.              |
+| `RetryPolicy`    | Decides when failed operations should retry.               |
+| `NetworkProbe`   | Checks whether network access is currently available.      |
+| `SyncWorker`     | Processes operations that are ready to run.                |
+| `SyncEngine`     | Orchestrates workers, retries, and recovery.               |
+| `ISyncTransport` | Sends operations to HTTP, P2P, or custom transport targets.|
 
 ## Public headers
 
@@ -115,13 +123,13 @@ outbox->fail(id, "temporary network error", now + 2, true);
 outbox->fail(id, "bad request", now + 2, false);
 ```
 
-| Failure | Retry? | Example |
-|---------|--------|---------|
-| Network timeout | Yes | temporary connection issue |
-| Server unavailable | Yes | 503 |
-| Offline device | Yes | no connection |
-| Bad request | No | invalid payload |
-| Validation error | No | missing required field |
+| Failure              | Retry | Example                         |
+|----------------------|-------|---------------------------------|
+| Network timeout      | Yes   | Temporary connection issue.     |
+| Server unavailable   | Yes   | HTTP `503` response.            |
+| Offline device       | Yes   | No active network connection.   |
+| Bad request          | No    | Invalid request payload.        |
+| Validation error     | No    | Missing required input field.   |
 
 ## WAL
 
@@ -199,7 +207,8 @@ const auto processed = engine.tick(now_ms());
 local file write → WAL append → outbox enqueue → sync engine tick → transport sends → done
 ```
 
-The critical rule: **local write happens before sync. Network is not responsible for preserving the user action.**
+The critical rule: **local write happens before sync.**
+**Network is not responsible for preserving the user action.**
 
 ## Offline then recover pattern
 
@@ -233,37 +242,48 @@ message.send, event.publish
 
 ## Design rules
 
-**Persist before sending:** store operation → then send request (never the reverse).
+### Persist before sending
+Store the operation first, then send the request. Never send before persisting.
 
-**Treat the network as optional:** `network available → sync now`, `network unavailable → sync later`.
+### Treat the network as optional
+When the network is available, sync now. When it is unavailable, sync later.
 
-**Make operations idempotent:** use stable operation ids so the server can detect duplicates.
+### Make operations idempotent
+Use stable operation IDs so the server can detect and ignore duplicates.
 
-**Separate temporary and permanent failures:** retry temporary, do not retry invalid data.
+### Separate temporary and permanent failures
+Retry temporary failures. Do not retry invalid data.
 
-**Keep payloads replayable:** include enough data to replay the operation later.
+### Keep payloads replayable
+Include enough data to replay the operation later.
 
 ## Common mistakes
 
 ### Sending before persisting
-
 If the process crashes after sending but before storing, recovery becomes impossible. **Persist first.**
 
 ### Treating offline as an error
-
 Offline is a normal state in offline-first systems. The operation should remain pending.
 
 ### Forgetting inflight recovery
-
 If a worker crashes after claiming, use inflight timeout recovery to requeue.
 
 ### Using non-idempotent remote writes
-
 Use stable operation ids and deduplication on the receiver.
 
 ## When to use Vix Sync
 
-Use for: offline-first applications, local-first file sync, reliable message delivery, retry-safe background jobs, edge applications, unstable network environments, P2P synchronization.
+Use Vix Sync when your application needs durable operations, offline execution, and safe synchronization.
+
+Good use cases:
+
+- Offline-first applications
+- Local-first file synchronization
+- Reliable message delivery
+- Retry-safe background jobs
+- Edge applications
+- Unstable network environments
+- P2P synchronization
 
 ## Production notes
 
@@ -278,7 +298,10 @@ Use for: offline-first applications, local-first file sync, reliable message del
 
 The core flow: `local write → WAL → outbox → sync engine → transport → done`
 
-The WAL keeps durable history. The outbox keeps pending work. The sync worker processes ready operations. The transport sends to HTTP, P2P, or custom targets.
+The WAL keeps durable history.
+The outbox keeps pending work.
+The sync worker processes ready operations.
+The transport sends to HTTP, P2P, or custom targets.
 
 The core idea: **persist first, sync later, never lose user intent.**
 

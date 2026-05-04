@@ -9,26 +9,26 @@ Response sends what your app returns.
 
 ## What is Request?
 
-| Method | Purpose |
-|--------|---------|
-| `req.param("id")` | Read path parameter |
-| `req.param("id", "0")` | Read path parameter with fallback |
-| `req.query_value("page", "1")` | Read query parameter with fallback |
-| `req.query()` | Read all query parameters |
-| `req.header("Authorization")` | Read request header |
-| `req.body()` | Read raw body |
-| `req.json()` | Read parsed JSON body |
-| `req.path()` | Request path |
+| Method                          | Purpose                                |
+|---------------------------------|----------------------------------------|
+| `req.param("id")`               | Reads a route path parameter.          |
+| `req.param("id", "0")`          | Reads a route parameter with fallback. |
+| `req.query_value("page", "1")`  | Reads a query parameter with fallback. |
+| `req.query()`                   | Reads all query parameters.            |
+| `req.header("Authorization")`   | Reads a request header value.          |
+| `req.body()`                    | Reads the raw request body.            |
+| `req.json()`                    | Reads the parsed JSON body.            |
+| `req.path()`                    | Reads the current request path.        |
 
 ## What is Response?
 
-| Method | Purpose |
-|--------|---------|
-| `res.text("Hello")` | Send plain text |
-| `res.json({"ok", true})` | Send JSON |
-| `res.status(201).json(...)` | Set status then send |
-| `res.header("X-Foo", "bar")` | Set response header |
-| `res.file("public/index.html")` | Send file |
+| Method                         | Purpose                         |
+|--------------------------------|---------------------------------|
+| `res.text("Hello")`            | Sends a plain text response.    |
+| `res.json({"ok", true})`       | Sends a JSON response.          |
+| `res.status(201).json(...)`    | Sets status before sending.     |
+| `res.header("X-Foo", "bar")`   | Sets a response header value.   |
+| `res.file("public/index.html")`| Sends a static file response.   |
 
 ## Reading path parameters
 

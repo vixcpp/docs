@@ -1,6 +1,7 @@
 # Validation
 
-In the previous chapter, you learned middleware. Now you will learn validation.
+In the previous chapter, you learned middleware.
+Now you will learn validation.
 
 Validation checks whether incoming data is correct before your application uses it.
 
@@ -38,16 +39,16 @@ if (!result.ok())
 
 ## Common rules
 
-| Rule | Purpose |
-|------|---------|
-| `required()` | Value must be present or non-empty |
-| `email()` | Must be valid email format |
-| `length_min(n)` | String length must be at least n |
-| `length_max(n)` | String length must be at most n |
-| `min(n)` | Numeric value must be at least n |
-| `max(n)` | Numeric value must be at most n |
-| `between(a, b)` | Must be between a and b |
-| `in_set({...})` | Must be one of the allowed values |
+| Rule              | Purpose                                      |
+|-------------------|----------------------------------------------|
+| `required()`      | Requires a present and non-empty value.      |
+| `email()`         | Requires a valid email address format.       |
+| `length_min(n)`   | Requires a string length of at least `n`.    |
+| `length_max(n)`   | Requires a string length of at most `n`.     |
+| `min(n)`          | Requires a numeric value of at least `n`.    |
+| `max(n)`          | Requires a numeric value of at most `n`.     |
+| `between(a, b)`   | Requires a value between `a` and `b`.        |
+| `in_set({...})`   | Requires one of the allowed values.          |
 
 ## Validate numbers
 

@@ -102,9 +102,18 @@ vix task release
   },
   "tasks": {
     "fmt": "vix fmt",
-    "dev": { "description": "Start dev mode", "command": "vix dev" },
-    "test": { "description": "Run tests", "command": "vix tests --preset ${preset} --fail-fast" },
-    "check": { "description": "Validate project", "command": "vix check --preset ${preset} --tests" }
+    "dev": {
+      "description": "Start dev mode",
+      "command": "vix dev"
+    },
+    "test": {
+      "description": "Run tests",
+      "command": "vix tests --preset ${preset} --fail-fast"
+    },
+    "check": {
+      "description": "Validate project",
+      "command": "vix check --preset ${preset} --tests"
+    }
   }
 }
 ```
@@ -116,7 +125,9 @@ vix add namespace/package   # add a dependency
 vix install                 # install from vix.lock
 ```
 
-`vix.json` → declared dependencies, `vix.lock` → exact resolved versions, `.vix/deps` → installed packages.
+`vix.json` → declared dependencies,
+`vix.lock` → exact resolved versions,
+`.vix/deps` → installed packages.
 
 ## `app.vix`
 
@@ -257,7 +268,13 @@ add_executable(app
 
 ## What you should remember
 
-A Vix project gives you a real structure with `src/`, `tests/`, `.env`, `app.vix`, `vix.json`, `CMakeLists.txt`.
+A Vix project gives you a real structure with
+`src/`,
+`tests/`,
+`.env`,
+`app.vix`,
+`vix.json`,
+`CMakeLists.txt`.
 
 The core idea: a Vix project is the point where quick experiments become a real application.
 

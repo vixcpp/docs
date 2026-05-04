@@ -1,6 +1,7 @@
 # JSON API
 
-Now you will build a complete JSON API. JSON APIs are one of the most common things you will build with Vix.
+Now you will build a complete JSON API.
+JSON APIs are one of the most common things you will build with Vix.
 
 ```txt
 client sends JSON → Vix reads Request → route validates input → route returns JSON Response
@@ -352,17 +353,17 @@ curl -i -X POST http://127.0.0.1:8080/api/users \
 
 ## Status codes for JSON APIs
 
-| Status | Meaning |
-|--------|---------|
-| 200 | OK — successful read |
-| 201 | Created — resource created |
-| 400 | Bad Request — invalid input |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 404 | Not Found |
-| 409 | Conflict |
-| 429 | Too Many Requests |
-| 500 | Internal Error |
+| Status | Meaning                           |
+|--------|-----------------------------------|
+| `200`  | OK, request succeeded.            |
+| `201`  | Created, resource added.          |
+| `400`  | Bad Request, invalid input.       |
+| `401`  | Unauthorized, auth required.      |
+| `403`  | Forbidden, access denied.         |
+| `404`  | Not Found, resource missing.      |
+| `409`  | Conflict, state mismatch.         |
+| `429`  | Too Many Requests, rate limited.  |
+| `500`  | Internal Server Error.            |
 
 ## Route flow for JSON APIs
 
@@ -370,11 +371,11 @@ curl -i -X POST http://127.0.0.1:8080/api/users \
 read request → parse params or body → validate input → run logic → format JSON → send response
 ```
 
-## Preparing for next chapters
+## Preparing for the next chapters
 
-- **Database** — the in-memory vector will be replaced by SQLite/MySQL
-- **Middleware** — CORS, rate limiting, authentication will wrap routes
-- **Validation** — manual checks will become declarative using `vix::validation`
+- **Database:** the in-memory vector will be replaced by SQLite or MySQL.
+- **Middleware:** CORS, rate limiting, and authentication will wrap the routes.
+- **Validation:** manual checks will become declarative with `vix::validation`.
 
 ## Common mistakes
 
@@ -411,9 +412,7 @@ Use one helper: `respond_error(res, 400, "message")`.
 ## What you should remember
 
 A JSON API route follows: Request → validate → logic → JSON Response.
-
 Use `res.json(...)` for responses, `req.json()` for JSON bodies, helpers for consistent errors and JSON formatting.
-
 The core idea: JSON APIs become simple when request parsing, validation, logic, and response formatting stay separate.
 
 ## Next chapter

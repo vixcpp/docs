@@ -8,7 +8,12 @@ vix run main.cpp
 
 ## The goal
 
-Understand: how to run a single file, how script mode works, how to pass runtime arguments, how to pass compiler flags, and how to avoid common mistakes.
+Understand:
+- how to run a single file,
+- how script mode works,
+- how to pass runtime arguments,
+- how to pass compiler flags,
+- and how to avoid common mistakes.
 
 ## Create a workspace
 
@@ -186,7 +191,8 @@ vix run main.cpp --force-script   # treat as short-lived tool
 
 ## When to move from one file to a project
 
-A single file is perfect for learning. Move to a project when you need multiple source files, headers, tests, dependencies, configuration, or a stable app structure:
+A single file is perfect for learning.
+Move to a project when you need multiple source files, headers, tests, dependencies, configuration, or a stable app structure:
 
 ```bash
 vix new api
@@ -228,7 +234,9 @@ The most important command: `vix run main.cpp`
 - `--` → compiler or linker flags
 - `--watch` or `vix dev main.cpp` → faster development loop
 
-The core idea: start with one file, move to a project when the app grows.
+The core idea:
+- start with one file,
+- move to a project when the app grows.
 
 ## Next chapter
 

@@ -1,22 +1,34 @@
 # Async runtime
 
-In the previous chapter, you learned WebSocket. Now you will learn the async runtime.
+In the previous chapter, you learned WebSocket.
+Now you will learn the async runtime.
 
 ```txt
 event loop → coroutines → timers, signals, networking, CPU pool → completion resumes on event loop
 ```
 
-Vix async is not a web framework. It is a low-level C++20 asynchronous runtime core — the deterministic foundation for servers, networking, timers, workers, and real-time systems.
+Vix async is not a web framework.
+It is a low-level C++20 asynchronous runtime core — the deterministic foundation for servers, networking, timers, workers, and real-time systems.
 
 ## Why async exists
 
-C++ has coroutines as a language feature, but not a full runtime. You still need: event loop, scheduler, timers, I/O integration, CPU worker pool, signal handling, cancellation.
+C++ has coroutines as a language feature, but not a full runtime.
+You still need:
+event loop,
+scheduler,
+timers,
+I/O integration,
+CPU worker pool,
+signal handling,
+cancellation.
 
 Vix async provides that foundation.
 
 ## The core idea
 
-User coroutine code resumes on the event loop. Blocking or CPU-heavy work is moved elsewhere. Completion returns to the event loop.
+User coroutine code resumes on the event loop.
+Blocking or CPU-heavy work is moved elsewhere.
+Completion returns to the event loop.
 
 ```txt
 event loop thread → runs user coroutine → starts timers/I/O/CPU jobs → completion → coroutine resumes
@@ -24,17 +36,17 @@ event loop thread → runs user coroutine → starts timers/I/O/CPU jobs → com
 
 ## Main components
 
-| Component | Purpose |
-|-----------|---------|
-| `io_context` | Owns the event loop and runtime services |
-| `scheduler` | Schedules coroutine resumption |
-| `task<T>` | Coroutine return type |
-| `timer` | Non-blocking timers |
-| `thread_pool` | CPU-bound work offloading |
-| `signal_set` | OS signal handling |
-| `net::*` | Async networking |
-| `when_all` | Wait for multiple tasks |
-| `when_any` | Wait for first completed task |
+| Component     | Purpose                                      |
+|---------------|----------------------------------------------|
+| `io_context`  | Owns the event loop and runtime services.    |
+| `scheduler`   | Schedules coroutine resumption.              |
+| `task<T>`     | Represents a coroutine return type.          |
+| `timer`       | Provides non-blocking timers.                |
+| `thread_pool` | Offloads CPU-bound work from the event loop. |
+| `signal_set`  | Handles operating system signals.            |
+| `net::*`      | Provides asynchronous networking primitives. |
+| `when_all`    | Waits for multiple tasks to complete.        |
+| `when_any`    | Waits for the first completed task.          |
 
 ## Minimal async example
 
@@ -160,7 +172,8 @@ app.get("/", handler);
 app.run(8080);
 ```
 
-The runtime handles execution. Understanding async helps you understand what happens underneath.
+The runtime handles execution.
+Understanding async helps you understand what happens underneath.
 
 ## Common mistakes
 
@@ -207,9 +220,14 @@ ctx.run();              // run event loop
 // co_await operations inside the coroutine
 ```
 
-Use timers instead of blocking sleep. Use CPU pool for heavy work. Use signals for clean shutdown.
+Use timers instead of blocking sleep.
+Use CPU pool for heavy work.
+Use signals for clean shutdown.
 
-The core idea: async code stays understandable when execution is explicit, non-blocking, and resumed through one clear runtime.
+The core idea:
+async code stays understandable when execution is explicit,
+non-blocking,
+and resumed through one clear runtime.
 
 ## Next chapter
 

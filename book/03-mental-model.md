@@ -20,13 +20,15 @@ Application
 Modules
 ```
 
-The CLI helps you work. The runtime runs your code. The application layer exposes APIs such as `App`, `Request`, and `Response`. The modules add capabilities like JSON, database, middleware, validation, WebSocket, cache, sync, and P2P.
+The CLI helps you work.
+The runtime runs your code.
+The application layer exposes APIs such as `App`, `Request`, and `Response`.
+The modules add capabilities like JSON, database, middleware, validation, WebSocket, cache, sync, and P2P.
 
 ## The simplest mental model
 
 ```cpp
 #include <vix.hpp>
-
 using namespace vix;
 
 int main()
@@ -46,20 +48,35 @@ int main()
 vix run main.cpp
 ```
 
-This example contains most of the Vix mental model: `vix run` → CLI workflow, `App` → application object, `app.get` → route registration, `Request` → incoming request, `Response` → outgoing response, `app.run` → runtime starts the server.
+This example contains most of the Vix mental model:
+- `vix run` → CLI workflow,
+- `App` → application object,
+- `app.get` → route registration,
+- `Request` → incoming request,
+- `Response` → outgoing response,
+- `app.run` → runtime starts the server.
 
 ## Layer 1: The CLI
 
-The CLI is the developer entrypoint. It provides commands such as: `vix run`, `vix new`, `vix dev`, `vix build`, `vix check`, `vix tests`, `vix fmt`, `vix doctor`.
+The CLI is the developer entrypoint.
+It provides commands such as:
+`vix run`,
+`vix new`,
+`vix dev`,
+`vix build`,
+`vix check`,
+`vix tests`,
+`vix fmt`,
+`vix doctor`.
 
 It gives a consistent development loop: create → run → edit → reload → check → test → build → deploy.
 
-| Command | Purpose |
-|---------|---------|
-| `vix run` | Build and run a file, project, or manifest |
-| `vix dev` | Development loop with watch and reload |
-| `vix build` | Configure, compile, link |
-| `vix check` | Validate: build, tests, sanitizers |
+| Command     | Purpose                                      |
+|-------------|----------------------------------------------|
+| `vix run`   | Builds and runs a file, project, or manifest.|
+| `vix dev`   | Starts a development loop with watch reload. |
+| `vix build` | Configures, compiles, and links the project. |
+| `vix check` | Validates builds, tests, and sanitizers.     |
 
 ## Layer 2: The runtime
 
@@ -75,9 +92,11 @@ For advanced apps with HTTP + WebSocket together:
 struct Runtime
 {
   vix::config::Config config{".env"};
+
   std::shared_ptr<vix::executor::RuntimeExecutor> executor{
       std::make_shared<vix::executor::RuntimeExecutor>(1u)
   };
+
   vix::App app{executor};
   vix::websocket::Server ws{config, executor};
 };
@@ -96,9 +115,19 @@ app.get("/users/{id}", [](Request &req, Response &res){
 });
 ```
 
-**Request** is read-only input from the client: path params, query params, headers, body, JSON body.
+**Request** is read-only input from the client:
+- path params,
+- query params,
+- headers,
+- body,
+- JSON body.
 
-**Response** is how the route sends output back: text, JSON, files, status codes, headers.
+**Response** is how the route sends output back:
+- text,
+- JSON,
+- files,
+- status codes,
+- headers.
 
 ### Keep `main()` small
 

@@ -1,6 +1,7 @@
 # Production deployment
 
-In the previous chapter, you learned P2P. Now you will learn how to deploy a Vix application in production.
+In the previous chapter, you learned P2P.
+Now you will learn how to deploy a Vix application in production.
 
 ```txt
 browser → HTTPS → Nginx → Vix app → systemd
@@ -8,7 +9,17 @@ browser → HTTPS → Nginx → Vix app → systemd
 
 ## Why production deployment matters
 
-During development: `vix dev`. In production you need: release build, stable working directory, environment variables, automatic restart, logs, reverse proxy, HTTPS, health checks, predictable ports.
+During development: `vix dev`.
+In production, your application needs:
+- A release build
+- A stable working directory
+- Environment variables
+- Automatic restart
+- Logs
+- A reverse proxy
+- HTTPS
+- Health checks
+- Predictable ports
 
 ## Production architecture
 
@@ -20,14 +31,14 @@ Nginx handles public HTTP/HTTPS. The Vix app listens locally. systemd keeps the 
 
 ## Development vs production
 
-| Development | Production |
-|------------|-----------|
-| `vix dev` | release binary |
-| hot reload | stable process |
-| terminal logs | systemd logs |
-| local browser | Nginx reverse proxy |
-| debug settings | production environment |
-| manual restart | automatic restart |
+| Development       | Production              |
+|-------------------|-------------------------|
+| `vix dev`         | Release binary.         |
+| Hot reload        | Stable process.         |
+| Terminal logs     | Systemd logs.           |
+| Local browser     | Nginx reverse proxy.    |
+| Debug settings    | Production environment. |
+| Manual restart    | Automatic restart.      |
 
 ## Prepare the server
 
@@ -281,11 +292,13 @@ FLUSH PRIVILEGES;
 
 ### 502 Bad Gateway
 
-Nginx cannot reach the Vix app. Check: `sudo systemctl status vix-myapp` and `curl -i http://127.0.0.1:8080/health`.
+Nginx cannot reach the Vix app.
+Check: `sudo systemctl status vix-myapp` and `curl -i http://127.0.0.1:8080/health`.
 
 ### 504 Gateway Timeout
 
-App accepted the connection but did not respond fast enough. Check for slow database queries or overloaded VPS.
+App accepted the connection but did not respond fast enough.
+Check for slow database queries or overloaded VPS.
 
 ### WebSocket closes immediately
 

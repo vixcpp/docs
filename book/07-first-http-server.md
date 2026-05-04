@@ -1,6 +1,11 @@
 # First HTTP server
 
-Now you will build your first HTTP server and understand the core Vix application model: `App`, `Request`, `Response`, routes, and server startup.
+Now you will build your first HTTP server and understand the core Vix application model:
+`App`,
+`Request`,
+`Response`,
+`routes`,
+and `server startup`.
 
 ## The smallest HTTP server
 
@@ -110,16 +115,16 @@ app.get("/not-found", [](Request &, Response &res){
 });
 ```
 
-| Status | Meaning |
-|--------|---------|
-| 200 | OK |
-| 201 | Created |
-| 400 | Bad Request |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 404 | Not Found |
-| 429 | Too Many Requests |
-| 500 | Internal Server Error |
+| Status | Meaning               |
+|--------|-----------------------|
+| 200    | OK                    |
+| 201    | Created               |
+| 400    | Bad Request           |
+| 401    | Unauthorized          |
+| 403    | Forbidden             |
+| 404    | Not Found             |
+| 429    | Too Many Requests     |
+| 500    | Internal Server Error |
 
 ## Keep routes organized
 

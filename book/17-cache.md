@@ -1,13 +1,15 @@
 # Cache
 
-In the previous chapter, you learned the async runtime. Now you will learn cache.
+In the previous chapter, you learned the async runtime.
+Now you will learn cache.
 
 ```txt
 request → cache lookup → cache hit → return cached result
                        → cache miss → compute or fetch → store → return response
 ```
 
-In Vix, cache is not only about speed — it is also part of offline-first behavior. When the network fails, a cache can safely serve previously stored data.
+In Vix, cache is not only about speed — it is also part of offline-first behavior.
+When the network fails, a cache can safely serve previously stored data.
 
 ## Public headers
 
@@ -24,16 +26,16 @@ In Vix, cache is not only about speed — it is also part of offline-first behav
 
 ## Core concepts
 
-| Concept | Purpose |
-|---------|---------|
-| `Cache` | Decides if an entry is usable |
-| `CacheEntry` | Stores one cached response |
-| `CachePolicy` | Defines TTL and stale rules |
-| `CacheContext` | Describes current network condition |
-| `MemoryStore` | In-memory storage |
-| `FileStore` | Persistent disk storage |
-| `LruMemoryStore` | Bounded memory with LRU eviction |
-| `CacheKey` | Builds stable cache keys |
+| Concept          | Purpose                                      |
+|------------------|----------------------------------------------|
+| `Cache`          | Decides whether a cached entry is usable.    |
+| `CacheEntry`     | Stores one cached response or value.         |
+| `CachePolicy`    | Defines TTL, freshness, and stale behavior.  |
+| `CacheContext`   | Describes the current network condition.     |
+| `MemoryStore`    | Stores cached entries in memory.             |
+| `FileStore`      | Stores cached entries on disk.               |
+| `LruMemoryStore` | Stores bounded entries with LRU eviction.    |
+| `CacheKey`       | Builds stable keys for cached entries.       |
 
 ## Time helper
 
@@ -146,7 +148,11 @@ const std::string key = vix::cache::CacheKey::fromRequest(
     {"Accept"});    // vary on Accept header
 ```
 
-Good cache keys include: method, path, normalized query params, and selected vary headers.
+Good cache keys include:
+method,
+path,
+normalized query params,
+and selected vary headers.
 
 ## Cache in an HTTP route
 
@@ -197,9 +203,20 @@ policy.stale_if_error_ms = 60'000;
 
 ## Good vs bad cache candidates
 
-Good: public GET responses, product lists, configuration, feature flags, read-heavy dashboards.
+#### Good use cases
 
-Be careful with: private user data, payment state, security decisions, rapidly changing values.
+- Public `GET` responses
+- Product lists
+- Configuration
+- Feature flags
+- Read-heavy dashboards
+
+#### Be careful with
+
+- Private user data
+- Payment state
+- Security decisions
+- Rapidly changing values
 
 ## Common mistakes
 
@@ -222,7 +239,8 @@ LruMemoryStore::Config{.max_entries = 2048}
 
 ### Not invalidating after writes
 
-If a POST, PUT, PATCH, or DELETE changes data, old cached GET responses may become stale. Use short TTLs or explicit invalidation.
+If a POST, PUT, PATCH, or DELETE changes data, old cached GET responses may become stale.
+Use short TTLs or explicit invalidation.
 
 ### Caching error responses
 
@@ -230,11 +248,24 @@ A temporary 500 response should usually not be cached.
 
 ## What you should remember
 
-Vix cache is built from explicit primitives: `Cache`, `CacheEntry`, `CachePolicy`, `CacheContext`, store, `CacheKey`.
+Vix cache is built from explicit primitives:
+`Cache`,
+`CacheEntry`,
+`CachePolicy`,
+`CacheContext`,
+`store`,
+`CacheKey`.
 
-For offline-first: `Online` prefers fresh, `Offline` optionally allows stale, `NetworkError` optionally allows stale.
+For offline-first:
+`Online` prefers fresh,
+`Offline` optionally allows stale,
+`NetworkError` optionally allows stale.
 
-The core idea: cache is not only an optimization — in Vix, cache is part of predictable behavior when the network is slow, unstable, or unavailable.
+The core idea:
+cache is not only an optimization — in Vix,
+cache is part of predictable behavior when the network is slow,
+unstable,
+or unavailable.
 
 ## Next chapter
 

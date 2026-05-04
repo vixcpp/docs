@@ -1,8 +1,10 @@
 # Real-time WebSocket
 
-In the previous chapter, you connected a Vix app to a database. Now you will learn WebSocket.
+In the previous chapter, you connected a Vix app to a database.
+Now you will learn WebSocket.
 
-HTTP is request/response — the connection ends. WebSocket stays open for real-time communication.
+HTTP is request/response — the connection ends.
+WebSocket stays open for real-time communication.
 
 ```txt
 client connects → connection stays open → client sends events → server sends events → many clients receive updates
@@ -10,9 +12,18 @@ client connects → connection stays open → client sends events → server sen
 
 ## When to use WebSocket
 
-Use HTTP for: CRUD APIs, page loading, authentication, normal JSON APIs.
+Use HTTP for:
+CRUD APIs,
+page loading,
+authentication,
+normal JSON APIs.
 
-Use WebSocket for: live messages, dashboards, presence, streaming events, notifications.
+Use WebSocket for:
+live messages,
+dashboards,
+presence,
+streaming events,
+notifications.
 
 ## Public headers
 
@@ -142,16 +153,16 @@ vix::serve_http_and_ws(".env", 8080, [](auto &app, auto &ws) {
 
 ## Recommended event protocol
 
-| Event | Direction | Purpose |
-|-------|-----------|---------|
-| `chat.join` | client → server | User joins |
-| `chat.leave` | client → server | User leaves |
-| `chat.message` | both | Chat message |
-| `chat.error` | server → client | Error |
-| `app.ping` | client → server | Health check |
-| `app.pong` | server → client | Health response |
-| `system.connected` | server → client | Client connected |
-| `system.disconnected` | server → client | Client disconnected |
+| Event                 | Direction        | Purpose                           |
+|-----------------------|------------------|-----------------------------------|
+| `chat.join`           | Client -> server | Joins a chat room or session.     |
+| `chat.leave`          | Client -> server | Leaves a chat room or session.    |
+| `chat.message`        | Both directions  | Sends or receives chat content.   |
+| `chat.error`          | Server -> client | Reports a chat-related error.     |
+| `app.ping`            | Client -> server | Sends a health check request.     |
+| `app.pong`            | Server -> client | Returns a health check response.  |
+| `system.connected`    | Server -> client | Confirms the client connected.    |
+| `system.disconnected` | Server -> client | Confirms the client disconnected. |
 
 ## Validate WebSocket payloads
 
@@ -161,7 +172,12 @@ if (type == "chat.message")
   const std::string text = payload.get_string_or("text", "");
   if (text.empty())
   {
-    ws.broadcast_json("chat.error", {"error", "message_required", "message", "Message text is required"});
+    ws.broadcast_json(
+      "chat.error", {
+        "error", "message_required",
+        "message", "Message text is required"
+      }
+    );
     return;
   }
   ws.broadcast_json("chat.message", payload);
@@ -181,7 +197,8 @@ proxy_send_timeout 3600;
 
 ### Using WebSocket for normal CRUD
 
-Use HTTP for create/read/update/delete. Use WebSocket for live events only.
+Use HTTP for create/read/update/delete.
+Use WebSocket for live events only.
 
 ### Broadcasting unvalidated payloads
 
@@ -197,11 +214,21 @@ Always have a fallback for unknown types returning `app.unknown`.
 
 ## What you should remember
 
-HTTP is request/response. WebSocket is a long-lived real-time connection.
+HTTP is request/response.
+WebSocket is a long-lived real-time connection.
 
-Vix WebSocket uses: `Server`, `Session`, `on_open`, `on_close`, `on_error`, `on_message`, `on_typed_message`, `broadcast_json`.
+Vix WebSocket uses:
+`Server`,
+`Session`,
+`on_open`,
+`on_close`,
+`on_error`,
+`on_message`,
+`on_typed_message`,
+`broadcast_json`.
 
-The core idea: use HTTP for normal API requests and WebSocket for live events that must reach clients immediately.
+The core idea:
+use HTTP for normal API requests and WebSocket for live events that must reach clients immediately.
 
 ## Next chapter
 
