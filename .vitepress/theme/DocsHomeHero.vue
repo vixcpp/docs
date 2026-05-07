@@ -8,7 +8,7 @@ int main() {
   App app;
 
   app.get("/", [](Request&, Response& res) {
-    res.json({ {"message", "Hello from Vix.cpp"} });
+    res.json({"message", "Hello from Vix.cpp"});
   });
 
   app.get("/ping", [](Request&, Response& res) {
