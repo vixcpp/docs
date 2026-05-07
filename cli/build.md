@@ -88,10 +88,10 @@ vix build -v
 you get a clearer build summary:
 
 ```
-Configuring cloud (dev)
+Configuring project-name (dev)
   ✔ Configured in 0.5s
 
-Compiling cloud (dev)
+Compiling project-name (dev)
   * launcher: ccache | linker: mold | jobs: 8
   build [============================] done
   ✔ Finished dev [unoptimized + debuginfo] in 10.6s
@@ -139,7 +139,7 @@ vix build
 
 ```bash
 vix build --build-target vix
-vix build --build-target cloud
+vix build --build-target project
 vix build --build-target my_app
 ```
 
@@ -230,8 +230,8 @@ vix build -v
 This shows useful information such as:
 
 ```
-Configuring cloud (dev)
-Compiling cloud (dev)
+Configuring project (dev)
+Compiling project (dev)
 launcher: ccache
 linker: mold
 jobs: 8
@@ -290,7 +290,7 @@ During a build, Vix shows compact progress:
 
 ```
   build [============----------------] 20/45
-  › Building CXX object CMakeFiles/cloud.dir/src/http/RequestContext.cpp.o
+  › Building CXX object CMakeFiles/project.dir/src/http/RequestContext.cpp.o
 ```
 
 At the end, Vix keeps the output readable:
@@ -747,7 +747,7 @@ vix build --build-target all
 ### Build one target
 
 ```bash
-vix build --build-target cloud
+vix build --build-target project
 ```
 
 ### Clean rebuild
