@@ -339,14 +339,57 @@ vix run api --no-clear
 
 `--no-clear` is equivalent to `--clear=never`.
 
-## Automatic docs mode
+## OpenAPI docs mode
+
+`vix run` does not enable OpenAPI/docs by default.
+
+This keeps normal runs clean and avoids exposing or generating docs unless you explicitly ask for them.
+
+```bash
+vix run api
+```
+
+This runs the app with docs disabled.
+
+To enable OpenAPI/docs for one run, use `--docs`:
 
 ```bash
 vix run api --docs
+```
+
+You can explicitly disable it with `--no-docs`:
+
+```bash
 vix run api --no-docs
 ```
 
-You can also use the `VIX_DOCS` environment variable.
+You can also use an explicit value:
+
+```bash
+vix run api --docs=true
+vix run api --docs=false
+vix run api --docs=1
+vix run api --docs=0
+```
+
+When enabled, Vix sets:
+
+```bash
+VIX_DOCS=1
+```
+
+When disabled or omitted, Vix sets:
+
+```bash
+VIX_DOCS=0
+```
+
+You can also control the behavior with the `VIX_DOCS` environment variable, but the CLI option is preferred because it is explicit for the current run.
+
+```bash
+VIX_DOCS=1 vix run api
+VIX_DOCS=0 vix run api
+```
 
 ## Logging
 
@@ -356,7 +399,13 @@ vix run api --verbose
 vix run api --quiet
 ```
 
-Supported levels: `trace`, `debug`, `info`, `warn`, `error`, `critical`
+Supported levels:
+- `trace`,
+- `debug`,
+- `info`,
+- `warn`,
+- `error`,
+- `critical`
 
 ### Log format
 
@@ -513,8 +562,8 @@ vix run app.vix --args --port --args 8080
 | `--with-sqlite` | Enable SQLite support for script mode. |
 | `--with-mysql` | Enable MySQL support for script mode. |
 | `--local-cache` | Use local script cache. |
-| `--docs` | Enable automatic docs mode. |
-| `--no-docs` | Disable automatic docs mode. |
+| `--docs` | Enable OpenAPI/docs for this run. |
+| `--no-docs` | Keep OpenAPI/docs disabled for this run. |
 | `--log-level <level>` | Set log level. |
 | `--verbose` | Shortcut for debug logs. |
 | `-q, --quiet` | Reduce output to warnings and errors. |
@@ -527,7 +576,7 @@ vix run app.vix --args --port --args 8080
 
 | Variable | Description |
 |----------|-------------|
-| `VIX_DOCS` | Enable or disable automatic docs mode. |
+| `VIX_DOCS` | Enable or disable OpenAPI/docs mode. Default is disabled through `vix run`. |
 | `VIX_LOG_LEVEL` | Runtime log level. |
 | `VIX_LOG_FORMAT` | Runtime log format. |
 | `VIX_COLOR` | Color mode. |
@@ -617,6 +666,19 @@ vix run main.cpp --san
 ```bash
 vix run api --log-level debug
 VIX_LOG_LEVEL=debug vix run api
+```
+
+````md
+### Run with OpenAPI docs enabled
+
+```bash
+vix run api --docs
+```
+
+By default, OpenAPI/docs are disabled:
+
+```bash
+vix run api
 ```
 
 ## Common mistakes
