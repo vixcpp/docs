@@ -405,4 +405,16 @@ function iconPath(name) {
     white-space: nowrap;
   }
 }
+.vdh-btn--primary {
+  background: var(--accent);
+  color: #052e16;
+  box-shadow: 0 4px 14px rgba(34,197,94,.30);
+}
+
+.vdh-btn--primary:hover {
+  background: #4ade80;
+  color: #052e16;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(34,197,94,.40);
+}
 </style>

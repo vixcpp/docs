@@ -290,6 +290,10 @@ export default defineConfig({
             link: "/cli/reset",
           },
           {
+            text: "vix replay",
+            link: "/cli/replay",
+          },
+          {
             text: "vix task",
             link: "/cli/task",
           },
@@ -463,6 +467,10 @@ export default defineConfig({
             link: "/api/json",
           },
           {
+            text: "KV",
+            link: "/api/kv",
+          },
+          {
             text: "Middleware",
             link: "/api/middleware",
           },
@@ -485,6 +493,7 @@ export default defineConfig({
         ],
       },
 
+      ,
       {
         text: "Internals",
         collapsed: true,
