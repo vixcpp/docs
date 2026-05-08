@@ -1,708 +1,982 @@
-# vix dev
+# vix build
 
-`vix dev` starts a Vix application in development mode.
+`vix build` configures and builds a CMake project using Vix presets.
 
-It configures, builds, runs, watches, rebuilds, and restarts your app automatically while you edit code.
-
-Use it during active development.
+Use it when you want to compile a project without running the application.
 
 ```bash
-vix dev
+vix build
 ```
 
 ## Overview
 
-`vix dev` is the development entrypoint for Vix projects and single-file C++ apps.
+`vix build` gives C++ projects a clean and fast build workflow.
 
-It is designed for a fast feedback loop:
+It detects the current project, configures CMake, builds with Ninja, uses Vix presets, supports parallel builds, enables optional features such as SQLite or MySQL, uses compiler launchers such as ccache or sccache, can use fast linkers such as mold or lld, and writes build logs automatically.
 
-1. edit file
-2. save
-3. Vix detects the change
-4. Vix rebuilds the target
-5. Vix restarts the app
+By default, `vix build` builds the main project target, not the full `all` target.
 
-In project mode, `vix dev` uses the project target by default, not the full `all` target.
+This keeps normal development builds fast.
 
-This keeps development reloads focused and fast.
+```bash
+vix build
+```
+
+For a full build of every target, use:
+
+```bash
+vix build --build-target all
+```
 
 ## Usage
 
 ```bash
-vix dev [name] [options] [-- app-args...]
+vix build [options] -- [cmake args...]
 ```
 
 ## Basic usage
 
 ```bash
-# Start the current project in dev mode
-vix dev
+# Build the current project
+vix build
 
-# Start a named app or target
-vix dev api
+# Build with a detailed Vix summary
+vix build -v
 
-# Start a single C++ file in dev mode
-vix dev server.cpp
+# Build with a specific number of jobs
+vix build -j 8
 
-# Pass runtime arguments to the application
-vix dev server.cpp -- --port 8080
+# Build from another directory
+vix build --dir ./examples/blog
+
+# Build a release version
+vix build --preset release
 ```
 
-## What vix dev does
+## What vix build does
 
 When you run:
 
 ```bash
-vix dev
+vix build
 ```
 
-Vix performs these steps:
+Vix performs the following steps:
 
-1. Detect the current project
-2. Configure the project if needed
-3. Build the main target
-4. Start the application
-5. Watch relevant files
-6. Rebuild when files change
-7. Restart the application automatically
+1. Detect the project directory
+2. Select a build preset
+3. Prepare the build directory
+4. Generate CMake configuration when needed
+5. Build the main project target
+6. Write configure and build logs
+7. Store build metadata for faster future decisions
 
-Normal output is intentionally compact:
+The normal output is intentionally compact:
 
 ```
-Dev api (dev)
-  ✔ Configured
-Compiling api (dev)
   build [============================] done
-  ✔ Started pid=12345
+  ✔ Built
+  ✔ Done in 0.1s
 ```
 
-When the application starts, the app may print its own output:
+With verbose output:
 
-```
-2:36:00 AM  ◆ Vix.cpp   READY   v2.5.3 (1 ms)   dev
-
-  › HTTP:    http://localhost:8080/
-  i Threads: 8/8
-  i Mode:    dev (watch/reload)
-  i Status:  ready
-  i Hint:    Ctrl+C to stop the server
+```bash
+vix build -v
 ```
 
-## Development profile
+you get a clearer build summary:
 
-The `(dev)` label means Vix is running in development profile.
+```
+Configuring project-name (dev)
+  ✔ Configured in 0.5s
 
-| Label | Description |
-|-------|-------------|
-| `(dev)` | development build, debug-friendly, fast feedback |
-| `(release)` | optimized build, production-oriented |
+Compiling project-name (dev)
+  * launcher: ccache | linker: mold | jobs: 8
+  build [============================] done
+  ✔ Finished dev [unoptimized + debuginfo] in 10.6s
+```
 
-For `vix dev`, the public profile is always development-oriented.
+## Build target behavior
+
+By default, `vix build` builds the main target of the project.
+
+The default target name is the project directory name.
+
+For example, inside:
+
+```
+~/vixcpp/vix
+```
+
+this command:
+
+```bash
+vix build
+```
+
+builds:
+
+```
+vix
+```
+
+not:
+
+```
+all
+```
+
+This avoids rebuilding examples, tests, and auxiliary executables during normal development.
+
+### Build the main target
+
+```bash
+vix build
+```
+
+### Build a specific target
+
+```bash
+vix build --build-target vix
+vix build --build-target project
+vix build --build-target my_app
+```
+
+### Build everything
+
+```bash
+vix build --build-target all
+```
+
+Use `--build-target all` before install or release workflows when CMake install rules require extra binaries to exist.
 
 Example:
 
-```
-Dev api (dev)
-Compiling api (dev)
+```bash
+vix build --build-target all
+sudo cmake --install build-ninja --prefix /usr/local
 ```
 
-## Project mode
+## Presets
 
-Inside a Vix project:
+Vix provides embedded presets.
+
+| Preset | Generator | Build type | Build directory |
+|--------|-----------|------------|-----------------|
+| `dev` | Ninja | Debug | `build-dev` |
+| `dev-ninja` | Ninja | Debug | `build-ninja` |
+| `release` | Ninja | Release | `build-release` |
+
+The default preset is `dev-ninja`.
+
+Examples:
 
 ```bash
-vix dev
+# Use the default development preset
+vix build
+
+# Use the dev preset
+vix build --preset dev
+
+# Use the release preset
+vix build --preset release
 ```
 
-Vix uses the project directory name as the default target.
+### Development build
 
-For example, `~/tmp/api` uses target `api`. So `vix dev` starts the `api` target.
-
-You can also pass a target or app name explicitly:
+Use the default build for daily work:
 
 ```bash
-vix dev api
+vix build
 ```
 
-## Script mode
+This uses:
 
-You can run a single `.cpp` file in development mode:
+- preset: `dev-ninja`
+- build type: `Debug`
+- generator: `Ninja`
+- build dir: `build-ninja`
+
+### Release build
+
+Use `--preset release` for optimized builds:
 
 ```bash
-vix dev server.cpp
+vix build --preset release
 ```
 
-This is useful for quick prototypes, small servers, experiments, or demos without creating a full project.
+This uses:
+
+- build type: `Release`
+- build dir: `build-release`
+
+You can combine it with other options:
+
+```bash
+vix build --preset release --with-sqlite
+vix build --preset release --static
+vix build --preset release --launcher sccache --linker mold
+```
+
+## Verbose output
+
+Use `-v` or `--verbose` to show a clean summary of the configure and build phases:
+
+```bash
+vix build -v
+```
+
+This shows useful information such as:
+
+```
+Configuring project (dev)
+Compiling project (dev)
+launcher: ccache
+linker: mold
+jobs: 8
+```
+
+It does not flood the terminal with raw CMake or Ninja logs.
+
+## Raw CMake and Ninja output
+
+Use `--cmake-verbose` when you need the raw CMake or Ninja output:
+
+```bash
+vix build --cmake-verbose
+```
+
+Use this when debugging CMake itself, generator behavior, linker commands, or full build output.
+
+Normal `-v` is for human-readable Vix output. `--cmake-verbose` is for raw low-level output.
+
+## Quiet output
+
+Use `--quiet` to reduce output:
+
+```bash
+vix build --quiet
+```
+
+This is useful in scripts when you only need the exit code.
+
+## Build logs
+
+`vix build` writes logs into the build directory.
+
+Common log files:
+
+```
+build-ninja/configure.log
+build-ninja/build.log
+build-dev/configure.log
+build-dev/build.log
+build-release/configure.log
+build-release/build.log
+```
+
+Use these logs when you need the full CMake, Ninja, compiler, or linker output.
 
 Example:
 
 ```bash
-vix dev server.cpp --force-server
+cat build-ninja/build.log
 ```
-
-## Runtime arguments
-
-Arguments after `--` are passed to your application.
-
-```bash
-vix dev server.cpp -- --port 8080
-```
-
-For project mode:
-
-```bash
-vix dev -- --port 8080
-```
-
-The `--` separator matters because Vix needs to distinguish its own options from your app arguments.
-
-### Important argument rule
-
-In script mode, `vix dev server.cpp -- --port 8080` means `--port 8080` goes to your application.
-
-Without `--`, Vix may treat the argument as a Vix option.
-
-Wrong:
-
-```bash
-vix dev server.cpp --port 8080
-```
-
-Correct:
-
-```bash
-vix dev server.cpp -- --port 8080
-```
-
-## Watch and reload
-
-Watch mode is enabled by default in `vix dev`.
-
-These are equivalent:
-
-```bash
-vix dev
-vix dev --watch
-vix dev --reload
-```
-
-When a watched file changes, Vix clears the terminal, rebuilds, and restarts the application.
-
-Example reload output:
-
-```
-Dev api (dev)
-  changed: /home/user/api/src/main.cpp
-Compiling api (dev)
-  build [============================] done
-  ✔ Started pid=12389
-```
-
-## File watching behavior
-
-`vix dev` watches files that can affect the build or runtime.
-
-Watched source extensions: `.cpp`, `.cc`, `.cxx`, `.c`, `.hpp`, `.hh`, `.hxx`, `.h`, `.ipp`, `.inl`, `.cmake`
-
-Watched project files: `CMakeLists.txt`, `CMakePresets.json`, `vix.json`, `vix.toml`, `vix.lock`
-
-Ignored paths: `.git`, `.vix`, `build`, `build-dev`, `build-ninja`, `build-release`, `node_modules`, `.cache`, `.idea`, `.vscode`, `docs`, `doc`, `dist`, `out`, `coverage`
-
-Ignored files include common non-build files such as `README.md`, `CHANGELOG.md`, `LICENSE`, `.gitignore`.
-
-## Rebuild behavior
-
-`vix dev` uses a file index to detect changes.
-It compares mtime, file size, and change kind. This avoids unnecessary rebuilds and makes reload detection faster.
-
-### Source or header change
-
-When a `.cpp`, `.hpp`, or `.h` file changes, Vix performs a normal rebuild and restarts the app.
-
-```
-Dev api (dev)
-  changed: /home/user/api/src/main.cpp
-Compiling api (dev)
-  build [============================] done
-  ✔ Started pid=12389
-```
-
-### CMake or Vix config change
-
-When a configuration file changes (`CMakeLists.txt`, `CMakePresets.json`, `vix.json`, `vix.lock`), Vix performs a reconfigure, rebuild, and restart.
-This is needed because the project structure, dependencies, options, or targets may have changed.
 
 ## Build progress
 
-`vix dev` uses the same build progress style as `vix build`.
-
-When Ninja reports progress, Vix renders it as:
+During a build, Vix shows compact progress:
 
 ```
-Compiling api (dev)
-  build [====------------------------] 4/31
-  › Building CXX object CMakeFiles/api.dir/src/main.cpp.o
+  build [============----------------] 20/45
+  › Building CXX object CMakeFiles/project.dir/src/http/RequestContext.cpp.o
 ```
 
-When the build is complete:
+At the end, Vix keeps the output readable:
 
 ```
   build [============================] done
+  ✔ Built
+  ✔ Done in 10.1s
 ```
 
-The progress is based on real Ninja build progress, not a fake spinner.
-
-### Why progress may not appear instantly
-
-Sometimes `Compiling api (dev)` appears before the progress line because Vix is waiting for Ninja to emit the first real progress line. This is normal.
-Vix does not show fake progress in `vix dev`.
-
-## Configure behavior
-
-If the build directory does not exist yet, Vix configures the project first:
-
-```
-Dev api (dev)
-  ✔ Configured
-Compiling api (dev)
-  build [============================] done
-  ✔ Started pid=12345
-```
-
-If the project is already configured, Vix skips the configure step.
-
-## Build directory
-
-Project dev mode uses `build-ninja`.
+If the build fails, Vix hides raw compiler or linker noise and prints a focused diagnostic.
 
 Example:
 
 ```
-/home/user/api/build-ninja
+  ✖ Link failed
+
+  message:
+    Referenced by: BuildCommand.cpp
+
+  error:
+    undefined symbol: vix::cli::build::print_build_header_full(...)
+
+  hint:
+    The symbol is declared and used, but no linked object or library provides its definition.
 ```
 
-This matches the normal development build path used by `vix build`.
+The raw build output is still available in:
 
-## Target behavior
+```
+build-ninja/build.log
+```
 
-By default, `vix dev` builds the main project target. For a project named `api`, Vix builds `api`, not `all`. This avoids rebuilding examples, tests, and auxiliary targets during development reloads.
+## Parallel builds
 
-## Force server mode
-
-Use `--force-server` when the target is a long-running app such as an HTTP server or WebSocket server.
+Use `-j` or `--jobs` to control parallelism:
 
 ```bash
-vix dev server.cpp --force-server
+vix build -j 8
+vix build --jobs 16
 ```
 
-## Force script mode
+If no job count is provided, Vix uses the machine CPU count, clamped internally to avoid excessive values.
 
-Use `--force-script` when the target is a short-lived CLI tool.
+## Compiler launcher
+
+Vix can use sccache or ccache to speed up repeated builds.
 
 ```bash
-vix dev tool.cpp --force-script
+vix build --launcher auto
+vix build --launcher sccache
+vix build --launcher ccache
+vix build --launcher none
 ```
 
-## Parallel build jobs
+| Mode | Description |
+|------|-------------|
+| `auto` | Prefer sccache, then ccache when available |
+| `sccache` | Use sccache if available |
+| `ccache` | Use ccache if available |
+| `none` | Disable compiler launcher |
 
-Use `-j` or `--jobs` to control parallel build jobs.
+Example:
 
 ```bash
-vix dev -j 8
-vix dev --jobs 16
+vix build --launcher ccache
 ```
 
-If no job count is provided, Vix uses a sensible default based on the machine.
+## Linker selection
+
+Vix can use faster linkers when available.
+
+```bash
+vix build --linker auto
+vix build --linker mold
+vix build --linker lld
+vix build --linker default
+```
+
+| Mode | Description |
+|------|-------------|
+| `auto` | Prefer mold, then lld when available |
+| `mold` | Use mold |
+| `lld` | Use lld |
+| `default` | Use the system default linker |
+
+Example:
+
+```bash
+vix build --linker mold
+```
 
 ## SQLite support
 
-Use `--with-sqlite` when your app needs SQLite-related Vix database support.
+Use `--with-sqlite` to enable SQLite-related build options:
 
 ```bash
-vix dev --with-sqlite
-vix dev server.cpp --with-sqlite
+vix build --with-sqlite
+```
+
+Release example:
+
+```bash
+vix build --preset release --with-sqlite
+```
+
+This maps to CMake options such as:
+
+```
+VIX_ENABLE_DB=ON
+VIX_DB_USE_SQLITE=ON
+VIX_DB_REQUIRE_SQLITE=ON
 ```
 
 ## MySQL support
 
-Use `--with-mysql` when your app needs MySQL-related Vix database support.
+Use `--with-mysql` to enable MySQL-related build options:
 
 ```bash
-vix dev --with-mysql
-vix dev server.cpp --with-mysql
+vix build --with-mysql
 ```
 
-When enabled, Vix can also expose runtime environment variables such as:
+Release example:
+
+```bash
+vix build --preset release --with-mysql
+```
+
+This maps to CMake options such as:
 
 ```
-VIX_DB_ENGINE=mysql
-VIX_ENABLE_DB=1
-VIX_DB_USE_MYSQL=1
+VIX_ENABLE_DB=ON
+VIX_DB_USE_MYSQL=ON
+VIX_DB_REQUIRE_MYSQL=ON
+```
+
+## Static linking
+
+Use `--static` to request static linking:
+
+```bash
+vix build --static
+```
+
+Release example:
+
+```bash
+vix build --preset release --static
+```
+
+This maps to:
+
+```
+VIX_LINK_STATIC=ON
+```
+
+Static linking depends on your platform and available static libraries.
+
+## Clean build
+
+Use `--clean` to remove local build directories and reconfigure from scratch:
+
+```bash
+vix build --clean
+```
+
+This removes local build directories such as:
+
+```
+build-dev
+build-ninja
+build-release
+```
+
+Then it configures and builds again.
+
+Use this when:
+
+- CMake cache is stale
+- the build directory is broken
+- toolchain settings changed
+- you want a fresh rebuild
+
+## Cache behavior
+
+Vix uses build metadata and signatures to avoid unnecessary setup work.
+Normal builds still let Ninja decide whether source files must be recompiled.
+This is important because Ninja remains the source of truth for file-level incremental compilation.
+
+Use `--no-cache` to disable Vix cache shortcuts:
+
+```bash
+vix build --no-cache
+```
+
+## Fast no-op builds
+
+Use `--fast` to let Vix check whether Ninja reports the project as up to date:
+
+```bash
+vix build --fast
+```
+
+If Ninja reports no work, Vix can exit quickly.
+Use this in tight loops or CI checks where a no-op build should be as fast as possible.
+You can disable Ninja dry-run up-to-date detection with:
+
+```bash
+vix build --no-up-to-date
+```
+
+## Status output
+
+Vix sets Ninja status output automatically when possible.
+
+Disable it with:
+
+```bash
+vix build --no-status
+```
+
+Use this if you want less progress output or if your environment does not handle terminal progress well.
+
+## Build heartbeat
+
+In CI systems, long builds with no output may look stuck.
+Enable heartbeat output with:
+
+```bash
+VIX_BUILD_HEARTBEAT=1 vix build
+```
+
+This prints a heartbeat when the build is silent for several seconds.
+
+## Debug build details
+
+Normal verbose output hides internal details such as graph state, artifact cache paths, build state paths, and CMake variables.
+
+To show internal build details, use:
+
+```bash
+VIX_LOG_LEVEL=debug vix build -v
 ```
 
 or:
 
-```
-VIX_DB_ENGINE=sqlite
-VIX_ENABLE_DB=1
-VIX_DB_USE_SQLITE=1
+```bash
+VIX_LOG_LEVEL=trace vix build -v
 ```
 
-## Sanitizers
+This is useful when debugging Vix itself.
 
-`vix dev` supports sanitizer-related options inherited from `vix run`.
+## Cross-compilation
+
+Use `--target` to cross-compile:
 
 ```bash
-vix dev server.cpp --san
-vix dev server.cpp --ubsan
-vix dev server.cpp --tsan
+vix build --target aarch64-linux-gnu
 ```
 
-Use these when debugging memory issues, undefined behavior, or threading problems.
-
-## Logging
-
-Use `--log-level` to control Vix logging.
+Release cross-build:
 
 ```bash
-vix dev --log-level debug
+vix build --preset release --target aarch64-linux-gnu
 ```
 
-Supported levels: `trace`, `debug`, `info`, `warn`, `error`, `critical`
-
-Use `--verbose` for debug-style output:
+With sysroot:
 
 ```bash
-vix dev --verbose
+vix build --target aarch64-linux-gnu --sysroot /opt/sysroots/aarch64
 ```
 
-Use `--quiet` for minimal output:
+Vix generates a CMake toolchain file in the build directory.
+The expected compiler tools follow the target triple:
+
+```
+aarch64-linux-gnu-gcc
+aarch64-linux-gnu-g++
+aarch64-linux-gnu-ar
+aarch64-linux-gnu-ranlib
+aarch64-linux-gnu-strip
+```
+
+List detected cross toolchains:
 
 ```bash
-vix dev --quiet
+vix build --targets
 ```
 
-## Verbose mode
+---
 
-Normal mode keeps output small:
+## Forward CMake arguments
 
-```
-Dev api (dev)
-  ✔ Configured
-Compiling api (dev)
-  build [============================] done
-  ✔ Started pid=12345
-```
-
-Verbose mode shows more detail:
+Use `--` to pass raw arguments to CMake:
 
 ```bash
-vix dev -v
+vix build -- -DVIX_SYNC_BUILD_TESTS=ON
 ```
 
-```
-Dev api (dev)
-  watching: /home/user/api
-  target  : api
-  build   : /home/user/api/build-ninja
-  press Ctrl+C to stop
-
-Configuring api (dev)
-  ✔ Configured
-
-Compiling api (dev)
-  build [============================] done
-  ✔ Started pid=12345
-```
-
-## Quiet mode
+Another example:
 
 ```bash
-vix dev --quiet
-vix dev -q
+vix build --preset release -- -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 ```
 
-## Clean rebuild
+Everything after `--` is forwarded to CMake configuration.
 
-Use `vix build --clean` when you want to clean the build directory before running dev mode again.
+## Build from another directory
+
+Use `--dir` or `-d`:
 
 ```bash
-vix build --clean
-vix dev
+vix build --dir ./examples/blog
+vix build -d ./examples/blog
 ```
 
-For most normal development, you do not need to clean manually.
+This is useful when you are outside the project root.
 
-## Recommended workflow
+## Export the built binary
 
-### New project
+Use `--bin` to export the built executable to the project root:
 
 ```bash
-vix new api
-cd api
-vix install
-vix dev
+vix build --bin
 ```
 
-Then edit your files. When you save:
-
-```
-Dev api (dev)
-  changed: /home/user/api/src/main.cpp
-Compiling api (dev)
-  build [============================] done
-  ✔ Started pid=12389
-```
-
-### Existing project
+Use `--out` to export it to a specific path:
 
 ```bash
-cd api
-vix install
-vix dev
+vix build --out ./dist/my_app
 ```
 
-### Single-file server
+`--bin` and `--out` cannot be used together.
+
+## Single C++ file build
+
+`vix build` can also build one C++ source file:
 
 ```bash
-vix dev server.cpp --force-server
-vix dev server.cpp --force-server -- --port 8080
+vix build main.cpp
 ```
 
-### Single-file CLI
+This builds the file and exports the produced executable.
+
+For running a single file directly, use:
 
 ```bash
-vix dev tool.cpp --force-script
-vix dev tool.cpp --force-script -- input.txt
+vix run main.cpp
 ```
 
-## Difference between vix dev, vix run, and vix build
+## Install workflow
 
-| Command | Purpose | Runs app | Watches files | Restarts app |
-|---------|---------|----------|---------------|--------------|
-| `vix build` | Configure and compile | no | no | no |
-| `vix run` | Build and run once | yes | no by default | no by default |
-| `vix run --watch` | Build, run, and watch | yes | yes | yes |
-| `vix dev` | Development mode | yes | yes | yes |
+Because `vix build` builds the main target by default, install workflows should build all required install targets first:
 
-`vix dev` is the best command while editing an application. `vix run` is better when you want to run manually.
-`vix build` is better when you only want to compile.
+```bash
+vix build --build-target all
+sudo cmake --install build-ninja --prefix /usr/local
+```
 
-## Relationship with vix run --watch
+If you only run:
 
-Conceptually, `vix dev` is similar to `vix run --watch`, but `vix dev` is optimized for the development experience.
-It provides cleaner dev output, target-aware rebuilds, automatic reload behavior, file indexing, and development-focused terminal rendering.
+```bash
+vix build
+sudo cmake --install build-ninja --prefix /usr/local
+```
+
+CMake install may fail if an install rule expects a binary that was not built by the main target.
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `--force-server` | Force classification as a long-running development server. |
-| `--force-script` | Force classification as a short-lived script or CLI tool. |
-| `--watch` | Enable watch mode. Enabled by default in `vix dev`. |
-| `--reload` | Alias-style reload flag. Enabled by default in `vix dev`. |
+| `--preset <name>` | Preset to use: `dev`, `dev-ninja`, or `release`. |
+| `--target <triple>` | Cross-compilation target triple. |
+| `--sysroot <path>` | Sysroot for cross toolchain. |
+| `--static` | Request static linking. |
+| `--with-sqlite` | Enable SQLite support. |
+| `--with-mysql` | Enable MySQL support. |
 | `-j, --jobs <n>` | Number of parallel build jobs. |
-| `--with-sqlite` | Enable SQLite-related support. |
-| `--with-mysql` | Enable MySQL-related support. |
-| `--san` | Enable AddressSanitizer and UBSan where supported. |
-| `--ubsan` | Enable UBSan-only mode where supported. |
-| `--tsan` | Enable ThreadSanitizer where supported. |
-| `--cwd <path>` | Run the application from a specific working directory. |
-| `--env <KEY=VALUE>` | Pass an environment variable to the app. |
-| `--args <value>` | Pass repeatable runtime arguments. |
-| `--log-level <level>` | Set Vix log verbosity. |
-| `--verbose, -v` | Show more development details. |
-| `--quiet, -q` | Reduce output to warnings and errors. |
+| `--clean` | Remove local build directories and reconfigure from scratch. |
+| `--no-cache` | Disable Vix build cache shortcuts. |
+| `--fast` | Exit quickly if Ninja says the build is up to date. |
+| `--linker <mode>` | Linker mode: `auto`, `default`, `mold`, or `lld`. |
+| `--launcher <mode>` | Compiler launcher mode: `auto`, `none`, `sccache`, or `ccache`. |
+| `--no-status` | Disable Ninja status progress format. |
+| `--no-up-to-date` | Disable Ninja dry-run up-to-date detection. |
+| `-d, --dir <path>` | Project directory. |
+| `-q, --quiet` | Minimal output. |
+| `-v, --verbose` | Show detailed Vix configure and build summary. |
+| `--targets` | List detected cross toolchains on PATH. |
+| `--cmake-verbose` | Show raw CMake and Ninja output. |
+| `--build-target <name>` | Build a specific CMake target. Default is the project directory name. |
+| `--bin` | Export the built executable to the project root. |
+| `--out <path>` | Export the built executable to a specific path. |
 | `-h, --help` | Show command help. |
 
 ## Environment variables
 
 | Variable | Description |
 |----------|-------------|
-| `VIX_LOG_LEVEL=debug` | Show debug-level Vix logs. |
-| `VIX_LOG_LEVEL=trace` | Show trace-level Vix logs. |
-| `VIX_MODE=dev` | Set automatically for the running app. |
-| `VIX_STDOUT_MODE=line` | Set automatically to make runtime output easier to stream. |
-| `VIX_DB_ENGINE=mysql` | Set when MySQL mode is enabled. |
-| `VIX_DB_ENGINE=sqlite` | Set when SQLite mode is enabled. |
+| `VIX_BUILD_HEARTBEAT=1` | Enable heartbeat when the build is silent for several seconds. |
+| `VIX_LOG_LEVEL=debug` | Show internal build graph, cache, state, and CMake variable details. |
+| `VIX_LOG_LEVEL=trace` | Show deeper internal build details. |
+| `VIX_GRAPH_EXECUTOR=1` | Enable the experimental target-aware graph executor. |
+
+## Experimental graph executor
+
+Vix contains an internal build graph foundation.
+
+It can import:
+
+- `compile_commands.json`
+- `build.ninja`
+- dependency files
+- object metadata
+
+It is used to prepare future target-aware incremental builds.
+The experimental graph executor is not enabled by default.
+
+Enable it with:
+
+```bash
+VIX_GRAPH_EXECUTOR=1 vix build -v
+```
+
+For normal projects, the stable default path remains CMake/Ninja execution.
 
 ## Common workflows
 
-### Start a new app
+### Normal development build
 
 ```bash
-vix new api
-cd api
-vix install
-vix dev
+vix build
 ```
 
-### Run an existing app
+### Verbose development build
 
 ```bash
-cd api
-vix install
-vix dev
+vix build -v
 ```
 
-### Run a server file directly
-
-```bash
-vix dev server.cpp --force-server
-```
-
-### Run a CLI tool file directly
-
-```bash
-vix dev tool.cpp --force-script
-```
-
-### Pass app arguments
-
-```bash
-vix dev server.cpp -- --port 8080
-```
-
-### Use more build jobs
-
-```bash
-vix dev -j 8
-```
-
-### Enable verbose dev output
-
-```bash
-vix dev -v
-```
-
-### Enable debug logs
-
-```bash
-VIX_LOG_LEVEL=debug vix dev
-```
-
-## Common mistakes
-
-### Running outside the project directory
-
-Wrong:
-
-```bash
-vix new api
-vix dev
-```
-
-Correct:
-
-```bash
-vix new api
-cd api
-vix dev
-```
-
-### Forgetting `--` before app arguments
-
-Wrong:
-
-```bash
-vix dev server.cpp --port 8080
-```
-
-Correct:
-
-```bash
-vix dev server.cpp -- --port 8080
-```
-
-### Expecting vix dev to build every target
-
-`vix dev` builds the main project target. It does not build every example, test, or auxiliary target by default.
-
-```bash
-vix build --build-target all
-```
-
-### Using VIX_LOG_LEVEL=release
-
-Wrong:
-
-```bash
-VIX_LOG_LEVEL=release vix dev
-```
-
-Correct:
+### Release build
 
 ```bash
 vix build --preset release
 ```
 
-`VIX_LOG_LEVEL` controls logging, not the build profile.
+### Full repository build
 
-### Editing ignored files and expecting reload
+```bash
+vix build --build-target all
+```
 
-Files such as `README.md`, `docs`, build output, `.git`, and `.vix` are ignored by dev mode.
-Editing them does not trigger a reload.
+### Build one target
+
+```bash
+vix build --build-target project
+```
+
+### Clean rebuild
+
+```bash
+vix build --clean
+```
+
+### Fast no-op check
+
+```bash
+vix build --fast
+```
+
+### Use mold
+
+```bash
+vix build --linker mold
+```
+
+### Use ccache
+
+```bash
+vix build --launcher ccache
+```
+
+### Release with SQLite
+
+```bash
+vix build --preset release --with-sqlite
+```
+
+### Release with MySQL
+
+```bash
+vix build --preset release --with-mysql
+```
+
+### Build and install
+
+```bash
+vix build --build-target all
+sudo cmake --install build-ninja --prefix /usr/local
+```
+
+## Common mistakes
+
+### Expecting vix build to run the app
+
+`vix build` only builds the project. It does not start the application.
+
+Use:
+
+```bash
+vix run
+```
+
+or:
+
+```bash
+vix dev
+```
+
+### Forgetting to enter the project directory
+
+Wrong:
+
+```bash
+vix new api
+vix build
+```
+
+Correct:
+
+```bash
+vix new api
+cd api
+vix build
+```
+
+### Expecting vix build to build every target
+
+By default, `vix build` builds the main project target.
+
+Use this for all targets:
+
+```bash
+vix build --build-target all
+```
+
+### Installing after only building the main target
+
+Wrong:
+
+```bash
+vix build
+sudo cmake --install build-ninja --prefix /usr/local
+```
+
+Correct:
+
+```bash
+vix build --build-target all
+sudo cmake --install build-ninja --prefix /usr/local
+```
+
+### Passing runtime arguments to vix build
+
+`vix build` does not run the program.
+
+Wrong:
+
+```bash
+vix build --port 8080
+```
+
+Correct:
+
+```bash
+vix run --run --port 8080
+```
+
+### Using -v when you need raw CMake logs
+
+`-v` shows a readable Vix summary.
+
+For raw CMake and Ninja logs, use:
+
+```bash
+vix build --cmake-verbose
+```
+
+### Expecting --clean to remove global caches
+
+`--clean` removes local build directories.
+
+For broader cleanup, use commands such as:
+
+```bash
+vix clean
+vix reset
+```
+
+depending on what you want to remove.
 
 ## Troubleshooting
 
-### Nothing happens after saving
+### Build says a target is missing
 
-Check that the file is watched. Watched files include source, header, CMake, and Vix config files.
-Files such as docs, README, generated output, and build directories are ignored.
-
-### The app does not restart
-
-Make sure the build succeeds. If the build fails, Vix waits for the next file change.
-Fix the error, save again, and Vix will rebuild automatically.
-
-### The executable cannot be found
-
-Vix expects the project executable target to match the project target name.
-For example, project directory `api` expects target `api`.
-Make sure your `CMakeLists.txt` defines an executable target with that name.
-
-### Progress appears late
-
-Vix only shows the progress bar when Ninja reports real progress.
-If the build is already up to date or Ninja has not emitted progress yet, you may see `Compiling api (dev)` before the progress line. This is normal.
-
-### Too much output
+Use:
 
 ```bash
-vix dev --quiet
+vix build --build-target all
 ```
 
-### Need more details
+or check available CMake targets:
 
 ```bash
-vix dev -v
-VIX_LOG_LEVEL=debug vix dev
+cmake --build build-ninja --target help
 ```
 
-## Best practices
+### Install fails because a binary is missing
 
-Use `vix dev` while coding.
-Use `vix build` before committing or packaging.
-Use `vix build --build-target all` before install or full repository validation.
-Use `vix check` when you want deeper validation.
+Build all install-related targets first:
 
----
+```bash
+vix build --build-target all
+sudo cmake --install build-ninja --prefix /usr/local
+```
+
+### CMake cache is stale
+
+Use:
+
+```bash
+vix build --clean
+```
+
+### You need the raw linker command
+
+Use:
+
+```bash
+vix build --cmake-verbose
+```
+
+or inspect:
+
+```bash
+cat build-ninja/build.log
+```
+
+### You need internal Vix build details
+
+Use:
+
+```bash
+VIX_LOG_LEVEL=debug vix build -v
+```
+
+## When to use vix build
+
+Use `vix build` when you want to:
+
+- compile a project
+- verify that a project builds
+- produce a release binary
+- build a specific CMake target
+- use a fast C++ development loop
+- inspect build errors without running the app
+- prepare an install or packaging workflow
+
+Do not use `vix build` when you want to run the app. Use `vix run` or `vix dev` instead.
 
 ## Related commands
 
 | Command | Purpose |
 |---------|---------|
-| `vix run` | Build and run manually |
-| `vix run --watch` | Build, run, and reload manually |
-| `vix build` | Configure and compile |
+| `vix run` | Build and run the app |
+| `vix dev` | Run the app with reload |
 | `vix check` | Validate build, tests, runtime, and sanitizers |
 | `vix tests` | Run tests |
-| `vix replay` | Inspect and replay previous Vix executions |
+| `vix clean` | Remove local project cache directories |
+| `vix reset` | Clean and reinstall project dependencies |
 
 ## Next step
 
-Continue with project builds.
+Continue with validation.
 
-[Open the vix build guide](/cli/build)
+[Open the vix check guide](/cli/check)
 
 
