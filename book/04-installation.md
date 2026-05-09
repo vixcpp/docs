@@ -40,7 +40,7 @@ Expected output shape:
 
 ```txt
 Vix.cpp CLI
-version : 2.5.2
+version : 2.5.3
 author  : Gaspard Kirira
 source  : https://github.com/vixcpp/vix
 ```

@@ -471,6 +471,10 @@ export default defineConfig({
             link: "/api/kv",
           },
           {
+            text: "ThreadPool",
+            link: "/api/threadpool",
+          },
+          {
             text: "Middleware",
             link: "/api/middleware",
           },
@@ -489,6 +493,108 @@ export default defineConfig({
           {
             text: "P2P",
             link: "/api/p2p",
+          },
+        ],
+      },
+
+      {
+        text: "ThreadPool",
+        collapsed: true,
+        items: [
+          {
+            text: "Overview",
+            link: "/threadpool/",
+          },
+          {
+            text: "Quick Start",
+            link: "/threadpool/quick-start",
+          },
+          {
+            text: "Installation",
+            link: "/threadpool/installation",
+          },
+          {
+            text: "Concepts",
+            link: "/threadpool/concepts",
+          },
+          {
+            text: "ThreadPool",
+            link: "/threadpool/thread-pool",
+          },
+          {
+            text: "Tasks",
+            link: "/threadpool/tasks",
+          },
+          {
+            text: "Futures",
+            link: "/threadpool/futures",
+          },
+          {
+            text: "Cancellation",
+            link: "/threadpool/cancellation",
+          },
+          {
+            text: "Timeouts",
+            link: "/threadpool/timeouts",
+          },
+          {
+            text: "Priorities",
+            link: "/threadpool/priorities",
+          },
+          {
+            text: "Task Groups",
+            link: "/threadpool/task-groups",
+          },
+          {
+            text: "Shutdown",
+            link: "/threadpool/shutdown",
+          },
+          {
+            text: "Metrics",
+            link: "/threadpool/metrics",
+          },
+          {
+            text: "Periodic Tasks",
+            link: "/threadpool/periodic-tasks",
+          },
+          {
+            text: "Parallel For",
+            link: "/threadpool/parallel-for",
+          },
+          {
+            text: "Parallel Map",
+            link: "/threadpool/parallel-map",
+          },
+          {
+            text: "Parallel Reduce",
+            link: "/threadpool/parallel-reduce",
+          },
+          {
+            text: "Best Practices",
+            link: "/threadpool/best-practices",
+          },
+          {
+            text: "API Reference",
+            link: "/threadpool/api-reference",
+          },
+        ],
+      },
+
+      {
+        text: "Releases",
+        collapsed: true,
+        items: [
+          {
+            text: "Overview",
+            link: "/releases/",
+          },
+          {
+            text: "Builds",
+            link: "/releases/builds",
+          },
+          {
+            text: "Changelog",
+            link: "/releases/changelog",
           },
         ],
       },
