@@ -508,84 +508,238 @@ export default defineConfig({
       },
 
       {
-        text: "ThreadPool",
+        text: "Modules",
         collapsed: true,
         items: [
           {
-            text: "Overview",
-            link: "/threadpool/",
-          },
-          {
-            text: "Quick Start",
-            link: "/threadpool/quick-start",
-          },
-          {
-            text: "Installation",
-            link: "/threadpool/installation",
-          },
-          {
-            text: "Concepts",
-            link: "/threadpool/concepts",
-          },
-          {
             text: "ThreadPool",
-            link: "/threadpool/thread-pool",
+            collapsed: true,
+            items: [
+              {
+                text: "Overview",
+                link: "/modules/threadpool/",
+              },
+              {
+                text: "Quick Start",
+                link: "/modules/threadpool/quick-start",
+              },
+              {
+                text: "Installation",
+                link: "/modules/threadpool/installation",
+              },
+              {
+                text: "Concepts",
+                link: "/modules/threadpool/concepts",
+              },
+              {
+                text: "Tasks",
+                link: "/modules/threadpool/tasks",
+              },
+              {
+                text: "Futures",
+                link: "/modules/threadpool/futures",
+              },
+              {
+                text: "Cancellation",
+                link: "/modules/threadpool/cancellation",
+              },
+              {
+                text: "Timeouts",
+                link: "/modules/threadpool/timeouts",
+              },
+              {
+                text: "Priorities",
+                link: "/modules/threadpool/priorities",
+              },
+              {
+                text: "Task Groups",
+                link: "/modules/threadpool/task-groups",
+              },
+              {
+                text: "Shutdown",
+                link: "/modules/threadpool/shutdown",
+              },
+              {
+                text: "Metrics",
+                link: "/modules/threadpool/metrics",
+              },
+              {
+                text: "Periodic Tasks",
+                link: "/modules/threadpool/periodic-tasks",
+              },
+              {
+                text: "Parallel For",
+                link: "/modules/threadpool/parallel-for",
+              },
+              {
+                text: "Parallel Map",
+                link: "/modules/threadpool/parallel-map",
+              },
+              {
+                text: "Parallel Reduce",
+                link: "/modules/threadpool/parallel-reduce",
+              },
+              {
+                text: "Best Practices",
+                link: "/modules/threadpool/best-practices",
+              },
+              {
+                text: "API Reference",
+                link: "/modules/threadpool/api-reference",
+              },
+            ],
           },
+
           {
-            text: "Tasks",
-            link: "/threadpool/tasks",
+            text: "KV",
+            collapsed: true,
+            items: [
+              {
+                text: "Overview",
+                link: "/modules/kv/",
+              },
+              {
+                text: "Opening a database",
+                link: "/modules/kv/opening",
+              },
+              {
+                text: "Keys",
+                link: "/modules/kv/keys",
+              },
+              {
+                text: "Values",
+                link: "/modules/kv/values",
+              },
+              {
+                text: "Persistence",
+                link: "/modules/kv/persistence",
+              },
+              {
+                text: "Recovery",
+                link: "/modules/kv/recovery",
+              },
+              {
+                text: "Stats",
+                link: "/modules/kv/stats",
+              },
+              {
+                text: "API Reference",
+                link: "/modules/kv/api-reference",
+              },
+            ],
           },
+
           {
-            text: "Futures",
-            link: "/threadpool/futures",
+            text: "Async",
+            collapsed: true,
+            items: [
+              {
+                text: "Overview",
+                link: "/modules/async/",
+              },
+              {
+                text: "io_context",
+                link: "/modules/async/io-context",
+              },
+              {
+                text: "Tasks",
+                link: "/modules/async/tasks",
+              },
+              {
+                text: "Timers",
+                link: "/modules/async/timers",
+              },
+              {
+                text: "Signals",
+                link: "/modules/async/signals",
+              },
+              {
+                text: "TCP",
+                link: "/modules/async/tcp",
+              },
+              {
+                text: "UDP",
+                link: "/modules/async/udp",
+              },
+              {
+                text: "API Reference",
+                link: "/modules/async/api-reference",
+              },
+            ],
           },
+
           {
-            text: "Cancellation",
-            link: "/threadpool/cancellation",
+            text: "P2P",
+            collapsed: true,
+            items: [
+              {
+                text: "Overview",
+                link: "/modules/p2p/",
+              },
+              {
+                text: "Node",
+                link: "/modules/p2p/node",
+              },
+              {
+                text: "Discovery",
+                link: "/modules/p2p/discovery",
+              },
+              {
+                text: "Bootstrap",
+                link: "/modules/p2p/bootstrap",
+              },
+              {
+                text: "Router",
+                link: "/modules/p2p/router",
+              },
+              {
+                text: "Protocol",
+                link: "/modules/p2p/protocol",
+              },
+              {
+                text: "WAL Replication",
+                link: "/modules/p2p/wal-replication",
+              },
+              {
+                text: "HTTP Control",
+                link: "/modules/p2p/http-control",
+              },
+              {
+                text: "API Reference",
+                link: "/modules/p2p/api-reference",
+              },
+            ],
           },
+
           {
-            text: "Timeouts",
-            link: "/threadpool/timeouts",
-          },
-          {
-            text: "Priorities",
-            link: "/threadpool/priorities",
-          },
-          {
-            text: "Task Groups",
-            link: "/threadpool/task-groups",
-          },
-          {
-            text: "Shutdown",
-            link: "/threadpool/shutdown",
-          },
-          {
-            text: "Metrics",
-            link: "/threadpool/metrics",
-          },
-          {
-            text: "Periodic Tasks",
-            link: "/threadpool/periodic-tasks",
-          },
-          {
-            text: "Parallel For",
-            link: "/threadpool/parallel-for",
-          },
-          {
-            text: "Parallel Map",
-            link: "/threadpool/parallel-map",
-          },
-          {
-            text: "Parallel Reduce",
-            link: "/threadpool/parallel-reduce",
-          },
-          {
-            text: "Best Practices",
-            link: "/threadpool/best-practices",
-          },
-          {
-            text: "API Reference",
-            link: "/threadpool/api-reference",
+            text: "Sync",
+            collapsed: true,
+            items: [
+              {
+                text: "Overview",
+                link: "/modules/sync/",
+              },
+              {
+                text: "WAL",
+                link: "/modules/sync/wal",
+              },
+              {
+                text: "Outbox",
+                link: "/modules/sync/outbox",
+              },
+              {
+                text: "Retry Policy",
+                link: "/modules/sync/retry-policy",
+              },
+              {
+                text: "Offline-first Model",
+                link: "/modules/sync/offline-first-model",
+              },
+              {
+                text: "API Reference",
+                link: "/modules/sync/api-reference",
+              },
+            ],
           },
         ],
       },

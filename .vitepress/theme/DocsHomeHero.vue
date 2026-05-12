@@ -62,7 +62,7 @@ function iconPath(name) {
   <div class="vdh">
     <div class="vdh-left">
       <div class="vdh-eyebrow">
-        <span class="vdh-badge">v2.5.2</span>
+        <span class="vdh-badge">v2.5.5</span>
         <span class="vdh-sep">·</span>
         <span>MIT · Open source</span>
       </div>
@@ -345,6 +345,54 @@ function iconPath(name) {
   color: var(--accent);
 }
 
+/* CTA buttons final override */
+.vdh-actions .vdh-btn {
+  text-decoration: none !important;
+}
+
+.vdh-actions .vdh-btn--primary {
+  background: var(--accent) !important;
+  color: #052e16 !important;
+  border: 1px solid rgba(34, 197, 94, .45) !important;
+  box-shadow: 0 10px 26px rgba(34, 197, 94, .24) !important;
+}
+
+.vdh-actions .vdh-btn--primary:hover {
+  background: #4ade80 !important;
+  color: #052e16 !important;
+  border-color: rgba(74, 222, 128, .60) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px rgba(34, 197, 94, .32) !important;
+}
+
+.vdh-actions .vdh-btn--ghost {
+  background: rgba(255, 255, 255, .035) !important;
+  color: var(--vp-c-text-1) !important;
+  border: 1px solid var(--vp-c-divider) !important;
+  box-shadow: none !important;
+}
+
+.vdh-actions .vdh-btn--ghost:hover {
+  background: var(--accent-s) !important;
+  color: var(--accent) !important;
+  border-color: var(--accent-b) !important;
+  transform: translateY(-1px);
+}
+.vdh-btn {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none !important;
+  transition: background .14s ease, color .14s ease, border-color .14s ease, transform .14s ease, box-shadow .14s ease;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1100px) {
   .vdh-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -417,4 +465,5 @@ function iconPath(name) {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(34,197,94,.40);
 }
+
 </style>

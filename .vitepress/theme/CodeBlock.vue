@@ -290,10 +290,10 @@ function hlInline(s) {
     /* Operators */
     if (s.startsWith("::", i))  { out += wrap("cb-op", "::"); i+=2; continue; }
     if (s.startsWith("->", i))  { out += wrap("cb-arrow", "->"); i+=2; continue; }
-    if (s.startsWith("<<", i))  { out += wrap("cb-op", "&lt;&lt;"); i+=2; continue; }
-    if (s.startsWith(">>", i))  { out += wrap("cb-op", "&gt;&gt;"); i+=2; continue; }
-    if (s.startsWith("<=", i))  { out += wrap("cb-op", "&lt;="); i+=2; continue; }
-    if (s.startsWith(">=", i))  { out += wrap("cb-op", "&gt;="); i+=2; continue; }
+    if (s.startsWith("<<", i))  { out += wrap("cb-op", "<<"); i += 2; continue; }
+    if (s.startsWith(">>", i))  { out += wrap("cb-op", ">>"); i += 2; continue; }
+    if (s.startsWith("<=", i))  { out += wrap("cb-op", "<="); i += 2; continue; }
+    if (s.startsWith(">=", i))  { out += wrap("cb-op", ">="); i += 2; continue; }
     if (s.startsWith("==", i))  { out += wrap("cb-op", "=="); i+=2; continue; }
     if (s.startsWith("!=", i))  { out += wrap("cb-op", "!="); i+=2; continue; }
     if (s.startsWith("&&", i))  { out += wrap("cb-op", "&amp;&amp;"); i+=2; continue; }
@@ -306,7 +306,7 @@ function hlInline(s) {
       else if (ch === '(' || ch === ')') { out += wrap("cb-paren", ch); }
       else if (ch === '[' || ch === ']') { out += wrap("cb-bracket", ch); }
       else if (ch === ';') { out += wrap("cb-semi", ch); }
-      else { out += wrap("cb-op", esc(ch)); }
+      else { out += wrap("cb-op", ch); }
       i++; continue;
     }
     out += esc(ch); i++;
@@ -602,5 +602,8 @@ html:not(.dark) .cb-body { background: #1a1e26; }
   color: #f8fafc;
   background: transparent;
   min-width: max-content;
+}
+.cb-semi {
+  color: rgba(230, 237, 243, .82);
 }
 </style>
