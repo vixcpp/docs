@@ -98,7 +98,7 @@ function iconPath(name) {
         </div>
         <div class="vdh-stat-div"></div>
         <div class="vdh-stat">
-          <div class="vdh-stat-v">C++17</div>
+          <div class="vdh-stat-v">C++20</div>
           <div class="vdh-stat-l">Minimum standard</div>
         </div>
         <div class="vdh-stat-div"></div>
