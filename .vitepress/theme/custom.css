@@ -690,21 +690,36 @@ html.dark ::selection {
   background: rgba(34, 197, 94, .25);
 }
 
-/* Fix custom CodeBlock plain text color */
-.vp-doc .cb .cb-pre,
-.vp-doc .cb .cb-code {
+/* ============================================================
+   Plain text code blocks
+   Keep txt/text/plain blocks readable on dark code surfaces
+   ============================================================ */
+
+/* Native VitePress code blocks: ```txt, ```text, ```plain */
+.vp-doc div[class*="language-txt"] code,
+.vp-doc div[class*="language-text"] code,
+.vp-doc div[class*="language-plain"] code,
+.vp-doc div[class*="language-plaintext"] code,
+.vp-doc [class*="language-txt"] code,
+.vp-doc [class*="language-text"] code,
+.vp-doc [class*="language-plain"] code,
+.vp-doc [class*="language-plaintext"] code,
+.vp-doc div[class*="language-txt"] pre,
+.vp-doc div[class*="language-text"] pre,
+.vp-doc div[class*="language-plain"] pre,
+.vp-doc div[class*="language-plaintext"] pre,
+.vp-doc [class*="language-txt"] pre,
+.vp-doc [class*="language-text"] pre,
+.vp-doc [class*="language-plain"] pre,
+.vp-doc [class*="language-plaintext"] pre {
   color: #f8fafc !important;
 }
 
-.vp-doc .cb .cb-code span {
-  color: inherit;
-}
-/* Plain text inside custom CodeBlock */
-.vp-doc .cb .cb-code {
+/* Custom CodeBlock plain text */
+.vp-doc .cb .cb-code--plain {
   color: #f8fafc !important;
 }
 
-/* Keep syntax highlighting colors */
-.vp-doc .cb .cb-code span[class^="cb-"] {
-  color: unset;
+.vp-doc .cb .cb-code--plain span {
+  color: inherit !important;
 }
