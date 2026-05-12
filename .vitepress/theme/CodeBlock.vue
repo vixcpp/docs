@@ -335,9 +335,36 @@ function highlightShell(raw) {
   return s;
 }
 
+function normalizeLang(lang) {
+  const l = String(lang || "").toLowerCase().trim();
+
+  if (["sh", "bash", "zsh", "shell", "console", "terminal"].includes(l)) {
+    return "shell";
+  }
+
+  if (["cpp", "c++", "cc", "cxx", "hpp", "hxx"].includes(l)) {
+    return "cpp";
+  }
+
+  if (["txt", "text", "plain", "plaintext"].includes(l)) {
+    return "text";
+  }
+
+  return l || "text";
+}
+
+function highlightText(raw) {
+  return esc(raw ?? "");
+}
+
 const activeHtml = computed(() => {
   const text = activeText.value || "";
-  return activeLang.value === "shell" ? highlightShell(text) : highlightCpp(text);
+  const lang = normalizeLang(activeLang.value);
+
+  if (lang === "shell") return highlightShell(text);
+  if (lang === "cpp") return highlightCpp(text);
+
+  return highlightText(text);
 });
 
 async function copy(text) {
@@ -559,5 +586,21 @@ html:not(.dark) .cb-body { background: #1a1e26; }
 @media (max-width: 640px) {
   .cb-pre { font-size: .82rem; padding: 12px 12px; }
   .cb-title { max-width: 28vw; overflow: hidden; text-overflow: ellipsis; }
+}
+.cb-code {
+  display: inline-block;
+  min-width: 100%;
+  color: #f8fafc;
+}
+
+.cb-pre {
+  margin: 0;
+  padding: 14px 16px;
+  white-space: pre;
+  line-height: 1.7;
+  font-size: .875rem;
+  color: #f8fafc;
+  background: transparent;
+  min-width: max-content;
 }
 </style>

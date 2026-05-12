@@ -689,3 +689,22 @@ html.dark .vp-doc a:hover {
 html.dark ::selection {
   background: rgba(34, 197, 94, .25);
 }
+
+/* Fix custom CodeBlock plain text color */
+.vp-doc .cb .cb-pre,
+.vp-doc .cb .cb-code {
+  color: #f8fafc !important;
+}
+
+.vp-doc .cb .cb-code span {
+  color: inherit;
+}
+/* Plain text inside custom CodeBlock */
+.vp-doc .cb .cb-code {
+  color: #f8fafc !important;
+}
+
+/* Keep syntax highlighting colors */
+.vp-doc .cb .cb-code span[class^="cb-"] {
+  color: unset;
+}
