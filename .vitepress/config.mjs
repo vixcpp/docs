@@ -400,6 +400,16 @@ export default defineConfig({
         ],
       },
       {
+        text: "Experimental",
+        collapsed: true,
+        items: [
+          {
+            text: "vix.app",
+            link: "/experimental/vix-app",
+          },
+        ],
+      },
+      {
         text: "Examples",
         collapsed: true,
         items: [
