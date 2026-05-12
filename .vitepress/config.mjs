@@ -646,8 +646,24 @@ export default defineConfig({
                 link: "/modules/async/tasks",
               },
               {
+                text: "Spawn",
+                link: "/modules/async/spawn",
+              },
+              {
                 text: "Timers",
                 link: "/modules/async/timers",
+              },
+              {
+                text: "Cancellation",
+                link: "/modules/async/cancellation",
+              },
+              {
+                text: "Thread pool",
+                link: "/modules/async/thread-pool",
+              },
+              {
+                text: "when_all / when_any",
+                link: "/modules/async/when",
               },
               {
                 text: "Signals",
@@ -660,6 +676,10 @@ export default defineConfig({
               {
                 text: "UDP",
                 link: "/modules/async/udp",
+              },
+              {
+                text: "DNS",
+                link: "/modules/async/dns",
               },
               {
                 text: "API Reference",

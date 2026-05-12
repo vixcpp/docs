@@ -268,23 +268,6 @@ html.dark .vp-doc :not(pre) > code {
   box-shadow: var(--cb-shadow), 0 0 0 1px var(--vix-accent-b);
 }
 
-.vp-doc div[class*="language-"] pre,
-.vp-doc [class*="language-"] pre {
-  padding: 16px 18px !important;
-  font-size: .875rem !important;
-  line-height: 1.72 !important;
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace !important;
-  background: var(--cb-bg) !important;
-  margin: 0 !important;
-  overflow-x: auto;
-}
-
-.vp-doc [class*='language-'] code,
-.vp-doc div[class*='language-'] code {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
 /* Language label */
 .vp-doc div[class*="language-"] .lang {
   font-family: "JetBrains Mono", ui-monospace, monospace;
@@ -384,7 +367,7 @@ html.dark .vp-doc :not(pre) > code {
 html:not(.dark) .cb {
   border-color: rgba(0,0,0,.08);
   background: var(--cb-bg);
-  box-shadow: var(--cb-shadow);
+  box-shadow: none;
 }
 
 html:not(.dark) .cb-head {
@@ -692,10 +675,12 @@ html.dark ::selection {
 
 /* ============================================================
    Plain text code blocks
-   Keep txt/text/plain blocks readable on dark code surfaces
+   Keep txt/text/plain/no-lang blocks readable on dark code surfaces
    ============================================================ */
 
-/* Native VitePress code blocks: ```txt, ```text, ```plain */
+/* Native VitePress code blocks: ```txt, ```text, ```plain, and ``` */
+.vp-doc div.language- code,
+.vp-doc div.language- pre,
 .vp-doc div[class*="language-txt"] code,
 .vp-doc div[class*="language-text"] code,
 .vp-doc div[class*="language-plain"] code,
@@ -722,4 +707,76 @@ html.dark ::selection {
 
 .vp-doc .cb .cb-code--plain span {
   color: inherit !important;
+}
+.vp-doc div[class*="language-"],
+.vp-doc [class*="language-"] {
+  background: var(--cb-bg) !important;
+  border-radius: var(--vix-radius) !important;
+  border: 1px solid var(--cb-border) !important;
+  overflow: hidden;
+  margin: 20px 0 !important;
+  box-shadow: none;
+  transition: border-color var(--vix-transition);
+}
+
+.vp-doc div[class*="language-"] pre,
+.vp-doc [class*="language-"] pre {
+  padding: 16px 18px !important;
+  font-size: .875rem !important;
+  line-height: 1.72 !important;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace !important;
+  background: transparent !important;
+  margin: 0 !important;
+  overflow-x: auto;
+}
+
+.vp-doc div[class*="language-"] code,
+.vp-doc [class*="language-"] code {
+  background: transparent !important;
+}
+
+.vp-doc div[class*="language-"].line-numbers-mode .line-numbers-wrapper,
+.vp-doc [class*="language-"].line-numbers-mode .line-numbers-wrapper {
+  background: transparent !important;
+}
+
+.vp-doc div[class*="language-"].line-numbers-mode pre,
+.vp-doc [class*="language-"].line-numbers-mode pre {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-top: 16px !important;
+  padding-bottom: 16px !important;
+}
+.vp-doc [class*='language-'] code,
+.vp-doc div[class*='language-'] code {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+:root {
+  --cb-bg: #101820;
+  --cb-bg-head: #151f2a;
+}
+
+html.dark {
+  --cb-bg: #101820;
+  --cb-bg-head: #151f2a;
+}
+
+html:not(.dark) {
+  --cb-bg: #101820;
+  --cb-bg-head: #151f2a;
+}
+.vp-doc div[class*="language-"],
+.vp-doc [class*="language-"] {
+  background: var(--cb-bg) !important;
+}
+
+.vp-doc div[class*="language-"] pre,
+.vp-doc [class*="language-"] pre {
+  background: transparent !important;
+}
+
+.vp-doc div[class*="language-"] code,
+.vp-doc [class*="language-"] code {
+  background: transparent !important;
 }
