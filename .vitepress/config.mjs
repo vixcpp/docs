@@ -119,6 +119,10 @@ export default defineConfig({
 
     nav: [
       {
+        text: "Download PDF",
+        link: "/vixcpp-documentation.pdf",
+      },
+      {
         text: "Registry",
         link: "https://registry.vixcpp.com/",
       },
