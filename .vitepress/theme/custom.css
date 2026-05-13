@@ -898,3 +898,18 @@ html:not(.dark) .VPSidebarItem .items .VPSidebarItem .items {
   font-size: 12.8px !important;
   opacity: 0.88;
 }
+/* Remove active sidebar cursor indicator */
+.VPSidebarItem.is-active > .item::before,
+.VPSidebarItem.has-active > .item::before {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* Keep active sidebar link aligned */
+.VPSidebarItem.is-active > .item > .link,
+.VPSidebarItem.is-active > .item .link {
+  padding-left: 0 !important;
+}
