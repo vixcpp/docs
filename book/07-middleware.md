@@ -311,4 +311,4 @@ middleware keeps route handlers clean by moving shared request behavior into one
 
 ## Next chapter
 
-[Next: Validation](/book/12-validation)
+[Next: Validation](/book/08-validation)

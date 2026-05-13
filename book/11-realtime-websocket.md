@@ -232,4 +232,4 @@ use HTTP for normal API requests and WebSocket for live events that must reach c
 
 ## Next chapter
 
-[Next: Async runtime](/book/16-async-runtime)
+[Next: Async runtime](/book/12-async-runtime)

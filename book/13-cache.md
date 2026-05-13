@@ -269,4 +269,4 @@ or unavailable.
 
 ## Next chapter
 
-[Next: Offline-first sync](/book/18-offline-first-sync)
+[Next: Offline-first sync](/book/14-offline-first-sync)

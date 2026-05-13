@@ -307,4 +307,4 @@ The core idea: **persist first, sync later, never lose user intent.**
 
 ## Next chapter
 
-[Next: P2P](/book/19-p2p)
+[Next: P2P](/book/15-p2p)

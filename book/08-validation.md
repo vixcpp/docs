@@ -249,4 +249,4 @@ The core idea: bad input should stop at the boundary of your application.
 
 ## Next chapter
 
-[Next: Errors and logging](/book/13-errors-and-logging)
+[Next: Errors and logging](/book/09-errors-and-logging)

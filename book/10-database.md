@@ -407,4 +407,4 @@ Routes should validate input, call database logic, and return safe JSON response
 
 ## Next chapter
 
-[Next: Real-time WebSocket](/book/15-realtime-websocket)
+[Next: Real-time WebSocket](/book/11-realtime-websocket)

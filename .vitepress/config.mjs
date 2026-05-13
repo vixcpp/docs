@@ -126,6 +126,36 @@ export default defineConfig({
 
     sidebar: [
       {
+        text: "Getting Started",
+        collapsed: false,
+        items: [
+          {
+            text: "Welcome to Vix.cpp",
+            link: "/getting-started/",
+          },
+          {
+            text: "Installation",
+            link: "/getting-started/installation",
+          },
+          {
+            text: "Set Up Your Environment",
+            link: "/getting-started/setup-environment",
+          },
+          {
+            text: "Run Your First C++ File",
+            link: "/getting-started/run-your-first-file",
+          },
+          {
+            text: "Create Your First Project",
+            link: "/getting-started/create-your-first-project",
+          },
+          {
+            text: "Your First HTTP Server",
+            link: "/getting-started/first-http-server",
+          },
+        ],
+      },
+      {
         text: "The Vix Book",
         collapsed: false,
         items: [
@@ -142,76 +172,60 @@ export default defineConfig({
             link: "/book/03-mental-model",
           },
           {
-            text: "Installation",
-            link: "/book/04-installation",
-          },
-          {
-            text: "Run Your First C++ File",
-            link: "/book/05-run-your-first-file",
-          },
-          {
-            text: "Create Your First Project",
-            link: "/book/06-create-your-first-project",
-          },
-          {
-            text: "Your First HTTP Server",
-            link: "/book/07-first-http-server",
-          },
-          {
             text: "Routes",
-            link: "/book/08-routes",
+            link: "/book/04-routes",
           },
           {
             text: "Request and Response",
-            link: "/book/09-request-response",
+            link: "/book/05-request-response",
           },
           {
             text: "Build a JSON API",
-            link: "/book/10-json-api",
+            link: "/book/06-json-api",
           },
           {
             text: "Middleware",
-            link: "/book/11-middleware",
+            link: "/book/07-middleware",
           },
           {
             text: "Validation",
-            link: "/book/12-validation",
+            link: "/book/08-validation",
           },
           {
             text: "Errors and Logging",
-            link: "/book/13-errors-and-logging",
+            link: "/book/09-errors-and-logging",
           },
           {
             text: "Database",
-            link: "/book/14-database",
+            link: "/book/10-database",
           },
           {
             text: "Realtime WebSocket",
-            link: "/book/15-realtime-websocket",
+            link: "/book/11-realtime-websocket",
           },
           {
             text: "Async Runtime",
-            link: "/book/16-async-runtime",
+            link: "/book/12-async-runtime",
           },
           {
             text: "Cache",
-            link: "/book/17-cache",
+            link: "/book/13-cache",
           },
           {
             text: "Offline-first Sync",
-            link: "/book/18-offline-first-sync",
+            link: "/book/14-offline-first-sync",
           },
           {
             text: "P2P",
-            link: "/book/19-p2p",
+            link: "/book/15-p2p",
           },
           {
             text: "Production Deployment",
-            link: "/book/20-production-deployment",
+            link: "/book/16-production-deployment",
           },
           {
             text: "Next Steps",
-            link: "/book/21-next-steps",
+            link: "/book/17-next-steps",
           },
         ],
       },

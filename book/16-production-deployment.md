@@ -385,4 +385,4 @@ The core idea: **development uses `vix dev`, production runs a release binary.**
 
 ## Next chapter
 
-[Next: Next steps](/book/21-next-steps)
+[Next: Next steps](/book/17-next-steps)

@@ -236,4 +236,4 @@ The core route flow: read Request → validate input → write Response → retu
 
 ## Next chapter
 
-[Next: JSON API](/book/10-json-api)
+[Next: JSON API](/book/06-json-api)

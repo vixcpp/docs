@@ -231,4 +231,4 @@ and resumed through one clear runtime.
 
 ## Next chapter
 
-[Next: Cache](/book/17-cache)
+[Next: Cache](/book/13-cache)

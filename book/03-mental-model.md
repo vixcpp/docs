@@ -240,10 +240,17 @@ browser → Nginx → Vix app on localhost → systemd
 
 ## What you should remember
 
-The Vix mental model has four layers: **CLI** controls the workflow, **Runtime** executes the app, **Application** is built around `App`, `Request`, and `Response`, **Modules** add capabilities.
+The Vix mental model has four layers: **CLI**, **Runtime**, **Application**, and **Modules**.
 
-The best way to grow a Vix app: start with one file, keep `main()` small, register routes through functions, add modules when needed, move logic into services as the app grows.
+The **CLI** controls the developer workflow.
+The **Runtime** executes the application.
+The **Application** layer is built around `App`, `Request`, and `Response`.
+The **Modules** add capabilities such as JSON, middleware, validation, database, WebSocket, cache, sync, and P2P.
 
-## Next chapter
+The best way to grow a Vix app is simple:
 
-[Next: Installation](/book/04-installation)
+```txt
+start with one file → keep main() small → register routes through functions → add modules when needed → move logic into services
+```
+
+[Next: Routes](/book/04-routes)

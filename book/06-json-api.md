@@ -417,4 +417,4 @@ The core idea: JSON APIs become simple when request parsing, validation, logic, 
 
 ## Next chapter
 
-[Next: Middleware](/book/11-middleware)
+[Next: Middleware](/book/07-middleware)
