@@ -137,15 +137,6 @@ html:not(.dark) {
 .VPSidebarItem.is-active > .item {
   position: relative;
 }
-.VPSidebarItem.is-active > .item::before {
-  content: "";
-  position: absolute;
-  left: 4px !important;
-  top: 50%; transform: translateY(-50%);
-  width: 3px; height: 16px;
-  background: var(--vix-accent);
-  border-radius: 999px;
-}
 
 /* Sidebar scrollbar */
 .VPSidebar .nav {
@@ -912,4 +903,21 @@ html:not(.dark) .VPSidebarItem .items .VPSidebarItem .items {
 .VPSidebarItem.is-active > .item > .link,
 .VPSidebarItem.is-active > .item .link {
   padding-left: 0 !important;
+}
+/* Remove active sidebar left cursor everywhere */
+.VPSidebarItem .indicator,
+.VPSidebarItem .item::before,
+.VPSidebarItem .item::after,
+.VPSidebarItem.is-active > .item::before,
+.VPSidebarItem.is-active > .item::after,
+.VPSidebarItem.has-active > .item::before,
+.VPSidebarItem.has-active > .item::after {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
 }
