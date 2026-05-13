@@ -268,6 +268,10 @@ export default defineConfig({
             link: "/cli/new",
           },
           {
+            text: "vix modules",
+            link: "/cli/modules",
+          },
+          {
             text: "vix make",
             link: "/cli/make",
           },
