@@ -780,3 +780,121 @@ html:not(.dark) {
 .vp-doc [class*="language-"] code {
   background: transparent !important;
 }
+
+
+/* ============================================================
+   Sidebar tree hierarchy
+   DOM-based tree without duplicated rules
+   ============================================================ */
+
+/* Every nested items container becomes a tree branch */
+.VPSidebarItem .items {
+  margin-left: 14px !important;
+  padding-left: 12px !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+html:not(.dark) .VPSidebarItem .items {
+  border-left-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* First visible child level:
+   Overview, Core, Runtime, Data, System, Log */
+.VPSidebarItem .items > .VPSidebarItem > .item > .link {
+  padding-left: 16px !important;
+  font-size: 13px !important;
+  opacity: 0.9;
+}
+
+/* Deeper tree containers:
+   children inside Core, Log, Runtime, etc. */
+.VPSidebarItem .items .VPSidebarItem .items {
+  margin-left: 11px !important;
+  padding-left: 5px !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+html:not(.dark) .VPSidebarItem .items .VPSidebarItem .items {
+  border-left-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Real children:
+   Print, Console, Inspect, Input, etc. */
+.VPSidebarItem .items .VPSidebarItem .items > .VPSidebarItem > .item > .link {
+  padding-left: 0 !important;
+  font-size: 12.8px !important;
+  opacity: 0.88;
+}
+
+/* Deeper children if needed later */
+.VPSidebarItem .items .VPSidebarItem .items .VPSidebarItem .items > .VPSidebarItem > .item > .link {
+  padding-left: 0 !important;
+  font-size: 12.5px !important;
+  opacity: 0.82;
+}
+
+/* Bullet marker for nested links */
+.VPSidebarItem .items .VPSidebarItem .link::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: var(--vp-c-divider);
+  vertical-align: middle;
+}
+
+/* Do not show bullet on collapsible section parents if VitePress renders them as folders */
+.VPSidebarItem .items > .VPSidebarItem > .item > .link.has-active::before {
+  display: none;
+}
+
+/* Active item */
+.VPSidebarItem .items .VPSidebarItem.is-active > .item > .link {
+  opacity: 1;
+  font-weight: 700 !important;
+  color: var(--vix-accent) !important;
+}
+
+.VPSidebarItem .items .VPSidebarItem.is-active > .item > .link::before {
+  background: var(--vix-accent);
+}
+/* Remove all custom sidebar dot markers */
+.VPSidebarItem .link::before,
+.VPSidebarItem .items .VPSidebarItem .link::before,
+.VPSidebarItem .items .VPSidebarItem.is-active > .item > .link::before {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin-right: 0 !important;
+  background: transparent !important;
+}
+/* Remove sidebar tree vertical lines */
+.VPSidebarItem .items,
+.VPSidebarItem .items .VPSidebarItem .items,
+.VPSidebarGroup > .items,
+.VPSidebarGroup > .items > .VPSidebarItem > .items {
+  border-left: 0 !important;
+}
+.VPSidebarItem .items {
+    margin-left: 14px !important;
+    padding-left: 0px !important;
+}
+.VPSidebarItem .items .VPSidebarItem .items {
+    margin-left: 11px !important;
+    padding-left: 0px !important;
+}
+/* Keep first-level sidebar items aligned */
+.VPSidebarItem .items > .VPSidebarItem > .item > .link {
+  padding-left: 0 !important;
+  font-size: 13px !important;
+}
+
+/* Keep deeper children indented only inside folders like Core */
+.VPSidebarItem .items .VPSidebarItem .items > .VPSidebarItem > .item > .link {
+  padding-left: 0 !important;
+  font-size: 12.8px !important;
+  opacity: 0.88;
+}

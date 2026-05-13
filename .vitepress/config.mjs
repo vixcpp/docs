@@ -482,41 +482,100 @@ export default defineConfig({
             text: "Overview",
             link: "/api/index",
           },
+
           {
-            text: "HTTP",
-            link: "/api/http",
+            text: "Core",
+            collapsed: true,
+            items: [
+              {
+                text: "Print",
+                link: "/api/core/print",
+              },
+              {
+                text: "Console",
+                link: "/api/core/console",
+              },
+              {
+                text: "Inspect",
+                link: "/api/core/inspect",
+              },
+              {
+                text: "Input",
+                link: "/api/core/input",
+              },
+            ],
           },
+
           {
-            text: "JSON",
-            link: "/api/json",
+            text: "Runtime",
+            collapsed: true,
+            items: [
+              {
+                text: "HTTP",
+                link: "/api/http",
+              },
+              {
+                text: "WebSocket",
+                link: "/api/websocket",
+              },
+              {
+                text: "Async",
+                link: "/api/async",
+              },
+              {
+                text: "P2P",
+                link: "/api/p2p",
+              },
+            ],
           },
+
           {
-            text: "KV",
-            link: "/api/kv",
+            text: "Data",
+            collapsed: true,
+            items: [
+              {
+                text: "JSON",
+                link: "/api/json",
+              },
+              {
+                text: "KV",
+                link: "/api/kv",
+              },
+            ],
           },
+
           {
-            text: "ThreadPool",
-            link: "/api/threadpool",
+            text: "System",
+            collapsed: true,
+            items: [
+              {
+                text: "ThreadPool",
+                link: "/api/threadpool",
+              },
+              {
+                text: "Middleware",
+                link: "/api/middleware",
+              },
+              {
+                text: "Config",
+                link: "/api/config",
+              },
+            ],
           },
+
           {
-            text: "Middleware",
-            link: "/api/middleware",
-          },
-          {
-            text: "Config",
-            link: "/api/config",
-          },
-          {
-            text: "WebSocket",
-            link: "/api/websocket",
-          },
-          {
-            text: "Async",
-            link: "/api/async",
-          },
-          {
-            text: "P2P",
-            link: "/api/p2p",
+            text: "Log",
+            collapsed: true,
+            items: [
+              {
+                text: "Overview",
+                link: "/api/log",
+              },
+              {
+                text: "Server Pretty Logs",
+                link: "/api/log/server-pretty-logs",
+              },
+            ],
           },
         ],
       },

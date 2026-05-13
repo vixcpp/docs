@@ -47,7 +47,6 @@ A minimal Vix HTTP app looks like this:
 
 ```cpp
 #include <vix.hpp>
-
 using namespace vix;
 
 int main()
