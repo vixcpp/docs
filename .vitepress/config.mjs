@@ -500,6 +500,10 @@ export default defineConfig({
                 link: "/api/core/print",
               },
               {
+                text: "Format",
+                link: "/api/core/format",
+              },
+              {
                 text: "Console",
                 link: "/api/core/console",
               },
@@ -592,6 +596,112 @@ export default defineConfig({
         text: "Modules",
         collapsed: true,
         items: [
+          {
+            text: "Core",
+            collapsed: true,
+            items: [
+              {
+                text: "Overview",
+                link: "/modules/core/",
+              },
+              {
+                text: "App",
+                link: "/modules/core/app",
+              },
+              {
+                text: "Architecture",
+                link: "/modules/core/architecture",
+              },
+              {
+                text: "Routing",
+                link: "/modules/core/routing",
+              },
+              {
+                text: "Handlers",
+                link: "/modules/core/handlers",
+              },
+              {
+                text: "Middleware",
+                link: "/modules/core/middleware",
+              },
+              {
+                text: "Request",
+                link: "/modules/core/request",
+              },
+              {
+                text: "Response",
+                link: "/modules/core/response",
+              },
+              {
+                text: "Static files",
+                link: "/modules/core/static-files",
+              },
+              {
+                text: "Templates",
+                link: "/modules/core/templates",
+              },
+              {
+                text: "HTTP server",
+                link: "/modules/core/http-server",
+              },
+              {
+                text: "Sessions",
+                link: "/modules/core/sessions",
+              },
+              {
+                text: "Transports",
+                link: "/modules/core/transports",
+              },
+              {
+                text: "TLS",
+                link: "/modules/core/tls",
+              },
+              {
+                text: "Runtime executor",
+                link: "/modules/core/runtime-executor",
+              },
+              {
+                text: "Async and runtime",
+                link: "/modules/core/async-and-runtime",
+              },
+              {
+                text: "Configuration",
+                link: "/modules/core/configuration",
+              },
+              {
+                text: "Print",
+                link: "/modules/core/print",
+              },
+              {
+                text: "Format",
+                link: "/modules/core/format",
+              },
+              {
+                text: "Console",
+                link: "/modules/core/console",
+              },
+              {
+                text: "Input",
+                link: "/modules/core/input",
+              },
+              {
+                text: "Inspect",
+                link: "/modules/core/inspect",
+              },
+              {
+                text: "OpenAPI",
+                link: "/modules/core/openapi",
+              },
+              {
+                text: "Attached runtime",
+                link: "/modules/core/attached-runtime",
+              },
+              {
+                text: "API Reference",
+                link: "/modules/core/api-reference",
+              },
+            ],
+          },
           {
             text: "ThreadPool",
             collapsed: true,
