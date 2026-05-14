@@ -6,6 +6,8 @@ You can download the complete Vix.cpp documentation as a PDF:
 
 [Download the Vix.cpp Documentation PDF](/vixcpp-documentation.pdf)
 
+[Download the Vix.cpp Documentation PDF in French](/vixcpp-documentation-fr.pdf)
+
 Vix.cpp is a modern C++ runtime and developer toolkit for building fast, reliable applications with a smoother workflow.
 
 It gives C++ a direct development experience:
