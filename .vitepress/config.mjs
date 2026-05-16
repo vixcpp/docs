@@ -256,6 +256,44 @@ export default defineConfig({
       },
 
       {
+        text: "vix.app",
+        collapsed: false,
+        items: [
+          { text: "Overview", link: "/guides/vix-app/" },
+          { text: "Getting Started", link: "/guides/vix-app/getting-started" },
+          {
+            text: "Manifest Reference",
+            link: "/guides/vix-app/manifest-reference",
+          },
+          { text: "Examples", link: "/guides/vix-app/examples" },
+          {
+            text: "Packages and Links",
+            link: "/guides/vix-app/packages-and-links",
+          },
+          { text: "Tests", link: "/guides/vix-app/tests" },
+          { text: "Project Types", link: "/guides/vix-app/project-types" },
+          {
+            text: "Sources and Includes",
+            link: "/guides/vix-app/sources-and-includes",
+          },
+          { text: "Compile Options", link: "/guides/vix-app/compile-options" },
+          { text: "Resources", link: "/guides/vix-app/resources" },
+          {
+            text: "Output Directory",
+            link: "/guides/vix-app/output-directory",
+          },
+          { text: "Libraries", link: "/guides/vix-app/libraries" },
+          {
+            text: "Migrating from CMake",
+            link: "/guides/vix-app/migration-from-cmake",
+          },
+          { text: "CMake Fallback", link: "/guides/vix-app/cmake-fallback" },
+          { text: "Troubleshooting", link: "/guides/vix-app/troubleshooting" },
+          { text: "Best Practices", link: "/guides/vix-app/best-practices" },
+        ],
+      },
+
+      {
         text: "CLI",
         collapsed: true,
         items: [
