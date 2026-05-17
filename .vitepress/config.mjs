@@ -740,6 +740,89 @@ export default defineConfig({
               },
             ],
           },
+
+          {
+            text: "WebSocket",
+            collapsed: true,
+            items: [
+              {
+                text: "Overview",
+                link: "/modules/websocket/",
+              },
+              {
+                text: "Quick Start",
+                link: "/modules/websocket/quick-start",
+              },
+              {
+                text: "Concepts",
+                link: "/modules/websocket/concepts",
+              },
+              {
+                text: "Configuration",
+                link: "/modules/websocket/configuration",
+              },
+              {
+                text: "Server",
+                link: "/modules/websocket/server",
+              },
+              {
+                text: "Session",
+                link: "/modules/websocket/session",
+              },
+              {
+                text: "Router",
+                link: "/modules/websocket/router",
+              },
+              {
+                text: "Messages",
+                link: "/modules/websocket/messages",
+              },
+              {
+                text: "Client",
+                link: "/modules/websocket/client",
+              },
+              {
+                text: "Rooms and Broadcasting",
+                link: "/modules/websocket/rooms-and-broadcasting",
+              },
+              {
+                text: "Long polling",
+                link: "/modules/websocket/long-polling",
+              },
+              {
+                text: "HTTP API",
+                link: "/modules/websocket/http-api",
+              },
+              {
+                text: "Attached runtime",
+                link: "/modules/websocket/attached-runtime",
+              },
+              {
+                text: "Metrics",
+                link: "/modules/websocket/metrics",
+              },
+              {
+                text: "Message store",
+                link: "/modules/websocket/message-store",
+              },
+              {
+                text: "SQLite message store",
+                link: "/modules/websocket/sqlite-message-store",
+              },
+              {
+                text: "OpenAPI",
+                link: "/modules/websocket/openapi",
+              },
+              {
+                text: "Shutdown",
+                link: "/modules/websocket/shutdown",
+              },
+              {
+                text: "API Reference",
+                link: "/modules/websocket/api-reference",
+              },
+            ],
+          },
           {
             text: "ThreadPool",
             collapsed: true,
