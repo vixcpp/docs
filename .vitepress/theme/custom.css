@@ -1,9 +1,13 @@
 /* ============================================================
    Vix.cpp Docs — custom.css
-   Modern edition — refined light & dark, polished code blocks
+   Complete edition — palette Vix custom, no Shiki dependency
    ============================================================ */
 
-/* ── Tokens ── */
+
+/* ════════════════════════════════════════════════
+   1. DESIGN TOKENS
+   ════════════════════════════════════════════════ */
+
 :root {
   --vix-accent:   #22c55e;
   --vix-accent-d: #16a34a;
@@ -14,9 +18,14 @@
   --vix-shadow-s: 0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.06);
   --vix-shadow-m: 0 4px 16px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.08);
   --vix-transition: .16s cubic-bezier(.4,0,.2,1);
+
+  /* Code surfaces — same in light & dark for consistency */
+  --cb-bg:        #0d1117;
+  --cb-bg-head:   #161b22;
+  --cb-border:    rgba(255, 255, 255, .08);
+  --cb-shadow:    0 4px 24px rgba(0, 0, 0, .35), 0 1px 4px rgba(0, 0, 0, .2);
 }
 
-/* ── Light ── */
 html:not(.dark) {
   --vp-c-bg:      #fafbfc;
   --vp-c-bg-soft: #f0f2f5;
@@ -28,14 +37,10 @@ html:not(.dark) {
   --vp-c-brand-2: #22c55e;
   --vp-c-brand-3: #4ade80;
 
-  /* Code block surfaces — light */
-  --cb-bg:        #1e2028;
-  --cb-bg-head:   #262830;
-  --cb-border:    rgba(0, 0, 0, .06);
-  --cb-shadow:    0 2px 12px rgba(0,0,0,.10), 0 1px 3px rgba(0,0,0,.06);
+  --cb-border:    rgba(0, 0, 0, .08);
+  --cb-shadow:    0 2px 12px rgba(0, 0, 0, .10), 0 1px 3px rgba(0, 0, 0, .06);
 }
 
-/* ── Dark ── */
 html.dark {
   --vp-c-bg:      #0c0f14;
   --vp-c-bg-soft: #13161d;
@@ -46,27 +51,28 @@ html.dark {
   --vp-c-brand-1: #22c55e;
   --vp-c-brand-2: #4ade80;
   --vp-c-brand-3: #86efac;
-
-  /* Code block surfaces — dark */
-  --cb-bg:        #0d1117;
-  --cb-bg-head:   #161b22;
-  --cb-border:    rgba(255, 255, 255, .06);
-  --cb-shadow:    0 4px 24px rgba(0,0,0,.35), 0 1px 4px rgba(0,0,0,.2);
 }
 
-/* ── App / Layout ── */
+
+/* ════════════════════════════════════════════════
+   2. APP / LAYOUT
+   ════════════════════════════════════════════════ */
+
 html, body, #app, .VPApp { min-height: 100vh; }
 .VPApp { display: flex; flex-direction: column; }
 .VPContent { flex: 1 0 auto; }
 html, body { overflow-x: hidden; }
 
-/* Smooth theme transition */
 html.dark,
 html:not(.dark) {
   transition: background-color .3s ease, color .3s ease;
 }
 
-/* ── Navbar ── */
+
+/* ════════════════════════════════════════════════
+   3. NAVBAR
+   ════════════════════════════════════════════════ */
+
 .VPNavBar {
   background: color-mix(in srgb, var(--vp-c-bg) 85%, transparent) !important;
   border-bottom: 1px solid var(--vp-c-divider) !important;
@@ -91,18 +97,16 @@ html:not(.dark) {
 
 .VPNavBarTitle .VPImage { border-radius: 8px; }
 
-/* ── Sidebar ── */
-.VPSidebar {
-  background: var(--vp-c-bg) !important;
-}
 
+/* ════════════════════════════════════════════════
+   4. SIDEBAR
+   ════════════════════════════════════════════════ */
+
+.VPSidebar,
 .VPSidebar .curtain,
 .VPSidebar .content,
-.VPSidebar .nav {
-  background: var(--vp-c-bg) !important;
-}
+.VPSidebar .nav { background: var(--vp-c-bg) !important; }
 
-/* Sidebar text */
 .VPSidebarGroup .title {
   font-size: 10.5px;
   font-weight: 800;
@@ -130,12 +134,54 @@ html:not(.dark) {
   color: var(--vix-accent) !important;
   font-weight: 700 !important;
   background: var(--vix-accent-s);
-  padding-left: 18px !important;
 }
 
-/* Active sidebar indicator */
-.VPSidebarItem.is-active > .item {
-  position: relative;
+/* Tree spacing — flat, no vertical lines, no bullets */
+.VPSidebarItem .items {
+  margin-left: 14px !important;
+  padding-left: 0 !important;
+  border-left: 0 !important;
+}
+.VPSidebarItem .items .VPSidebarItem .items {
+  margin-left: 11px !important;
+  padding-left: 0 !important;
+  border-left: 0 !important;
+}
+.VPSidebarItem .items > .VPSidebarItem > .item > .link {
+  padding-left: 0 !important;
+  font-size: 13px !important;
+}
+.VPSidebarItem .items .VPSidebarItem .items > .VPSidebarItem > .item > .link {
+  padding-left: 0 !important;
+  font-size: 12.8px !important;
+  opacity: 0.88;
+}
+
+/* Remove all bullet/cursor indicators */
+.VPSidebarItem .link::before,
+.VPSidebarItem .indicator,
+.VPSidebarItem .item::before,
+.VPSidebarItem .item::after,
+.VPSidebarItem.is-active > .item::before,
+.VPSidebarItem.is-active > .item::after,
+.VPSidebarItem.has-active > .item::before,
+.VPSidebarItem.has-active > .item::after {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+/* Force sidebar item text style */
+.VPSidebarItem .item .text,
+.VPSidebarItem .link .text {
+  flex-grow: 1 !important;
+  padding: 4px 0 4px 5px !important;
+  line-height: 24px !important;
+  font-size: 14px !important;
+  transition: color 0.25s !important;
 }
 
 /* Sidebar scrollbar */
@@ -146,10 +192,10 @@ html:not(.dark) {
 .VPSidebar .nav::-webkit-scrollbar { width: 6px; }
 .VPSidebar .nav::-webkit-scrollbar-track { background: transparent; }
 .VPSidebar .nav::-webkit-scrollbar-thumb {
-  background: var(--vp-c-divider); border-radius: 999px;
+  background: var(--vp-c-divider);
+  border-radius: 999px;
 }
 
-/* Desktop sidebar scrollbar */
 @media (min-width: 961px) {
   .VPSidebar {
     scrollbar-width: thin;
@@ -158,9 +204,6 @@ html:not(.dark) {
   .VPSidebar::-webkit-scrollbar,
   .VPSidebar .content::-webkit-scrollbar,
   .VPSidebar .nav::-webkit-scrollbar { width: 7px; }
-  .VPSidebar::-webkit-scrollbar-track,
-  .VPSidebar .content::-webkit-scrollbar-track,
-  .VPSidebar .nav::-webkit-scrollbar-track { background: transparent; }
   .VPSidebar::-webkit-scrollbar-thumb,
   .VPSidebar .content::-webkit-scrollbar-thumb,
   .VPSidebar .nav::-webkit-scrollbar-thumb {
@@ -176,15 +219,12 @@ html:not(.dark) {
 }
 
 
-/* ══════════════════════════════════════════════
-   DOC CONTENT
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   5. DOC CONTENT — typography
+   ════════════════════════════════════════════════ */
 
-.VPDoc .vp-doc {
-  max-width: 740px;
-}
+.VPDoc .vp-doc { max-width: 740px; }
 
-/* ── Headings ── */
 .vp-doc h1 {
   font-size: clamp(1.7rem, 3vw, 2.2rem);
   letter-spacing: -0.035em;
@@ -208,14 +248,13 @@ html:not(.dark) {
   letter-spacing: -0.01em;
 }
 
-/* ── Paragraphs ── */
 .vp-doc p {
   line-height: 1.78;
   font-size: 15px;
   color: var(--vp-c-text-1);
 }
 
-/* ── Inline code ── */
+/* Inline code */
 .vp-doc :not(pre) > code {
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: .8em;
@@ -238,41 +277,90 @@ html.dark .vp-doc :not(pre) > code {
 }
 
 
-/* ══════════════════════════════════════════════
-   CODE BLOCKS — VitePress native (Shiki)
-   Both themes use a dark code surface for consistency
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   6. CODE BLOCKS — Native VitePress fences
+   Forced to use Vix palette, neutralizing Shiki
+   ════════════════════════════════════════════════ */
 
+/* Container */
 .vp-doc div[class*="language-"],
 .vp-doc [class*="language-"] {
-  border-radius: var(--vix-radius) !important;
+  background: var(--cb-bg) !important;
   border: 1px solid var(--cb-border) !important;
-  overflow: hidden;
-  margin: 20px 0 !important;
+  border-radius: var(--vix-radius) !important;
   box-shadow: var(--cb-shadow);
-  transition: box-shadow var(--vix-transition), border-color var(--vix-transition);
+  margin: 20px 0 !important;
+  overflow: hidden;
+  position: relative;
+  transition: box-shadow var(--vix-transition);
 }
 
-/* Subtle lift on hover */
 .vp-doc div[class*="language-"]:hover,
 .vp-doc [class*="language-"]:hover {
   box-shadow: var(--cb-shadow), 0 0 0 1px var(--vix-accent-b);
 }
 
-/* Language label */
-.vp-doc div[class*="language-"] .lang {
+/* Pre wrapper */
+.vp-doc div[class*="language-"] pre,
+.vp-doc [class*="language-"] pre {
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 16px 18px !important;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace !important;
+  font-size: .875rem !important;
+  line-height: 1.72 !important;
+  color: #e6edf3 !important;
+  overflow-x: auto;
+}
+
+/* Code element */
+.vp-doc div[class*="language-"] code,
+.vp-doc [class*="language-"] code {
+  background: transparent !important;
+  color: #e6edf3 !important;
+  padding: 0 10px !important;
+  border: 0 !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+}
+
+/* ────────────────────────────────────────────────
+   NEUTRALIZE SHIKI INLINE STYLES
+   Shiki injects style="color:#xxxxxx" on each <span>.
+   We override them with our token classes below.
+   This catches anything that wasn't re-highlighted
+   by our custom JS, preventing rainbow fallback.
+   ──────────────────────────────────────────────── */
+.vp-doc div[class*="language-"] code span[style],
+.vp-doc [class*="language-"] code span[style] {
+  color: inherit !important;
+}
+
+/* But spans WITH our cb-* class get our palette */
+.vp-doc div[class*="language-"] code span[class*="cb-"],
+.vp-doc [class*="language-"] code span[class*="cb-"] {
+  color: revert;
+}
+
+/* Language label (top-right) */
+.vp-doc div[class*="language-"] > .lang,
+.vp-doc [class*="language-"] > .lang {
+  position: absolute;
+  top: 10px;
+  right: 50px;
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
-  color: rgba(255,255,255,.28);
-  top: 12px;
-  right: 14px;
+  color: rgba(255, 255, 255, .28);
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Copy button */
-.vp-doc [class*='language-'] > button.copy {
+.vp-doc [class*="language-"] > button.copy {
+  position: absolute !important;
   top: 8px !important;
   right: 8px !important;
   width: 32px !important;
@@ -283,63 +371,47 @@ html.dark .vp-doc :not(pre) > code {
   background-image: none !important;
   opacity: 0;
   transition: all var(--vix-transition) !important;
+  z-index: 2;
 }
 
-.vp-doc [class*='language-']:hover > button.copy {
-  opacity: 1 !important;
-}
+.vp-doc [class*="language-"]:hover > button.copy { opacity: 1 !important; }
 
-.vp-doc [class*='language-'] > button.copy::before {
+.vp-doc [class*="language-"] > button.copy::before {
   content: "";
   display: block;
-  width: 16px;
-  height: 16px;
+  width: 16px; height: 16px;
   margin: auto;
   background-color: rgba(255, 255, 255, .72);
-  mask-image: var(--vp-icon-copy);
-  mask-position: center;
-  mask-repeat: no-repeat;
-  mask-size: 16px 16px;
-  -webkit-mask-image: var(--vp-icon-copy);
-  -webkit-mask-position: center;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-size: 16px 16px;
+  mask: var(--vp-icon-copy) center / 16px 16px no-repeat;
+  -webkit-mask: var(--vp-icon-copy) center / 16px 16px no-repeat;
 }
 
-.vp-doc [class*='language-'] > button.copy:hover {
+.vp-doc [class*="language-"] > button.copy:hover {
   background-color: rgba(34, 197, 94, .14) !important;
   border-color: rgba(34, 197, 94, .30) !important;
-  transform: translateY(-1px);
 }
+.vp-doc [class*="language-"] > button.copy:hover::before { background-color: #86efac; }
+.vp-doc [class*="language-"] > button.copy.copied::before { background-color: #22c55e; }
 
-.vp-doc [class*='language-'] > button.copy:hover::before {
-  background-color: #86efac;
-}
-
-.vp-doc [class*='language-'] > button.copy.copied::before {
-  background-color: #22c55e;
-}
-
-/* Code scrollbars */
-.vp-doc pre::-webkit-scrollbar { height: 6px; }
+/* Scrollbar */
+.vp-doc pre::-webkit-scrollbar { height: 7px; }
 .vp-doc pre::-webkit-scrollbar-thumb {
-  background: rgba(34,197,94,.25);
+  background: rgba(34, 197, 94, .30);
   border-radius: 999px;
 }
-.vp-doc pre::-webkit-scrollbar-thumb:hover {
-  background: rgba(34,197,94,.45);
-}
+.vp-doc pre::-webkit-scrollbar-thumb:hover { background: rgba(34, 197, 94, .55); }
 .vp-doc pre::-webkit-scrollbar-track { background: transparent; }
 
 /* Line numbers */
 .vp-doc div[class*="language-"].line-numbers-mode .line-numbers-wrapper,
 .vp-doc [class*="language-"].line-numbers-mode .line-numbers-wrapper {
-  padding-top: 16px !important;
-  padding-bottom: 16px !important;
-  line-height: 1.72 !important;
-  font-size: .875rem !important;
+  padding: 16px 0 !important;
+  border-right: 1px solid rgba(255, 255, 255, .06) !important;
   font-family: "JetBrains Mono", ui-monospace, monospace !important;
-  border-right: 1px solid rgba(255,255,255,.06);
+  font-size: .875rem !important;
+  line-height: 1.72 !important;
+  color: rgba(255, 255, 255, .25) !important;
+  background: transparent !important;
 }
 
 .vp-doc div[class*="language-"].line-numbers-mode pre,
@@ -349,31 +421,57 @@ html.dark .vp-doc :not(pre) > code {
 }
 
 
-/* ══════════════════════════════════════════════
-   CUSTOM CodeBlock COMPONENT — Light mode overrides
-   The component always renders dark internally,
-   but we refine borders/shadows for light context
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   7. SYNTAX TOKENS — Vix custom palette
+   Applied to both <CodeBlock> and native fences
+   Spécificité boostée pour battre Shiki inline
+   ════════════════════════════════════════════════ */
 
-html:not(.dark) .cb {
-  border-color: rgba(0,0,0,.08);
-  background: var(--cb-bg);
-  box-shadow: none;
-}
+/* C++ tokens */
+.vp-doc .cb-dir,     .cb .cb-dir,     code span.cb-dir     { color: #c586c0 !important; font-weight: 600; }
+.vp-doc .cb-inc,     .cb .cb-inc,     code span.cb-inc     { color: #ce9178 !important; }
+.vp-doc .cb-ctrl,    .cb .cb-ctrl,    code span.cb-ctrl    { color: #c586c0 !important; font-weight: 600; }
+.vp-doc .cb-kw,      .cb .cb-kw,      code span.cb-kw      { color: #569cd6 !important; font-weight: 600; }
+.vp-doc .cb-type,    .cb .cb-type,    code span.cb-type    { color: #4ec9b0 !important; font-weight: 600; }
+.vp-doc .cb-ns,      .cb .cb-ns,      code span.cb-ns      { color: #4fc1ff !important; }
+.vp-doc .cb-fn,      .cb .cb-fn,      code span.cb-fn      { color: #dcdcaa !important; }
+.vp-doc .cb-blt,     .cb .cb-blt,     code span.cb-blt     { color: #dcdcaa !important; font-style: italic; }
+.vp-doc .cb-mem,     .cb .cb-mem,     code span.cb-mem     { color: #9cdcfe !important; }
+.vp-doc .cb-id,      .cb .cb-id,      code span.cb-id      { color: #e6edf3 !important; }
+.vp-doc .cb-const,   .cb .cb-const,   code span.cb-const   { color: #4fc1ff !important; font-weight: 600; }
+.vp-doc .cb-str,     .cb .cb-str,     code span.cb-str     { color: #ce9178 !important; }
+.vp-doc .cb-char,    .cb .cb-char,    code span.cb-char    { color: #d7ba7d !important; }
+.vp-doc .cb-num,     .cb .cb-num,     code span.cb-num     { color: #b5cea8 !important; font-weight: 500; }
+.vp-doc .cb-cmt,     .cb .cb-cmt,     code span.cb-cmt     { color: #6a9955 !important; font-style: italic; }
+.vp-doc .cb-op,      .cb .cb-op,      code span.cb-op      { color: rgba(230, 237, 243, .55) !important; }
+.vp-doc .cb-arrow,   .cb .cb-arrow,   code span.cb-arrow   { color: rgba(230, 237, 243, .70) !important; }
+.vp-doc .cb-brace,   .cb .cb-brace,   code span.cb-brace   { color: #ffd700 !important; }
+.vp-doc .cb-paren,   .cb .cb-paren,   code span.cb-paren   { color: rgba(230, 237, 243, .60) !important; }
+.vp-doc .cb-bracket, .cb .cb-bracket, code span.cb-bracket { color: #da70d6 !important; }
+.vp-doc .cb-semi,    .cb .cb-semi,    code span.cb-semi    { color: rgba(230, 237, 243, .55) !important; }
+.vp-doc .cb-url,     .cb .cb-url,     code span.cb-url     { color: #4fc1ff !important; text-decoration: underline; text-underline-offset: 2px; }
 
-html:not(.dark) .cb-head {
-  background: var(--cb-bg-head);
-  border-color: rgba(255,255,255,.06);
-}
+/* Shell tokens */
+.vp-doc .cb-sh-prompt,  .cb .cb-sh-prompt,  code span.cb-sh-prompt  { color: #22c55e !important; font-weight: 800; }
+.vp-doc .cb-sh-cmd,     .cb .cb-sh-cmd,     code span.cb-sh-cmd     { color: #38bdf8 !important; font-weight: 700; }
+.vp-doc .cb-sh-flag,    .cb .cb-sh-flag,    code span.cb-sh-flag    { color: #fb923c !important; }
+.vp-doc .cb-sh-path,    .cb .cb-sh-path,    code span.cb-sh-path    { color: #a5b4fc !important; }
+.vp-doc .cb-sh-url,     .cb .cb-sh-url,     code span.cb-sh-url     { color: #38bdf8 !important; text-decoration: underline; text-underline-offset: 2px; }
+.vp-doc .cb-sh-port,    .cb .cb-sh-port,    code span.cb-sh-port    { color: #b5cea8 !important; }
+.vp-doc .cb-sh-http,    .cb .cb-sh-http,    code span.cb-sh-http    { color: #dcdcaa !important; font-weight: 700; }
+.vp-doc .cb-sh-comment, .cb .cb-sh-comment, code span.cb-sh-comment { color: #6a9955 !important; font-style: italic; }
 
-html:not(.dark) .cb-body {
-  background: var(--cb-bg);
-}
+/* Plain text fallback */
+.vp-doc .language-text code,
+.vp-doc .language-plain code,
+.vp-doc .language-plaintext code,
+.vp-doc .language-txt code,
+.vp-doc div.language- code { color: #f8fafc !important; }
 
 
-/* ══════════════════════════════════════════════
-   TABLES
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   8. TABLES
+   ════════════════════════════════════════════════ */
 
 .vp-doc table {
   width: 100%;
@@ -405,16 +503,15 @@ html:not(.dark) .cb-body {
 
 .vp-doc tr:last-child td { border-bottom: 0; }
 
-/* Subtle row hover */
 .vp-doc tr:hover td {
   background: var(--vix-accent-s);
   transition: background var(--vix-transition);
 }
 
 
-/* ══════════════════════════════════════════════
-   BLOCKQUOTES
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   9. BLOCKQUOTES / CALLOUTS
+   ════════════════════════════════════════════════ */
 
 .vp-doc blockquote {
   border-left: 3px solid var(--vix-accent);
@@ -425,11 +522,6 @@ html:not(.dark) .cb-body {
   font-size: 14.5px;
   line-height: 1.72;
 }
-
-
-/* ══════════════════════════════════════════════
-   BADGES / CUSTOM CONTAINERS
-   ══════════════════════════════════════════════ */
 
 .vp-doc .tip,
 .vp-doc .warning,
@@ -442,9 +534,9 @@ html:not(.dark) .cb-body {
 }
 
 
-/* ══════════════════════════════════════════════
-   OUTLINE (TOC)
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   10. OUTLINE / TOC
+   ════════════════════════════════════════════════ */
 
 .VPDocAside .outline-link {
   font-size: 12.5px;
@@ -458,9 +550,9 @@ html:not(.dark) .cb-body {
 }
 
 
-/* ══════════════════════════════════════════════
-   PREV / NEXT NAVIGATION
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   11. PREV / NEXT NAV
+   ════════════════════════════════════════════════ */
 
 .VPDocFooter .pager-link {
   border-radius: var(--vix-radius);
@@ -477,9 +569,9 @@ html:not(.dark) .cb-body {
 }
 
 
-/* ══════════════════════════════════════════════
-   SEARCH
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   12. SEARCH
+   ════════════════════════════════════════════════ */
 
 .VPNavBarSearch .VPNavBarSearchButton,
 .VPNavBarSearch .DocSearch-Button {
@@ -496,12 +588,47 @@ html:not(.dark) .cb-body {
 .VPLocalSearchBox { background: transparent !important; border: none !important; }
 .VPBackdrop,
 .VPNavBarSearch .DocSearch-Overlay,
-.VPLocalSearchBox .backdrop { background: transparent !important; backdrop-filter: none !important; }
+.VPLocalSearchBox .backdrop {
+  background: transparent !important;
+  backdrop-filter: none !important;
+}
 
 
-/* ══════════════════════════════════════════════
-   MOBILE — Sidebar & Layout
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   13. LINKS & SELECTION
+   ════════════════════════════════════════════════ */
+
+.vp-doc a {
+  color: var(--vix-accent);
+  text-decoration: none;
+  text-underline-offset: 3px;
+  transition: color var(--vix-transition), text-decoration var(--vix-transition);
+}
+.vp-doc a:hover {
+  color: var(--vix-accent-d);
+  text-decoration: underline;
+}
+html.dark .vp-doc a { color: #4ade80; }
+html.dark .vp-doc a:hover { color: #86efac; }
+
+::selection {
+  background: rgba(34, 197, 94, .20);
+  color: inherit;
+}
+html.dark ::selection { background: rgba(34, 197, 94, .25); }
+
+
+/* ════════════════════════════════════════════════
+   14. UTILITIES
+   ════════════════════════════════════════════════ */
+
+.VPFooter { display: none !important; }
+.VPLocalNav { background: var(--vp-c-bg) !important; }
+
+
+/* ════════════════════════════════════════════════
+   15. MOBILE — Sidebar & Layout
+   ════════════════════════════════════════════════ */
 
 @media (max-width: 960px) {
   .VPNavBar {
@@ -511,9 +638,7 @@ html:not(.dark) .cb-body {
     right: auto !important;
   }
 
-  .VPContent {
-    padding-top: 0 !important;
-  }
+  .VPContent { padding-top: 0 !important; }
 
   .VPLocalNav {
     position: relative !important;
@@ -527,9 +652,7 @@ html:not(.dark) .cb-body {
   }
 
   .VPLocalNav .container,
-  .VPLocalNav .items {
-    background: var(--vp-c-bg) !important;
-  }
+  .VPLocalNav .items { background: var(--vp-c-bg) !important; }
 
   body.vix-local-nav-fixed .VPLocalNav {
     position: fixed !important;
@@ -563,15 +686,13 @@ html:not(.dark) .cb-body {
   .VPDoc,
   .VPDoc .container,
   .VPDoc .content,
-  .VPDoc .content-container {
-    overflow: visible !important;
-  }
+  .VPDoc .content-container { overflow: visible !important; }
 }
 
 
-/* ══════════════════════════════════════════════
-   RESPONSIVE TYPOGRAPHY & SPACING
-   ══════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   16. RESPONSIVE TYPOGRAPHY
+   ════════════════════════════════════════════════ */
 
 @media (max-width: 960px) {
   .VPNavBarTitle .title { font-size: 14px; }
@@ -580,16 +701,8 @@ html:not(.dark) .cb-body {
 }
 
 @media (max-width: 640px) {
-  .VPDoc {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-  }
-
-  .VPDoc .container {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
+  .VPDoc { padding: 0 12px !important; }
+  .VPDoc .container { padding: 0 !important; }
   .vp-doc h1 { font-size: 1.5rem; }
   .vp-doc p  { font-size: 14.5px; }
 
@@ -616,321 +729,21 @@ html:not(.dark) .cb-body {
   .VPDoc .container { padding: 0 12px !important; }
   .vp-doc h1 { font-size: 1.3rem; }
 }
-
-
-/* ══════════════════════════════════════════════
-   UTILITIES
-   ══════════════════════════════════════════════ */
-
-.VPFooter { display: none !important; }
-.VPLocalNav { background: var(--vp-c-bg) !important; }
-
-
-/* ══════════════════════════════════════════════
-   LINKS — Accent-colored with subtle underline
-   ══════════════════════════════════════════════ */
-
-.vp-doc a {
-  color: var(--vix-accent);
-  text-decoration: none;
-  text-underline-offset: 3px;
-  transition: color var(--vix-transition), text-decoration var(--vix-transition);
+.vp-doc div[class*="language-"] code, .vp-doc [class*="language-"] code {
+    background: transparent !important;
+    color: #e6edf3 !important;
+    padding: 0 0px !important;
+    border: 0 !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
 }
-
-.vp-doc a:hover {
-  color: var(--vix-accent-d);
-  text-decoration: underline;
-}
-
-html.dark .vp-doc a {
-  color: #4ade80;
-}
-
-html.dark .vp-doc a:hover {
-  color: #86efac;
-}
-
-
-/* ══════════════════════════════════════════════
-   SELECTION COLOR
-   ══════════════════════════════════════════════ */
-
-::selection {
-  background: rgba(34, 197, 94, .20);
-  color: inherit;
-}
-
-html.dark ::selection {
-  background: rgba(34, 197, 94, .25);
-}
-
-/* ============================================================
-   Plain text code blocks
-   Keep txt/text/plain/no-lang blocks readable on dark code surfaces
-   ============================================================ */
-
-/* Native VitePress code blocks: ```txt, ```text, ```plain, and ``` */
-.vp-doc div.language- code,
-.vp-doc div.language- pre,
-.vp-doc div[class*="language-txt"] code,
-.vp-doc div[class*="language-text"] code,
-.vp-doc div[class*="language-plain"] code,
-.vp-doc div[class*="language-plaintext"] code,
-.vp-doc [class*="language-txt"] code,
-.vp-doc [class*="language-text"] code,
-.vp-doc [class*="language-plain"] code,
-.vp-doc [class*="language-plaintext"] code,
-.vp-doc div[class*="language-txt"] pre,
-.vp-doc div[class*="language-text"] pre,
-.vp-doc div[class*="language-plain"] pre,
-.vp-doc div[class*="language-plaintext"] pre,
-.vp-doc [class*="language-txt"] pre,
-.vp-doc [class*="language-text"] pre,
-.vp-doc [class*="language-plain"] pre,
-.vp-doc [class*="language-plaintext"] pre {
-  color: #f8fafc !important;
-}
-
-/* Custom CodeBlock plain text */
-.vp-doc .cb .cb-code--plain {
-  color: #f8fafc !important;
-}
-
-.vp-doc .cb .cb-code--plain span {
-  color: inherit !important;
-}
-.vp-doc div[class*="language-"],
-.vp-doc [class*="language-"] {
-  background: var(--cb-bg) !important;
-  border-radius: var(--vix-radius) !important;
-  border: 1px solid var(--cb-border) !important;
-  overflow: hidden;
-  margin: 20px 0 !important;
-  box-shadow: none;
-  transition: border-color var(--vix-transition);
-}
-
-.vp-doc div[class*="language-"] pre,
-.vp-doc [class*="language-"] pre {
-  padding: 16px 18px !important;
-  font-size: .875rem !important;
-  line-height: 1.72 !important;
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace !important;
-  background: transparent !important;
-  margin: 0 !important;
-  overflow-x: auto;
-}
-
-.vp-doc div[class*="language-"] code,
-.vp-doc [class*="language-"] code {
-  background: transparent !important;
-}
-
-.vp-doc div[class*="language-"].line-numbers-mode .line-numbers-wrapper,
-.vp-doc [class*="language-"].line-numbers-mode .line-numbers-wrapper {
-  background: transparent !important;
-}
-
-.vp-doc div[class*="language-"].line-numbers-mode pre,
-.vp-doc [class*="language-"].line-numbers-mode pre {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  padding-top: 16px !important;
-  padding-bottom: 16px !important;
-}
-.vp-doc [class*='language-'] code,
-.vp-doc div[class*='language-'] code {
-  padding-left: 10px !important;
-  padding-right: 10px !important;
-}
-:root {
-  --cb-bg: #101820;
-  --cb-bg-head: #151f2a;
-}
-
-html.dark {
-  --cb-bg: #101820;
-  --cb-bg-head: #151f2a;
-}
-
-html:not(.dark) {
-  --cb-bg: #101820;
-  --cb-bg-head: #151f2a;
-}
-.vp-doc div[class*="language-"],
-.vp-doc [class*="language-"] {
-  background: var(--cb-bg) !important;
-}
-
-.vp-doc div[class*="language-"] pre,
-.vp-doc [class*="language-"] pre {
-  background: transparent !important;
-}
-
-.vp-doc div[class*="language-"] code,
-.vp-doc [class*="language-"] code {
-  background: transparent !important;
-}
-
-
-/* ============================================================
-   Sidebar tree hierarchy
-   DOM-based tree without duplicated rules
-   ============================================================ */
-
-/* Every nested items container becomes a tree branch */
-.VPSidebarItem .items {
-  margin-left: 14px !important;
-  padding-left: 12px !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-html:not(.dark) .VPSidebarItem .items {
-  border-left-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* First visible child level:
-   Overview, Core, Runtime, Data, System, Log */
-.VPSidebarItem .items > .VPSidebarItem > .item > .link {
-  padding-left: 16px !important;
-  font-size: 13px !important;
-  opacity: 0.9;
-}
-
-/* Deeper tree containers:
-   children inside Core, Log, Runtime, etc. */
-.VPSidebarItem .items .VPSidebarItem .items {
-  margin-left: 11px !important;
-  padding-left: 5px !important;
-  border-left: 1px solid rgba(255, 255, 255, 0.08) !important;
-}
-
-html:not(.dark) .VPSidebarItem .items .VPSidebarItem .items {
-  border-left-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* Real children:
-   Print, Console, Inspect, Input, etc. */
-.VPSidebarItem .items .VPSidebarItem .items > .VPSidebarItem > .item > .link {
-  padding-left: 0 !important;
-  font-size: 12.8px !important;
-  opacity: 0.88;
-}
-
-/* Deeper children if needed later */
-.VPSidebarItem .items .VPSidebarItem .items .VPSidebarItem .items > .VPSidebarItem > .item > .link {
-  padding-left: 0 !important;
-  font-size: 12.5px !important;
-  opacity: 0.82;
-}
-
-/* Bullet marker for nested links */
-.VPSidebarItem .items .VPSidebarItem .link::before {
-  content: "";
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  margin-right: 8px;
-  border-radius: 999px;
-  background: var(--vp-c-divider);
-  vertical-align: middle;
-}
-
-/* Do not show bullet on collapsible section parents if VitePress renders them as folders */
-.VPSidebarItem .items > .VPSidebarItem > .item > .link.has-active::before {
-  display: none;
-}
-
-/* Active item */
-.VPSidebarItem .items .VPSidebarItem.is-active > .item > .link {
-  opacity: 1;
-  font-weight: 700 !important;
-  color: var(--vix-accent) !important;
-}
-
-.VPSidebarItem .items .VPSidebarItem.is-active > .item > .link::before {
-  background: var(--vix-accent);
-}
-/* Remove all custom sidebar dot markers */
-.VPSidebarItem .link::before,
-.VPSidebarItem .items .VPSidebarItem .link::before,
-.VPSidebarItem .items .VPSidebarItem.is-active > .item > .link::before {
-  content: none !important;
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  margin-right: 0 !important;
-  background: transparent !important;
-}
-/* Remove sidebar tree vertical lines */
-.VPSidebarItem .items,
-.VPSidebarItem .items .VPSidebarItem .items,
-.VPSidebarGroup > .items,
-.VPSidebarGroup > .items > .VPSidebarItem > .items {
-  border-left: 0 !important;
-}
-.VPSidebarItem .items {
-    margin-left: 14px !important;
-    padding-left: 0px !important;
-}
-.VPSidebarItem .items .VPSidebarItem .items {
-    margin-left: 11px !important;
-    padding-left: 0px !important;
-}
-/* Keep first-level sidebar items aligned */
-.VPSidebarItem .items > .VPSidebarItem > .item > .link {
-  padding-left: 0 !important;
-  font-size: 13px !important;
-}
-
-/* Keep deeper children indented only inside folders like Core */
-.VPSidebarItem .items .VPSidebarItem .items > .VPSidebarItem > .item > .link {
-  padding-left: 0 !important;
-  font-size: 12.8px !important;
-  opacity: 0.88;
-}
-/* Remove active sidebar cursor indicator */
-.VPSidebarItem.is-active > .item::before,
-.VPSidebarItem.has-active > .item::before {
-  content: none !important;
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
-}
-
-/* Keep active sidebar link aligned */
-.VPSidebarItem.is-active > .item > .link,
-.VPSidebarItem.is-active > .item .link {
-  padding-left: 0 !important;
-}
-/* Remove active sidebar left cursor everywhere */
-.VPSidebarItem .indicator,
-.VPSidebarItem .item::before,
-.VPSidebarItem .item::after,
-.VPSidebarItem.is-active > .item::before,
-.VPSidebarItem.is-active > .item::after,
-.VPSidebarItem.has-active > .item::before,
-.VPSidebarItem.has-active > .item::after {
-  content: none !important;
-  display: none !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-}
-/* Force VitePress sidebar text */
-.VPSidebarItem .item .text,
-.VPSidebarItem .link .text,
-.VPSidebar .text[data-v-64d7ab74] {
-  flex-grow: 1 !important;
-  padding-top: 4px !important;
-  padding-right: 0 !important;
-  padding-bottom: 4px !important;
-  padding-left: 5px !important;
-  line-height: 24px !important;
-  font-size: 14px !important;
-  transition: color 0.25s !important;
+.vp-doc div[class*="language-"] pre, .vp-doc [class*="language-"] pre {
+    background: transparent !important;
+    margin: 0 !important;
+    padding: 16px 10px !important;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace !important;
+    font-size: .875rem !important;
+    line-height: 1.72 !important;
+    color: #e6edf3 !important;
+    overflow-x: auto;
 }
