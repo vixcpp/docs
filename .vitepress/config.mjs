@@ -1120,7 +1120,7 @@ gtag("config", "G-1B67VYZMXF");
         items: [
           {
             text: "Contribution",
-            link: "/contribution",
+            link: "/contributing",
           },
           {
             text: "Pull Requests",
