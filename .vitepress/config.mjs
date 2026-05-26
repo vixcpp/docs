@@ -1114,6 +1114,29 @@ gtag("config", "G-1B67VYZMXF");
         ],
       },
 
+      {
+        text: "Community",
+        collapsed: true,
+        items: [
+          {
+            text: "Contribution",
+            link: "/contribution",
+          },
+          {
+            text: "Pull Requests",
+            link: "/pull-request",
+          },
+          {
+            text: "Code of Conduct",
+            link: "/code-of-conduct",
+          },
+          {
+            text: "Security",
+            link: "/security",
+          },
+        ],
+      },
+
       ,
       {
         text: "Internals",
