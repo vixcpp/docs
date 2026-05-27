@@ -1,75 +1,64 @@
 # Create Your First Project
 
-This page shows how to create your first real Vix project.
-
-Until now, you used:
+This page shows how to create your first Vix project.
+You already know how to run a single C++ file:
 
 ```bash
 vix run main.cpp
 ```
 
-That is great for a single file.
+That is useful for quick experiments.
 
-For a real application, use:
+For a real project, use:
 
 ```bash
-vix new api
+vix new
 ```
 
-A Vix project gives you a clean structure, a build workflow, tests, configuration files, and a better development loop.
+A Vix project gives you a clean folder, a manifest, configuration files, tests, and project commands.
 
-## Create a project
+## Create a simple application
 
-Create a new project:
+Create a new application project:
 
 ```bash
 cd ~/tmp
-vix new api
+vix new hello --app
 ```
 
-Vix will ask which template you want to use.
-
-Choose:
-
-```txt
-Application
-```
-
-The output should look similar to this:
+This creates a minimal runnable Vix application.
+The CLI will print the next steps:
 
 ```txt
-Template
-❯ Application
-  Library (header-only)
-
-Core
-  ○ ORM
-  ○ Sanitizers
-  ○ Static C++ runtime
-
-Advanced
-  ○ Full static
-
-✔ Project created.
-  • Location  : /home/your-user/tmp/api
-
-✔  api  application
-─────────────────────────────────────
 next
-1  cd api/     enter project
-2  vix build   compile
-3  vix run     start app
+1  cd hello/    enter project
+2  vix build    compile
+3  vix run      start app
 ```
 
 ## Enter the project
 
 ```bash
-cd api
+cd hello
 ```
+
+## Create local configuration
+
+If the project contains `.env.example`, create your local `.env`:
+
+```bash
+cp .env.example .env
+```
+
+This is the recommended workflow.
+
+`.env.example` documents the expected configuration.
+
+`.env` contains your local values.
 
 ## Build the project
 
-Run:
+Compile the project:
 
 ```bash
 vix build
@@ -78,18 +67,17 @@ vix build
 Expected output shape:
 
 ```txt
-Compiling api (dev)
-  build [============================] done
+Compiling hello (dev)
   ✔ Configured
   ✔ Built
   ✔ Done in 1.6s
 ```
 
-This compiles the project without starting the application.
+`vix build` compiles the project without starting it.
 
 ## Run the project
 
-Run:
+Start the application:
 
 ```bash
 vix run
@@ -98,7 +86,7 @@ vix run
 Expected output shape:
 
 ```txt
-Vix.cpp   READY   v2.5.3   run
+● Vix.cpp   READY   v2.6.0   run
   › HTTP:    http://localhost:8080/
   i Threads: 8/8
   i Mode:    run
@@ -109,7 +97,7 @@ Vix.cpp   READY   v2.5.3   run
 Open another terminal and test it:
 
 ```bash
-curl -i http://127.0.0.1:8080/
+curl http://127.0.0.1:8080/
 ```
 
 Stop the server with:
@@ -126,48 +114,40 @@ For day-to-day development, use:
 vix dev
 ```
 
-`vix dev` starts the project in development mode.
+Use `vix dev` when you are editing code and want a development loop.
 
-Use it when you are editing code and want a faster development loop.
-
-Then open:
-
-```txt
-http://localhost:8080/
-```
+Use `vix run` when you simply want to start the application.
 
 ## Generated project structure
 
-A basic application project usually looks like this:
+A simple application project looks like this:
 
 ```txt
-api/
-├── CMakeLists.txt
-├── CMakePresets.json
-├── README.md
-├── app.vix
-├── vix.json
-├── .env
-├── .env.example
+hello/
 ├── src/
 │   └── main.cpp
-└── tests/
-    └── test_basic.cpp
+├── tests/
+│   └── test_basic.cpp
+├── .env.example
+├── .env
+├── vix.app
+├── vix.json
+└── README.md
 ```
+
+Some projects may include extra files depending on the selected template.
 
 ## What each file does
 
-| File or folder | Purpose |
-| --- | --- |
-| `src/` | Application source code. |
-| `tests/` | Project tests. |
-| `CMakeLists.txt` | C++ build configuration. |
-| `CMakePresets.json` | Build presets used by CMake and Vix. |
-| `app.vix` | Vix app manifest. |
-| `vix.json` | Vix project metadata, dependencies, and tasks. |
-| `.env` | Local runtime configuration. |
-| `.env.example` | Example environment file. |
-| `README.md` | Project documentation. |
+| File or folder | Purpose                                                |
+| -------------- | ------------------------------------------------------ |
+| `src/main.cpp` | Main application entry point.                          |
+| `tests/`       | Project tests.                                         |
+| `.env.example` | Example configuration shared with the project.         |
+| `.env`         | Local configuration for your machine.                  |
+| `vix.app`      | Application manifest used by Vix to build the project. |
+| `vix.json`     | Project metadata, tasks, and dependencies.             |
+| `README.md`    | Generated project documentation.                       |
 
 ## Open the entry file
 
@@ -177,7 +157,9 @@ Open:
 src/main.cpp
 ```
 
-A minimal generated app can look like this:
+A simple generated app keeps the entry point small.
+
+The exact code can evolve between versions, but the idea stays the same:
 
 ```cpp
 #include <vix.hpp>
@@ -189,90 +171,26 @@ int main()
   App app;
 
   app.get("/", [](Request &, Response &res) {
-    res.send("Hello world");
+    res.send("Hello from Vix.cpp");
   });
 
-  app.run(8080);
+  app.run();
 
   return 0;
 }
 ```
 
-This is the main entrypoint of your application.
+The port should come from configuration, not from hardcoded values in normal applications.
 
-## Edit the first route
+## Configuration
 
-Replace the route with a JSON response:
+Open:
 
-```cpp
-app.get("/", [](Request &, Response &res) {
-  res.json({
-    "message", "Hello from your first Vix project",
-    "framework", "Vix.cpp"
-  });
-});
+```txt
+.env
 ```
 
-Add a health route:
-
-```cpp
-app.get("/health", [](Request &, Response &res) {
-  res.json({
-    "ok", true,
-    "service", "api"
-  });
-});
-```
-
-Your full `src/main.cpp` can look like this:
-
-```cpp
-#include <vix.hpp>
-
-using namespace vix;
-
-int main()
-{
-  App app;
-
-  app.get("/", [](Request &, Response &res) {
-    res.json({
-      "message", "Hello from your first Vix project",
-      "framework", "Vix.cpp"
-    });
-  });
-
-  app.get("/health", [](Request &, Response &res) {
-    res.json({
-      "ok", true,
-      "service", "api"
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-Run:
-
-```bash
-vix dev
-```
-
-Test:
-
-```bash
-curl -i http://127.0.0.1:8080/
-curl -i http://127.0.0.1:8080/health
-```
-
-## Use `.env`
-
-Vix projects can use `.env` files for local configuration.
-
-Example:
+You may see values such as:
 
 ```dotenv
 SERVER_PORT=8080
@@ -280,33 +198,58 @@ VIX_LOG_LEVEL=info
 VIX_LOG_FORMAT=kv
 ```
 
-In code, you can load configuration:
+To change the port, edit:
 
-```cpp
-#include <vix.hpp>
-
-using namespace vix;
-
-int main()
-{
-  config::Config cfg{".env"};
-
-  App app;
-
-  app.get("/", [](Request &, Response &res) {
-    res.json({
-      "message", "Hello from Vix",
-      "framework", "Vix.cpp"
-    });
-  });
-
-  app.run(cfg.getServerPort());
-
-  return 0;
-}
+```dotenv
+SERVER_PORT=3000
 ```
 
-Now the server port comes from `.env`.
+Then run again:
+
+```bash
+vix run
+```
+
+The source code does not need to change.
+
+## `vix.app`
+
+The `vix.app` file describes the application target.
+
+It tells Vix what to build.
+
+For simple projects, you do not need to write a `CMakeLists.txt` manually.
+
+The flow is:
+
+```txt
+vix.app
+  -> Vix generates the internal CMake project
+  -> vix build compiles the app
+  -> vix run starts the app
+```
+
+This gives you a simple project file while keeping a real native C++ build underneath.
+
+## `vix.json`
+
+The `vix.json` file stores project metadata, tasks, and dependency information.
+
+Some projects define tasks that you can run with:
+
+```bash
+vix task <name>
+```
+
+Common examples:
+
+```bash
+vix task dev
+vix task test
+vix task ci
+```
+
+The exact tasks depend on the generated template.
 
 ## Useful project commands
 
@@ -321,87 +264,47 @@ vix tests
 vix fmt
 ```
 
-| Command | Purpose |
-| --- | --- |
-| `vix build` | Compile the project. |
-| `vix run` | Build and start the app. |
-| `vix dev` | Start development mode. |
-| `vix check` | Validate the project. |
-| `vix tests` | Run tests. |
-| `vix fmt` | Format source files. |
+| Command     | Purpose                            |
+| ----------- | ---------------------------------- |
+| `vix build` | Compile the project.               |
+| `vix run`   | Build if needed and start the app. |
+| `vix dev`   | Start development mode.            |
+| `vix check` | Validate the project.              |
+| `vix tests` | Run tests.                         |
+| `vix fmt`   | Format source files.               |
 
-## Project tasks
+## Project templates
 
-Some projects define tasks in `vix.json`.
+The `--app` template is the simplest way to start.
 
-You can run them with:
+Vix also provides templates for more specific project types.
 
-```bash
-vix task dev
-vix task test
-vix task check
-```
+| Template    | Command                            | Use when                                               |
+| ----------- | ---------------------------------- | ------------------------------------------------------ |
+| Application | `vix new hello --app`              | You want a minimal runnable Vix application.           |
+| Backend     | `vix new api --template backend`   | You want a production-oriented API or backend service. |
+| Web         | `vix new site --template web`      | You want server-rendered HTML with Vix templates.      |
+| Vue         | `vix new dashboard --template vue` | You want a Vue frontend with a Vix C++ backend.        |
+| Game        | `vix new game --template game`     | You want a game-oriented Vix project.                  |
+| Library     | `vix new mathlib --lib`            | You want a reusable C++ library.                       |
 
-A `vix.json` file can contain tasks like:
+Getting Started uses `--app` because it is the smallest project shape.
 
-```json
-{
-  "name": "api",
-  "deps": [],
-  "vars": {
-    "preset": "dev-ninja",
-    "release_preset": "release"
-  },
-  "tasks": {
-    "dev": {
-      "description": "Start dev mode",
-      "command": "vix dev"
-    },
-    "test": {
-      "description": "Run tests",
-      "command": "vix tests --preset ${preset}"
-    },
-    "check": {
-      "description": "Validate project",
-      "command": "vix check --preset ${preset} --tests"
-    }
-  }
-}
-```
+The other templates have their own structure and evolution strategy.
 
-## Application vs library
+You will learn them in the Project Templates section.
 
-When you run:
+## When to use another template
 
-```bash
-vix new api
-```
+Use the backend template when you want controllers, routes, middleware, public files, storage, migrations, tests, and production diagnostics from the beginning.
 
-Vix can create different kinds of projects.
+Use the web template when you want HTML rendered on the server with Vix templates.
 
-For this guide, choose:
+Use the Vue template when you want a modern frontend and a Vix backend in the same project.
 
-```txt
-Application
-```
+Use the game template when you want a game-oriented runtime structure.
 
-Use Application when you want to build a runnable app, server, API, or service.
-
-Use Library (header-only) when you want to build a reusable C++ library.
-
-Example:
-
-```bash
-vix new tree
-```
-
-Then choose:
-
-```txt
-Library (header-only)
-```
-
-A library project is useful when you want to create reusable headers and tests, but it is not the main path for this Getting Started guide.
+Use the library template when you want reusable C++ code instead of a runnable app.
 
 ## Common mistakes
 
@@ -411,70 +314,66 @@ Wrong:
 
 ```bash
 cd ~/tmp
-vix dev
+vix run
 ```
 
 Correct:
 
 ```bash
-cd ~/tmp/api
-vix dev
+cd ~/tmp/hello
+vix run
 ```
 
 Run project commands from the project folder.
 
+### Forgetting `.env`
+
+If the project has `.env.example`, create your local `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Do this once after generating the project.
+
 ### Forgetting to stop the previous server
 
-If port 8080 is already in use, stop the previous server with:
+If port `8080` is already in use, stop the previous server with:
 
 ```txt
 Ctrl+C
 ```
 
-Or find the process:
+Or change the port in `.env`:
 
-```bash
-sudo lsof -i :8080
+```dotenv
+SERVER_PORT=3000
 ```
 
-### Editing files but not rebuilding
-
-When using:
+Then run again:
 
 ```bash
 vix run
 ```
 
-you may need to restart manually after changes.
+### Editing files but not using development mode
 
-For active development, use:
+For active development, prefer:
 
 ```bash
 vix dev
 ```
 
-### Adding new `.cpp` files
-
-If you add new source files, make sure they are part of the build.
-
-For a CMake project, update `CMakeLists.txt`.
-
-Example:
-
-```cmake
-add_executable(api
-  src/main.cpp
-  src/routes.cpp
-)
-```
+Use `vix run` when you simply want to start the app.
 
 ## What you should remember
 
-Create an application project:
+Create a simple application project:
 
 ```bash
-vix new api
-cd api
+vix new hello --app
+cd hello
+cp .env.example .env
 ```
 
 Build it:
@@ -495,10 +394,19 @@ Develop it:
 vix dev
 ```
 
-A Vix project is the point where a quick experiment becomes a real application.
+A Vix project is where a quick experiment becomes a real application.
 
 ## Next step
 
 Build your first HTTP server with Vix.
 
 Next: [Your First HTTP Server](/getting-started/first-http-server)
+
+For deeper project structures, continue later with:
+
+- [Application template](/templates/application)
+- [Backend template](/templates/backend)
+- [Web template](/templates/web)
+- [Vue template](/templates/vue)
+- [Game template](/templates/game)
+- [Library template](/templates/library)

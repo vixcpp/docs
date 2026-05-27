@@ -8,35 +8,31 @@ The main command is:
 vix run main.cpp
 ```
 
-This is the fastest way to start using Vix.
+Use this mode for quick experiments, small examples, and learning.
 
 ## Create a workspace
 
-Create a temporary folder:
+Create a clean folder:
 
 ```bash
 mkdir -p ~/tmp/vix-first-file
 cd ~/tmp/vix-first-file
 ```
 
-Create `main.cpp`:
+## Create `main.cpp`
+
+Create the file:
 
 ```bash
-touch main.cpp
-```
-
-## Write your first C++ program
-
-Open `main.cpp` and write:
-
-```cpp
-#include <iostream>
+cat > main.cpp <<'CPP'
+#include <vix.hpp>
 
 int main()
 {
-  std::cout << "Hello from Vix\n";
+  vix::print("Hello from Vix.cpp");
   return 0;
 }
+CPP
 ```
 
 Run it:
@@ -48,7 +44,7 @@ vix run main.cpp
 Expected output:
 
 ```txt
-Hello from Vix
+Hello from Vix.cpp
 ```
 
 ## What happened?
@@ -59,29 +55,24 @@ When you run:
 vix run main.cpp
 ```
 
-Vix detects that you passed a single `.cpp` file.
+Vix detects a single C++ source file, builds it, then runs the generated program.
 
-It then:
+You do not need to create a full project for this mode.
 
-```txt
-detects the file → compiles it → runs it → prints the output
-```
+Single-file mode is useful for:
 
-You do not need to create a full project yet.
-
-This mode is useful for:
-
-- quick experiments
-- learning Vix
 - testing small ideas
-- writing small C++ tools
+- learning Vix APIs
+- writing small tools
 - running examples
+- validating quick C++ code
 
-## Run a Vix HTTP file
+## Run a small HTTP app
 
-Now replace `main.cpp` with a small Vix HTTP app:
+Replace `main.cpp`:
 
-```cpp
+```bash
+cat > main.cpp <<'CPP'
 #include <vix.hpp>
 
 using namespace vix;
@@ -91,13 +82,24 @@ int main()
   App app;
 
   app.get("/", [](Request &, Response &res) {
-    res.text("Hello Vix");
+    res.text("Hello from Vix.cpp");
   });
 
-  app.run(8080);
+  app.run();
 
   return 0;
 }
+CPP
+```
+
+Create `.env`:
+
+```bash
+cat > .env <<'EOF'
+SERVER_PORT=8080
+VIX_LOG_LEVEL=info
+VIX_LOG_FORMAT=kv
+EOF
 ```
 
 Run it:
@@ -109,12 +111,12 @@ vix run main.cpp
 Expected output shape:
 
 ```txt
-Vix.cpp   READY
+Vix.cpp   READY   v2.6.0
 HTTP:    http://localhost:8080/
 Status:  ready
 ```
 
-Open another terminal and test the server:
+Test it in another terminal:
 
 ```bash
 curl -i http://127.0.0.1:8080/
@@ -123,7 +125,7 @@ curl -i http://127.0.0.1:8080/
 Expected response:
 
 ```txt
-Hello Vix
+Hello from Vix.cpp
 ```
 
 Stop the server with:
@@ -134,11 +136,10 @@ Ctrl+C
 
 ## Return JSON
 
-Most Vix backend apps return JSON.
+Replace `main.cpp` with a JSON response:
 
-Update the route:
-
-```cpp
+```bash
+cat > main.cpp <<'CPP'
 #include <vix.hpp>
 
 using namespace vix;
@@ -149,8 +150,8 @@ int main()
 
   app.get("/", [](Request &, Response &res) {
     res.json({
-      "message", "Hello from Vix",
-      "framework", "Vix.cpp"
+      "message", "Hello from Vix.cpp",
+      "mode", "single-file"
     });
   });
 
@@ -161,13 +162,14 @@ int main()
     });
   });
 
-  app.run(8080);
+  app.run();
 
   return 0;
 }
+CPP
 ```
 
-Run it again:
+Run it:
 
 ```bash
 vix run main.cpp
@@ -182,28 +184,55 @@ curl -i http://127.0.0.1:8080/health
 
 ## Add a route parameter
 
-Vix routes can contain path parameters.
+Update `main.cpp`:
 
-Add this route before `app.run(8080)`:
+```bash
+cat > main.cpp <<'CPP'
+#include <vix.hpp>
 
-```cpp
-app.get("/hello/{name}", [](Request &req, Response &res) {
-  const std::string name = req.param("name");
+using namespace vix;
 
-  res.json({
-    "greeting", "Hello " + name,
-    "powered_by", "Vix.cpp"
+int main()
+{
+  App app;
+
+  app.get("/", [](Request &, Response &res) {
+    res.json({
+      "message", "Hello from Vix.cpp",
+      "mode", "single-file"
+    });
   });
-});
+
+  app.get("/health", [](Request &, Response &res) {
+    res.json({
+      "ok", true,
+      "service", "first-file"
+    });
+  });
+
+  app.get("/hello/{name}", [](Request &req, Response &res) {
+    const std::string name = req.param("name");
+
+    res.json({
+      "greeting", "Hello " + name,
+      "powered_by", "Vix.cpp"
+    });
+  });
+
+  app.run();
+
+  return 0;
+}
+CPP
 ```
 
-Run:
+Run it:
 
 ```bash
 vix run main.cpp
 ```
 
-Test:
+Test it:
 
 ```bash
 curl -i http://127.0.0.1:8080/hello/Gaspard
@@ -220,48 +249,10 @@ Expected response shape:
 
 ## Add a query parameter
 
-Query parameters come after `?` in the URL.
-
-Add this route before `app.run(8080)`:
-
-```cpp
-app.get("/users/{id}", [](Request &req, Response &res) {
-  const std::string id = req.param("id");
-  const std::string page = req.query_value("page", "1");
-
-  res.json({
-    "id", id,
-    "page", page
-  });
-});
-```
-
-Run:
+Update `main.cpp` again:
 
 ```bash
-vix run main.cpp
-```
-
-Test:
-
-```bash
-curl -i "http://127.0.0.1:8080/users/42?page=2"
-```
-
-Expected response shape:
-
-```json
-{
-  "id": "42",
-  "page": "2"
-}
-```
-
-## Complete example
-
-Your full `main.cpp` can look like this:
-
-```cpp
+cat > main.cpp <<'CPP'
 #include <vix.hpp>
 
 using namespace vix;
@@ -272,8 +263,8 @@ int main()
 
   app.get("/", [](Request &, Response &res) {
     res.json({
-      "message", "Hello from Vix",
-      "framework", "Vix.cpp"
+      "message", "Hello from Vix.cpp",
+      "mode", "single-file"
     });
   });
 
@@ -303,97 +294,76 @@ int main()
     });
   });
 
-  app.run(8080);
+  app.run();
 
   return 0;
 }
+CPP
 ```
 
-Run:
+Run it:
 
 ```bash
 vix run main.cpp
 ```
 
-Test:
+Test it:
 
 ```bash
-curl -i http://127.0.0.1:8080/
-curl -i http://127.0.0.1:8080/health
-curl -i http://127.0.0.1:8080/hello/Gaspard
 curl -i "http://127.0.0.1:8080/users/42?page=2"
+```
+
+Expected response shape:
+
+```json
+{
+  "id": "42",
+  "page": "2"
+}
 ```
 
 ## Pass runtime arguments
 
-Runtime arguments are arguments passed to your program.
+Runtime arguments are passed to your program with `--run`.
 
-Use `--run`:
+Create a small argument example:
 
 ```bash
-vix run main.cpp --run --port 8080
-```
-
-Use this when your program reads `argv`.
-
-Example:
-
-```cpp
-#include <iostream>
+cat > main.cpp <<'CPP'
+#include <vix.hpp>
 
 int main(int argc, char **argv)
 {
-  std::cout << "argc = " << argc << "\n";
+  vix::print("argc = {}", argc);
 
   for (int i = 0; i < argc; ++i)
   {
-    std::cout << "argv[" << i << "] = " << argv[i] << "\n";
+    vix::print("argv[{}] = {}", i, argv[i]);
   }
 
   return 0;
 }
+CPP
 ```
 
-Run:
+Run it:
 
 ```bash
-vix run main.cpp --run --port 8080
-```
-
-## Important: `--run` vs `--`
-
-In script mode, `--run` is for runtime arguments.
-
-```bash
-vix run main.cpp --run --port 8080
-```
-
-The `--` separator is for compiler or linker flags.
-
-```bash
-vix run main.cpp -- -O2 -DNDEBUG
-```
-
-Do not use `--` for runtime arguments in script mode.
-
-Wrong:
-
-```bash
-vix run main.cpp -- --port 8080
-```
-
-Correct:
-
-```bash
-vix run main.cpp --run --port 8080
+vix run main.cpp --run --name Vix
 ```
 
 ## Pass compiler flags
 
-Use `--` to pass compiler or linker flags:
+Use `--` for compiler and linker flags:
 
 ```bash
 vix run main.cpp -- -O2 -DNDEBUG
+```
+
+Add include paths:
+
+```bash
+vix run main.cpp -- -I./include
 ```
 
 Link with libraries:
@@ -402,11 +372,21 @@ Link with libraries:
 vix run main.cpp -- -lssl -lcrypto
 ```
 
-Add include paths:
+## `--run` vs `--`
+
+Use `--run` for arguments passed to your program:
 
 ```bash
-vix run main.cpp -- -I./include
+vix run main.cpp --run --name Vix
 ```
+
+Use `--` for compiler or linker flags:
+
+```bash
+vix run main.cpp -- -O2 -DNDEBUG
+```
+
+Do not use `--` for runtime arguments.
 
 ## Use watch mode
 
@@ -416,17 +396,15 @@ During development, you can rebuild and restart when the file changes:
 vix run main.cpp --watch
 ```
 
-For project development, you will usually use:
+For full projects, you will usually use:
 
 ```bash
 vix dev
 ```
 
-You will learn this in the next pages.
-
 ## Use sanitizers
 
-For debugging memory issues:
+For memory debugging:
 
 ```bash
 vix run main.cpp --san
@@ -438,110 +416,47 @@ For undefined behavior checks:
 vix run main.cpp --ubsan
 ```
 
-## Common mistakes
-
-### Using CLI-only installation
-
-If your code uses:
-
-```cpp
-#include <vix.hpp>
-```
-
-you need the full SDK.
-
-Check:
-
-```bash
-find ~/.local/include -name vix.hpp 2>/dev/null
-```
-
-If nothing appears, reinstall Vix:
-
-```bash
-curl -fsSL https://vixcpp.com/install.sh | bash
-```
-
-### Passing runtime args after `--`
-
-Wrong:
-
-```bash
-vix run main.cpp -- --port 8080
-```
-
-Correct:
-
-```bash
-vix run main.cpp --run --port 8080
-```
-
-### Port 8080 is already in use
-
-If the server cannot start, another process may already be using port 8080.
-
-Check:
-
-```bash
-sudo lsof -i :8080
-```
-
-Stop the other process or change the port:
-
-```cpp
-app.run(3000);
-```
-
-### Running from the wrong directory
-
-Relative paths depend on the directory where you run `vix`.
-
-For example:
-
-```cpp
-res.file("public/index.html");
-```
-
-will look for:
-
-```txt
-public/index.html
-```
-
-relative to your current working directory.
-
 ## When to create a project
 
-A single file is perfect for learning.
+A single file is perfect for learning and small tests.
 
 Move to a project when you need:
 
-- multiple `.cpp` files
+- multiple source files
 - headers
-- tests
 - dependencies
-- `.env` configuration
+- tests
+- `.env.example`
 - a stable folder structure
-- release builds
-
-The next page shows how to create a real Vix project.
+- production builds
 
 ## What you should remember
 
-The main command is:
+Run a single C++ file:
 
 ```bash
 vix run main.cpp
 ```
 
-Use:
+Use `.env` for configuration:
 
-- `--run` for runtime arguments
-- `--` for compiler and linker flags
+```dotenv
+SERVER_PORT=8080
+```
 
-Single-file mode is the fastest way to start.
+Use `--run` for runtime arguments:
 
-When your app grows, create a project.
+```bash
+vix run main.cpp --run --name Vix
+```
+
+Use `--` for compiler and linker flags:
+
+```bash
+vix run main.cpp -- -O2 -DNDEBUG
+```
+
+When the app grows, create a real project.
 
 ## Next step
 

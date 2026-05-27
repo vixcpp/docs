@@ -179,6 +179,40 @@ gtag("config", "G-1B67VYZMXF");
         ],
       },
       {
+        text: "Project Templates",
+        collapsed: false,
+        items: [
+          {
+            text: "Overview",
+            link: "/templates/",
+          },
+          {
+            text: "Application",
+            link: "/templates/application",
+          },
+          {
+            text: "Backend",
+            link: "/templates/backend",
+          },
+          {
+            text: "Web",
+            link: "/templates/web",
+          },
+          {
+            text: "Vue",
+            link: "/templates/vue",
+          },
+          {
+            text: "Game",
+            link: "/templates/game",
+          },
+          {
+            text: "Library",
+            link: "/templates/library",
+          },
+        ],
+      },
+      {
         text: "The Vix Book",
         collapsed: false,
         items: [
@@ -267,6 +301,7 @@ gtag("config", "G-1B67VYZMXF");
           { text: "WebSocket chat", link: "/guides/websocket-chat" },
           { text: "Static files", link: "/guides/static-files" },
           { text: "Templates", link: "/guides/templates" },
+          { text: "Game", link: "/guides/game" },
           {
             text: "Production: Nginx + systemd",
             link: "/guides/production-nginx-systemd",
@@ -1136,8 +1171,6 @@ gtag("config", "G-1B67VYZMXF");
           },
         ],
       },
-
-      ,
       {
         text: "Internals",
         collapsed: true,

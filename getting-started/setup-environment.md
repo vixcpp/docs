@@ -1,12 +1,23 @@
 # Set Up Your Environment
 
-This page helps you prepare a clean development environment for Vix.cpp.
+This page helps you confirm that your Vix.cpp development environment is ready.
+At this point, Vix should already be installed.
 
-Before writing real Vix applications, make sure your terminal, compiler, build tools, and project folder are ready.
+You should have:
+
+- the `vix` CLI
+- the full Vix SDK
+- a C++ compiler
+- CMake
+- Ninja
+- the required system libraries for your platform
+
+This page does not repeat the full installation steps.
+It only verifies that your local environment can run a Vix application.
 
 ## Check Vix
 
-First, verify that the `vix` command is available:
+Check that the `vix` command is available:
 
 ```bash
 vix --version
@@ -16,134 +27,31 @@ Expected output shape:
 
 ```txt
 Vix.cpp CLI
-version : 2.5.3
+version : 2.6.0
 author  : Gaspard Kirira
 source  : https://github.com/vixcpp/vix
 ```
 
-The exact version may be different.
+The exact version may be newer depending on the latest release.
 
-## Check your C++ compiler
+## Choose a working folder
 
-Vix uses your system C++ compiler underneath.
-
-Run:
+Use a clean temporary folder for the first examples:
 
 ```bash
-c++ --version
+cd /tmp
 ```
 
-You should see a compiler such as GCC, Clang, MSVC, or clang-cl.
-
-On Linux, GCC or Clang is recommended.
-
-## Check CMake
-
-Vix uses CMake for project builds.
-
-Run:
+Or use your own workspace:
 
 ```bash
-cmake --version
+mkdir -p ~/projects/vix-examples
+cd ~/projects/vix-examples
 ```
 
-If CMake is missing on Ubuntu or Debian:
-
-```bash
-sudo apt update
-sudo apt install -y cmake
-```
-
-## Check Ninja
-
-Ninja is the recommended build backend for Vix projects.
-
-Run:
-
-```bash
-ninja --version
-```
-
-If Ninja is missing on Ubuntu or Debian:
-
-```bash
-sudo apt install -y ninja-build
-```
-
-## Check common development libraries
-
-For most Vix applications, install the common C++ development dependencies.
-
-### Ubuntu or Debian
-
-```bash
-sudo apt update
-sudo apt install -y \
-  build-essential cmake ninja-build pkg-config \
-  libssl-dev libsqlite3-dev zlib1g-dev libbrotli-dev \
-  nlohmann-json3-dev libspdlog-dev libfmt-dev
-```
-
-### macOS
-
-With Homebrew:
-
-```bash
-brew install cmake ninja pkg-config openssl@3 spdlog fmt nlohmann-json brotli
-```
-
-### Windows
-
-Install Visual Studio Build Tools with MSVC or clang-cl.
-
-For optional libraries, use vcpkg.
-
-## Recommended project folder
-
-Create a clean folder for experiments:
-
-```bash
-mkdir -p ~/tmp
-cd ~/tmp
-```
-
-You can use this folder for the first examples in this guide.
-
-## Create a quick test file
+## Create a Vix application
 
 Create `main.cpp`:
-
-```bash
-cat > main.cpp <<'CPP'
-#include <iostream>
-
-int main()
-{
-  std::cout << "Hello from my C++ environment\n";
-  return 0;
-}
-CPP
-```
-
-Run it with Vix:
-
-```bash
-vix run main.cpp
-```
-
-Expected output:
-
-```txt
-Hello from my C++ environment
-```
-
-If this works, your basic C++ environment is ready.
-
-## Test a Vix HTTP program
-
-Now test that the Vix SDK headers and libraries are available.
-
-Replace `main.cpp`:
 
 ```bash
 cat > main.cpp <<'CPP'
@@ -157,17 +65,50 @@ int main()
 
   app.get("/", [](Request &, Response &res) {
     res.json({
-      "message", "Hello from Vix",
-      "framework", "Vix.cpp"
+      "message", "Hello from Vix.cpp",
+      "version", "2.6.0"
     });
   });
 
-  app.run(8080);
+  app.run();
 
   return 0;
 }
 CPP
 ```
+
+The application uses:
+
+```cpp
+app.run();
+```
+
+This is intentional.
+
+Vix reads the server port from the environment.
+
+## Configure the port with `.env`
+
+Create a `.env` file:
+
+```bash
+cat > .env <<'EOF'
+SERVER_PORT=8080
+VIX_LOG_LEVEL=info
+VIX_LOG_FORMAT=kv
+EOF
+```
+
+This keeps configuration outside the source code.
+
+Your project now has:
+
+```txt
+main.cpp
+.env
+```
+
+## Run the application
 
 Run it:
 
@@ -178,44 +119,94 @@ vix run main.cpp
 Expected output shape:
 
 ```txt
-Vix.cpp   READY
-HTTP:    http://localhost:8080/
-Status:  ready
+12:09:05 PM  ● Vix.cpp   READY   v2.6.0 (1 ms)   run
+  › HTTP:    http://localhost:8080/
+  i Threads: 8/8
+  i Mode:    run
+  i Status:  ready
+  i Hint:    Ctrl+C to stop the server
 ```
 
-In another terminal, test the server:
+This means Vix successfully compiled and started your application.
+
+## Test the server
+
+Open another terminal and run:
 
 ```bash
-curl -i http://127.0.0.1:8080/
+curl http://127.0.0.1:8080/
 ```
 
 Expected response shape:
 
 ```json
 {
-  "message": "Hello from Vix",
-  "framework": "Vix.cpp"
+  "message": "Hello from Vix.cpp",
+  "version": "2.6.0"
 }
 ```
 
-Stop the server with:
+You can also open this URL in your browser:
+
+```txt
+http://localhost:8080/
+```
+
+## Stop the server
+
+Go back to the terminal running the server and press:
 
 ```txt
 Ctrl+C
 ```
 
-## Check useful Vix commands
+Expected output shape:
 
-These commands help you inspect your environment:
+```txt
+Program interrupted by user (SIGINT).
+```
+
+## Change the port
+
+To change the port, edit `.env`:
+
+```dotenv
+SERVER_PORT=3000
+VIX_LOG_LEVEL=info
+VIX_LOG_FORMAT=kv
+```
+
+Then run again:
+
+```bash
+vix run main.cpp
+```
+
+Open:
+
+```txt
+http://localhost:3000/
+```
+
+This is the recommended workflow.
+
+Do not hardcode the port in your source code for normal applications.
+
+## Useful environment commands
+
+You can inspect your setup with:
 
 ```bash
 vix doctor
+```
+
+And inspect Vix paths, cache, and installation details with:
+
+```bash
 vix info
 ```
 
-Use `vix doctor` when you want to check whether your toolchain is healthy.
-
-Use `vix info` when you want to inspect paths, cache directories, and installation details.
+These commands are useful when something does not behave as expected.
 
 ## Recommended editor setup
 
@@ -223,13 +214,13 @@ You can use any editor.
 
 Recommended setup:
 
-| Tool | Recommendation |
-| --- | --- |
-| Editor | VS Code, CLion, Vim, Neovim, or Zed |
-| Compiler | GCC or Clang on Linux/macOS, MSVC or clang-cl on Windows |
-| Build system | CMake |
-| Build backend | Ninja |
-| Terminal | Bash, Zsh, PowerShell, or Windows Terminal |
+| Tool          | Recommendation                                           |
+| ------------- | -------------------------------------------------------- |
+| Editor        | VS Code, CLion, Vim, Neovim, or Zed                      |
+| Compiler      | GCC or Clang on Linux/macOS, MSVC or clang-cl on Windows |
+| Build system  | CMake                                                    |
+| Build backend | Ninja                                                    |
+| Terminal      | Bash, Zsh, PowerShell, or Windows Terminal               |
 
 For VS Code, install:
 
@@ -254,9 +245,9 @@ git config --global --list
 
 ## Environment variables
 
-Vix applications often read configuration from `.env`.
+Vix applications should keep configuration in environment variables.
 
-A simple `.env` file can look like this:
+For local development, use `.env`:
 
 ```dotenv
 SERVER_PORT=8080
@@ -264,122 +255,82 @@ VIX_LOG_LEVEL=info
 VIX_LOG_FORMAT=kv
 ```
 
-Later, project templates can generate `.env` and `.env.example` files for you.
+For production, these values can come from your service manager, deployment platform, or system environment.
+
+The source code stays the same.
+
+Only the environment changes.
 
 ## Common issues
 
-### `vix: command not found`
-
-Your terminal cannot find the Vix binary.
-
-Fix your PATH:
-
-```bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-For Zsh:
-
-```bash
-echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-```
-
-Then check:
-
-```bash
-vix --version
-```
-
-### `c++: command not found`
-
-Install a compiler.
-
-On Ubuntu or Debian:
-
-```bash
-sudo apt update
-sudo apt install -y build-essential
-```
-
-### `cmake: command not found`
-
-Install CMake:
-
-```bash
-sudo apt install -y cmake
-```
-
-### `ninja: command not found`
-
-Install Ninja:
-
-```bash
-sudo apt install -y ninja-build
-```
-
-### `#include <vix.hpp> not found`
-
-The full SDK is missing or not installed correctly.
-
-Check:
-
-```bash
-find ~/.local/include -name vix.hpp 2>/dev/null
-```
-
-If nothing appears, reinstall the full SDK:
-
-```bash
-curl -fsSL https://vixcpp.com/install.sh | bash
-```
-
-Do not use CLI-only mode for this guide.
-
 ### Port 8080 is already in use
 
-Find the process using the port:
+If another program already uses port `8080`, change the port in `.env`:
 
-```bash
-sudo lsof -i :8080
+```dotenv
+SERVER_PORT=3000
 ```
 
-Stop the process or change the port in your code.
-
-## What you should remember
-
-A good Vix environment has:
-
-- `vix`
-- `c++`
-- `cmake`
-- `ninja`
-- `git`
-- `curl`
-
-Check them with:
-
-```bash
-vix --version
-c++ --version
-cmake --version
-ninja --version
-git --version
-curl --version
-```
-
-The most important test is:
+Then run again:
 
 ```bash
 vix run main.cpp
 ```
 
-If that works, you are ready to write your first C++ file with Vix.
+Or find the process using the port:
+
+```bash
+sudo lsof -i :8080
+```
+
+### The app starts but `curl` cannot connect
+
+Make sure the server is still running.
+
+You should see:
+
+```txt
+Vix.cpp   READY
+```
+
+Then test again:
+
+```bash
+curl http://127.0.0.1:8080/
+```
+
+If you changed the port in `.env`, use that port instead.
+
+### The first run is slower
+
+The first run may take a little longer because Vix may need to configure and build the application.
+
+Later runs are usually faster.
+
+## What you should remember
+
+Keep configuration outside the code:
+
+```dotenv
+SERVER_PORT=8080
+```
+
+Run the app:
+
+```bash
+vix run main.cpp
+```
+
+If you see:
+
+```txt
+Vix.cpp   READY   v2.6.0
+```
+
+Your environment is ready.
 
 ## Next step
 
 Run your first C++ file with Vix.
 
 Next: [Run Your First C++ File](/getting-started/run-your-first-file)
-
