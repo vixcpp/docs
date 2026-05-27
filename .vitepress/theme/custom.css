@@ -1653,3 +1653,64 @@ html:not(.dark) .VPDocFooter .pager-link {
     padding-bottom: 32px !important;
   }
 }
+/* ============================================================
+   Mobile local nav - remove bottom separator line
+   ============================================================ */
+
+@media (max-width: 960px) {
+  .VPLocalNav {
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .VPLocalNav .container,
+  .VPLocalNav .items {
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+}
+@media (max-width: 960px) {
+  .VPLocalNav::before,
+  .VPLocalNav::after,
+  .VPLocalNav .container::before,
+  .VPLocalNav .container::after {
+    content: none !important;
+    display: none !important;
+    border: 0 !important;
+  }
+}
+/* ============================================================
+   Mobile: remove the remaining separator under Menu / On this page
+   ============================================================ */
+
+@media (max-width: 960px) {
+  .VPNav::after {
+    content: none !important;
+    display: none !important;
+    height: 0 !important;
+    background: transparent !important;
+  }
+
+  .VPLocalNav,
+  .VPLocalNav .container,
+  .VPLocalNav .items,
+  .VPLocalNav .menu,
+  .VPLocalNav .outline {
+    border-top: 0 !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .VPLocalNav::before,
+  .VPLocalNav::after,
+  .VPLocalNav .container::before,
+  .VPLocalNav .container::after {
+    content: none !important;
+    display: none !important;
+  }
+}
+.VPDoc {
+  padding-top: 20px !important;
+}
