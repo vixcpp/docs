@@ -229,82 +229,96 @@ gtag("config", "G-1B67VYZMXF");
             link: "/book/03-mental-model",
           },
           {
-            text: "Routes",
-            link: "/book/04-routes",
+            text: "Application Model",
+            link: "/book/04-application-model",
           },
           {
-            text: "Request and Response",
-            link: "/book/05-request-response",
+            text: "Runtime Workflow",
+            link: "/book/05-runtime-workflow",
           },
           {
-            text: "Build a JSON API",
-            link: "/book/06-json-api",
+            text: "Build Workflow",
+            link: "/book/06-build-workflow",
           },
           {
-            text: "Middleware",
-            link: "/book/07-middleware",
+            text: "Modules and Composition",
+            link: "/book/07-modules-and-composition",
           },
           {
-            text: "Validation",
-            link: "/book/08-validation",
-          },
-          {
-            text: "Errors and Logging",
-            link: "/book/09-errors-and-logging",
-          },
-          {
-            text: "Database",
-            link: "/book/10-database",
-          },
-          {
-            text: "Realtime WebSocket",
-            link: "/book/11-realtime-websocket",
-          },
-          {
-            text: "Async Runtime",
-            link: "/book/12-async-runtime",
-          },
-          {
-            text: "Cache",
-            link: "/book/13-cache",
-          },
-          {
-            text: "Offline-first Sync",
-            link: "/book/14-offline-first-sync",
-          },
-          {
-            text: "P2P",
-            link: "/book/15-p2p",
-          },
-          {
-            text: "Production Deployment",
-            link: "/book/16-production-deployment",
+            text: "From Local to Production",
+            link: "/book/08-local-to-production",
           },
           {
             text: "Next Steps",
-            link: "/book/17-next-steps",
+            link: "/book/09-next-steps",
           },
         ],
       },
 
       {
         text: "Guides",
+        collapsed: false,
         items: [
-          { text: "Build a REST API", link: "/guides/build-rest-api" },
-          { text: "Validation", link: "/guides/validation" },
-          { text: "Authentication", link: "/guides/authentication" },
-          { text: "Sessions", link: "/guides/sessions" },
-          { text: "CORS", link: "/guides/cors" },
-          { text: "Rate limiting", link: "/guides/rate-limiting" },
-          { text: "SQLite API", link: "/guides/sqlite-api" },
-          { text: "MySQL API", link: "/guides/mysql-api" },
-          { text: "WebSocket chat", link: "/guides/websocket-chat" },
-          { text: "Static files", link: "/guides/static-files" },
-          { text: "Templates", link: "/guides/templates" },
-          { text: "Game", link: "/guides/game" },
           {
-            text: "Production: Nginx + systemd",
-            link: "/guides/production-nginx-systemd",
+            text: "Application Workflows",
+            collapsed: false,
+            items: [
+              { text: "Build a REST API", link: "/guides/build-rest-api" },
+              { text: "WebSocket Chat", link: "/guides/websocket-chat" },
+              { text: "Static Files", link: "/guides/static-files" },
+              { text: "Templates", link: "/guides/templates" },
+              { text: "Game", link: "/guides/game" },
+            ],
+          },
+          {
+            text: "Backend Essentials",
+            collapsed: false,
+            items: [
+              { text: "Validation", link: "/guides/validation" },
+              { text: "Authentication", link: "/guides/authentication" },
+              { text: "Sessions", link: "/guides/sessions" },
+              { text: "CORS", link: "/guides/cors" },
+              { text: "Rate Limiting", link: "/guides/rate-limiting" },
+            ],
+          },
+          {
+            text: "Data",
+            collapsed: false,
+            items: [
+              { text: "SQLite API", link: "/guides/sqlite-api" },
+              { text: "MySQL API", link: "/guides/mysql-api" },
+            ],
+          },
+          {
+            text: "Build Performance",
+            collapsed: false,
+            items: [
+              {
+                text: "Fast Target Builds",
+                link: "/guides/fast-target-builds",
+              },
+              { text: "Object Cache", link: "/guides/object-cache" },
+              { text: "Artifact Cache", link: "/guides/artifact-cache" },
+            ],
+          },
+          {
+            text: "Runtime Workflows",
+            collapsed: false,
+            items: [
+              { text: "Replay a Run", link: "/guides/replay" },
+              { text: "Runtime Arguments", link: "/guides/runtime-arguments" },
+              { text: "Diagnostics", link: "/guides/diagnostics" },
+            ],
+          },
+          {
+            text: "Production",
+            collapsed: false,
+            items: [
+              {
+                text: "Nginx + systemd",
+                link: "/guides/production-nginx-systemd",
+              },
+            ],
           },
         ],
       },
