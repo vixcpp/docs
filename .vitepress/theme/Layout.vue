@@ -628,7 +628,19 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+.vix-nav__banner a {
+  color: #4ade80 !important;
+  font-weight: 760;
+  text-decoration: underline !important;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  white-space: nowrap;
+}
 
+.vix-nav__banner a:hover {
+  color: #86efac !important;
+  text-decoration: underline !important;
+}
 /* Medium screens */
 @media (max-width: 1180px) {
   .vix-nav__inner {
