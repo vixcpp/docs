@@ -101,11 +101,11 @@ Without replay, you often need to remember: which command was used, which direct
 
 ## Difference between vix run, vix dev, and vix replay
 
-| Command | Best for | Records/replays context |
-|---|---|---|
-| `vix run` | manual run | records only with `--replay` |
-| `vix dev` | active development | records development executions when enabled |
-| `vix replay` | reproducing a previous run | replays recorded execution |
+| Command      | Best for                   | Records/replays context                     |
+| ------------ | -------------------------- | ------------------------------------------- |
+| `vix run`    | manual run                 | records only with `--replay`                |
+| `vix dev`    | active development         | records development executions when enabled |
+| `vix replay` | reproducing a previous run | replays recorded execution                  |
 
 `vix replay` does not replace `vix run` or `vix dev`. It uses recorded executions created by replay-enabled runs.
 
@@ -253,20 +253,20 @@ The latest marker stores the most recent run id:
 
 ## Options
 
-| Option | Description |
-|---|---|
-| `--dry-run` | Print the replay command without executing it |
-| `--summary` | Print the record summary before replaying |
-| `--no-summary` | Do not print the record summary |
-| `--dir`, `--cwd` | Use another directory containing `.vix/runs` |
-| `--env KEY=VALUE` | Add an environment variable during replay |
-| `--` | Append remaining arguments to the replay command |
-| `-h`, `--help` | Show command help |
+| Option            | Description                                      |
+| ----------------- | ------------------------------------------------ |
+| `--dry-run`       | Print the replay command without executing it    |
+| `--summary`       | Print the record summary before replaying        |
+| `--no-summary`    | Do not print the record summary                  |
+| `--dir`, `--cwd`  | Use another directory containing `.vix/runs`     |
+| `--env KEY=VALUE` | Add an environment variable during replay        |
+| `--`              | Append remaining arguments to the replay command |
+| `-h`, `--help`    | Show command help                                |
 
 ## Recording option on vix run
 
-| Option | Description |
-|---|---|
+| Option     | Description                                        |
+| ---------- | -------------------------------------------------- |
 | `--replay` | Record this `vix run` execution under `.vix/runs/` |
 
 Example:
@@ -280,14 +280,14 @@ vix run main.cpp --replay
 
 ## List options
 
-| Option | Description |
-|---|---|
-| `--all` | Show all replay runs |
-| `--failed`, `--fail` | Show failed replay runs |
-| `--success`, `--ok` | Show successful replay runs |
-| `--interrupted`, `--interrupt` | Show interrupted replay runs |
-| `--limit <n>` | Limit number of rows |
-| `--dir`, `--cwd <path>` | Use another directory containing `.vix/runs` |
+| Option                         | Description                                  |
+| ------------------------------ | -------------------------------------------- |
+| `--all`                        | Show all replay runs                         |
+| `--failed`, `--fail`           | Show failed replay runs                      |
+| `--success`, `--ok`            | Show successful replay runs                  |
+| `--interrupted`, `--interrupt` | Show interrupted replay runs                 |
+| `--limit <n>`                  | Limit number of rows                         |
+| `--dir`, `--cwd <path>`        | Use another directory containing `.vix/runs` |
 
 ## Common workflows
 
@@ -396,13 +396,13 @@ The `--` separates replay options from arguments appended to the replayed comman
 
 ## Related commands
 
-| Command | Purpose |
-|---|---|
-| `vix run` | Build and run manually |
-| `vix dev` | Start dev server with auto-reload |
-| `vix build` | Configure and compile |
+| Command     | Purpose                                        |
+| ----------- | ---------------------------------------------- |
+| `vix run`   | Build and run manually                         |
+| `vix dev`   | Start dev server with auto-reload              |
+| `vix build` | Configure and compile                          |
 | `vix check` | Validate build, tests, runtime, and sanitizers |
-| `vix tests` | Run tests |
+| `vix tests` | Run tests                                      |
 
 ## Next step
 

@@ -254,14 +254,15 @@ curl -i http://127.0.0.1:8080/api/data -H "Origin: http://localhost:5173"
 
 ## Middleware and route responsibility
 
-| Middleware       | Example route action          |
-|------------------|-------------------------------|
-| CORS             | Allows browser API calls.     |
-| Rate limiting    | Protects public endpoints.    |
-| Authentication   | Guards dashboard routes.      |
-| Request IDs      | Tracks each request in logs.  |
-| Logging          | Records request activity.     |
-| Body limits      | Rejects oversized requests.   |
+| Middleware     | Example route action         |
+| -------------- | ---------------------------- |
+| CORS           | Allows browser API calls.    |
+| Rate limiting  | Protects public endpoints.   |
+| Authentication | Guards dashboard routes.     |
+| Request IDs    | Tracks each request in logs. |
+| Logging        | Records request activity.    |
+| Body limits    | Rejects oversized requests.  |
+
 ## Common mistakes
 
 ### Registering middleware after routes

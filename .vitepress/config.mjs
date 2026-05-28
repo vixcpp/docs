@@ -370,64 +370,88 @@ gtag("config", "G-1B67VYZMXF");
             link: "/cli/",
           },
           {
-            text: "REPL",
-            link: "/cli/repl",
+            text: "All Commands",
+            link: "/cli/commands",
           },
+
           {
-            text: "vix new",
-            link: "/cli/new",
+            text: "Core Workflow",
+            collapsed: false,
+            items: [
+              {
+                text: "vix repl",
+                link: "/cli/repl",
+              },
+              {
+                text: "vix new",
+                link: "/cli/new",
+              },
+              {
+                text: "vix make",
+                link: "/cli/make",
+              },
+              {
+                text: "vix modules",
+                link: "/cli/modules",
+              },
+              {
+                text: "vix run",
+                link: "/cli/run",
+              },
+              {
+                text: "vix dev",
+                link: "/cli/dev",
+              },
+              {
+                text: "vix build",
+                link: "/cli/build",
+              },
+              {
+                text: "vix check",
+                link: "/cli/check",
+              },
+              {
+                text: "vix tests",
+                link: "/cli/tests",
+              },
+              {
+                text: "vix fmt",
+                link: "/cli/fmt",
+              },
+            ],
           },
+
           {
-            text: "vix modules",
-            link: "/cli/modules",
+            text: "Project State",
+            collapsed: false,
+            items: [
+              {
+                text: "vix clean",
+                link: "/cli/clean",
+              },
+              {
+                text: "vix reset",
+                link: "/cli/reset",
+              },
+              {
+                text: "vix replay",
+                link: "/cli/replay",
+              },
+              {
+                text: "vix task",
+                link: "/cli/task",
+              },
+            ],
           },
-          {
-            text: "vix make",
-            link: "/cli/make",
-          },
-          {
-            text: "vix run",
-            link: "/cli/run",
-          },
-          {
-            text: "vix dev",
-            link: "/cli/dev",
-          },
-          {
-            text: "vix build",
-            link: "/cli/build",
-          },
-          {
-            text: "vix check",
-            link: "/cli/check",
-          },
-          {
-            text: "vix tests",
-            link: "/cli/tests",
-          },
-          {
-            text: "vix fmt",
-            link: "/cli/fmt",
-          },
-          {
-            text: "vix clean",
-            link: "/cli/clean",
-          },
-          {
-            text: "vix reset",
-            link: "/cli/reset",
-          },
-          {
-            text: "vix replay",
-            link: "/cli/replay",
-          },
-          {
-            text: "vix task",
-            link: "/cli/task",
-          },
+
           {
             text: "Dependencies",
+            collapsed: false,
             items: [
+              {
+                text: "vix search",
+                link: "/cli/search",
+              },
               {
                 text: "vix add",
                 link: "/cli/add",
@@ -454,9 +478,19 @@ gtag("config", "G-1B67VYZMXF");
               },
             ],
           },
+
           {
-            text: "Packaging",
+            text: "Registry and Packages",
+            collapsed: false,
             items: [
+              {
+                text: "vix registry",
+                link: "/cli/registry",
+              },
+              {
+                text: "vix store",
+                link: "/cli/store",
+              },
               {
                 text: "vix pack",
                 link: "/cli/pack",
@@ -473,31 +507,85 @@ gtag("config", "G-1B67VYZMXF");
                 text: "vix publish",
                 link: "/cli/publish",
               },
+              {
+                text: "vix unpublish",
+                link: "/cli/unpublish",
+              },
             ],
           },
+
           {
-            text: "Advanced",
+            text: "Runtime and Production",
+            collapsed: false,
             items: [
               {
-                text: "vix registry",
-                link: "/cli/registry",
+                text: "vix env",
+                link: "/cli/env",
               },
               {
-                text: "vix store",
-                link: "/cli/store",
+                text: "vix service",
+                link: "/cli/service",
+              },
+              {
+                text: "vix proxy",
+                link: "/cli/proxy",
+              },
+              {
+                text: "vix deploy",
+                link: "/cli/deploy",
+              },
+              {
+                text: "vix health",
+                link: "/cli/health",
+              },
+              {
+                text: "vix logs",
+                link: "/cli/logs",
+              },
+              {
+                text: "vix ws",
+                link: "/cli/ws",
+              },
+            ],
+          },
+
+          {
+            text: "Data",
+            collapsed: false,
+            items: [
+              {
+                text: "vix db",
+                link: "/cli/db",
               },
               {
                 text: "vix orm",
                 link: "/cli/orm",
               },
+            ],
+          },
+
+          {
+            text: "Advanced Runtime",
+            collapsed: false,
+            items: [
               {
                 text: "vix p2p",
                 link: "/cli/p2p",
               },
+              {
+                text: "vix game",
+                link: "/cli/game",
+              },
+              {
+                text: "vix agent",
+                link: "/cli/agent",
+              },
             ],
           },
+
           {
             text: "System",
+            collapsed: false,
             items: [
               {
                 text: "vix info",
@@ -521,12 +609,9 @@ gtag("config", "G-1B67VYZMXF");
               },
             ],
           },
-          {
-            text: "All Commands",
-            link: "/cli/commands",
-          },
         ],
       },
+
       {
         text: "Experimental",
         collapsed: true,

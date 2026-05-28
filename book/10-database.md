@@ -18,11 +18,11 @@ A database gives your application durable state.
 
 ## SQLite or MySQL?
 
-| Criteria     | SQLite                               | MySQL                             |
-|--------------|------------------------------        |-----------------------------------|
-| Best for     | Local development, small apps, MVPs. | Multi-user production APIs.       |
-| Setup        | Very simple, no server required.     | Requires a database server.       |
-| Persistence  | Stores data in a local file.         | Stores data in a server database. |
+| Criteria    | SQLite                               | MySQL                             |
+| ----------- | ------------------------------------ | --------------------------------- |
+| Best for    | Local development, small apps, MVPs. | Multi-user production APIs.       |
+| Setup       | Very simple, no server required.     | Requires a database server.       |
+| Persistence | Stores data in a local file.         | Stores data in a server database. |
 
 Start with SQLite for learning.
 

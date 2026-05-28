@@ -2,7 +2,36 @@
 
 `vix new` creates a new Vix project.
 
-Use it when you want to start a new application, create a reusable header-only library, or initialize a Vix project in an existing folder.
+Use it when you want to start an application, backend service, web project, Vue fullstack project, game project, or reusable C++ library.
+
+```bash
+vix new api
+```
+
+## Overview
+
+`vix new` is the project creation command in Vix.
+
+It creates a ready-to-use project with:
+
+- source files
+- project configuration
+- Vix metadata
+- generated tasks
+- build setup
+- runtime configuration when needed
+- template-specific structure
+
+It is the recommended way to start a Vix project because it creates a structure that works immediately with:
+
+```bash
+vix build
+vix run
+vix dev
+vix tests
+vix check
+vix task
+```
 
 ## Usage
 
@@ -10,94 +39,276 @@ Use it when you want to start a new application, create a reusable header-only l
 vix new <name|path> [options]
 ```
 
-## Examples
-
-Create a new application named `api`:
+## Basic examples
 
 ```bash
+# Create a default application
 vix new api
-```
 
-Create a project in the current directory:
-
-```bash
+# Create a project in the current directory
 vix new .
-```
 
-Create a header-only library:
+# Create a backend service
+vix new api --template backend
 
-```bash
+# Create a server-rendered web project
+vix new blog --template web
+
+# Create a Vue fullstack project
+vix new dashboard --template vue
+
+# Create a game project
+vix new mario --game
+
+# Create a game project with template syntax
+vix new platformer --template game
+
+# Create a header-only library
 vix new tree --lib
-```
 
-Create a project inside another directory:
-
-```bash
+# Create inside another directory
 vix new blog -d ./projects
-```
 
-Overwrite an existing directory:
-
-```bash
+# Overwrite an existing directory
 vix new api --force
 ```
 
-## What it creates
+## What `vix new` can create
 
-For an application, `vix new` generates a ready-to-run Vix project with:
+| Type        | Command                            | Use when                                                |
+| ----------- | ---------------------------------- | ------------------------------------------------------- |
+| Application | `vix new api`                      | You want a small runnable C++ app.                      |
+| Application | `vix new api --app`                | You want to be explicit about the default app template. |
+| Backend     | `vix new api --template backend`   | You want a production-oriented API or backend service.  |
+| Web         | `vix new blog --template web`      | You want server-rendered HTML with Vix.                 |
+| Vue         | `vix new dashboard --template vue` | You want a Vue frontend with a Vix C++ backend.         |
+| Game        | `vix new mario --game`             | You want a Vix game project.                            |
+| Game        | `vix new mario --template game`    | Same idea using template syntax.                        |
+| Library     | `vix new tree --lib`               | You want a reusable header-only C++ library.            |
 
-- a CMake project
-- source structure
-- config files
-- a `vix.json` manifest
-- default project tasks
-- an empty dependency list
-- an executable target matching the project name
+## Default behavior
 
-For a header-only library, `vix new` generates:
-
-- a CMake project
-- an `include/` directory
-- a generated header
-- a `tests/` directory
-- an `examples/` directory
-- a `vix.json` package manifest
-- an interface CMake target
-- an alias target in the form `name::name`
-
-## Application workflow
-
-Create the project:
+By default, `vix new` creates an application project.
 
 ```bash
 vix new api
+```
+
+This is equivalent to:
+
+```bash
+vix new api --app
+```
+
+Use the default application template when you want:
+
+- a small executable app
+- a simple HTTP app
+- a local tool
+- a demo
+- a prototype
+- a project that can grow later
+
+## Application template
+
+Create an application:
+
+```bash
+vix new hello
+```
+
+or:
+
+```bash
+vix new hello --app
 ```
 
 Enter the project:
 
 ```bash
-cd api/
+cd hello
 ```
 
-Build the application:
+Build it:
 
 ```bash
 vix build
 ```
 
-Run the application:
+Run it:
 
 ```bash
 vix run
 ```
 
-Or start development mode:
+Start development mode:
 
 ```bash
 vix dev
 ```
 
-## Library workflow
+The application template is the smallest real Vix project.
+
+It is useful when you want to start clean without a large backend, web, Vue, game, or library structure.
+
+## Backend template
+
+Create a backend project:
+
+```bash
+vix new api --template backend
+```
+
+Enter the project:
+
+```bash
+cd api
+```
+
+Create your local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Start development mode:
+
+```bash
+vix dev
+```
+
+Test the health endpoint:
+
+```bash
+curl http://127.0.0.1:8080/health
+```
+
+Use the backend template when you need:
+
+- API routes
+- production-oriented folders
+- config files
+- health endpoints
+- middleware-ready structure
+- database-ready structure
+- a stronger backend foundation than the default app template
+
+## Web template
+
+Create a web project:
+
+```bash
+vix new blog --template web
+```
+
+Enter the project:
+
+```bash
+cd blog
+```
+
+Create your local environment file:
+
+```bash
+cp .env.example .env
+```
+
+Start development mode:
+
+```bash
+vix dev
+```
+
+Open:
+
+```txt
+http://127.0.0.1:8080
+```
+
+Use the web template when you want:
+
+- server-rendered HTML
+- static assets
+- Vix templates
+- a simple web app structure
+- an app that does not need a separate frontend framework
+
+## Vue template
+
+Create a Vue fullstack project:
+
+```bash
+vix new dashboard --template vue
+```
+
+Enter the project:
+
+```bash
+cd dashboard
+```
+
+Install dependencies when needed:
+
+```bash
+vix install
+```
+
+Start development mode:
+
+```bash
+vix dev
+```
+
+Use the Vue template when you want:
+
+- a Vue frontend
+- a Vix C++ backend
+- one fullstack project
+- frontend and backend development together
+
+In dev mode, Vix can detect the Vue frontend and start the frontend dev server when the project contains the expected frontend structure.
+
+## Game template
+
+Create a game project:
+
+```bash
+vix new mario --game
+```
+
+or:
+
+```bash
+vix new mario --template game
+```
+
+Enter the project:
+
+```bash
+cd mario
+```
+
+Build it:
+
+```bash
+vix build
+```
+
+Run it:
+
+```bash
+vix run
+```
+
+Use the game template when you want:
+
+- a game-oriented project structure
+- a simulation
+- a real-time prototype
+- a custom engine foundation
+- a project based on the Vix game runtime
+
+## Library template
 
 Create a header-only library:
 
@@ -108,10 +319,10 @@ vix new tree --lib
 Enter the project:
 
 ```bash
-cd tree/
+cd tree
 ```
 
-Build the generated library project:
+Build the generated project:
 
 ```bash
 vix build --build-target all
@@ -129,111 +340,102 @@ Run tests:
 vix tests
 ```
 
-For header-only libraries, `vix build` alone may not be the right command because `vix build` builds the main project target by default.
+Use the library template when you want:
 
-For example, inside a project named `tree`, `vix build` tries to build the target named `tree`.
-
-A header-only library usually exposes an interface target, not a normal executable named `tree`.
-
-Use this instead:
-
-```bash
-vix build --build-target all
-```
-
-## Application project
-
-By default, `vix new` creates an application:
-
-```bash
-vix new api
-```
-
-This is equivalent to:
-
-```bash
-vix new api --app
-```
-
-Use this when you want to build an executable application, API server, backend service, tool, or demo.
-
-The generated application can normally be built with:
-
-```bash
-vix build
-```
-
-Then run with:
-
-```bash
-vix run
-```
-
-Or launched in development mode with:
-
-```bash
-vix dev
-```
-
-## Library project
-
-Use `--lib` when you want to create a header-only library package:
-
-```bash
-vix new tree --lib
-```
-
-This is useful when you want to create reusable C++ code that can later be packaged and shared.
-
-The generated library is header-only, so its main CMake target is an interface target.
-
-Build it with:
-
-```bash
-vix build --build-target all
-```
-
-Tests are disabled by default for generated header-only libraries.
-
-Enable tests with:
-
-```bash
-vix build --build-target all -- -Dtree_BUILD_TESTS=ON
-```
-
-Then run:
-
-```bash
-vix tests
-```
-
-Replace `tree` with your project name:
-
-```bash
-vix build --build-target all -- -Dmy_lib_BUILD_TESTS=ON
-```
+- reusable C++ code
+- a header-only package
+- an `include/` directory
+- tests
+- examples
+- a future package for the Vix Registry
 
 ## Why libraries use `--build-target all`
 
 `vix build` builds the main project target by default.
 
-The default target name is the project directory name.
+For an application named `api`, this works because the generated project creates an executable target named:
 
-For an application named `api`, this works because the generated CMake project creates an executable target named `api`.
+```txt
+api
+```
 
-For a header-only library named `tree`, the project creates an interface library target, tests, and examples.
+For a header-only library named `tree`, the project usually exposes an interface target and optional tests or examples.
 
-Because header-only libraries do not produce a normal binary target named like an app, use:
+So for generated libraries, use:
 
 ```bash
 vix build --build-target all
 ```
 
-This asks CMake and Ninja to build all generated targets that are enabled in the current configuration.
+This asks CMake and Ninja to build all enabled generated targets.
 
-## Initialize the current directory
+## Template selection
 
-Use `.` to create the project in the current folder:
+You can select a template with a flag:
+
+```bash
+vix new api --app
+vix new tree --lib
+vix new mario --game
+```
+
+You can also use `--template`:
+
+```bash
+vix new api --template backend
+vix new blog --template web
+vix new dashboard --template vue
+vix new platformer --template game
+```
+
+Supported `--template` values:
+
+```txt
+backend
+web
+vue
+game
+```
+
+## Interactive mode
+
+When Vix can interact with the terminal and you do not provide a specific template, it can ask you to choose a template interactively.
+
+This is useful when you run:
+
+```bash
+vix new myproject
+```
+
+and want to choose the project type from a menu.
+
+In scripts or CI, use explicit flags or non-interactive mode.
+
+## Non-interactive mode
+
+Use `VIX_NONINTERACTIVE=1` to disable prompts:
+
+```bash
+VIX_NONINTERACTIVE=1 vix new api
+```
+
+Create a library without prompts:
+
+```bash
+VIX_NONINTERACTIVE=1 vix new tree --lib
+```
+
+CI also disables prompts:
+
+```bash
+CI=1 vix new api
+```
+
+Use non-interactive mode when running `vix new` from scripts, CI jobs, or automated setup commands.
+
+## Create in the current directory
+
+Use `.` to initialize the current directory:
 
 ```bash
 vix new .
@@ -250,9 +452,17 @@ git init
 vix new .
 ```
 
+If the current directory is not empty, Vix may ask for confirmation in interactive mode.
+
+In non-interactive mode, use `--force` if you intentionally want to write template files into the current directory.
+
+```bash
+vix new . --force
+```
+
 ## Create inside another directory
 
-Use `-d` or `--dir` to choose the base directory where the project should be created:
+Use `-d` or `--dir` to choose the base directory:
 
 ```bash
 vix new blog -d ./projects
@@ -262,6 +472,12 @@ This creates:
 
 ```txt
 ./projects/blog
+```
+
+Equivalent form:
+
+```bash
+vix new blog --dir ./projects
 ```
 
 ## Overwrite an existing directory
@@ -274,48 +490,55 @@ Use `--force` only when you intentionally want to overwrite an existing director
 vix new api --force
 ```
 
-Use this carefully because existing files may be replaced.
+Use this carefully.
 
-## Options
+If the destination exists and is not empty, files may be replaced.
 
-| Option | Description |
-| --- | --- |
-| `--app` | Generate an application project. This is the default. |
-| `--lib` | Generate a header-only library project. |
-| `-d, --dir <path>` | Base directory for project creation. |
-| `--force` | Overwrite an existing directory. |
-| `-h, --help` | Show command help. |
+## Conflicting options
 
-## Environment variables
+Choose only one project type.
 
-| Variable | Description |
-| --- | --- |
-| `VIX_NONINTERACTIVE=1` | Disable interactive prompts. |
-| `CI=1` | Disable interactive prompts in CI environments. |
-
-Use non-interactive mode in scripts and CI pipelines:
+Wrong:
 
 ```bash
-VIX_NONINTERACTIVE=1 vix new api
+vix new api --app --lib
 ```
 
-Create a library in non-interactive mode:
+Wrong:
 
 ```bash
-VIX_NONINTERACTIVE=1 vix new tree --lib
+vix new api --lib --template backend
 ```
 
-## Generated manifest
+Wrong:
 
-A new project includes a `vix.json` manifest.
+```bash
+vix new game --game --template vue
+```
 
-The manifest describes the project, its dependencies, and reusable tasks.
+Correct:
 
-For an application, the manifest is used for tasks such as development, testing, checking, formatting, and release workflows.
+```bash
+vix new api --app
+```
 
-For a library, the manifest is used for package metadata and dependencies.
+or:
 
-The exact generated content may evolve with Vix versions, but the role stays the same: `vix.json` is the project manifest.
+```bash
+vix new api --template backend
+```
+
+or:
+
+```bash
+vix new tree --lib
+```
+
+or:
+
+```bash
+vix new mario --game
+```
 
 ## Generated application structure
 
@@ -336,17 +559,90 @@ api/
     └── test_basic.cpp
 ```
 
-The application target matches the project name.
+The executable target matches the project name.
 
 For example:
 
 ```bash
 vix new api
-cd api/
+cd api
 vix build
 ```
 
 This builds the `api` target.
+
+## Generated backend structure
+
+A generated backend project has a production-oriented structure.
+
+It can include folders for routes, handlers, middleware, configuration, and application code.
+
+The exact structure can evolve with Vix versions, but the purpose stays the same:
+
+```txt
+backend template
+-> production-oriented C++ API foundation
+```
+
+Use it when the project is meant to become a real backend service.
+
+## Generated web structure
+
+A generated web project is designed for server-rendered web apps.
+
+It can include:
+
+```txt
+src/
+templates/
+public/
+.env
+.env.example
+vix.json
+```
+
+Use it when you want Vix to serve HTML, templates, and static files.
+
+## Generated Vue structure
+
+A generated Vue project is a fullstack project.
+
+It can include:
+
+```txt
+backend C++ app
+frontend/
+frontend/package.json
+vix.json
+.env
+.env.example
+```
+
+Use `vix dev` to run the development workflow.
+
+## Generated game structure
+
+A generated game project is designed for Vix game workflows.
+
+It can include:
+
+```txt
+src/
+assets/
+CMakeLists.txt
+CMakePresets.json
+vix.json
+README.md
+```
+
+Use:
+
+```bash
+vix build
+vix run
+```
+
+to build and start the game.
 
 ## Generated library structure
 
@@ -381,70 +677,352 @@ Enable tests with:
 vix build --build-target all -- -Dtree_BUILD_TESTS=ON
 ```
 
-Run tests with:
+Run tests:
 
 ```bash
 vix tests
 ```
 
-## Build behavior
+## Generated manifest files
 
-`vix build` does not always mean “build everything”.
+A new project can include:
 
-By default, it builds the main project target.
+```txt
+vix.json
+<project>.vix
+vix.app
+```
 
-For applications, this is usually what you want:
+The exact files depend on the template.
+
+## `vix.json`
+
+`vix.json` stores project metadata, dependencies, variables, and reusable tasks.
+
+It is used by commands such as:
+
+```bash
+vix task
+vix add
+vix install
+vix check
+```
+
+## `<project>.vix`
+
+Some templates generate a `.vix` manifest file.
+
+It can be used with commands such as:
+
+```bash
+vix run app.vix
+vix dev app.vix
+```
+
+## `vix.app`
+
+Some templates use the `vix.app` workflow.
+
+`vix.app` describes a simple Vix application target.
+
+It can be used by:
+
+```bash
+vix build
+vix run
+vix dev
+```
+
+without requiring the user to manually write a `CMakeLists.txt` for simple apps.
+
+## Generated tasks
+
+Generated projects can include reusable tasks in `vix.json`.
+
+Examples:
+
+```bash
+vix task dev
+vix task test
+vix task ci
+```
+
+Tasks make project workflows repeatable.
+
+The exact generated tasks depend on the template.
+
+## Feature selection
+
+For some templates, interactive mode can ask which features you want.
+
+Feature selection can apply to application, backend, or Vue projects.
+
+Examples of feature categories can include:
+
+- database support
+- static runtime options
+- full static options
+- backend-related project features
+
+The exact available features can evolve with Vix versions.
+
+In non-interactive mode, choose the template explicitly and configure features later.
+
+## Application workflow
+
+Create:
+
+```bash
+vix new api
+```
+
+Enter:
+
+```bash
+cd api
+```
+
+Build:
 
 ```bash
 vix build
 ```
 
-For header-only libraries, prefer:
+Run:
 
 ```bash
-vix build --build-target all
-```
-
-This matches the build behavior documented in the `vix build` guide.
-
-## After project creation
-
-For an application, the usual next commands are:
-
-```bash
-cd api/
-vix build
 vix run
 ```
 
-For a library, the usual next commands are:
+Develop:
 
 ```bash
-cd tree/
-vix build --build-target all
-vix build --build-target all -- -Dtree_BUILD_TESTS=ON
-vix tests
+vix dev
 ```
 
-Use:
+## Backend workflow
+
+Create:
+
+```bash
+vix new api --template backend
+```
+
+Enter:
+
+```bash
+cd api
+```
+
+Create local env:
+
+```bash
+cp .env.example .env
+```
+
+Start dev mode:
+
+```bash
+vix dev
+```
+
+Test health:
+
+```bash
+curl http://127.0.0.1:8080/health
+```
+
+## Web workflow
+
+Create:
+
+```bash
+vix new blog --template web
+```
+
+Enter:
+
+```bash
+cd blog
+```
+
+Create local env:
+
+```bash
+cp .env.example .env
+```
+
+Start dev mode:
+
+```bash
+vix dev
+```
+
+Open:
+
+```txt
+http://127.0.0.1:8080
+```
+
+## Vue workflow
+
+Create:
+
+```bash
+vix new dashboard --template vue
+```
+
+Enter:
+
+```bash
+cd dashboard
+```
+
+Install dependencies when needed:
 
 ```bash
 vix install
 ```
 
-when your project has dependencies that must be installed from `vix.lock`.
+Start dev mode:
 
-Use:
+```bash
+vix dev
+```
+
+## Game workflow
+
+Create:
+
+```bash
+vix new mario --game
+```
+
+Enter:
+
+```bash
+cd mario
+```
+
+Build:
+
+```bash
+vix build
+```
+
+Run:
+
+```bash
+vix run
+```
+
+## Library workflow
+
+Create:
+
+```bash
+vix new tree --lib
+```
+
+Enter:
+
+```bash
+cd tree
+```
+
+Build all generated targets:
+
+```bash
+vix build --build-target all
+```
+
+Enable tests:
+
+```bash
+vix build --build-target all -- -Dtree_BUILD_TESTS=ON
+```
+
+Run tests:
+
+```bash
+vix tests
+```
+
+## After project creation
+
+Common next commands:
+
+```bash
+cd <project>
+vix build
+vix run
+vix dev
+```
+
+If the project has dependencies:
+
+```bash
+vix install
+```
+
+If you want validation:
 
 ```bash
 vix check
 ```
 
-when you want to validate the project.
+If you want tests:
+
+```bash
+vix tests
+```
+
+If you want to run generated tasks:
+
+```bash
+vix task <name>
+```
+
+## Options
+
+| Option               | Description                                                                  |
+| -------------------- | ---------------------------------------------------------------------------- |
+| `<name\|path>`       | Project name or destination path.                                            |
+| `--app`              | Generate an application project. This is the default.                        |
+| `--application`      | Alias-style application option.                                              |
+| `--type=app`         | Generate an application project.                                             |
+| `--type=application` | Generate an application project.                                             |
+| `--lib`              | Generate a header-only library project.                                      |
+| `--library`          | Alias-style library option.                                                  |
+| `--type=lib`         | Generate a library project.                                                  |
+| `--type=library`     | Generate a library project.                                                  |
+| `--game`             | Generate a game project.                                                     |
+| `--type=game`        | Generate a game project.                                                     |
+| `--template <name>`  | Generate a template project: `backend`, `web`, `vue`, or `game`.             |
+| `--template=<name>`  | Same as `--template <name>`.                                                 |
+| `-d, --dir <path>`   | Base directory for project creation.                                         |
+| `--dir=<path>`       | Same as `--dir <path>`.                                                      |
+| `--force`            | Overwrite an existing directory or write into a non-empty current directory. |
+| `-h, --help`         | Show command help.                                                           |
+
+## Environment variables
+
+| Variable               | Description                                     |
+| ---------------------- | ----------------------------------------------- |
+| `VIX_NONINTERACTIVE=1` | Disable interactive prompts.                    |
+| `CI=1`                 | Disable interactive prompts in CI environments. |
+
+Examples:
+
+```bash
+VIX_NONINTERACTIVE=1 vix new api
+VIX_NONINTERACTIVE=1 vix new tree --lib
+CI=1 vix new api --template backend
+```
 
 ## Common mistakes
 
-### Running commands outside the project
+### Running commands outside the generated project
 
 Wrong:
 
@@ -457,11 +1035,29 @@ Correct:
 
 ```bash
 vix new api
-cd api/
+cd api
 vix dev
 ```
 
-After creating a project, enter the generated directory before running project commands.
+### Creating a library when you need an app
+
+Wrong for a backend service:
+
+```bash
+vix new api --lib
+```
+
+Correct:
+
+```bash
+vix new api
+```
+
+or:
+
+```bash
+vix new api --template backend
+```
 
 ### Using `vix build` directly in a header-only library
 
@@ -469,17 +1065,15 @@ Wrong:
 
 ```bash
 vix new tree --lib
-cd tree/
+cd tree
 vix build
 ```
-
-This may fail because `vix build` tries to build the main target named after the project directory.
 
 Correct:
 
 ```bash
 vix new tree --lib
-cd tree/
+cd tree
 vix build --build-target all
 ```
 
@@ -489,8 +1083,7 @@ Wrong:
 
 ```bash
 vix new tree --lib
-cd tree/
-vix build --build-target all
+cd tree
 vix tests
 ```
 
@@ -498,25 +1091,23 @@ Correct:
 
 ```bash
 vix new tree --lib
-cd tree/
+cd tree
 vix build --build-target all -- -Dtree_BUILD_TESTS=ON
 vix tests
 ```
 
-Tests for generated header-only libraries are disabled by default.
+### Combining incompatible project types
 
-### Creating a library when you need an app
-
-This creates a library:
+Wrong:
 
 ```bash
-vix new api --lib
+vix new api --lib --template backend
 ```
 
-For a backend service or executable app, use the default:
+Correct:
 
 ```bash
-vix new api
+vix new api --template backend
 ```
 
 ### Using `--force` too early
@@ -531,17 +1122,73 @@ Prefer creating a clean folder first.
 
 ## Troubleshooting
 
-### Build target not found
+### Missing project name
 
-If you see an error like:
+Wrong:
 
-```txt
-✖ Build target not found
-target: tree
-hint: This project does not define a CMake target named 'tree'.
+```bash
+vix new --template backend
 ```
 
-You are probably inside a generated header-only library.
+Correct:
+
+```bash
+vix new api --template backend
+```
+
+### Unknown template
+
+Wrong:
+
+```bash
+vix new app --template desktop
+```
+
+Supported templates:
+
+```txt
+backend
+web
+vue
+game
+```
+
+Correct:
+
+```bash
+vix new app --template backend
+```
+
+### Directory is not empty
+
+If the target directory exists and is not empty, Vix will avoid overwriting by default.
+
+Use a clean directory or pass:
+
+```bash
+vix new api --force
+```
+
+only when you intentionally want to overwrite.
+
+### Base directory is invalid
+
+Wrong:
+
+```bash
+vix new blog --dir ./missing-folder
+```
+
+Create the base directory first:
+
+```bash
+mkdir -p ./projects
+vix new blog --dir ./projects
+```
+
+### Build target not found in a library
+
+You are probably in a generated header-only library.
 
 Use:
 
@@ -549,14 +1196,7 @@ Use:
 vix build --build-target all
 ```
 
-### No tests available
-
-If you see:
-
-```txt
-✖ No tests available.
-➜ Tests were not generated in the existing build directory.
-```
+### No tests available in a library
 
 Enable tests first:
 
@@ -570,59 +1210,32 @@ Then run:
 vix tests
 ```
 
-### You created a project but commands do not work
+Replace `tree` with your project name.
 
-Make sure you entered the generated directory:
+## When to use each template
 
-```bash
-cd api/
-```
-
-or:
-
-```bash
-cd tree/
-```
-
-### You need raw build details
-
-Use:
-
-```bash
-vix build --cmake-verbose
-```
-
-or inspect:
-
-```bash
-cat build-ninja/build.log
-```
-
-## When to use `vix new`
-
-Use `vix new` when:
-
-- starting a new Vix application
-- creating a reusable Vix header-only library package
-- initializing an existing empty repository
-- preparing a project for dependency management
-- creating a project that should work with `vix dev`, `vix run`, `vix build`, and `vix check`
+Use the application template when you want the smallest runnable app.
+Use the backend template when you want a production-oriented API or backend service.
+Use the web template when you want server-rendered HTML.
+Use the Vue template when you want a frontend and backend in one project.
+Use the game template when you want a game, simulation, prototype, or custom engine foundation.
+Use the library template when you want reusable C++ code that can later be packaged and shared.
 
 ## Related commands
 
-| Command | Purpose |
-| --- | --- |
-| `vix build` | Build the project |
-| `vix run` | Build and run the app |
-| `vix dev` | Run the app with reload |
-| `vix tests` | Run tests |
-| `vix check` | Validate the project |
-| `vix install` | Install project dependencies |
-| `vix task` | Run generated or custom project tasks |
-| `vix add` | Add dependencies |
+| Command       | Purpose                             |
+| ------------- | ----------------------------------- |
+| `vix build`   | Build the generated project.        |
+| `vix run`     | Build and run the generated app.    |
+| `vix dev`     | Start development mode with reload. |
+| `vix tests`   | Run tests.                          |
+| `vix check`   | Validate the project.               |
+| `vix install` | Install project dependencies.       |
+| `vix add`     | Add dependencies.                   |
+| `vix task`    | Run generated or custom tasks.      |
 
 ## Next step
 
-Continue with building projects.
+Build the generated project.
 
-Open the `vix build` guide.
+[Open the vix build guide](/cli/build)

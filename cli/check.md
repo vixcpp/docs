@@ -400,12 +400,12 @@ Project checks use isolated build directories per profile.
 
 Common examples:
 
-| Profile | Build directory |
-|---------|-----------------|
-| default dev-ninja | `build-ninja` |
-| sanitizer dev-ninja | `build-ninja-san` |
-| UBSan dev-ninja | `build-ninja-ubsan` |
-| release | `build-release` |
+| Profile             | Build directory     |
+| ------------------- | ------------------- |
+| default dev-ninja   | `build-ninja`       |
+| sanitizer dev-ninja | `build-ninja-san`   |
+| UBSan dev-ninja     | `build-ninja-ubsan` |
+| release             | `build-release`     |
 
 Script checks use the Vix script cache.
 
@@ -425,28 +425,28 @@ Vix uses a local script cache instead of the global one.
 
 ## Options
 
-| Option | Description |
-|--------|-------------|
-| `-d, --dir <path>` | Explicit project directory. |
-| `--preset <name>` | Configure preset. Default is `dev-ninja`. |
-| `--build-preset <name>` | Build preset override. |
-| `-j, --jobs <n>` | Number of parallel build jobs. |
-| `--tests` | Run tests after build. |
-| `--ctest-preset <name>` | Internal test preset override. |
-| `--ctest-arg <arg>` | Extra argument forwarded to the internal test runner. Repeatable. |
-| `--run` | Run the built executable after build. |
-| `--run-timeout <sec>` | Runtime timeout in seconds. |
-| `-q, --quiet` | Minimal output. |
-| `--verbose` | More verbose logging. |
-| `--log-level <level>` | Set `VIX_LOG_LEVEL` for the check session. |
-| `--san` | Enable AddressSanitizer and UndefinedBehaviorSanitizer. |
-| `--ubsan` | Enable UndefinedBehaviorSanitizer only. |
-| `--tsan` | Enable ThreadSanitizer. |
-| `--full` | Force the complete sanitizer check. |
-| `--with-sqlite` | Enable SQLite backend for single-file checks when supported. |
-| `--with-mysql` | Enable MySQL backend for single-file checks when supported. |
-| `--local-cache` | Use a local script cache for single-file checks. |
-| `-h, --help` | Show command help. |
+| Option                  | Description                                                       |
+| ----------------------- | ----------------------------------------------------------------- |
+| `-d, --dir <path>`      | Explicit project directory.                                       |
+| `--preset <name>`       | Configure preset. Default is `dev-ninja`.                         |
+| `--build-preset <name>` | Build preset override.                                            |
+| `-j, --jobs <n>`        | Number of parallel build jobs.                                    |
+| `--tests`               | Run tests after build.                                            |
+| `--ctest-preset <name>` | Internal test preset override.                                    |
+| `--ctest-arg <arg>`     | Extra argument forwarded to the internal test runner. Repeatable. |
+| `--run`                 | Run the built executable after build.                             |
+| `--run-timeout <sec>`   | Runtime timeout in seconds.                                       |
+| `-q, --quiet`           | Minimal output.                                                   |
+| `--verbose`             | More verbose logging.                                             |
+| `--log-level <level>`   | Set `VIX_LOG_LEVEL` for the check session.                        |
+| `--san`                 | Enable AddressSanitizer and UndefinedBehaviorSanitizer.           |
+| `--ubsan`               | Enable UndefinedBehaviorSanitizer only.                           |
+| `--tsan`                | Enable ThreadSanitizer.                                           |
+| `--full`                | Force the complete sanitizer check.                               |
+| `--with-sqlite`         | Enable SQLite backend for single-file checks when supported.      |
+| `--with-mysql`          | Enable MySQL backend for single-file checks when supported.       |
+| `--local-cache`         | Use a local script cache for single-file checks.                  |
+| `-h, --help`            | Show command help.                                                |
 
 ## Common workflows
 
@@ -597,21 +597,21 @@ vix check --san --full
 
 ## Difference between `vix check`, `vix build`, and `vix tests`
 
-| Command | Purpose |
-|---------|---------|
-| `vix build` | Configure and compile the project. |
-| `vix tests` | Run project tests with a Vix-native test output. |
+| Command     | Purpose                                                                   |
+| ----------- | ------------------------------------------------------------------------- |
+| `vix build` | Configure and compile the project.                                        |
+| `vix tests` | Run project tests with a Vix-native test output.                          |
 | `vix check` | Validate build, optional tests, optional runtime, and sanitizer profiles. |
 
 ## Related commands
 
-| Command | Purpose |
-|---------|---------|
+| Command     | Purpose                            |
+| ----------- | ---------------------------------- |
 | `vix build` | Configure and compile the project. |
-| `vix run` | Build and run the app manually. |
-| `vix dev` | Run the app with reload. |
-| `vix tests` | Run project tests. |
-| `vix fmt` | Format source files. |
+| `vix run`   | Build and run the app manually.    |
+| `vix dev`   | Run the app with reload.           |
+| `vix tests` | Run project tests.                 |
+| `vix fmt`   | Format source files.               |
 
 ## Next step
 

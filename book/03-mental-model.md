@@ -49,6 +49,7 @@ vix run main.cpp
 ```
 
 This example contains most of the Vix mental model:
+
 - `vix run` → CLI workflow,
 - `App` → application object,
 - `app.get` → route registration,
@@ -71,12 +72,12 @@ It provides commands such as:
 
 It gives a consistent development loop: create → run → edit → reload → check → test → build → deploy.
 
-| Command     | Purpose                                      |
-|-------------|----------------------------------------------|
-| `vix run`   | Builds and runs a file, project, or manifest.|
-| `vix dev`   | Starts a development loop with watch reload. |
-| `vix build` | Configures, compiles, and links the project. |
-| `vix check` | Validates builds, tests, and sanitizers.     |
+| Command     | Purpose                                       |
+| ----------- | --------------------------------------------- |
+| `vix run`   | Builds and runs a file, project, or manifest. |
+| `vix dev`   | Starts a development loop with watch reload.  |
+| `vix build` | Configures, compiles, and links the project.  |
+| `vix check` | Validates builds, tests, and sanitizers.      |
 
 ## Layer 2: The runtime
 
@@ -116,6 +117,7 @@ app.get("/users/{id}", [](Request &req, Response &res){
 ```
 
 **Request** is read-only input from the client:
+
 - path params,
 - query params,
 - headers,
@@ -123,6 +125,7 @@ app.get("/users/{id}", [](Request &req, Response &res){
 - JSON body.
 
 **Response** is how the route sends output back:
+
 - text,
 - JSON,
 - files,
@@ -193,6 +196,7 @@ vix::db::Database db{cfg};
 ```
 
 Environment variables:
+
 ```dotenv
 SERVER_PORT=8080
 DATABASE_ENGINE=sqlite

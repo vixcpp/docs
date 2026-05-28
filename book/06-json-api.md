@@ -353,17 +353,17 @@ curl -i -X POST http://127.0.0.1:8080/api/users \
 
 ## Status codes for JSON APIs
 
-| Status | Meaning                           |
-|--------|-----------------------------------|
-| `200`  | OK, request succeeded.            |
-| `201`  | Created, resource added.          |
-| `400`  | Bad Request, invalid input.       |
-| `401`  | Unauthorized, auth required.      |
-| `403`  | Forbidden, access denied.         |
-| `404`  | Not Found, resource missing.      |
-| `409`  | Conflict, state mismatch.         |
-| `429`  | Too Many Requests, rate limited.  |
-| `500`  | Internal Server Error.            |
+| Status | Meaning                          |
+| ------ | -------------------------------- |
+| `200`  | OK, request succeeded.           |
+| `201`  | Created, resource added.         |
+| `400`  | Bad Request, invalid input.      |
+| `401`  | Unauthorized, auth required.     |
+| `403`  | Forbidden, access denied.        |
+| `404`  | Not Found, resource missing.     |
+| `409`  | Conflict, state mismatch.        |
+| `429`  | Too Many Requests, rate limited. |
+| `500`  | Internal Server Error.           |
 
 ## Route flow for JSON APIs
 

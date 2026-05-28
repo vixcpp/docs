@@ -36,11 +36,11 @@ user action → local write → durable log → outbox → sync later
 Never depend on the network to preserve user intent.
 ```
 
-| Property        | Meaning                                               |
-|-----------------|-------------------------------------------------------|
-| `Durable`       | The operation survives a process restart.             |
-| `Retryable`     | Failed operations can be attempted again safely.      |
-| `Offline-first` | The app can continue working without network access.  |
+| Property        | Meaning                                              |
+| --------------- | ---------------------------------------------------- |
+| `Durable`       | The operation survives a process restart.            |
+| `Retryable`     | Failed operations can be attempted again safely.     |
+| `Offline-first` | The app can continue working without network access. |
 
 ## Vix Sync architecture
 
@@ -48,16 +48,16 @@ Never depend on the network to preserve user intent.
 Local Write → WAL → Outbox → SyncWorker → Transport → Done / Retry / Failed
 ```
 
-| Component        | Purpose                                                    |
-|------------------|------------------------------------------------------------|
-| `Operation`      | Describes one durable unit of work.                        |
-| `Wal`            | Stores an append-only operation history.                   |
-| `Outbox`         | Stores operations waiting to be synchronized.              |
-| `RetryPolicy`    | Decides when failed operations should retry.               |
-| `NetworkProbe`   | Checks whether network access is currently available.      |
-| `SyncWorker`     | Processes operations that are ready to run.                |
-| `SyncEngine`     | Orchestrates workers, retries, and recovery.               |
-| `ISyncTransport` | Sends operations to HTTP, P2P, or custom transport targets.|
+| Component        | Purpose                                                     |
+| ---------------- | ----------------------------------------------------------- |
+| `Operation`      | Describes one durable unit of work.                         |
+| `Wal`            | Stores an append-only operation history.                    |
+| `Outbox`         | Stores operations waiting to be synchronized.               |
+| `RetryPolicy`    | Decides when failed operations should retry.                |
+| `NetworkProbe`   | Checks whether network access is currently available.       |
+| `SyncWorker`     | Processes operations that are ready to run.                 |
+| `SyncEngine`     | Orchestrates workers, retries, and recovery.                |
+| `ISyncTransport` | Sends operations to HTTP, P2P, or custom transport targets. |
 
 ## Public headers
 
@@ -123,13 +123,13 @@ outbox->fail(id, "temporary network error", now + 2, true);
 outbox->fail(id, "bad request", now + 2, false);
 ```
 
-| Failure              | Retry | Example                         |
-|----------------------|-------|---------------------------------|
-| Network timeout      | Yes   | Temporary connection issue.     |
-| Server unavailable   | Yes   | HTTP `503` response.            |
-| Offline device       | Yes   | No active network connection.   |
-| Bad request          | No    | Invalid request payload.        |
-| Validation error     | No    | Missing required input field.   |
+| Failure            | Retry | Example                       |
+| ------------------ | ----- | ----------------------------- |
+| Network timeout    | Yes   | Temporary connection issue.   |
+| Server unavailable | Yes   | HTTP `503` response.          |
+| Offline device     | Yes   | No active network connection. |
+| Bad request        | No    | Invalid request payload.      |
+| Validation error   | No    | Missing required input field. |
 
 ## WAL
 
@@ -243,32 +243,41 @@ message.send, event.publish
 ## Design rules
 
 ### Persist before sending
+
 Store the operation first, then send the request. Never send before persisting.
 
 ### Treat the network as optional
+
 When the network is available, sync now. When it is unavailable, sync later.
 
 ### Make operations idempotent
+
 Use stable operation IDs so the server can detect and ignore duplicates.
 
 ### Separate temporary and permanent failures
+
 Retry temporary failures. Do not retry invalid data.
 
 ### Keep payloads replayable
+
 Include enough data to replay the operation later.
 
 ## Common mistakes
 
 ### Sending before persisting
+
 If the process crashes after sending but before storing, recovery becomes impossible. **Persist first.**
 
 ### Treating offline as an error
+
 Offline is a normal state in offline-first systems. The operation should remain pending.
 
 ### Forgetting inflight recovery
+
 If a worker crashes after claiming, use inflight timeout recovery to requeue.
 
 ### Using non-idempotent remote writes
+
 Use stable operation ids and deduplication on the receiver.
 
 ## When to use Vix Sync

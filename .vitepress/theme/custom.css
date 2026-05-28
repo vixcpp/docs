@@ -1094,16 +1094,6 @@ html:not(.dark) .vp-doc [class*="language-"]:hover {
     align-items: start;
   }
 
-  .VPDoc.has-sidebar.has-aside .content {
-    min-width: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  .VPDoc.has-sidebar.has-aside .content-container {
-    max-width: var(--vix-doc-content-width) !important;
-    margin: 0 !important;
-  }
-
   .VPDoc.has-sidebar.has-aside .aside {
     width: var(--vix-doc-aside-width) !important;
     padding-left: 0 !important;
@@ -1194,6 +1184,7 @@ html:not(.dark) .VPDocFooter .pager-link {
     padding-bottom: 10px !important;
   }
 }
+
 /* ════════════════════════════════════════════════
    3. NAVBAR - expert documentation header
    ════════════════════════════════════════════════ */
@@ -2126,6 +2117,7 @@ body.vix-local-nav-fixed .VPSidebar {
 .VPLocalSearchBox .result:hover {
   background: var(--vp-c-bg-alt) !important;
 }
+
 /* ============================================================
    Mobile: fixed banner + fixed VitePress menu, not fixed header
    ============================================================ */
@@ -2386,4 +2378,119 @@ body.vix-local-nav-fixed .VPSidebar {
 }
 :root {
   --vix-doc-sidebar-width: 250px !important;
+}
+@media (min-width: 960px) {
+  .VPDoc .content {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .VPDoc .content-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  .VPDoc .vp-doc {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+@media (min-width: 1280px) {
+  .VPDoc.has-sidebar.has-aside .container {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 250px !important;
+    column-gap: 36px !important;
+    align-items: start !important;
+  }
+
+  .VPDoc.has-sidebar.has-aside .content {
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .VPDoc.has-sidebar.has-aside .content-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+
+  .VPDoc.has-sidebar.has-aside .vp-doc {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .VPDoc.has-sidebar.has-aside .aside {
+    width: 250px !important;
+    min-width: 250px !important;
+    max-width: 250px !important;
+    padding-left: 0 !important;
+  }
+}
+@media (min-width: 1280px) {
+  .VPDoc.has-sidebar.has-aside .container {
+    column-gap: 56px !important;
+  }
+}
+@media (min-width: 960px) {
+  .VPContent.has-sidebar,
+  .VPContent.has-sidebar[data-v-52f1cd35] {
+    padding-left: var(--vix-doc-sidebar-width, 280px) !important;
+    padding-right: 0 !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  .VPContent.has-sidebar,
+  .VPContent.has-sidebar[data-v-52f1cd35] {
+    padding-left: var(--vix-doc-sidebar-width, 280px) !important;
+    padding-right: 0 !important;
+  }
+}
+@media (min-width: 960px) {
+  .VPDoc .container,
+  .VPDoc .content,
+  .VPDoc .content-container,
+  .VPDoc .vp-doc {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .VPDoc .content-container,
+  .VPDoc .vp-doc {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+@media (min-width: 1280px) {
+  .VPDoc.has-sidebar.has-aside .aside {
+    padding-left: 24px !important;
+  }
+
+  .VPDocAside {
+    padding-left: 0 !important;
+  }
+
+  .VPDocAsideOutline {
+    padding-left: 0 !important;
+  }
+}
+@media (min-width: 1280px) {
+  .VPDoc.has-sidebar.has-aside .aside {
+    padding-left: 32px !important;
+  }
+}
+@media (min-width: 1280px) {
+  .VPDoc.has-sidebar.has-aside .content {
+    min-width: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    padding-left: 10px !important;
+    padding-right: 32px !important;
+  }
 }

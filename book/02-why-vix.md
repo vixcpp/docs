@@ -40,6 +40,7 @@ What developers often miss is a unified runtime experience.
 ## The missing layer
 
 When you build a backend in C++, you usually combine many pieces:
+
 - HTTP library,
 - JSON library,
 - build system,
@@ -77,6 +78,7 @@ A web framework usually focuses on HTTP.
 Vix is broader.
 
 Vix also includes the surrounding application workflow:
+
 - CLI,
 - project creation,
 - direct file execution,
@@ -156,6 +158,7 @@ The core problem is not that C++ is weak.
 The problem is that building applications in C++ often starts with too much friction.
 
 Vix provides:
+
 - direct execution,
 - project workflow,
 - HTTP app model,

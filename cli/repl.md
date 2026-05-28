@@ -219,7 +219,7 @@ Wrong:
 Correct:
 
 ```json
-{"name":"Gaspard"}
+{ "name": "Gaspard" }
 ```
 
 ## Printing output
@@ -496,7 +496,7 @@ Wrong:
 Correct:
 
 ```json
-{"name":"Gaspard"}
+{ "name": "Gaspard" }
 ```
 
 ### Forgetting quotes around strings

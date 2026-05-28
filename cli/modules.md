@@ -1,239 +1,529 @@
-
 # vix modules
 
-`vix modules` adds an app-first module organization layer to a CMake project.
+`vix modules` organizes application code into clean, explicit C++ modules.
 
-Use it when you want to split a Vix application into clean, explicit, reusable C++ modules without turning the whole project into a complex monorepo.
-
-## Usage
+Use it when your Vix app starts growing and you want to split code by feature, domain, or responsibility without turning the whole project into a complex CMake setup.
 
 ```bash
-vix modules <subcommand> [options]
+vix modules init
+vix modules add auth
 ```
 
 ## Overview
 
-`vix modules` helps you organize application code into independent CMake modules.
+`vix modules` adds an app-first module organization layer to Vix projects.
 
-It creates a predictable structure:
+It works with:
+
+```txt
+vix.app projects
+CMake projects
+```
+
+The modern recommended path for simple applications is:
+
+```txt
+vix.app
+modules = [...]
+```
+
+CMake still works and remains the advanced compatibility path.
+
+The goal is simple:
+
+```txt
+small app
+clear modules
+explicit dependencies
+no manual CMake for common cases
+CMake available when needed
+```
+
+## The important idea
+
+For Vix apps, modules are declared in `vix.app`.
+
+Example:
+
+```ini
+name = api
+type = executable
+standard = c++20
+
+sources = [
+  src/main.cpp,
+]
+
+include_dirs = [
+  src,
+]
+
+modules = [
+  auth,
+  users,
+  orders,
+]
+
+packages = [
+  vix,
+]
+
+links = [
+  vix::vix,
+]
+
+output_dir = bin
+```
+
+This tells Vix:
+
+```txt
+this app uses modules/auth
+this app uses modules/users
+this app uses modules/orders
+```
+
+When Vix builds a `vix.app` project, it generates an internal CMake project under:
+
+```txt
+.vix/generated/app/CMakeLists.txt
+```
+
+That generated CMake project loads your modules automatically.
+
+You do not edit the generated file.
+
+You edit:
+
+```txt
+vix.app
+```
+
+## CMake still works
+
+If your project already has:
+
+```txt
+CMakeLists.txt
+```
+
+Vix uses it.
+
+Project resolution order:
+
+```txt
+1. CMakeLists.txt
+2. vix.app
+```
+
+That means:
+
+```txt
+If CMakeLists.txt exists, Vix uses CMakeLists.txt.
+If CMakeLists.txt does not exist but vix.app exists, Vix uses vix.app.
+```
+
+So this project uses CMake:
+
+```txt
+api/
+  CMakeLists.txt
+  vix.app
+  modules/
+  src/
+```
+
+This project uses `vix.app`:
+
+```txt
+api/
+  vix.app
+  modules/
+  src/
+```
+
+This keeps existing CMake projects compatible while allowing new Vix apps to stay simpler.
+
+## When to use modules
+
+Use modules when your app has separate areas like:
+
+```txt
+auth
+users
+orders
+billing
+notifications
+catalog
+storage
+search
+```
+
+Instead of putting everything in:
+
+```txt
+src/
+```
+
+you can use:
 
 ```txt
 modules/
-└── User/
-    ├── CMakeLists.txt
-    ├── include/
-    │   └── User/
-    │       └── api.hpp
-    └── src/
-        └── User.cpp
+  auth/
+  users/
+  orders/
 ```
 
-Each module has:
+Each module has its own public API, private implementation, and build target.
 
-- public headers in `include/<module>/`
-- private implementation in `src/`
-- its own `CMakeLists.txt`
-- a CMake target
-- a CMake alias target in the form `<project>::<module>`
+## What a module is
 
-For example, in a project named `blog`, a module named `User` creates:
+A Vix module is a small C++ library inside your application.
+
+A module named `auth` looks like this:
 
 ```txt
-target: blog::User
-header: modules/User/include/User/api.hpp
-impl:   modules/User/src/User.cpp
+modules/auth/
+├── CMakeLists.txt
+├── include/
+│   └── auth/
+│       └── api.hpp
+└── src/
+    └── auth.cpp
 ```
 
-## Why modules exist
+The public header is:
 
-Large C++ apps often become hard to maintain when everything lives directly in `src/`.
+```txt
+modules/auth/include/auth/api.hpp
+```
 
-`vix modules` gives you a simple convention:
+The private implementation is:
 
-- one feature/domain per module
-- public API separated from private implementation
-- explicit CMake targets
-- explicit cross-module dependencies
-- safer includes
-- clearer project structure
+```txt
+modules/auth/src/auth.cpp
+```
 
-The goal is not to replace CMake.
+The module target is:
 
-The goal is to make CMake organization easier and more predictable.
+```txt
+<project>_auth
+```
 
-## Subcommands
+The public alias target is:
 
-| Command | Purpose |
-| --- | --- |
-| `vix modules init` | Initialize modules mode in the current project |
-| `vix modules add <name>` | Create a new module |
-| `vix modules check` | Validate module safety rules |
-| `vix modules --help` | Show help |
+```txt
+<project>::auth
+```
 
-## Basic workflow
+For a project named `api`, the alias is:
 
-Initialize modules mode:
+```txt
+api::auth
+```
+
+## Basic workflow with vix.app
+
+Create an app:
+
+```bash
+vix new api --app
+cd api
+```
+
+Initialize modules:
 
 ```bash
 vix modules init
 ```
 
-Create a module:
+Add modules:
 
 ```bash
-vix modules add User
+vix modules add auth
+vix modules add users
 ```
 
-Use the module in code:
+Declare them in `vix.app`:
+
+```ini
+modules = [
+  auth,
+  users,
+]
+```
+
+Use them in code:
 
 ```cpp
-#include <User/api.hpp>
+#include <auth/api.hpp>
+#include <users/api.hpp>
 ```
 
-Build the project:
+Build:
 
 ```bash
 vix build
 ```
 
-Check module rules:
+Run:
 
 ```bash
-vix modules check
+vix run
 ```
 
-## Initialize modules mode
+## Basic workflow with CMake
 
-Run:
+For an existing CMake project:
+
+```bash
+vix modules init
+vix modules add auth
+vix build
+```
+
+In CMake projects, `vix modules init` can patch the root `CMakeLists.txt` with:
+
+```cmake
+# VIX_MODULES_BEGIN
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/vix_modules.cmake)
+# VIX_MODULES_END
+```
+
+When a module is added, Vix can also add a guarded link block to connect the module to the main target.
+
+This keeps existing CMake projects working.
+
+## Why vix.app does not patch CMakeLists.txt
+
+A `vix.app` project usually has no root `CMakeLists.txt`.
+
+That is intentional.
+
+When you run:
 
 ```bash
 vix modules init
 ```
 
-This creates:
+inside a `vix.app` project, Vix creates:
 
 ```txt
 modules/
 cmake/vix_modules.cmake
 ```
 
-It also patches the root `CMakeLists.txt` by adding an idempotent include block.
+but skips patching `CMakeLists.txt` because the app is controlled by `vix.app`.
 
-Example output:
+You should connect modules through:
 
-```txt
-  ✔  modules  initialized
-  ─────────────────────────────────────
-  files
-  1  modules/  module directory
-  2  cmake/vix_modules.cmake  module loader
-  3  CMakeLists.txt  patched
-  ─────────────────────────────────────
-  next
-  1  vix modules add <name>  create module
+```ini
+modules = [
+  auth,
+  users,
+]
 ```
 
-The generated CMake loader scans `modules/*` and adds every module that contains a `CMakeLists.txt`.
+not by editing generated CMake.
 
-## Add a module
+## Generated files
 
-Run:
-
-```bash
-vix modules add User
-```
-
-Example output:
+`vix modules init` creates:
 
 ```txt
-  ✔  User  module
-  ─────────────────────────────────────
-  files
-  1  modules/User/include/User/api.hpp  public header
-  2  modules/User/src/User.cpp  implementation
-  3  modules/User/CMakeLists.txt  target
-  ─────────────────────────────────────
-  target
-  1  blog::User  CMake alias
-  ─────────────────────────────────────
-  next
-  1  #include <User/api.hpp>  include
-  2  vix build  compile
+modules/
+cmake/vix_modules.cmake
 ```
 
-For a project named `blog`, this creates a CMake alias target:
+`vix modules add auth` creates:
 
 ```txt
-blog::User
-```
-
-and a real internal target similar to:
-
-```txt
-blog_User
-```
-
-The alias is the public name you should use when linking modules.
-
-## Generated module structure
-
-A module named `User` generates:
-
-```txt
-modules/User/
+modules/auth/
 ├── CMakeLists.txt
 ├── include/
-│   └── User/
+│   └── auth/
 │       └── api.hpp
 └── src/
-    └── User.cpp
+    └── auth.cpp
 ```
 
-The public header is:
+The generated module is ready to build.
 
-```txt
-modules/User/include/User/api.hpp
+## `vix.app` modules field
+
+The `modules` field is for internal app modules.
+
+Example:
+
+```ini
+modules = [
+  auth,
+  users,
+  billing,
+]
 ```
 
-The implementation file is:
+These names map to module folders:
 
 ```txt
-modules/User/src/User.cpp
+modules/auth
+modules/users
+modules/billing
 ```
 
-The module CMake file is:
+And to CMake alias targets:
 
 ```txt
-modules/User/CMakeLists.txt
+api::auth
+api::users
+api::billing
+```
+
+Do not use `modules` for registry packages.
+
+Use `deps` for registry packages.
+
+## `modules` vs `deps`
+
+Use `modules` for code inside your app.
+
+Use `deps` for packages from the Vix Registry.
+
+Example:
+
+```ini
+modules = [
+  auth,
+  users,
+]
+
+deps = [
+  gk/json@^1.0.0,
+]
+```
+
+The difference is important:
+
+| Field      | Purpose                                     | Example          |
+| ---------- | ------------------------------------------- | ---------------- |
+| `modules`  | Internal app modules under `modules/`       | `auth`           |
+| `deps`     | External packages from the Vix Registry     | `gk/json@^1.0.0` |
+| `packages` | CMake packages resolved with `find_package` | `vix`            |
+| `links`    | CMake targets linked to the app             | `vix::vix`       |
+
+## Full vix.app example with modules
+
+```ini
+name = api
+type = executable
+standard = c++20
+
+sources = [
+  src/main.cpp,
+]
+
+include_dirs = [
+  src,
+]
+
+modules = [
+  auth,
+  users,
+  orders,
+]
+
+deps = [
+]
+
+packages = [
+  vix,
+]
+
+links = [
+  vix::vix,
+]
+
+resources = [
+  .env=.env,
+]
+
+output_dir = bin
+```
+
+This is the app-first Vix structure.
+
+The app owns the modules.
+
+The modules stay clean and explicit.
+
+## Full project structure
+
+A modular `vix.app` project can look like this:
+
+```txt
+api/
+├── vix.app
+├── vix.json
+├── .env
+├── .env.example
+├── src/
+│   └── main.cpp
+├── modules/
+│   ├── auth/
+│   │   ├── CMakeLists.txt
+│   │   ├── include/
+│   │   │   └── auth/
+│   │   │       └── api.hpp
+│   │   └── src/
+│   │       └── auth.cpp
+│   ├── users/
+│   │   ├── CMakeLists.txt
+│   │   ├── include/
+│   │   │   └── users/
+│   │   │       └── api.hpp
+│   │   └── src/
+│   │       └── users.cpp
+│   └── orders/
+│       ├── CMakeLists.txt
+│       ├── include/
+│       │   └── orders/
+│       │       └── api.hpp
+│       └── src/
+│           └── orders.cpp
+└── cmake/
+    └── vix_modules.cmake
 ```
 
 ## Public include style
 
-Use angle-bracket includes from the module public include root:
+Use public include paths:
 
 ```cpp
-#include <User/api.hpp>
+#include <auth/api.hpp>
+#include <users/api.hpp>
 ```
 
-Do not include module files with relative paths like:
+Do not use relative module paths:
 
 ```cpp
-#include "../modules/User/include/User/api.hpp"
+#include "../modules/auth/include/auth/api.hpp"
 ```
 
-The generated module target exposes its public include directory through CMake.
+The module target exposes its public include directory.
 
-## Generated public header
+The include should stay clean.
 
-A generated module header looks like this:
+## Generated module header
+
+A generated module header can look like this:
 
 ```cpp
-#ifndef blog_user_api_hpp
-#define blog_user_api_hpp
+#ifndef api_auth_api_hpp
+#define api_auth_api_hpp
 
 #include <string>
 
-namespace blog::User
+namespace api::auth
 {
   struct Api
   {
@@ -244,57 +534,57 @@ namespace blog::User
 #endif
 ```
 
-The exact namespace depends on your project name and module name.
+The exact namespace depends on the project name and module name.
 
-## Generated implementation
+## Generated module implementation
 
-A generated implementation looks like this:
+A generated module implementation can look like this:
 
 ```cpp
-#include <User/api.hpp>
+#include <auth/api.hpp>
 
-namespace blog::User
+namespace api::auth
 {
   std::string Api::name()
   {
-    return "blog::User";
+    return "api::auth";
   }
 }
 ```
 
-## Generated CMake target
+## Generated module CMake target
 
-A generated module `CMakeLists.txt` creates a normal library target and an alias target:
+A generated module CMake file creates a real target and an alias target.
 
-```cmake
-add_library(blog_User)
-add_library(blog::User ALIAS blog_User)
-```
-
-It then adds the implementation file:
+Example for project `api` and module `auth`:
 
 ```cmake
-target_sources(blog_User
+add_library(api_auth)
+add_library(api::auth ALIAS api_auth)
+
+target_sources(api_auth
   PRIVATE
-    src/User.cpp
+    src/auth.cpp
 )
-```
 
-It exposes the public include directory:
-
-```cmake
-target_include_directories(blog_User
+target_include_directories(api_auth
   PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
   PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/src
 )
+
+target_compile_features(api_auth PUBLIC cxx_std_20)
+
+set_target_properties(api_auth PROPERTIES
+  OUTPUT_NAME "api_auth"
+)
 ```
 
-It also requires C++20:
+The alias target is the public name:
 
-```cmake
-target_compile_features(blog_User PUBLIC cxx_std_20)
+```txt
+api::auth
 ```
 
 ## Module loader
@@ -305,9 +595,19 @@ target_compile_features(blog_User PUBLIC cxx_std_20)
 cmake/vix_modules.cmake
 ```
 
-This loader scans the `modules/` directory and adds each module with a `CMakeLists.txt`.
+The loader scans:
 
-Conceptually, it behaves like this:
+```txt
+modules/
+```
+
+and adds every module that contains:
+
+```txt
+CMakeLists.txt
+```
+
+Conceptually:
 
 ```cmake
 file(GLOB VIX_MODULE_DIRS RELATIVE "${VIX_MODULES_DIR}" "${VIX_MODULES_DIR}/*")
@@ -321,66 +621,316 @@ foreach(_m ${VIX_MODULE_DIRS})
 endforeach()
 ```
 
-The generated file is guarded so it is only included once.
+This loader is used by both paths:
 
-## Root CMakeLists.txt patch
+```txt
+vix.app generated CMake
+manual CMake project
+```
 
-When you run:
+## How vix.app connects modules internally
+
+For a `vix.app` project, Vix generates internal CMake.
+
+The generated project can include the module loader and link declared modules.
+
+Conceptually:
+
+```txt
+vix.app
+  -> reads modules = [...]
+  -> generates .vix/generated/app/CMakeLists.txt
+  -> includes cmake/vix_modules.cmake
+  -> links module aliases to the app target
+```
+
+So this:
+
+```ini
+modules = [
+  auth,
+  users,
+]
+```
+
+maps to:
+
+```txt
+api::auth
+api::users
+```
+
+and links them into the app.
+
+## Do not edit generated CMake
+
+Do not edit:
+
+```txt
+.vix/generated/app/CMakeLists.txt
+```
+
+It is generated by Vix.
+
+If you need to add a module, edit:
+
+```ini
+modules = [
+  auth,
+  users,
+  orders,
+]
+```
+
+If you need to add a registry dependency, edit or use `vix add` so the project metadata and lockfile stay aligned.
+
+If you need full custom build logic, use a real `CMakeLists.txt`.
+
+## Adding a module
+
+Run:
 
 ```bash
-vix modules init
+vix modules add auth
 ```
 
-Vix patches the root `CMakeLists.txt` with an idempotent block:
+This creates:
 
-```cmake
-# VIX_MODULES_BEGIN
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/vix_modules.cmake)
-# VIX_MODULES_END
+```txt
+modules/auth/include/auth/api.hpp
+modules/auth/src/auth.cpp
+modules/auth/CMakeLists.txt
 ```
 
-Idempotent means running the command multiple times does not duplicate the block.
+Then add it to `vix.app`:
 
-## Auto-linking modules
-
-By default, `vix modules add <name>` tries to patch the root `CMakeLists.txt` so the module is linked into the main project target.
-
-For a project named `blog` and a module named `User`, it adds a guarded block similar to:
-
-```cmake
-# VIX_MODULE_LINK_BEGIN User
-if (TARGET blog::User)
-  if (TARGET blog)
-    target_link_libraries(blog PRIVATE blog::User)
-  endif()
-endif()
-# VIX_MODULE_LINK_END User
+```ini
+modules = [
+  auth,
+]
 ```
 
-This works when the main application target has the same name as the CMake project.
-
-For example:
-
-```cmake
-project(blog LANGUAGES CXX)
-
-add_executable(blog src/main.cpp)
-```
-
-If your main target has another name, either use `--no-link` and link manually, or edit the generated link block.
-
-## Manual linking
-
-Use `--no-link` if you do not want Vix to patch the root `CMakeLists.txt`:
+Build:
 
 ```bash
-vix modules add User --no-link
+vix build
 ```
 
-Then link manually:
+## Adding multiple modules
+
+```bash
+vix modules add auth
+vix modules add users
+vix modules add orders
+```
+
+Then:
+
+```ini
+modules = [
+  auth,
+  users,
+  orders,
+]
+```
+
+Use in code:
+
+```cpp
+#include <auth/api.hpp>
+#include <users/api.hpp>
+#include <orders/api.hpp>
+```
+
+## Module naming rules
+
+Module names may contain:
+
+```txt
+letters
+numbers
+_
+-
+```
+
+Examples:
+
+```txt
+auth
+users
+order_items
+payment-gateway
+```
+
+Hyphens are normalized to underscores for target names.
+
+Example:
+
+```txt
+payment-gateway
+```
+
+becomes:
+
+```txt
+payment_gateway
+```
+
+So the alias for project `api` becomes:
+
+```txt
+api::payment_gateway
+```
+
+## Reserved module names
+
+Avoid names that conflict with project structure, build tools, or common dependency names.
+
+Examples of reserved or bad names:
+
+```txt
+modules
+module
+src
+include
+cmake
+build
+test
+tests
+example
+examples
+vendor
+third_party
+internal
+private
+public
+main
+app
+api
+core
+std
+vix
+vixcpp
+registry
+deps
+fmt
+boost
+openssl
+sqlite
+mysql
+asio
+beast
+```
+
+Use domain names instead:
+
+```txt
+auth
+users
+orders
+billing
+notifications
+inventory
+search
+```
+
+## `--project`
+
+Use `--project` to set the project name used for module targets.
+
+```bash
+vix modules add auth --project api
+```
+
+This creates aliases like:
+
+```txt
+api::auth
+```
+
+Use this when Vix cannot detect the project name correctly.
+
+## `--dir`
+
+Use `--dir` to run module commands from another directory.
+
+```bash
+vix modules init --dir ./apps/api
+vix modules add auth --dir ./apps/api
+vix modules check --dir ./apps/api
+```
+
+Equivalent form:
+
+```bash
+vix modules add auth --dir=./apps/api
+```
+
+## `--no-patch`
+
+Use `--no-patch` with `init` when you do not want Vix to patch a root `CMakeLists.txt`.
+
+```bash
+vix modules init --no-patch
+```
+
+This still creates:
+
+```txt
+modules/
+cmake/vix_modules.cmake
+```
+
+but does not modify root CMake.
+
+For `vix.app` projects, root CMake patching is skipped because `vix.app` is the source of truth.
+
+## `--patch`
+
+Use `--patch` to explicitly allow root CMake patching.
+
+```bash
+vix modules init --patch
+```
+
+This matters only for CMake projects with a root `CMakeLists.txt`.
+
+## `--no-link`
+
+Use `--no-link` when adding a module if you do not want Vix to patch the root CMake link block.
+
+```bash
+vix modules add auth --no-link
+```
+
+For `vix.app` projects, prefer declaring the module in `vix.app`:
+
+```ini
+modules = [
+  auth,
+]
+```
+
+For manual CMake projects, link manually:
 
 ```cmake
-target_link_libraries(blog PRIVATE blog::User)
+target_link_libraries(api PRIVATE api::auth)
+```
+
+## `--link`
+
+Use `--link` to allow Vix to patch a CMake project link block.
+
+```bash
+vix modules add auth --link
+```
+
+This is useful for classic CMake projects.
+
+For `vix.app`, linking is controlled by:
+
+```ini
+modules = [...]
 ```
 
 ## Cross-module dependencies
@@ -390,32 +940,46 @@ If one module uses another module, the dependency must be explicit.
 Example:
 
 ```cpp
-#include <Auth/api.hpp>
+#include <auth/api.hpp>
 ```
 
-If module `User` includes `Auth`, then `User` must link to `Auth` in `modules/User/CMakeLists.txt`:
+If `users` includes `auth`, then `users` must link to `auth`.
+
+In:
+
+```txt
+modules/users/CMakeLists.txt
+```
+
+add:
 
 ```cmake
-target_link_libraries(blog_User PUBLIC blog::Auth)
+target_link_libraries(api_users PUBLIC api::auth)
 ```
 
-Public module usage must be explicit because public headers affect downstream users.
+or:
 
-## PUBLIC vs PRIVATE
+```cmake
+target_link_libraries(api_users PRIVATE api::auth)
+```
 
-Use `PUBLIC` when the dependency appears in public headers.
+The correct visibility depends on where the dependency is used.
+
+## PUBLIC vs PRIVATE dependencies
+
+Use `PUBLIC` when the dependency appears in a public header.
 
 Example:
 
 ```cpp
-// modules/User/include/User/api.hpp
-#include <Auth/api.hpp>
+// modules/users/include/users/api.hpp
+#include <auth/api.hpp>
 ```
 
 Then:
 
 ```cmake
-target_link_libraries(blog_User PUBLIC blog::Auth)
+target_link_libraries(api_users PUBLIC api::auth)
 ```
 
 Use `PRIVATE` when the dependency is only used inside `.cpp` files.
@@ -423,19 +987,17 @@ Use `PRIVATE` when the dependency is only used inside `.cpp` files.
 Example:
 
 ```cpp
-// modules/User/src/User.cpp
-#include <Auth/api.hpp>
+// modules/users/src/users.cpp
+#include <auth/api.hpp>
 ```
 
 Then:
 
 ```cmake
-target_link_libraries(blog_User PRIVATE blog::Auth)
+target_link_libraries(api_users PRIVATE api::auth)
 ```
 
 ## Module safety rules
-
-`vix modules check` validates module rules.
 
 Run:
 
@@ -443,399 +1005,74 @@ Run:
 vix modules check
 ```
 
-It checks:
+This checks module structure and dependency safety.
 
-- public headers must not include private implementation files
-- cross-module includes must be declared in CMake
-- modules must expose dependencies explicitly
+The main rules are:
 
-## Public headers must not include private implementation
+```txt
+public headers must not include private implementation files
+cross-module includes must be declared through target_link_libraries
+module dependencies must be explicit
+```
+
+## Public headers must not include private files
 
 Wrong:
 
 ```cpp
-#include "../src/User.cpp"
+#include "../src/auth_impl.hpp"
 ```
 
-Wrong:
+or:
 
 ```cpp
-#include "src/internal.hpp"
+#include <auth/src/auth_impl.hpp>
 ```
+
+Public headers should expose stable public API only.
 
 Correct:
 
 ```cpp
-#include <User/api.hpp>
+#include <auth/api.hpp>
 ```
 
-Public headers should expose stable API only.
+Private implementation headers should stay under:
 
-Private details should stay inside `src/`.
+```txt
+modules/auth/src/
+```
 
-## Cross-module include without link
+and be included only by implementation files.
 
-Wrong:
+## Cross-module includes must be declared
+
+If a module includes another module:
 
 ```cpp
-// modules/User/include/User/api.hpp
-#include <Auth/api.hpp>
+#include <auth/api.hpp>
 ```
 
-without:
-
-```cmake
-target_link_libraries(blog_User PUBLIC blog::Auth)
-```
-
-Correct:
-
-```cmake
-target_link_libraries(blog_User PUBLIC blog::Auth)
-```
-
-## Check output
-
-When modules are valid:
-
-```txt
-  ✔ Modules check passed
-    • modules   : 2
-    • headers   : 2
-```
-
-When a module has an undeclared dependency, Vix prints a focused diagnostic and shows the CMake fix.
-
-Example:
-
-```txt
-  ✖ Missing explicit module dependency (include without link)
-    • module    : User
-    • header    : modules/User/include/User/api.hpp
-    • uses      : <Auth/...>
-  ! Fix (module CMakeLists.txt):
-
-    target_link_libraries(blog_User PUBLIC blog::Auth)
-```
-
-## Options
-
-| Option | Description |
-| --- | --- |
-| `-d, --dir <path>` | Project root. Defaults to the current directory. |
-| `--project <name>` | Override the project name. By default, Vix reads it from root `CMakeLists.txt`. |
-| `--no-patch` | Do not patch the root `CMakeLists.txt` during init. |
-| `--patch` | Patch the root `CMakeLists.txt`. This is the default for init. |
-| `--no-link` | Do not auto-link the generated module into the main project target. |
-| `--link` | Auto-link the generated module into the main project target. This is the default for add. |
-| `-h, --help` | Show help. |
-
-## Use another project directory
-
-Run modules commands from outside the project with `--dir`:
-
-```bash
-vix modules init --dir ./blog
-vix modules add User --dir ./blog
-vix modules check --dir ./blog
-```
-
-## Override project name
-
-By default, Vix tries to detect the project name from the root `CMakeLists.txt`.
-
-For example:
-
-```cmake
-project(blog LANGUAGES CXX)
-```
-
-This gives:
-
-```txt
-blog
-```
-
-You can override it:
-
-```bash
-vix modules add User --project blog
-```
-
-This is useful when:
-
-- the project name cannot be detected
-- the main CMake namespace differs from the root project name
-- you are generating modules for a custom target layout
-
-## Initialize without patching CMakeLists.txt
-
-Use:
-
-```bash
-vix modules init --no-patch
-```
-
-This creates:
-
-```txt
-modules/
-cmake/vix_modules.cmake
-```
-
-but does not modify the root `CMakeLists.txt`.
-
-Then include the loader manually:
-
-```cmake
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/vix_modules.cmake)
-```
-
-## Add without auto-linking
-
-Use:
-
-```bash
-vix modules add User --no-link
-```
-
-This creates the module files but does not add a link block to the root `CMakeLists.txt`.
-
-Then link the module manually:
-
-```cmake
-target_link_libraries(blog PRIVATE blog::User)
-```
-
-## Module naming rules
-
-Module names may contain:
-
-- letters
-- numbers
-- `_`
-- `-`
-
-Examples:
-
-```bash
-vix modules add User
-vix modules add orders
-vix modules add billing_api
-vix modules add payment-gateway
-```
-
-Hyphens are normalized to underscores for CMake and C++ identifiers.
-
-Example:
-
-```bash
-vix modules add payment-gateway
-```
-
-creates normalized identifiers based on:
-
-```txt
-payment_gateway
-```
-
-## Reserved module names
-
-Some names are reserved because they conflict with project structure, tools, dependencies, or common build directories.
-
-Avoid names such as:
-
-- `modules`
-- `module`
-- `src`
-- `source`
-- `include`
-- `cmake`
-- `build`
-- `dist`
-- `test`
-- `tests`
-- `example`
-- `examples`
-- `vendor`
-- `third_party`
-- `external`
-- `internal`
-- `detail`
-- `private`
-- `public`
-- `main`
-- `app`
-- `api`
-- `core`
-- `std`
-- `vix`
-- `vixcpp`
-- `registry`
-- `deps`
-- `pack`
-- `lock`
-- `install`
-- `add`
-- `remove`
-- `store`
-- `gc`
-- `fmt`
-- `spdlog`
-- `boost`
-- `openssl`
-- `zlib`
-- `sqlite`
-- `mysql`
-- `postgres`
-- `curl`
-- `asio`
-- `beast`
-
-If you try to use a reserved name, Vix will reject it.
-
-## Recommended module names
-
-Prefer domain names:
-
-```bash
-vix modules add Auth
-vix modules add User
-vix modules add Products
-vix modules add Orders
-vix modules add Billing
-vix modules add Notifications
-```
-
-Avoid technical names:
-
-```bash
-vix modules add Utils
-vix modules add Helpers
-vix modules add Common
-```
-
-A module should represent a feature or domain of your app.
-
-## App-first organization
-
-`vix modules` is app-first.
-
-That means modules are designed primarily for organizing an application, not for publishing every feature as a separate package.
-
-Use modules when code belongs to the current app.
-
-Use packages when code should be reused across projects.
-
-## Modules vs packages
-
-Use a module when:
-
-- the code belongs to one application
-- the code depends on the app’s domain
-- you want clean internal boundaries
-- you want faster local organization
-
-Use a package when:
-
-- the code should be shared across projects
-- the code has its own version
-- the code should be published
-- the code should be consumed through `vix add`
-
-## Modules vs src folders
-
-A traditional structure may look like:
-
-```txt
-src/
-├── auth/
-├── users/
-├── products/
-└── orders/
-```
-
-This is simple, but boundaries are informal.
-
-With `vix modules`, each domain gets its own CMake target:
-
-```txt
-modules/
-├── Auth/
-├── User/
-├── Products/
-└── Orders/
-```
-
-This makes dependencies explicit and easier to validate.
-
-## Recommended project layout
-
-A Vix app with modules may look like:
-
-```txt
-blog/
-├── CMakeLists.txt
-├── CMakePresets.json
-├── README.md
-├── vix.json
-├── src/
-│   └── main.cpp
-├── cmake/
-│   └── vix_modules.cmake
-└── modules/
-    ├── User/
-    │   ├── CMakeLists.txt
-    │   ├── include/
-    │   │   └── User/
-    │   │       └── api.hpp
-    │   └── src/
-    │       └── User.cpp
-    └── Auth/
-        ├── CMakeLists.txt
-        ├── include/
-        │   └── Auth/
-        │       └── api.hpp
-        └── src/
-            └── Auth.cpp
-```
-
-## Recommended CMake root order
-
-In the root `CMakeLists.txt`, include modules after `project(...)` and before linking module targets.
+the CMake dependency must exist.
 
 Example:
 
 ```cmake
-cmake_minimum_required(VERSION 3.20)
-project(blog LANGUAGES CXX)
-
-# VIX_MODULES_BEGIN
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/vix_modules.cmake)
-# VIX_MODULES_END
-
-add_executable(blog src/main.cpp)
-
-# VIX_MODULE_LINKS_BEGIN
-# module link blocks generated by vix modules add
-# VIX_MODULE_LINKS_END
+target_link_libraries(api_users PUBLIC api::auth)
 ```
 
-If your main target is created before module linking, make sure the generated link blocks appear after the target exists.
+This makes the dependency visible to the build system.
 
-## Using a module in main.cpp
+It also avoids hidden include path problems.
 
-After creating a module:
+## App code using modules
 
-```bash
-vix modules add User
-```
-
-Use it in `src/main.cpp`:
+In your app source:
 
 ```cpp
 #include <vix.hpp>
-#include <User/api.hpp>
+#include <auth/api.hpp>
+#include <users/api.hpp>
 
 using namespace vix;
 
@@ -844,223 +1081,537 @@ int main()
   App app;
 
   app.get("/", [](Request &, Response &res) {
-    res.send(User::Api::name());
+    res.json({
+      "ok", true,
+      "auth", api::auth::Api::name(),
+      "users", api::users::Api::name()
+    });
   });
 
-  app.run(8080);
+  app.run();
+
+  return 0;
 }
 ```
 
-Depending on your generated namespace, you may need the full namespace:
+Your `vix.app` must include:
+
+```ini
+modules = [
+  auth,
+  users,
+]
+```
+
+## App-first architecture example
+
+A real backend can evolve like this:
+
+```txt
+api/
+├── vix.app
+├── src/
+│   └── main.cpp
+├── modules/
+│   ├── auth/
+│   ├── users/
+│   ├── orders/
+│   ├── billing/
+│   └── notifications/
+└── cmake/
+    └── vix_modules.cmake
+```
+
+Each module owns one part of the domain.
+
+Example responsibilities:
+
+| Module          | Responsibility                    |
+| --------------- | --------------------------------- |
+| `auth`          | login, tokens, permissions        |
+| `users`         | user profile and user lookup      |
+| `orders`        | order creation and order state    |
+| `billing`       | payments, invoices, subscriptions |
+| `notifications` | email, websocket, push events     |
+
+## Recommended module boundaries
+
+A module should own one clear responsibility.
+
+Good module names:
+
+```txt
+auth
+users
+orders
+billing
+notifications
+catalog
+inventory
+search
+files
+storage
+```
+
+Avoid generic names:
+
+```txt
+utils
+helpers
+core
+common
+misc
+```
+
+Generic modules become dumping grounds.
+
+Prefer domain modules.
+
+## Keep main.cpp small
+
+Do not put every route and service directly in `main.cpp`.
+
+Prefer:
 
 ```cpp
-res.send(blog::User::Api::name());
+#include <vix.hpp>
+#include <auth/api.hpp>
+#include <users/api.hpp>
+
+using namespace vix;
+
+static void register_routes(App &app)
+{
+  app.get("/", [](Request &, Response &res) {
+    res.text("ok");
+  });
+}
+
+int main()
+{
+  App app;
+
+  register_routes(app);
+
+  app.run();
+  return 0;
+}
 ```
 
-## Build after adding modules
+As the app grows, modules should own their own route registration functions.
 
-After adding a module, build normally:
+Example:
 
-```bash
-vix build
+```cpp
+auth::register_routes(app);
+users::register_routes(app);
 ```
 
-If your main app target is not named like the project, use manual linking or `--project`.
+## Module route registration pattern
 
-You can also build all targets:
+A module can expose a route registration API.
 
-```bash
-vix build --build-target all
+Example:
+
+```cpp
+// modules/auth/include/auth/api.hpp
+#ifndef api_auth_api_hpp
+#define api_auth_api_hpp
+
+#include <vix.hpp>
+
+namespace api::auth
+{
+  void register_routes(vix::App &app);
+}
+
+#endif
 ```
 
-## Validate modules
+Implementation:
 
-Run:
+```cpp
+// modules/auth/src/auth.cpp
+#include <auth/api.hpp>
 
-```bash
-vix modules check
+namespace api::auth
+{
+  void register_routes(vix::App &app)
+  {
+    app.get("/auth/health", [](vix::Request &, vix::Response &res) {
+      res.json({
+        "ok", true,
+        "module", "auth"
+      });
+    });
+  }
+}
 ```
 
-Use this after:
+App:
 
-- adding a new module
-- adding cross-module includes
-- editing module CMake files
-- refactoring public headers
-- before committing module changes
+```cpp
+#include <vix.hpp>
+#include <auth/api.hpp>
+
+int main()
+{
+  vix::App app;
+
+  api::auth::register_routes(app);
+
+  app.run();
+  return 0;
+}
+```
+
+## Module service pattern
+
+A module can expose application services.
+
+Example:
+
+```cpp
+// modules/users/include/users/api.hpp
+#ifndef api_users_api_hpp
+#define api_users_api_hpp
+
+#include <string>
+
+namespace api::users
+{
+  struct UserService
+  {
+    std::string find_name_by_id(int id) const;
+  };
+}
+
+#endif
+```
+
+Implementation:
+
+```cpp
+// modules/users/src/users.cpp
+#include <users/api.hpp>
+
+namespace api::users
+{
+  std::string UserService::find_name_by_id(int id) const
+  {
+    return "user-" + std::to_string(id);
+  }
+}
+```
+
+## Modules and registry dependencies
+
+Modules can use registry dependencies, but registry dependencies belong to the app dependency model.
+
+Example:
+
+```ini
+deps = [
+  gk/json@^1.0.0,
+]
+
+links = [
+  vix::vix,
+  gk::json,
+]
+```
+
+Then a module can link to the dependency in its own `CMakeLists.txt` if needed.
+
+Example:
+
+```cmake
+target_link_libraries(api_users PRIVATE gk::json)
+```
+
+Keep the rule:
+
+```txt
+vix.app declares app-level packages and registry deps
+module CMake declares module-level target dependencies
+```
+
+## When to move to manual CMake
+
+Stay with `vix.app` when your app has:
+
+```txt
+one main target
+simple modules
+normal packages
+normal links
+normal resources
+```
+
+Move to `CMakeLists.txt` when you need:
+
+```txt
+multiple custom targets
+custom commands
+generated sources
+install rules
+CTest integration
+complex platform-specific logic
+advanced package exports
+custom toolchains
+deep CMake functions
+```
+
+Adding a `CMakeLists.txt` is enough.
+
+Vix will automatically use CMake because CMake has priority.
+
+## Commands
+
+| Command                  | Purpose                    |
+| ------------------------ | -------------------------- |
+| `vix modules init`       | Initialize module support. |
+| `vix modules add <name>` | Create a new module.       |
+| `vix modules check`      | Validate module rules.     |
+| `vix modules --help`     | Show help.                 |
+
+## Options
+
+| Option             | Description                                         |
+| ------------------ | --------------------------------------------------- |
+| `-d, --dir <path>` | Project directory.                                  |
+| `--dir=<path>`     | Same as `--dir <path>`.                             |
+| `--project <name>` | Project name used for generated module targets.     |
+| `--project=<name>` | Same as `--project <name>`.                         |
+| `--no-patch`       | Do not patch root `CMakeLists.txt` during `init`.   |
+| `--patch`          | Allow root `CMakeLists.txt` patching during `init`. |
+| `--no-link`        | Do not patch root CMake link block during `add`.    |
+| `--link`           | Allow root CMake link patching during `add`.        |
+| `-h, --help`       | Show help.                                          |
 
 ## Common workflows
 
-### Create app and initialize modules
+### Start modules in a vix.app project
 
 ```bash
-vix new blog
-cd blog/
 vix modules init
-vix modules add User
+vix modules add auth
+vix modules add users
+```
+
+Then edit `vix.app`:
+
+```ini
+modules = [
+  auth,
+  users,
+]
+```
+
+Build:
+
+```bash
 vix build
 ```
 
-### Create several modules
+### Start modules in a CMake project
 
 ```bash
-vix modules add Auth
-vix modules add User
-vix modules add Products
-vix modules add Orders
-vix modules check
+vix modules init
+vix modules add auth
 vix build
 ```
 
-### Add a module without linking
-
-```bash
-vix modules add Billing --no-link
-```
-
-Then in CMake:
+If needed, link manually:
 
 ```cmake
-target_link_libraries(blog PRIVATE blog::Billing)
+target_link_libraries(api PRIVATE api::auth)
 ```
 
-### Add a module from outside the project
+### Add a module without CMake auto-link patch
 
 ```bash
-vix modules add User --dir ./blog
+vix modules add auth --no-link
 ```
 
-### Check modules from outside the project
+Then either add it to `vix.app`:
+
+```ini
+modules = [
+  auth,
+]
+```
+
+or link manually in CMake:
+
+```cmake
+target_link_libraries(api PRIVATE api::auth)
+```
+
+### Check module rules
 
 ```bash
-vix modules check --dir ./blog
+vix modules check
+```
+
+### Run from another directory
+
+```bash
+vix modules add auth --dir ./apps/api
+```
+
+### Force project name
+
+```bash
+vix modules add auth --project api
 ```
 
 ## Common mistakes
 
-### Running modules before init
+### Forgetting to add the module to vix.app
 
 Wrong:
 
 ```bash
-vix modules add User
+vix modules add auth
+vix build
 ```
 
-without:
+without updating:
 
-```bash
-vix modules init
+```ini
+modules = [
+  auth,
+]
 ```
 
 Correct:
 
 ```bash
-vix modules init
-vix modules add User
+vix modules add auth
 ```
 
-### Using a reserved name
+Then:
+
+```ini
+modules = [
+  auth,
+]
+```
+
+### Editing generated CMake
 
 Wrong:
 
-```bash
-vix modules add api
+```txt
+.vix/generated/app/CMakeLists.txt
 ```
 
 Correct:
 
-```bash
-vix modules add User
+```txt
+vix.app
 ```
 
-### Forgetting to include the public header
+For simple apps, edit `vix.app`.
+
+For advanced apps, create a real `CMakeLists.txt`.
+
+### Using modules for registry packages
+
+Wrong:
+
+```ini
+modules = [
+  gk/json@^1.0.0,
+]
+```
+
+Correct:
+
+```ini
+deps = [
+  gk/json@^1.0.0,
+]
+```
+
+### Forgetting cross-module CMake dependencies
 
 Wrong:
 
 ```cpp
-#include "modules/User/include/User/api.hpp"
+#include <auth/api.hpp>
 ```
+
+inside `users`, but no link in `modules/users/CMakeLists.txt`.
 
 Correct:
 
-```cpp
-#include <User/api.hpp>
+```cmake
+target_link_libraries(api_users PUBLIC api::auth)
 ```
 
-### Depending on another module without CMake link
+or:
+
+```cmake
+target_link_libraries(api_users PRIVATE api::auth)
+```
+
+### Using relative includes
 
 Wrong:
 
 ```cpp
-#include <Auth/api.hpp>
-```
-
-without:
-
-```cmake
-target_link_libraries(blog_User PUBLIC blog::Auth)
+#include "../modules/auth/include/auth/api.hpp"
 ```
 
 Correct:
 
-```cmake
-target_link_libraries(blog_User PUBLIC blog::Auth)
+```cpp
+#include <auth/api.hpp>
 ```
 
-### Linking to the internal target name everywhere
+### Creating generic dumping-ground modules
 
-Avoid using the internal target when a public alias exists:
+Avoid:
 
-```cmake
-target_link_libraries(blog PRIVATE blog_User)
+```txt
+utils
+helpers
+common
+misc
 ```
 
-Prefer:
+Prefer domain modules:
 
-```cmake
-target_link_libraries(blog PRIVATE blog::User)
+```txt
+auth
+users
+orders
+billing
+notifications
 ```
 
-### Assuming auto-link works for every project
+### Expecting vix.app to be used when CMakeLists.txt exists
 
-Auto-linking expects the main target to be named like the project.
+If your project has:
 
-If your project is:
-
-```cmake
-project(blog LANGUAGES CXX)
+```txt
+CMakeLists.txt
+vix.app
 ```
 
-but your executable is:
+Vix uses:
 
-```cmake
-add_executable(server src/main.cpp)
+```txt
+CMakeLists.txt
 ```
 
-then auto-linking to `blog` will not link your real executable.
-
-Use:
-
-```bash
-vix modules add User --no-link
-```
-
-Then manually link:
-
-```cmake
-target_link_libraries(server PRIVATE blog::User)
-```
+If you want to test `vix.app`, temporarily rename `CMakeLists.txt`.
 
 ## Troubleshooting
 
-### `modules/` folder not found
-
-If you see:
-
-```txt
-modules/ folder not found.
-Run: vix modules init
-```
+### `modules/ folder not found`
 
 Run:
 
@@ -1068,254 +1619,170 @@ Run:
 vix modules init
 ```
 
-### Module already exists
+Then:
 
-If you see:
+```bash
+vix modules add auth
+```
+
+### `Module already exists`
+
+The folder already exists:
 
 ```txt
-Module already exists: modules/User
+modules/auth
 ```
 
-Pick another name or remove the existing module manually.
+Choose another name or remove the existing module intentionally.
 
-### Failed to patch root CMakeLists.txt
+### `Invalid module name`
 
-Make sure the project has a root `CMakeLists.txt`.
+Use only:
 
-Then run again:
-
-```bash
-vix modules init
+```txt
+letters
+numbers
+_
+-
 ```
-
-or initialize without patching:
-
-```bash
-vix modules init --no-patch
-```
-
-and include the generated file manually:
-
-```cmake
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/vix_modules.cmake)
-```
-
-### Auto-link did not affect your app
-
-Your main target may not be named like the project.
-
-Check your root `CMakeLists.txt`.
-
-If you have:
-
-```cmake
-project(blog LANGUAGES CXX)
-add_executable(server src/main.cpp)
-```
-
-then link manually:
-
-```cmake
-target_link_libraries(server PRIVATE blog::User)
-```
-
-### Include not found
-
-If this fails:
-
-```cpp
-#include <User/api.hpp>
-```
-
-check that:
-
-- the module exists
-- the module is loaded by `cmake/vix_modules.cmake`
-- the target using the header links to `blog::User`
-- you rebuilt after adding the module
-
-Try:
-
-```bash
-vix build --clean
-```
-
-### Missing explicit module dependency
-
-If `vix modules check` reports a missing dependency, open the module `CMakeLists.txt` and add:
-
-```cmake
-target_link_libraries(blog_User PUBLIC blog::OtherModule)
-```
-
-Use `PUBLIC` when the dependency is included from a public header.
-
-Use `PRIVATE` when it is only used in `.cpp` files.
-
-## Best practices
-
-### Keep module APIs small
-
-Expose only what other parts of the app need.
-
-Keep implementation details in `src/`.
-
-### Prefer domain modules
 
 Good:
 
-- `Auth`
-- `User`
-- `Products`
-- `Orders`
-- `Billing`
-- `Notifications`
-
-Less useful:
-
-- `Utils`
-- `Helpers`
-- `Common`
-- `Stuff`
-
-### Avoid circular dependencies
-
-Avoid:
-
-```txt
-User -> Auth
-Auth -> User
+```bash
+vix modules add auth
+vix modules add user_profiles
+vix modules add payment-gateway
 ```
 
-Prefer extracting shared concepts into a third module:
+Bad:
 
-```txt
-User -> Identity
-Auth -> Identity
+```bash
+vix modules add "user profiles"
+vix modules add auth/core
 ```
 
-### Keep public headers clean
+### `Reserved module name`
 
-Public headers should avoid unnecessary includes.
+Choose a domain name instead of a tool, folder, or framework name.
 
-Prefer forward declarations when possible.
+Good:
 
-### Keep dependencies explicit
+```txt
+billing
+orders
+files
+notifications
+```
 
-When a module uses another module, declare it in CMake.
+Bad:
 
-Do not rely on accidental include paths.
+```txt
+src
+include
+vix
+core
+sqlite
+boost
+```
 
-### Run checks before commits
+### Module compiles but app cannot include header
 
-Before committing module changes:
+Make sure the module is declared in `vix.app`:
+
+```ini
+modules = [
+  auth,
+]
+```
+
+For CMake projects, make sure the app links the module:
+
+```cmake
+target_link_libraries(api PRIVATE api::auth)
+```
+
+### Module includes another module but build fails
+
+Add the module dependency:
+
+```cmake
+target_link_libraries(api_users PRIVATE api::auth)
+```
+
+Use `PUBLIC` if the dependency appears in public headers.
+
+### vix.app project says CMake patch skipped
+
+That is expected.
+
+For `vix.app`, add modules in:
+
+```ini
+modules = [
+  auth,
+]
+```
+
+Root CMake patching is only for CMake projects.
+
+## Best practices
+
+Use `vix.app` for simple application modules.
+
+Use `modules = [...]` as the source of truth in app-first projects.
+
+Use CMake only when you need advanced build control.
+
+Keep module names domain-focused.
+
+Expose public headers under:
+
+```txt
+modules/<name>/include/<name>/
+```
+
+Keep private implementation under:
+
+```txt
+modules/<name>/src/
+```
+
+Use angle-bracket includes:
+
+```cpp
+#include <auth/api.hpp>
+```
+
+Declare cross-module dependencies explicitly with `target_link_libraries`.
+
+Use `PUBLIC` only when the dependency appears in public headers.
+
+Use `PRIVATE` when the dependency is only used in implementation files.
+
+Run:
 
 ```bash
 vix modules check
-vix build
 ```
 
-## Command reference
+before committing larger module changes.
 
-### `init`
-
-```bash
-vix modules init [options]
-```
-
-Initializes modules mode.
-
-Common options:
-
-```bash
-vix modules init --no-patch
-vix modules init --dir ./blog
-```
-
-Creates:
-
-```txt
-modules/
-cmake/vix_modules.cmake
-```
-
-Patches root `CMakeLists.txt` unless `--no-patch` is used.
-
-### `add`
-
-```bash
-vix modules add <name> [options]
-```
-
-Creates a module.
-
-Examples:
-
-```bash
-vix modules add User
-vix modules add Auth
-vix modules add Products --no-link
-vix modules add Billing --project blog
-```
-
-Creates:
-
-```txt
-modules/<name>/CMakeLists.txt
-modules/<name>/include/<name>/api.hpp
-modules/<name>/src/<name>.cpp
-```
-
-### `check`
-
-```bash
-vix modules check [options]
-```
-
-Validates module boundaries.
-
-Examples:
-
-```bash
-vix modules check
-vix modules check --dir ./blog
-vix modules check --project blog
-```
-
-## When to use `vix modules`
-
-Use `vix modules` when you want to:
-
-- organize a growing Vix app
-- split features into clear domains
-- keep public and private code separate
-- make CMake dependencies explicit
-- avoid a messy `src/` folder
-- validate module boundaries
-- keep app architecture readable over time
-
-Do not use `vix modules` when:
-
-- the project is a tiny one-file example
-- the code is meant to become a standalone package immediately
-- you only need a quick script
-- you do not want CMake target boundaries
+Do not edit generated CMake under `.vix/generated/app`.
 
 ## Related commands
 
-| Command | Purpose |
-| --- | --- |
-| `vix new` | Create a new Vix project |
-| `vix make` | Generate files and project artifacts |
-| `vix build` | Build the project |
-| `vix run` | Build and run the app |
-| `vix dev` | Run the app with reload |
-| `vix check` | Validate project health |
-| `vix tests` | Run tests |
-| `vix add` | Add external dependencies |
+| Command       | Purpose                                 |
+| ------------- | --------------------------------------- |
+| `vix build`   | Build the app and its modules.          |
+| `vix run`     | Run the modular app.                    |
+| `vix dev`     | Rebuild and restart during development. |
+| `vix check`   | Validate project health.                |
+| `vix tests`   | Run tests.                              |
+| `vix add`     | Add registry dependencies.              |
+| `vix install` | Install project dependencies.           |
 
 ## Next step
 
-Continue with building projects.
+Learn how `vix.app` resolves projects and falls back to CMake.
 
-Open the `vix build` guide.
+[Open the CMake fallback guide](/guides/vix-app/cmake-fallback)

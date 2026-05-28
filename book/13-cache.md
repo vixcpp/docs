@@ -26,16 +26,16 @@ When the network fails, a cache can safely serve previously stored data.
 
 ## Core concepts
 
-| Concept          | Purpose                                      |
-|------------------|----------------------------------------------|
-| `Cache`          | Decides whether a cached entry is usable.    |
-| `CacheEntry`     | Stores one cached response or value.         |
-| `CachePolicy`    | Defines TTL, freshness, and stale behavior.  |
-| `CacheContext`   | Describes the current network condition.     |
-| `MemoryStore`    | Stores cached entries in memory.             |
-| `FileStore`      | Stores cached entries on disk.               |
-| `LruMemoryStore` | Stores bounded entries with LRU eviction.    |
-| `CacheKey`       | Builds stable keys for cached entries.       |
+| Concept          | Purpose                                     |
+| ---------------- | ------------------------------------------- |
+| `Cache`          | Decides whether a cached entry is usable.   |
+| `CacheEntry`     | Stores one cached response or value.        |
+| `CachePolicy`    | Defines TTL, freshness, and stale behavior. |
+| `CacheContext`   | Describes the current network condition.    |
+| `MemoryStore`    | Stores cached entries in memory.            |
+| `FileStore`      | Stores cached entries on disk.              |
+| `LruMemoryStore` | Stores bounded entries with LRU eviction.   |
+| `CacheKey`       | Builds stable keys for cached entries.      |
 
 ## Time helper
 

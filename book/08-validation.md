@@ -39,16 +39,16 @@ if (!result.ok())
 
 ## Common rules
 
-| Rule              | Purpose                                      |
-|-------------------|----------------------------------------------|
-| `required()`      | Requires a present and non-empty value.      |
-| `email()`         | Requires a valid email address format.       |
-| `length_min(n)`   | Requires a string length of at least `n`.    |
-| `length_max(n)`   | Requires a string length of at most `n`.     |
-| `min(n)`          | Requires a numeric value of at least `n`.    |
-| `max(n)`          | Requires a numeric value of at most `n`.     |
-| `between(a, b)`   | Requires a value between `a` and `b`.        |
-| `in_set({...})`   | Requires one of the allowed values.          |
+| Rule            | Purpose                                   |
+| --------------- | ----------------------------------------- |
+| `required()`    | Requires a present and non-empty value.   |
+| `email()`       | Requires a valid email address format.    |
+| `length_min(n)` | Requires a string length of at least `n`. |
+| `length_max(n)` | Requires a string length of at most `n`.  |
+| `min(n)`        | Requires a numeric value of at least `n`. |
+| `max(n)`        | Requires a numeric value of at most `n`.  |
+| `between(a, b)` | Requires a value between `a` and `b`.     |
+| `in_set({...})` | Requires one of the allowed values.       |
 
 ## Validate numbers
 
@@ -205,7 +205,11 @@ app.post("/api/register", [](Request &req, Response &res){
   "error": "validation failed",
   "errors": [
     { "field": "email", "code": "format", "message": "invalid email format" },
-    { "field": "password", "code": "length_min", "message": "password too short" }
+    {
+      "field": "password",
+      "code": "length_min",
+      "message": "password too short"
+    }
   ]
 }
 ```

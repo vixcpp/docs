@@ -94,22 +94,22 @@ curl -i -X POST http://127.0.0.1:8080/users \
 
 ## Common MySQL types
 
-| MySQL type | Use for |
-|-----------|---------|
-| `BIGINT` | ids, counters |
-| `VARCHAR(255)` | names, emails |
-| `TEXT` | long text |
-| `BOOLEAN` | flags |
-| `DECIMAL(10,2)` | money |
-| `TIMESTAMP` | dates |
+| MySQL type      | Use for       |
+| --------------- | ------------- |
+| `BIGINT`        | ids, counters |
+| `VARCHAR(255)`  | names, emails |
+| `TEXT`          | long text     |
+| `BOOLEAN`       | flags         |
+| `DECIMAL(10,2)` | money         |
+| `TIMESTAMP`     | dates         |
 
 ## SQLite vs MySQL
 
-| Feature     | SQLite                             | MySQL                             |
-|-------------|------------------------------------|-----------------------------------|
-| Deployment  | Stores data in a local file.       | Stores data in a server database. |
-| Setup       | Very simple, no server required.   | Requires a database server.       |
-| Best for    | Local apps, small APIs, and MVPs.  | Multi-user production APIs.       |
+| Feature    | SQLite                            | MySQL                             |
+| ---------- | --------------------------------- | --------------------------------- |
+| Deployment | Stores data in a local file.      | Stores data in a server database. |
+| Setup      | Very simple, no server required.  | Requires a database server.       |
+| Best for   | Local apps, small APIs, and MVPs. | Multi-user production APIs.       |
 
 ## Common mistakes
 

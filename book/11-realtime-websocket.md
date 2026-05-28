@@ -154,7 +154,7 @@ vix::serve_http_and_ws(".env", 8080, [](auto &app, auto &ws) {
 ## Recommended event protocol
 
 | Event                 | Direction        | Purpose                           |
-|-----------------------|------------------|-----------------------------------|
+| --------------------- | ---------------- | --------------------------------- |
 | `chat.join`           | Client -> server | Joins a chat room or session.     |
 | `chat.leave`          | Client -> server | Leaves a chat room or session.    |
 | `chat.message`        | Both directions  | Sends or receives chat content.   |

@@ -10,6 +10,7 @@ Run C++ code quickly.
 ```
 
 Then you will grow toward real backend systems:
+
 - HTTP APIs,
 - JSON,
 - middleware,
@@ -116,6 +117,7 @@ vix run main.cpp
 Then open `http://localhost:8080`.
 
 This small example already shows the core Vix style:
+
 - `App`,
 - route,
 - `Request`,
@@ -163,6 +165,7 @@ Read it in order the first time.
 Each chapter builds on the previous one.
 
 You only need basic C++ knowledge:
+
 - functions,
 - classes,
 - headers,

@@ -37,7 +37,7 @@ event loop thread → runs user coroutine → starts timers/I/O/CPU jobs → com
 ## Main components
 
 | Component     | Purpose                                      |
-|---------------|----------------------------------------------|
+| ------------- | -------------------------------------------- |
 | `io_context`  | Owns the event loop and runtime services.    |
 | `scheduler`   | Schedules coroutine resumption.              |
 | `task<T>`     | Represents a coroutine return type.          |

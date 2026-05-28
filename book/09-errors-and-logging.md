@@ -24,17 +24,17 @@ A Vix API should use one predictable shape.
 
 ## HTTP status codes
 
-| Status | Meaning                           |
-|--------|-----------------------------------|
-| `200`  | OK, request succeeded.            |
-| `201`  | Created, resource added.          |
-| `400`  | Bad Request, invalid input.       |
-| `401`  | Unauthorized, auth required.      |
-| `403`  | Forbidden, access denied.         |
-| `404`  | Not Found, resource missing.      |
-| `409`  | Conflict, state mismatch.         |
-| `429`  | Too Many Requests, rate limited.  |
-| `500`  | Internal Server Error.            |
+| Status | Meaning                          |
+| ------ | -------------------------------- |
+| `200`  | OK, request succeeded.           |
+| `201`  | Created, resource added.         |
+| `400`  | Bad Request, invalid input.      |
+| `401`  | Unauthorized, auth required.     |
+| `403`  | Forbidden, access denied.        |
+| `404`  | Not Found, resource missing.     |
+| `409`  | Conflict, state mismatch.        |
+| `429`  | Too Many Requests, rate limited. |
+| `500`  | Internal Server Error.           |
 
 Do not return 200 for errors.
 
@@ -119,14 +119,14 @@ vix::log::critical("critical message");
 
 ## Log levels
 
-| Level      | Use                                      |
-|------------|------------------------------------------|
-| `trace`    | Records very detailed debugging events.  |
-| `debug`    | Records useful debugging information.    |
-| `info`     | Records normal application events.       |
-| `warn`     | Records unusual but non-fatal events.    |
-| `error`    | Records failed operations.               |
-| `critical` | Records serious system failures.         |
+| Level      | Use                                     |
+| ---------- | --------------------------------------- |
+| `trace`    | Records very detailed debugging events. |
+| `debug`    | Records useful debugging information.   |
+| `info`     | Records normal application events.      |
+| `warn`     | Records unusual but non-fatal events.   |
+| `error`    | Records failed operations.              |
+| `critical` | Records serious system failures.        |
 
 Recommended: `info` in production, `debug` or `trace` during development.
 

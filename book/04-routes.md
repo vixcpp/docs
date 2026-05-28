@@ -15,12 +15,12 @@ app.get("/", [](Request &req, Response &res){
 });
 ```
 
-| Part | Purpose |
-|------|---------|
-| `app.get` | HTTP method |
-| `"/"` | Path pattern |
-| Lambda | Handler |
-| `Request &req` | Incoming request |
+| Part            | Purpose           |
+| --------------- | ----------------- |
+| `app.get`       | HTTP method       |
+| `"/"`           | Path pattern      |
+| Lambda          | Handler           |
+| `Request &req`  | Incoming request  |
 | `Response &res` | Outgoing response |
 
 ## HTTP methods
@@ -143,9 +143,10 @@ app.get("/*", [](Request &req, Response &res){
 ```
 
 Used for:
-  - static file fallback
-  - SPA fallback
-  - custom 404 behavior
+
+- static file fallback
+- SPA fallback
+- custom 404 behavior
 
 Used for: SPA fallback, static file fallback, custom 404.
 
@@ -185,12 +186,15 @@ A request to:
 ```txt
 /index.html
 ```
+
 serves:
+
 ```txt
 public/index.html
 ```
 
 Run:
+
 ```bash
 vix run main.cpp
 curl http://localhost:8080/index.html
