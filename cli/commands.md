@@ -676,7 +676,11 @@ vix verify --path ./dist/api@1.0.0
 
 ## Full command list
 
-```txt
+Each entry below is used as:
+
+```bash
+vix <command>
+
 add
 agent
 build
