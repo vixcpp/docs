@@ -35,21 +35,35 @@ export default {
     });
 
     // ──────────────────────────────────────────────
-    // Local nav fixed-on-scroll
+    // Custom header layout sync
     // ──────────────────────────────────────────────
-    const updateLocalNavState = () => {
-      const nav = document.querySelector(".VPNavBar");
-      const localNav = document.querySelector(".VPLocalNav");
-      if (!nav || !localNav) return;
+    const syncVixHeaderHeight = () => {
+      const header = document.querySelector(".vix-nav");
+      if (!header) return;
 
-      const navHeight = nav.getBoundingClientRect().height;
-      const shouldFix = window.scrollY > navHeight;
-      document.body.classList.toggle("vix-local-nav-fixed", shouldFix);
+      const height = Math.ceil(header.getBoundingClientRect().height);
+      document.documentElement.style.setProperty(
+        "--vix-header-height",
+        `${height}px`,
+      );
     };
 
-    window.addEventListener("scroll", updateLocalNavState, { passive: true });
-    window.addEventListener("resize", updateLocalNavState);
-    window.requestAnimationFrame(updateLocalNavState);
+    window.addEventListener("load", syncVixHeaderHeight);
+    window.addEventListener("resize", syncVixHeaderHeight);
+
+    window.requestAnimationFrame(() => {
+      syncVixHeaderHeight();
+      setTimeout(syncVixHeaderHeight, 80);
+    });
+
+    const headerObserver = new MutationObserver(() => {
+      syncVixHeaderHeight();
+    });
+
+    headerObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
 
     // ──────────────────────────────────────────────
     // Custom syntax highlighter for VitePress fenced blocks
