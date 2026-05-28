@@ -2384,3 +2384,6 @@ body.vix-local-nav-fixed .VPSidebar {
     padding-right: 0 !important;
   }
 }
+:root {
+  --vix-doc-sidebar-width: 250px !important;
+}

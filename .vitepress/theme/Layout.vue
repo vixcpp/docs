@@ -1,8 +1,10 @@
 <script setup>
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import DefaultTheme from "vitepress/theme";
+import { useRoute } from "vitepress";
 
 const { Layout } = DefaultTheme;
+const route = useRoute();
 
 const showBanner = ref(true);
 const isDark = ref(true);
@@ -36,6 +38,33 @@ const socials = [
     icon: `<path d="M18.9 2H22l-6.8 7.8L23 22h-6.7l-5.2-6.8L5.3 22H2l7.3-8.4L1.7 2h6.9l4.7 6.1L18.9 2Zm-1.2 18h1.7L7.7 3.9H5.9L17.7 20Z"/>`,
   },
 ];
+
+const normalizePath = (path) => {
+  if (!path) return "/";
+
+  const clean = path.split("#")[0].split("?")[0];
+
+  if (clean.length > 1 && clean.endsWith("/")) {
+    return clean.slice(0, -1);
+  }
+
+  return clean;
+};
+
+const isActiveLink = (href) => {
+  if (!href || href.startsWith("http")) {
+    return false;
+  }
+
+  const currentPath = normalizePath(route.path);
+  const targetPath = normalizePath(href);
+
+  if (targetPath === "/") {
+    return currentPath === "/";
+  }
+
+  return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
+};
 
 const openSearch = () => {
   const searchButton = document.querySelector(
@@ -174,7 +203,7 @@ onBeforeUnmount(() => {
           <a
             v-for="link in navLinks"
             :key="link.text"
-            class="vix-nav__link"
+            :class="['vix-nav__link', { 'is-active': isActiveLink(link.href) }]"
             :href="link.href"
             :target="link.href.startsWith('http') ? '_blank' : undefined"
             :rel="link.href.startsWith('http') ? 'noreferrer' : undefined"
@@ -470,6 +499,32 @@ onBeforeUnmount(() => {
 .vix-nav__link:hover {
   color: var(--vp-c-text-1);
   text-decoration: none;
+}
+
+.vix-nav__link.is-active {
+  color: var(--vp-c-text-1) !important;
+  font-weight: 760 !important;
+}
+
+.vix-nav__link.is-active::after {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -10px;
+  height: 2px;
+  border-radius: 999px;
+  background: #22c55e;
+}
+
+.vix-nav__link {
+  position: relative;
+}
+
+.vix-nav__link.is-active {
+  color: var(--vp-c-text-1) !important;
+  font-weight: 760 !important;
 }
 
 .vix-nav__right {
