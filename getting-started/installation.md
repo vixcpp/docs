@@ -1,7 +1,9 @@
 # Installation
 
 This page shows how to install Vix.cpp and verify that it works on your machine.
-For Getting Started, install the full SDK.
+
+For Getting Started and real C++ application development, install the full SDK.
+
 Starting with **Vix.cpp v2.6.0**, the recommended installation is the full SDK installation.
 
 The full SDK includes:
@@ -9,18 +11,18 @@ The full SDK includes:
 - the `vix` CLI
 - the main `vix.hpp` header
 - Vix module headers
-- Vix libraries
+- Vix static libraries
 - CMake package files
 - the `vix::vix` target for CMake projects
 
-This means you can install Vix once, then build real Vix applications without manually copying headers, linking modules, or rebuilding the SDK yourself.
+This means you can install Vix once, then build real Vix applications without manually copying headers, linking modules, or rebuilding Vix yourself.
 
 ## Recommended install
 
 Linux and macOS:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | bash
+curl -fsSL https://vixcpp.com/install.sh | sh
 ```
 
 Windows PowerShell:
@@ -31,7 +33,7 @@ irm https://vixcpp.com/install.ps1 | iex
 
 After installation, restart your terminal.
 
-Then verify the installation:
+Then verify the CLI:
 
 ```bash
 vix --version
@@ -41,28 +43,29 @@ Expected output shape:
 
 ```txt
 Vix.cpp CLI
-version : 2.6.0
+version : v2.6.1
 author  : Gaspard Kirira
 source  : https://github.com/vixcpp/vix
 ```
 
 The exact version may be newer depending on the latest release.
 
-## What changed in v2.6.0
+## What the full SDK installs
 
-Vix.cpp v2.6.0 makes installation simpler.
+The full SDK installs the command-line tool and the development files needed by C++ projects.
 
-Before, users could install the CLI but still miss the SDK headers, libraries, CMake package files, or module dependencies.
+It installs files like:
 
-Now, the default installation is the full SDK.
-
-That means this should work after installation:
-
-```cpp
-#include <vix.hpp>
+```txt
+~/.local/bin/vix
+~/.local/include/vix.hpp
+~/.local/include/vix/...
+~/.local/lib/libvix_*.a
+~/.local/lib/cmake/Vix/VixConfig.cmake
+~/.local/lib/cmake/Vix/VixTargets.cmake
 ```
 
-And this should work in a CMake project:
+For CMake projects, the expected usage is:
 
 ```cmake
 find_package(Vix CONFIG REQUIRED)
@@ -71,7 +74,7 @@ add_executable(app main.cpp)
 target_link_libraries(app PRIVATE vix::vix)
 ```
 
-The SDK is designed to include Vix as a complete development foundation, not only as a command-line binary.
+The `vix::vix` target is the main SDK target. It is designed to provide the complete Vix development foundation.
 
 ## Verify the CLI
 
@@ -81,15 +84,13 @@ Check that the `vix` command is available:
 vix --version
 ```
 
-If the command works, the CLI is installed.
-
 If your terminal says:
 
 ```txt
 vix: command not found
 ```
 
-Your shell cannot find the Vix binary.
+your shell cannot find the Vix binary.
 
 Add `~/.local/bin` to your `PATH`.
 
@@ -115,9 +116,7 @@ vix --version
 
 ## Verify the SDK
 
-The SDK should install the Vix headers.
-
-Check that `vix.hpp` exists:
+Check that the main SDK header exists:
 
 ```bash
 find ~/.local/include -name vix.hpp 2>/dev/null
@@ -129,7 +128,7 @@ Expected output shape:
 /home/your-user/.local/include/vix.hpp
 ```
 
-Also check that the Vix CMake package exists:
+Check that the Vix CMake package exists:
 
 ```bash
 find ~/.local/lib/cmake -name VixConfig.cmake 2>/dev/null
@@ -139,6 +138,24 @@ Expected output shape:
 
 ```txt
 /home/your-user/.local/lib/cmake/Vix/VixConfig.cmake
+```
+
+Check that Vix static libraries are installed:
+
+```bash
+find ~/.local/lib -name "libvix_*.a" 2>/dev/null
+```
+
+For example, if you use WebSocket features, this file should exist:
+
+```bash
+find ~/.local/lib -name "libvix_websocket.a" 2>/dev/null
+```
+
+Expected output shape:
+
+```txt
+/home/your-user/.local/lib/libvix_websocket.a
 ```
 
 If these files exist, the SDK is installed.
@@ -180,6 +197,60 @@ Hello from Vix.cpp
 
 If this works, your CLI and SDK are ready.
 
+## Verify with a CMake project
+
+Create a temporary CMake project:
+
+```bash
+mkdir -p ~/tmp/vix-cmake-test
+cd ~/tmp/vix-cmake-test
+```
+
+Create `CMakeLists.txt`:
+
+```bash
+cat > CMakeLists.txt <<'CMAKE'
+cmake_minimum_required(VERSION 3.20)
+project(vix_cmake_test LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Vix CONFIG REQUIRED)
+
+add_executable(app main.cpp)
+target_link_libraries(app PRIVATE vix::vix)
+CMAKE
+```
+
+Create `main.cpp`:
+
+```bash
+cat > main.cpp <<'CPP'
+#include <vix.hpp>
+
+int main()
+{
+  vix::print("Hello from Vix CMake");
+  return 0;
+}
+CPP
+```
+
+Configure and build:
+
+```bash
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$HOME/.local"
+cmake --build build
+./build/app
+```
+
+Expected output:
+
+```txt
+Hello from Vix CMake
+```
+
 ## Verify with a Vix project
 
 Create a project:
@@ -203,35 +274,69 @@ vix run
 
 If the application starts, your installation is correct.
 
-## Useful commands after installation
+## Updating Vix
 
-Vix includes commands that help you inspect your setup.
+There are two update paths.
 
-Check the installed version:
+### Update the CLI
 
-```bash
-vix --version
-```
-
-Inspect your environment:
-
-```bash
-vix doctor
-```
-
-Show Vix paths and cache information:
-
-```bash
-vix info
-```
-
-Upgrade Vix later:
+`vix upgrade` updates the installed Vix CLI binary:
 
 ```bash
 vix upgrade
 ```
 
-These commands are useful when you want to understand what Vix installed, which paths are used, and whether your environment is ready.
+This updates the command-line tool only.
+
+It does not reinstall the full SDK.
+
+That means `vix upgrade` does not replace:
+
+- installed headers
+- static libraries
+- CMake package files
+- module libraries such as `libvix_websocket.a`
+
+Use `vix upgrade` when you only need the latest `vix` command.
+
+### Update the full SDK
+
+If you build C++ applications with Vix, update the full SDK with:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+```
+
+To install or update a specific SDK version:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
+```
+
+Use the SDK update command when your project depends on:
+
+```cpp
+#include <vix.hpp>
+```
+
+or:
+
+```cmake
+find_package(Vix CONFIG REQUIRED)
+
+add_executable(app main.cpp)
+target_link_libraries(app PRIVATE vix::vix)
+```
+
+## CLI update vs SDK update
+
+| Command                                                                                  | Updates                                          | Use when                          |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------- |
+| `vix upgrade`                                                                            | CLI binary only                                  | You want the latest `vix` command |
+| `curl -fsSL https://vixcpp.com/install.sh \| VIX_INSTALL_KIND=sdk sh`                    | CLI, headers, libraries, and CMake package files | You build Vix C++ applications    |
+| `curl -fsSL https://vixcpp.com/install.sh \| VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh` | Full SDK for a specific version                  | You need a known SDK version      |
+
+For application development, use the SDK installation or SDK update command.
 
 ## SDK mode vs CLI-only mode
 
@@ -242,7 +347,7 @@ Vix has two installation modes.
 | SDK mode      | CLI, headers, libraries, and CMake package files | You want to build Vix applications  |
 | CLI-only mode | Only the `vix` binary                            | You only need the command-line tool |
 
-For this guide, use **SDK mode**.
+For Getting Started, use **SDK mode**.
 
 Do not use CLI-only mode if you want to compile code that includes:
 
@@ -256,14 +361,14 @@ Do not use CLI-only mode if you want to build projects that use:
 find_package(Vix CONFIG REQUIRED)
 ```
 
-## CLI-only mode
+## CLI-only install
 
 CLI-only mode installs only the command-line tool.
 
 Linux and macOS:
 
 ```bash
-VIX_INSTALL_KIND=cli curl -fsSL https://vixcpp.com/install.sh | bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=cli sh
 ```
 
 This is not recommended for Getting Started.
@@ -274,16 +379,31 @@ The next pages build real Vix applications, so you need the full SDK.
 
 By default, the installer uses the latest release.
 
-To install a specific version:
+To install a specific SDK version on Linux or macOS:
 
 ```bash
-VIX_VERSION=v2.6.0 curl -fsSL https://vixcpp.com/install.sh | bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
+```
+
+To install only the CLI for a specific version:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=cli sh
 ```
 
 On Windows PowerShell:
 
 ```powershell
-$env:VIX_VERSION="v2.6.0"
+$env:VIX_VERSION="v2.6.1"
+$env:VIX_INSTALL_KIND="sdk"
+irm https://vixcpp.com/install.ps1 | iex
+```
+
+For CLI-only mode on Windows PowerShell:
+
+```powershell
+$env:VIX_VERSION="v2.6.1"
+$env:VIX_INSTALL_KIND="cli"
 irm https://vixcpp.com/install.ps1 | iex
 ```
 
@@ -467,6 +587,40 @@ ninja --version
 
 If one of these commands is missing, install the missing tool before continuing.
 
+## Useful commands after installation
+
+Check the installed version:
+
+```bash
+vix --version
+```
+
+Inspect your environment:
+
+```bash
+vix doctor
+```
+
+Show Vix paths and cache information:
+
+```bash
+vix info
+```
+
+Update the CLI:
+
+```bash
+vix upgrade
+```
+
+Update the full SDK:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+```
+
+These commands are useful when you want to understand what Vix installed, which paths are used, and whether your environment is ready.
+
 ## Common installation problems
 
 ### `vix: command not found`
@@ -512,7 +666,7 @@ find ~/.local/include -name vix.hpp 2>/dev/null
 If nothing appears, reinstall the full SDK:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
 ```
 
 Then restart your terminal and check again:
@@ -529,6 +683,12 @@ Check that the CMake package exists:
 find ~/.local/lib/cmake -name VixConfig.cmake 2>/dev/null
 ```
 
+If nothing appears, reinstall the full SDK:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+```
+
 If it exists but CMake cannot find it, pass the SDK prefix manually:
 
 ```bash
@@ -539,6 +699,51 @@ Then build:
 
 ```bash
 cmake --build build
+```
+
+### `vix upgrade` worked, but my project still fails to link
+
+`vix upgrade` updates the CLI binary only.
+
+It does not reinstall the SDK headers, libraries, or CMake package files.
+
+If your project fails with an error like:
+
+```txt
+undefined symbol: vix::websocket::LowLevelServer::run(...)
+```
+
+or:
+
+```txt
+undefined symbol: vix::websocket::Session::shutdown_now(...)
+```
+
+then your SDK libraries are missing or outdated.
+
+Check:
+
+```bash
+find ~/.local/lib -name "libvix_websocket.a" 2>/dev/null
+```
+
+If nothing appears, reinstall the full SDK:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+```
+
+For a specific version:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
+```
+
+Then rebuild your project:
+
+```bash
+rm -rf build build-ninja
+vix build
 ```
 
 ### CMake or Ninja is missing
@@ -642,35 +847,61 @@ If you want a small coding-oriented model:
 ollama pull qwen2.5-coder:1.5b
 ```
 
-## Clean reinstall
+## Clean SDK reinstall
 
-If your system has an older broken installation, reinstall the SDK:
+If your system has an older or incomplete SDK installation, reinstall the SDK.
+
+Linux and macOS:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | bash
+rm -f "$HOME/.local/lib/libvix_"*.a
+rm -rf "$HOME/.local/lib/cmake/Vix"
+
+curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+```
+
+For a specific version:
+
+```bash
+rm -f "$HOME/.local/lib/libvix_"*.a
+rm -rf "$HOME/.local/lib/cmake/Vix"
+
+curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
 ```
 
 Then verify:
 
 ```bash
 vix --version
-vix doctor
-vix info
-```
-
-You should also confirm the SDK files:
-
-```bash
 find ~/.local/include -name vix.hpp 2>/dev/null
 find ~/.local/lib/cmake -name VixConfig.cmake 2>/dev/null
+find ~/.local/lib -name "libvix_websocket.a" 2>/dev/null
 ```
 
 ## What you should remember
 
-Use the full SDK:
+For real C++ development, install the full SDK:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | bash
+curl -fsSL https://vixcpp.com/install.sh | sh
+```
+
+To update only the CLI:
+
+```bash
+vix upgrade
+```
+
+To update the full SDK:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+```
+
+To install a specific SDK version:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
 ```
 
 Verify the CLI:
@@ -689,6 +920,12 @@ Verify the CMake package:
 
 ```bash
 find ~/.local/lib/cmake -name VixConfig.cmake 2>/dev/null
+```
+
+Verify the WebSocket module library:
+
+```bash
+find ~/.local/lib -name "libvix_websocket.a" 2>/dev/null
 ```
 
 Inspect the environment:
