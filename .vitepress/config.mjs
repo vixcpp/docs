@@ -203,16 +203,52 @@ const guides = {
       ],
     },
     {
-      text: "Data",
+      text: "Database",
       collapsed: true,
       items: [
         {
-          text: "SQLite API",
-          link: "/guides/sqlite-api",
+          text: "Overview",
+          link: "/guides/database/",
         },
         {
-          text: "MySQL API",
-          link: "/guides/mysql-api",
+          text: "Quick Start",
+          link: "/guides/database/quick-start",
+        },
+        {
+          text: "Configuration",
+          link: "/guides/database/configuration",
+        },
+        {
+          text: "SQLite",
+          link: "/guides/database/sqlite",
+        },
+        {
+          text: "MySQL",
+          link: "/guides/database/mysql",
+        },
+        {
+          text: "Queries",
+          link: "/guides/database/queries",
+        },
+        {
+          text: "Connection Pool",
+          link: "/guides/database/connection-pool",
+        },
+        {
+          text: "Transactions",
+          link: "/guides/database/transactions",
+        },
+        {
+          text: "Migrations",
+          link: "/guides/database/migrations",
+        },
+        {
+          text: "Schema Snapshots",
+          link: "/guides/database/schema-snapshots",
+        },
+        {
+          text: "CLI",
+          link: "/guides/database/cli",
         },
       ],
     },
