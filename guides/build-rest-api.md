@@ -428,6 +428,6 @@ For persistence, use SQLite or MySQL.
 
 ## What to use next
 
-- [SQLite API guide](/guides/sqlite-api) — for persistence
+- [SQLite API guide](/guides/database/sqlite) — for persistence
 - [Validation guide](/guides/validation) — for validating input
 - [Authentication guide](/guides/authentication) — for auth

@@ -249,4 +249,4 @@ if (user == nullptr) {
 
 - [Sessions guide](/guides/sessions)
 - [Rate limiting guide](/guides/rate-limiting)
-- [SQLite API guide](/guides/sqlite-api)
+- [SQLite API guide](/guides/database/sqlite)

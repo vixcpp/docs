@@ -253,6 +253,44 @@ const guides = {
       ],
     },
     {
+      text: "ORM",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/guides/orm/",
+        },
+        {
+          text: "Quick Start",
+          link: "/guides/orm/quick-start",
+        },
+        {
+          text: "Entities",
+          link: "/guides/orm/entities",
+        },
+        {
+          text: "Mappers",
+          link: "/guides/orm/mappers",
+        },
+        {
+          text: "Repositories",
+          link: "/guides/orm/repositories",
+        },
+        {
+          text: "Query Builder",
+          link: "/guides/orm/query-builder",
+        },
+        {
+          text: "Unit of Work",
+          link: "/guides/orm/unit-of-work",
+        },
+        {
+          text: "With vix::db",
+          link: "/guides/orm/with-vix-db",
+        },
+      ],
+    },
+    {
       text: "Build Performance",
       collapsed: true,
       items: [

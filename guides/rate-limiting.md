@@ -130,6 +130,6 @@ For testing:
 
 ## What to use next
 
-- [SQLite API guide](/guides/sqlite-api)
-- [MySQL API guide](/guides/mysql-api)
+- [SQLite API guide](/guides/database/sqlite)
+- [MySQL API guide](/guides/database/mysql)
 - [Production Nginx + systemd guide](/guides/production-nginx-systemd)
