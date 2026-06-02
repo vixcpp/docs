@@ -1,56 +1,41 @@
 # Introduction
 
 Welcome to the Vix Book.
-This book teaches the modern Vix workflow for building real C++ applications.
-Not only how to run one file.
-Not only how to write an HTTP route.
-Not only how to compile a project.
 
-The goal is bigger:
+This book explains how Vix.cpp helps developers build real C++ applications with a clearer workflow around the native C++ ecosystem.
+
+Vix.cpp does not change the language. It does not replace the compiler, the linker, or CMake. It adds an application-oriented layer above the tools C++ developers already use.
+
+The path of this book is simple:
 
 ```txt
-one C++ file
-  -> application
+single C++ file
+  -> structured application
   -> runtime workflow
   -> build workflow
   -> modules
   -> production
 ```
 
-Vix exists to make this path clear.
+The goal is to understand how Vix.cpp turns C++ code into applications that can be created, built, run, tested, packaged, and deployed through a consistent workflow.
 
-## The idea
+## Why this book exists
 
-C++ is powerful, fast, and mature.
+C++ is powerful, mature, and widely used for systems where performance and control matter.
 
-But the workflow around C++ applications can be difficult.
+But the workflow around C++ applications is often fragmented. Before an application feels usable, a developer may need to configure the build system, choose a project layout, prepare compiler flags, wire dependencies, set up tests, define scripts, configure logs, manage runtime arguments, and prepare deployment steps.
 
-A developer often has to think about many things before the application itself becomes real:
+None of these tasks are unusual. They are part of serious software development. The problem is that every project often has to assemble them again.
 
-```txt
-compiler flags
-build folders
-CMake configuration
-dependencies
-development mode
-tests
-runtime arguments
-logs
-services
-Nginx
-health checks
-deployment
-```
+Vix.cpp exists to make that application workflow more direct.
 
-Vix brings those workflows into one application-oriented CLI.
-
-The first step can be simple:
+The first step can be as small as:
 
 ```bash
 vix run main.cpp
 ```
 
-Then the project step can also be simple:
+Then the same workflow can grow into a project:
 
 ```bash
 vix new api --template backend
@@ -58,44 +43,45 @@ cd api
 vix dev
 ```
 
-That is the spirit of Vix.
+That progression is the foundation of this book.
 
-## What Vix is
+## What Vix.cpp is
 
-Vix is a modern C++ runtime and application workflow.
+Vix.cpp is a modern C++ runtime and developer toolkit.
 
-It helps you:
+It provides a command workflow for common development tasks:
 
-```txt
-run C++ files
-create applications
-use vix.app
-build projects
-run development mode
-compose modules
-manage dependencies
-check and test code
-generate files
-package projects
-inspect local state
-replay runs
-prepare production
-manage services
-configure proxies
-check health
-read logs
-deploy
+```bash
+vix run
+vix dev
+vix build
+vix check
+vix tests
+vix fmt
+vix pack
+vix deploy
 ```
 
-Vix does not replace C++.
+It also provides runtime modules for application development, including HTTP, JSON, WebSocket, async execution, logging, validation, caching, P2P, sync, AI agents, games, and production-oriented workflows.
 
-Vix does not replace your understanding of C++.
+A useful way to think about Vix.cpp is:
 
-Vix gives C++ a clearer workflow for real application development.
+```txt
+C++:
+  language, performance, native binaries
+
+CMake and Ninja:
+  build system compatibility
+
+Vix.cpp:
+  runtime, CLI, modules, diagnostics, project workflow
+```
+
+Vix.cpp works around C++. It does not replace it.
 
 ## The first command
 
-The smallest Vix workflow is:
+The smallest useful Vix workflow is:
 
 ```bash
 vix run main.cpp
@@ -108,7 +94,7 @@ Example:
 
 int main()
 {
-  vix::print("Hello from Vix");
+  vix::print("Hello from Vix.cpp");
   return 0;
 }
 ```
@@ -119,23 +105,17 @@ Run it:
 vix run main.cpp
 ```
 
-This is the beginning:
+This gives fast feedback without creating a full project first.
 
-```txt
-file
-  -> run
-  -> feedback
-```
-
-But this book is not only about running one file.
-
-That is only the entry point.
+For experiments, examples, small tools, and learning, this is enough.
 
 ## From file to application
 
 A real application needs structure.
 
-For that, Vix provides project templates:
+At some point, one file is not enough. You need source folders, configuration, tests, dependencies, logs, runtime behavior, and a repeatable development command.
+
+For that, Vix.cpp provides project templates:
 
 ```bash
 vix new api --template backend
@@ -143,33 +123,26 @@ cd api
 vix dev
 ```
 
-This gives you a real starting point for an application.
-
-A backend template can contain:
+A backend project can include:
 
 ```txt
 routes
 configuration
 validation
-database
+database access
 tests
 health checks
-production config
+production configuration
 deployment workflow
 ```
 
-This is the important shift:
+This is the shift from running code to building an application.
 
-```txt
-Vix is not only a runner.
-Vix is an application workflow.
-```
+Vix.cpp is designed for that shift.
 
-## The new book structure
+## Book structure
 
-This book follows the current Vix direction.
-
-It is organized into 9 chapters:
+This book is organized into nine chapters:
 
 ```txt
 01. Introduction
@@ -185,45 +158,30 @@ It is organized into 9 chapters:
 
 Each chapter answers one important question.
 
-| Chapter                  | Question                                                          |
-| ------------------------ | ----------------------------------------------------------------- |
-| Introduction             | What is Vix and what path does this book follow?                  |
-| Why Vix Exists           | What problem does Vix solve for C++ developers?                   |
-| Mental Model             | How should you think about Vix as a system?                       |
-| Application Model        | How does a Vix application work?                                  |
-| Runtime Workflow         | How does Vix run files, apps, binaries, and commands?             |
-| Build Workflow           | How does Vix build safely and efficiently?                        |
-| Modules and Composition  | How do modules, dependencies, and registry packages fit together? |
-| From Local to Production | How does a Vix app move from development to server deployment?    |
-| Next Steps               | What should you build after learning the core model?              |
+| Chapter                  | Main question                                             |
+| ------------------------ | --------------------------------------------------------- |
+| Introduction             | What path does this book follow?                          |
+| Why Vix Exists           | What problem does Vix.cpp solve for C++ developers?       |
+| Mental Model             | How should you think about Vix.cpp as a system?           |
+| Application Model        | How is a Vix application structured?                      |
+| Runtime Workflow         | How does Vix run files, projects, binaries, and commands? |
+| Build Workflow           | How does Vix build safely and efficiently?                |
+| Modules and Composition  | How do modules and dependencies fit together?             |
+| From Local to Production | How does a Vix app move from development to deployment?   |
+| Next Steps               | What should you build after learning the core model?      |
 
-The book is now focused and strategic.
+The structure is intentionally focused.
 
-It is not a random list of features.
+It follows the lifecycle of a C++ application instead of listing features randomly.
 
-It is a path.
+## The Vix.cpp path
 
-## The Vix path
-
-The path is:
-
-```txt
-start with one file
-understand why Vix exists
-learn the mental model
-create an application
-understand runtime behavior
-understand build behavior
-compose modules
-move to production
-build a real backend template
-```
-
-In commands:
+The practical path looks like this:
 
 ```bash
 vix run main.cpp
 vix new api --template backend
+cd api
 vix dev
 vix build
 vix check --tests
@@ -233,65 +191,74 @@ vix health
 vix deploy
 ```
 
-Each command belongs to a stage of the application lifecycle.
-
-## The application model
-
-For applications, Vix now prioritizes `vix.app`.
-
-A `vix.app` file describes the application in a simple way:
+Each command belongs to a stage:
 
 ```txt
-name = "api"
-type = "executable"
-cpp_standard = "23"
+try code
+  -> create project
+  -> develop
+  -> build
+  -> validate
+  -> prepare service
+  -> configure proxy
+  -> check health
+  -> deploy
+```
+
+The same project can move from a local experiment to a production service without changing the overall workflow model.
+
+## Application model
+
+Vix.cpp supports two main project models.
+
+For simple and medium applications, Vix.cpp can use `vix.app`.
+
+A `vix.app` file describes the application in a small manifest:
+
+```txt
+name = api
+type = executable
+standard = c++23
 
 sources = [
-  "src/main.cpp"
+  src/main.cpp,
 ]
 
 include_dirs = [
-  "src"
-]
-
-modules = [
-  "core",
-  "json",
-  "http"
+  src,
 ]
 ```
 
-This avoids forcing every application developer to start with a visible `CMakeLists.txt`.
+Vix.cpp can use that manifest to generate the internal CMake project needed to build the application.
 
-Vix can generate the internal CMake project when needed.
+For advanced projects, a normal `CMakeLists.txt` is still supported.
 
 The rule is:
 
 ```txt
-vix.app for simple application workflow
-CMakeLists.txt for advanced control and compatibility
+Use vix.app for a simple application workflow.
+Use CMakeLists.txt when the build needs advanced control.
 ```
 
-If `CMakeLists.txt` exists, Vix uses it.
+If `CMakeLists.txt` exists, Vix.cpp uses it.
 
-If there is no `CMakeLists.txt` and `vix.app` exists, Vix uses `vix.app`.
+If there is no `CMakeLists.txt` and `vix.app` exists, Vix.cpp uses `vix.app`.
 
-This gives beginners a simple application path while keeping advanced CMake projects supported.
+This keeps the simple path simple while preserving compatibility with the existing C++ build ecosystem.
 
-## The runtime workflow
+## Runtime workflow
 
-Vix can run different kinds of targets:
+Vix.cpp can run different kinds of targets:
 
 ```txt
 single C++ files
 project applications
 vix.app manifests
 built binaries
-Docker-based workflows
 recorded replay runs
 ```
 
-The simple command is still:
+The common command is:
 
 ```bash
 vix run
@@ -303,15 +270,15 @@ or:
 vix run main.cpp
 ```
 
-But under the hood, Vix chooses the right strategy.
+Under the hood, Vix.cpp selects the appropriate strategy.
 
-Sometimes direct compilation is enough.
+A single file may use direct compilation.
 
-Sometimes a project build is needed.
+A project may require a build step first.
 
-Sometimes a CMake fallback is safer.
+A CMake project may go through the CMake/Ninja path.
 
-The goal is:
+The goal is not magic. The goal is a consistent command with clear behavior.
 
 ```txt
 same command
@@ -319,13 +286,11 @@ correct strategy
 clear output
 ```
 
-## The build workflow
+## Build workflow
 
-Vix also cares about build performance.
+Vix.cpp also cares about build performance, but correctness comes first.
 
-But performance must not break correctness.
-
-The principle is:
+The build principle is:
 
 ```txt
 fast when safe
@@ -333,17 +298,17 @@ correct by default
 fallback when needed
 ```
 
-Vix can use build state, object cache, artifact cache, target-aware builds, and CMake/Ninja integration.
+Vix.cpp can use build state, object cache, artifact cache, target-aware builds, and CMake/Ninja integration.
 
-But if Vix cannot prove that a shortcut is safe, it should rebuild or fallback.
+But if a shortcut cannot be proven safe, Vix.cpp should rebuild or fall back to the native build system path.
 
-A build system must be trusted before it is fast.
+A build tool must be trusted before it is fast.
 
 ## Modules and composition
 
-Real applications need features.
+Real applications need features beyond `main()`.
 
-Vix applications can compose modules such as:
+Vix.cpp applications can compose modules such as:
 
 ```txt
 core
@@ -360,18 +325,7 @@ cache
 crypto
 ```
 
-A `vix.app` can declare modules directly:
-
-```txt
-modules = [
-  "core",
-  "json",
-  "http",
-  "db"
-]
-```
-
-Project dependencies can also be managed through the registry workflow:
+Dependencies can also be managed through the registry workflow:
 
 ```bash
 vix registry sync
@@ -380,21 +334,21 @@ vix add softadastra/json
 vix install
 ```
 
-The important dependency command after cloning a project is:
+After cloning a project, the important dependency command is:
 
 ```bash
 vix install
 ```
 
-It installs the exact versions pinned in `vix.lock`.
+It installs the exact versions pinned by the project.
 
 ## From local to production
 
-Vix should not stop at local development.
+Vix.cpp should not stop at local development.
 
-A real application eventually needs to run on a server.
+A C++ application eventually needs to run somewhere.
 
-A production Vix setup can look like this:
+A typical production setup can look like this:
 
 ```txt
 Internet
@@ -403,7 +357,7 @@ Internet
   -> systemd
 ```
 
-Vix provides commands for this workflow:
+Vix.cpp provides commands for this workflow:
 
 ```bash
 vix env check --production
@@ -414,41 +368,32 @@ vix logs
 vix deploy
 ```
 
-This makes production part of the application workflow.
+The purpose is not to replace every deployment platform.
 
-Not an afterthought.
+The purpose is to make production part of the application workflow instead of treating it as an unrelated manual process.
 
 ## What this book is not
 
 This book is not a full C++ language course.
 
-It will not teach every C++ feature.
+It will not teach every C++ feature, memory rule, template technique, concurrency model, or performance detail.
 
-It will not replace learning memory, lifetimes, references, templates, concurrency, or performance.
+Those topics matter, but they belong to C++ itself.
 
-This book is about Vix.
-
-It teaches how to use Vix to build and ship C++ applications.
-
-The C++ language remains important.
-
-Vix improves the workflow around it.
+This book focuses on Vix.cpp: how to use it, how to understand its model, and how to build applications with it.
 
 ## What you should expect
 
 By the end of this book, you should understand:
 
-```txt
-why Vix exists
-how Vix thinks about applications
-how vix.app fits into the project model
-how vix run works conceptually
-how vix build fits with CMake and generated projects
-how modules are composed
-how registry dependencies are installed
-how development moves to production
-what backend template should be built next
-```
+- why Vix.cpp exists
+- how Vix.cpp fits into the C++ ecosystem
+- how `vix.app` fits into the project model
+- how `vix run` works conceptually
+- how `vix build` relates to CMake and generated projects
+- how modules are composed
+- how dependencies are installed
+- how local development moves toward production
 
 You should be able to move from:
 
@@ -470,51 +415,12 @@ and later to:
 vix deploy
 ```
 
-## The most important command at the beginning
-
-At the beginning, remember this:
-
-```bash
-vix run main.cpp
-```
-
-It gives you fast feedback.
-
-## The most important command for real projects
-
-For a serious application, remember this:
-
-```bash
-vix new api --template backend
-```
-
-This is the natural next step after learning the basics.
-
-## The most important production command
-
-When the application is ready to move to a server, remember this:
-
-```bash
-vix deploy
-```
-
-But production should be prepared first:
-
-```bash
-vix env check --production
-vix build --preset release
-vix check --tests
-vix service init
-vix proxy nginx init
-vix health
-```
-
 ## The core mental model
 
 The core mental model is:
 
 ```txt
-Vix is a workflow around C++ applications.
+Vix.cpp is an application workflow around native C++.
 ```
 
 That workflow includes:
@@ -531,19 +437,19 @@ deploy
 debug
 ```
 
-This is why Vix exists.
+This is why Vix.cpp exists.
 
 This is what the book explains.
 
 ## What you should remember
 
-Vix starts simple:
+Vix.cpp starts small:
 
 ```bash
 vix run main.cpp
 ```
 
-Vix becomes useful for applications:
+It becomes useful for applications:
 
 ```bash
 vix new api --template backend
@@ -551,7 +457,7 @@ cd api
 vix dev
 ```
 
-Vix becomes serious in production:
+It becomes serious in production:
 
 ```bash
 vix deploy

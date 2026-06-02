@@ -1,60 +1,51 @@
 # Why Vix Exists
 
-Vix exists because C++ is powerful, but the application workflow around C++ is still too heavy for many developers.
+Vix.cpp exists because C++ is still one of the strongest languages for building serious software, but the workflow around C++ applications is often heavier than it needs to be.
 
-The problem is not C++ itself.
+The problem is not that C++ lacks power. The problem is that moving from source code to a runnable, testable, maintainable, and deployable application usually requires many separate tools, scripts, conventions, and manual decisions.
 
-The problem is everything around the moment when you want to build something real.
-
-```txt
-C++ gives you power.
-But the workflow often gives you friction.
-```
-
-Vix was created to reduce that friction.
+Vix.cpp was created to reduce that friction while keeping the native C++ model intact.
 
 ## The real problem
 
-A developer should be able to start with a simple idea:
+A developer may start with a simple goal:
 
 ```txt
 I want to build an application in C++.
 ```
 
-But very quickly, the work becomes larger than the application itself.
-
-You may need to think about:
+But before the application becomes useful, the developer often has to deal with many surrounding tasks:
 
 ```txt
+project structure
 compiler flags
 build directories
-CMake files
-Ninja files
-dependency installation
-package versions
-development reloads
+CMake configuration
+dependency setup
 tests
 formatting
 runtime arguments
-database setup
 logs
+environment variables
 service files
-reverse proxy config
+reverse proxy configuration
 health checks
 deployment steps
 ```
 
-These things matter.
+Each task matters. Serious applications need these pieces.
 
-But they should not block the first step.
+The issue is that every project often has to assemble them again. The first useful feature can be delayed by project setup, build wiring, scripts, and environment problems.
 
-The first step should be simple:
+Vix.cpp exists to make this path more direct.
+
+A single file can start with:
 
 ```bash
 vix run main.cpp
 ```
 
-Then the project step should also be simple:
+A real project can start with:
 
 ```bash
 vix new api --template backend
@@ -62,50 +53,39 @@ cd api
 vix dev
 ```
 
-That is why Vix exists.
+The point is not to remove the professional parts of C++ development. The point is to give them a clearer workflow.
 
 ## C++ is not the weakness
 
-C++ is not weak.
-
-C++ is used to build:
-
-```txt
-operating systems
-browsers
-databases
-game engines
-runtimes
-network servers
-trading systems
-embedded systems
-high-performance services
-```
+C++ is used to build operating systems, browsers, databases, game engines, runtimes, network servers, trading systems, embedded systems, and high-performance services.
 
 The language is capable.
 
+The compilers are capable.
+
 The ecosystem is capable.
 
-The issue is that the normal application workflow often feels fragmented.
-
-A beginner can write valid C++ code and still get stuck on:
+The difficulty is that the normal application workflow can be fragmented. A developer can write valid C++ code and still get stuck on basic operational questions:
 
 ```txt
-How do I build this?
-How do I run this?
+How do I build this project?
+How do I run it?
 How do I add dependencies?
-How do I create a project?
 How do I run tests?
-How do I deploy?
+How do I format the code?
+How do I inspect failures?
+How do I prepare it for production?
 ```
 
-Vix exists to make those workflows direct.
+Vix.cpp focuses on those questions.
 
-## The Vix answer
+It does not try to make C++ less powerful. It tries to make the surrounding workflow more predictable.
 
-Vix gives C++ an application-first workflow.
+## The Vix.cpp answer
 
-Instead of forcing the developer to begin with build-system complexity, Vix lets the developer begin with intent.
+Vix.cpp gives C++ an application-first workflow.
+
+Instead of starting from build-system details, the developer can start from the action they want to perform.
 
 Run a file:
 
@@ -125,106 +105,70 @@ Start development mode:
 vix dev
 ```
 
-Build:
+Build the project:
 
 ```bash
 vix build
 ```
 
-Validate:
+Validate the project:
 
 ```bash
 vix check --tests
 ```
 
-Deploy:
+Move toward production:
 
 ```bash
 vix deploy
 ```
 
-The idea is simple:
+The idea is simple: common application work should have common commands.
 
-```txt
-common application work should have common commands
-```
+This does not remove advanced control. It gives everyday tasks a stable entry point.
 
 ## Why not only CMake?
 
-CMake is powerful.
+CMake is powerful and important.
 
-Vix does not try to erase it.
+Vix.cpp does not try to erase it. CMake remains the right tool for complex build graphs, advanced target configuration, cross-platform projects, exported packages, custom toolchains, generated sources, and platform-specific build logic.
 
-CMake remains important for advanced C++ projects, cross-platform builds, library composition, and compatibility.
+But many application developers do not want the first step of every project to be a visible `CMakeLists.txt`.
 
-But many application developers do not want to begin with visible CMake complexity.
-
-For applications, Vix now prioritizes `vix.app`.
-
-Example:
+For simple and medium applications, Vix.cpp can use `vix.app`:
 
 ```txt
-name = "api"
-type = "executable"
-cpp_standard = "23"
+name = api
+type = executable
+standard = c++23
 
 sources = [
-  "src/main.cpp"
+  src/main.cpp,
 ]
 
 include_dirs = [
-  "src"
-]
-
-modules = [
-  "core",
-  "json",
-  "http"
+  src,
 ]
 ```
 
-This gives a simple application manifest.
+Vix.cpp can generate the internal CMake project from that manifest when needed.
 
-Internally, Vix can still generate and use CMake when needed.
-
-The rule is:
+The rule is straightforward:
 
 ```txt
 Use vix.app for the simple application path.
-Use CMakeLists.txt when the project needs direct CMake control.
+Use CMakeLists.txt when the build needs direct CMake control.
 ```
 
-This keeps both worlds:
-
-```txt
-simple for apps
-powerful for advanced projects
-```
+This keeps the entry point simple without cutting the project off from the C++ build ecosystem.
 
 ## Why not only a build tool?
 
-Vix is not only a build command.
-
 A build command solves only one part of the problem.
 
-Real applications also need:
+Real applications need more than compilation. They need development commands, runtime configuration, module composition, dependency management, tests, diagnostics, packaging, service setup, proxy configuration, health checks, logs, and deployment.
 
-```txt
-development workflow
-runtime workflow
-module composition
-dependency management
-test workflow
-diagnostics
-replay
-production services
-proxy configuration
-health checks
-logs
-deployment
-```
-
-That is why Vix includes commands such as:
+That is why Vix.cpp includes commands such as:
 
 ```bash
 vix dev
@@ -232,6 +176,7 @@ vix run
 vix build
 vix check
 vix tests
+vix fmt
 vix make
 vix add
 vix install
@@ -244,46 +189,45 @@ vix logs
 vix deploy
 ```
 
-The goal is not to have many commands just to look complete.
+The goal is not to have many commands for appearance. The goal is to cover the real lifecycle of a C++ application.
 
-The goal is to cover the real lifecycle of a C++ application.
+## The traditional workflow
 
-## The old C++ workflow
-
-A traditional workflow often looks like this:
+A traditional C++ application workflow can look like this:
 
 ```txt
 create files manually
 write CMake manually
-configure build manually
-run build manually
-find binary manually
-run binary manually
-write scripts manually
-write service file manually
-write Nginx config manually
-debug logs manually
+configure the build manually
+run the build manually
+find the binary manually
+run the binary manually
+write helper scripts manually
+write service configuration manually
+write reverse proxy configuration manually
+inspect logs manually
 deploy manually
 ```
 
-This is powerful, but slow.
+This approach gives full control, but it also creates repeated operational work.
 
-It also creates many small places where mistakes happen.
+Every project can end up with its own commands, scripts, directory layout, and debugging habits.
 
-Vix tries to replace repeated manual steps with clear commands.
+Vix.cpp tries to make the repeated parts explicit and reusable.
 
-## The Vix workflow
+## The Vix.cpp workflow
 
-A Vix workflow looks like this:
+A Vix.cpp workflow is organized around the application lifecycle:
 
 ```txt
 create
-  -> run
   -> develop
   -> build
   -> check
+  -> test
   -> package
   -> deploy
+  -> inspect
 ```
 
 With commands:
@@ -297,7 +241,7 @@ vix pack
 vix deploy
 ```
 
-And when something breaks:
+And when something fails:
 
 ```bash
 vix doctor
@@ -306,30 +250,29 @@ vix logs errors --lines 100
 vix replay failed
 ```
 
-Vix does not remove debugging.
-
-It makes debugging more structured.
+Vix.cpp does not remove debugging. It makes debugging more structured.
 
 ## Why application-first matters
 
-Many C++ tools are library-first or build-system-first.
+Many C++ tools are build-system-first or library-first.
 
-Vix is application-first.
+Vix.cpp is application-first.
 
-That means the tool starts from questions like:
+That means it starts from questions such as:
 
 ```txt
 How does the developer create an app?
-How does the app run?
-How does the app reload during development?
-How does the app use modules?
+How does the app run locally?
+How does the app use configuration?
+How does the app enter development mode?
+How does the app compose modules?
 How does the app install dependencies?
 How does the app expose HTTP?
 How does the app check health?
-How does the app deploy?
+How does the app move to production?
 ```
 
-This is why the book now follows a tighter structure:
+This is why the Vix Book is organized around the application lifecycle:
 
 ```txt
 Introduction
@@ -343,33 +286,19 @@ From Local to Production
 Next Steps
 ```
 
-The book is no longer just about a few HTTP examples.
+The book is not just about a few commands. It explains how Vix.cpp thinks about C++ applications.
 
-It is about the complete Vix application model.
+## Reducing accidental complexity
 
-## Vix reduces accidental complexity
+There are two kinds of complexity in software.
 
-There are two kinds of complexity.
+Essential complexity is the real problem your application must solve.
 
-Essential complexity:
+Accidental complexity is the extra work caused by tooling, setup, unclear workflows, inconsistent scripts, and avoidable operational friction.
 
-```txt
-the real problem your application solves
-```
+C++ applications can have deep essential complexity. That is normal.
 
-Accidental complexity:
-
-```txt
-the extra work required only because the workflow is hard
-```
-
-C++ applications have essential complexity.
-
-That is normal.
-
-But developers should not lose too much time on accidental complexity.
-
-Vix tries to reduce accidental complexity around:
+But developers should not lose unnecessary time on accidental complexity around:
 
 ```txt
 project creation
@@ -383,15 +312,15 @@ diagnostics
 deployment
 ```
 
-The application itself can still be complex.
+Vix.cpp tries to reduce that surrounding friction.
 
-But the path to run and ship it should be clearer.
+The application itself can still be complex. The path to run, test, package, and ship it should be clearer.
 
-## Vix keeps explicitness
+## Keeping explicit behavior
 
-Vix should not become magic.
+Vix.cpp should not become magic.
 
-A good Vix command should be understandable.
+A good Vix command should be simple to run and possible to explain.
 
 For example:
 
@@ -399,16 +328,7 @@ For example:
 vix build
 ```
 
-means:
-
-```txt
-resolve the project
-configure if needed
-build the target
-use cache when safe
-fallback when needed
-print useful diagnostics
-```
+means that Vix.cpp resolves the project, configures it when needed, builds the selected target, uses cache only when safe, falls back when needed, and prints useful diagnostics.
 
 And:
 
@@ -416,21 +336,9 @@ And:
 vix deploy
 ```
 
-means:
+means that Vix.cpp runs the configured deployment workflow, builds the application, validates it, restarts the service, checks health, checks proxy behavior, and surfaces logs if something fails.
 
-```txt
-run the configured deployment workflow
-build
-test
-restart service
-check health
-check proxy
-show logs on failure
-```
-
-The command is simple, but the behavior should still be explainable.
-
-That is an important principle:
+The command is short, but the behavior should remain understandable.
 
 ```txt
 simple command
@@ -438,33 +346,23 @@ explicit behavior
 clear diagnostics
 ```
 
-## Vix supports fallback
+That principle matters because serious developers need trust, not mystery.
 
-Vix should be fast when it can be fast.
+## Safe fallback
 
-But correctness comes first.
+Vix.cpp should be fast when it can be fast, but correctness comes first.
 
-For example, a script can sometimes be compiled directly.
+A single-file program can sometimes be compiled directly. Other cases need a safer path because they involve runtime modules, special dependencies, database support, sanitizer modes, project configuration, or generated build metadata.
 
-But some scripts need more:
+In those cases, Vix.cpp can fall back to the appropriate build strategy.
 
-```txt
-Vix runtime features
-special dependencies
-database support
-sanitizer modes
-project-level configuration
-```
-
-In those cases, Vix can use a CMake fallback automatically.
-
-The developer still runs:
+The developer may still run:
 
 ```bash
 vix run server.cpp
 ```
 
-Vix decides the safest execution path.
+But Vix.cpp chooses the safest execution path.
 
 The goal is:
 
@@ -474,11 +372,11 @@ correct strategy
 less manual work
 ```
 
-## Vix and dependencies
+## Dependencies
 
 Real projects need packages.
 
-That is why Vix has registry workflows:
+That is why Vix.cpp includes registry and dependency workflows:
 
 ```bash
 vix registry sync
@@ -490,7 +388,7 @@ vix outdated
 vix remove
 ```
 
-The dependency model uses:
+A Vix.cpp project can use:
 
 ```txt
 vix.json
@@ -501,13 +399,13 @@ local store
 registry index
 ```
 
-The important command after cloning a project is:
+After cloning a project, the important command is:
 
 ```bash
 vix install
 ```
 
-This installs the exact versions already pinned in `vix.lock`.
+It installs the versions pinned by the project.
 
 For adding a package:
 
@@ -521,15 +419,15 @@ For publishing a package:
 vix publish 0.2.0
 ```
 
-Vix exists because real applications need a dependency workflow, not just a compiler command.
+Vix.cpp exists because real applications need dependency workflows, not only compiler commands.
 
-## Vix and production
+## Production
 
-A tool that helps you run code locally is useful.
+A tool that runs code locally is useful.
 
-But a tool that helps you move from local to production is much more valuable.
+A tool that helps move a C++ application from local development to production is more valuable.
 
-That is why Vix includes production commands:
+Vix.cpp includes production-oriented commands:
 
 ```bash
 vix env check --production
@@ -540,7 +438,7 @@ vix logs
 vix deploy
 ```
 
-A production Vix app can follow this model:
+A production Vix.cpp application can follow this model:
 
 ```txt
 Internet
@@ -549,26 +447,17 @@ Internet
   -> systemd
 ```
 
-The developer should not need to rewrite the same systemd and Nginx workflow for every app.
+The developer should not need to rewrite the same service and proxy workflow for every backend.
 
-Vix makes that workflow repeatable.
+Vix.cpp makes that path repeatable.
 
-## Vix and diagnostics
+## Diagnostics
 
-A modern runtime workflow needs diagnostics.
+A modern developer workflow needs diagnostics.
 
-When something fails, the developer needs to know:
+When something fails, the developer needs to know what command ran, what failed, where it failed, which logs matter, and what can be tried next.
 
-```txt
-what command ran
-what failed
-where it failed
-what to try next
-what logs matter
-whether the run can be reproduced
-```
-
-That is why Vix includes commands such as:
+Vix.cpp includes commands such as:
 
 ```bash
 vix doctor
@@ -581,19 +470,17 @@ vix replay
 
 `vix info` shows local state, registry paths, store paths, caches, and packages.
 
-`vix logs` reads app and proxy logs.
+`vix logs` reads application and proxy logs.
 
 `vix replay` replays recorded runs.
 
-The goal is not only to fail.
+The goal is not only to fail. The goal is to fail with enough information to continue.
 
-The goal is to fail with enough information to continue.
+## Learning path
 
-## Vix and learning
+Vix.cpp also makes C++ more approachable.
 
-Vix also exists to make C++ more approachable.
-
-A beginner should be able to start with:
+A beginner can start with:
 
 ```bash
 vix run main.cpp
@@ -608,7 +495,7 @@ vix build
 vix check --tests
 ```
 
-Then later:
+Later, the same workflow can move toward production:
 
 ```bash
 vix service init
@@ -616,29 +503,21 @@ vix proxy nginx init
 vix deploy
 ```
 
-The same tool supports the learning path and the production path.
+The same tool supports learning, development, maintenance, and deployment.
 
-That is important.
+That continuity is important.
 
-## What Vix should feel like
+## What Vix.cpp should feel like
 
-Vix should feel like this:
+Vix.cpp should feel like a workflow where C++ remains powerful, but the surrounding operations are clearer.
 
-```txt
-C++ remains powerful.
-The workflow becomes clear.
-The commands are predictable.
-The project structure is understandable.
-The build is fast when safe.
-The diagnostics help.
-Production is not an afterthought.
-```
+The commands should be predictable. The project structure should be understandable. The build should be fast when safe. The diagnostics should help. Production should not feel like an unrelated manual process.
 
-That is the experience Vix is trying to create.
+That is the experience Vix.cpp is trying to create.
 
 ## The core reason
 
-Vix exists because C++ deserves a workflow where this is normal:
+Vix.cpp exists because this should be normal in C++:
 
 ```bash
 vix new api --template backend
@@ -646,7 +525,7 @@ cd api
 vix dev
 ```
 
-and this is also normal:
+And this should also be normal:
 
 ```bash
 vix deploy
@@ -654,19 +533,13 @@ vix health
 vix logs errors --lines 100
 ```
 
-The same ecosystem should support both local development and production operations.
+The same ecosystem should support local development and production operations.
 
 ## What you should remember
 
-Vix exists to make real C++ application development smoother.
+Vix.cpp exists to make real C++ application development smoother without changing C++ or removing advanced control.
 
-Not by changing C++.
-
-Not by hiding everything.
-
-Not by removing advanced control.
-
-But by giving clear workflows for the things developers repeat every day.
+It gives clear workflows for the tasks developers repeat every day:
 
 ```txt
 run
@@ -683,7 +556,7 @@ debug
 The shortest summary is:
 
 ```txt
-Vix modernizes the workflow around C++.
+Vix.cpp modernizes the workflow around C++.
 ```
 
 ## Next chapter

@@ -1,39 +1,64 @@
 # vix.app
 
-`vix.app` is a simple project manifest for Vix.cpp.
+`vix.app` is the simple application manifest for Vix.cpp.
 
-It lets you build and run C++ projects without writing a `CMakeLists.txt` manually.
+It gives C++ projects a small, readable project description without forcing every application to start with a hand-written `CMakeLists.txt`.
 
-Instead of starting with CMake configuration, you describe your project in a small `vix.app` file, and Vix generates the internal CMake project for you.
+A `vix.app` file describes what the project is, which files it builds, which include directories it uses, which libraries it links, and which output it should produce.
+
+Vix.cpp can then generate the internal CMake project needed to build the application.
 
 ```txt
 vix.app
   -> generated CMake project
   -> vix build
-  -> executable or library
+  -> native executable or library
 ```
 
-`vix.app` is designed for simple and medium C++ projects that need a clean build experience without the usual CMake setup cost.
+The result is still native C++. Vix.cpp does not replace the compiler, the linker, or the C++ build ecosystem. It provides a simpler entry point for projects that do not need full manual CMake control at the beginning.
 
-For advanced projects, you can still use a normal `CMakeLists.txt`.
+## Why `vix.app` exists
 
-## Why vix.app exists
+C++ projects often start with build configuration before the developer can focus on the application itself.
 
-C++ is powerful, but starting a C++ project often requires writing build configuration before writing real code.
+For advanced projects, that control is useful.
 
-For many projects, the user only wants to say:
+For many simple and medium projects, the developer usually only needs to describe a few things:
 
 ```txt
-this is my app
-these are my source files
-these are my include directories
-these are my libraries
-build and run it
+what the project is called
+what kind of target it builds
+which C++ standard it uses
+which source files are compiled
+which include directories are available
+which libraries or packages are linked
+where the output goes
 ```
 
-`vix.app` gives Vix a simple, readable description of the project.
+That information does not always need a full CMake file written by hand.
 
-Example:
+`vix.app` exists to make the common application path smaller:
+
+```txt
+describe the application
+  -> let Vix.cpp generate the internal build project
+  -> build and run with the Vix workflow
+```
+
+This keeps the early project experience focused on the application instead of build boilerplate.
+
+## A minimal example
+
+A minimal application can use this structure:
+
+```txt
+hello/
+├── vix.app
+└── src/
+    └── main.cpp
+```
+
+`vix.app`:
 
 ```ini
 name = hello
@@ -43,37 +68,56 @@ standard = c++20
 sources = [
   src/main.cpp,
 ]
-
-include_dirs = [
-  include,
-]
 ```
 
-Then you can run:
+`src/main.cpp`:
+
+```cpp
+#include <vix.hpp>
+
+int main()
+{
+  vix::print("Hello from vix.app");
+  return 0;
+}
+```
+
+Build the project:
 
 ```bash
 vix build
+```
+
+Run it:
+
+```bash
 vix run
 ```
 
-## What vix.app does
+The project stays simple, but it still builds as a native C++ application.
 
-A `vix.app` file can describe:
+## What `vix.app` describes
 
-- the target name
-- the target type
-- the C++ standard
-- source files
-- include directories
-- preprocessor definitions
-- libraries to link
-- compile options
-- link options
-- CMake packages
-- resources to copy
-- output directory
+A `vix.app` file can describe the normal build properties of an application or library.
 
-For example:
+Common fields include:
+
+| Field             | Purpose                                                              |
+| ----------------- | -------------------------------------------------------------------- |
+| `name`            | Target or application name.                                          |
+| `type`            | Target type, such as `executable`, `static`, `shared`, or `library`. |
+| `standard`        | C++ standard used by the target.                                     |
+| `sources`         | Source files compiled into the target.                               |
+| `include_dirs`    | Include directories available to the target.                         |
+| `defines`         | Preprocessor definitions.                                            |
+| `packages`        | CMake packages required by the target.                               |
+| `links`           | Libraries or imported targets linked to the target.                  |
+| `compile_options` | Extra compiler options.                                              |
+| `link_options`    | Extra linker options.                                                |
+| `resources`       | Files or directories copied with the target.                         |
+| `output_dir`      | Output directory for the generated artifact.                         |
+
+Example:
 
 ```ini
 name = myapp
@@ -108,186 +152,176 @@ compile_options = [
 ]
 ```
 
+This is still a project description, not a new programming language. It is meant to cover common cases clearly.
+
 ## Project detection
 
-Vix uses this resolution order:
+Vix.cpp supports both existing CMake projects and `vix.app` projects.
+
+The project resolution order is:
 
 ```txt
-1. If CMakeLists.txt exists, Vix uses the normal CMake project.
-2. If no CMakeLists.txt exists but vix.app exists, Vix uses vix.app.
+1. If CMakeLists.txt exists, Vix.cpp uses the CMake project.
+2. If no CMakeLists.txt exists but vix.app exists, Vix.cpp uses vix.app.
 ```
 
-This means `vix.app` does not break existing CMake projects.
+This rule protects existing CMake projects.
 
-If your project has a `CMakeLists.txt`, Vix will keep using it directly.
+A project with `CMakeLists.txt` continues to use its CMake build definition.
 
-If your project only has a `vix.app`, Vix will generate an internal CMake project under:
+A project with only `vix.app` uses the manifest-based Vix.cpp workflow.
+
+When Vix.cpp uses `vix.app`, it generates the internal CMake project under:
 
 ```txt
 .vix/generated/app/CMakeLists.txt
 ```
 
-You should not edit this generated file manually.
+Do not edit the generated file manually.
 
 Edit `vix.app` instead.
 
-## Basic project layout
-
-A minimal `vix.app` project looks like this:
-
-```txt
-hello/
-  vix.app
-  src/
-    main.cpp
-```
-
-`vix.app`:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <vix.hpp>
-
-int main()
-{
-  vix::print("Hello from vix.app");
-  return 0;
-}
-```
-
-Build it:
-
-```bash
-vix build
-```
-
-Run it:
-
-```bash
-vix run
-```
-
 ## Supported target types
 
-`vix.app` supports these target types:
+`vix.app` supports common target types.
 
 ```ini
 type = executable
 ```
+
+Use this for applications and command-line tools.
 
 ```ini
 type = static
 ```
 
+Use this for static libraries.
+
 ```ini
 type = shared
 ```
+
+Use this for shared libraries.
 
 ```ini
 type = library
 ```
 
-Use `executable` for applications.
+Use this when you want the default library behavior supported by Vix.cpp.
 
-Use `static` for static libraries.
+The target type should match what the project is meant to produce.
 
-Use `shared` for shared libraries.
-
-Use `library` when you want the default library behavior supported by Vix.
-
-## vix.app and CMake
+## `vix.app` and CMake
 
 `vix.app` does not remove CMake.
 
-It gives a simpler entry point for projects that do not need a custom `CMakeLists.txt`.
+It gives a simpler entry point for projects that do not need custom CMake logic yet.
 
-Internally, Vix can generate a CMake project from your manifest.
-
-This gives you a simple user experience while keeping compatibility with the existing C++ ecosystem.
+Internally, Vix.cpp can generate a CMake project from the manifest. That means the project still benefits from the native C++ build ecosystem.
 
 ```txt
 Simple project:
-  vix.app -> generated CMake -> build
+  vix.app -> generated CMake -> native build
 
 Advanced project:
   CMakeLists.txt -> normal CMake build
 ```
 
-## When to use vix.app
+This separation lets a project start small and move to full CMake control later.
 
-Use `vix.app` when your project has a straightforward structure:
+## When to use `vix.app`
 
-```txt
-app/
-  vix.app
-  include/
-  src/
-```
+Use `vix.app` when the project has a straightforward structure.
 
-Good use cases:
+Good examples include:
 
-- small CLI applications
+- small applications
+- command-line tools
 - examples
 - learning projects
 - simple libraries
 - prototypes
 - demos
-- apps with a few dependencies
+- applications with a few dependencies
 - projects that do not need custom CMake logic
 
-## When to use CMakeLists.txt
+A typical layout is:
 
-Use a normal `CMakeLists.txt` when your project needs full CMake control.
+```txt
+app/
+├── vix.app
+├── include/
+└── src/
+```
 
-Examples:
+`vix.app` keeps this kind of project readable and easy to build.
+
+## When to use `CMakeLists.txt`
+
+Use a normal `CMakeLists.txt` when the build needs full CMake control.
+
+Examples include:
 
 - multiple complex targets
 - custom code generation
+- generated source files
 - advanced install rules
+- exported CMake packages
 - complex toolchains
 - platform-specific build logic
 - advanced dependency discovery
 - custom CMake functions
-- generated sources
 - large monorepos
 
-The rule is simple:
+The rule is practical:
 
 ```txt
-Start with vix.app.
-Move to CMakeLists.txt when you need full control.
+Start with vix.app when the project is simple.
+Move to CMakeLists.txt when the build needs advanced control.
 ```
 
-## vix.app is the simple path
+Vix.cpp can work with both paths.
 
-`vix.app` is the easiest way to start a C++ project with Vix.
+## What `vix.app` is not
 
-It is not meant to become a second CMake language.
+`vix.app` is not meant to become a second CMake language.
 
-It is meant to keep common projects simple.
+It should not try to cover every advanced build case.
+
+Its role is to describe common application and library projects clearly.
+
+When the build becomes complex, use CMake directly.
+
+The model is:
 
 ```txt
-vix.app is for clarity.
-CMake is for full control.
-Vix connects both.
+vix.app for clarity
+CMake for full control
+Vix.cpp connects both
 ```
+
+## How it fits into Vix.cpp
+
+`vix.app` is one part of the larger Vix.cpp application workflow.
+
+A typical project may use:
+
+```txt
+vix.app  -> describes the application build
+vix.json -> describes project metadata, tasks, dependencies, and workflow
+vix.lock -> records exact dependency versions
+.env     -> stores local runtime configuration
+```
+
+Each file has a separate job.
+
+This keeps the project easier to understand for developers, CI systems, tooling, and language models that read the documentation.
 
 ## Next steps
 
-Start with:
+Continue with:
 
-- [Getting Started](./getting-started.md)
-- [Manifest Reference](./manifest-reference.md)
-- [Examples](./examples.md)
-- [Packages and Links](./packages-and-links.md)
+- [Getting Started](./getting-started)
+- [Manifest Reference](./manifest-reference)
+- [Examples](./examples)
+- [Packages and Links](./packages-and-links)

@@ -2510,3 +2510,47 @@ body.vix-local-nav-fixed .VPSidebar {
     padding-top: 20px !important;
   }
 }
+.vix-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--vp-c-text-2);
+  font-family: var(--vp-font-family-mono);
+}
+
+.vix-breadcrumb-home {
+  display: inline-flex;
+  align-items: center;
+  color: var(--vp-c-text-2);
+  text-decoration: none;
+}
+
+.vix-breadcrumb-link {
+  color: var(--vp-c-text-2);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.vix-breadcrumb-link:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.vix-breadcrumb-current {
+  color: var(--vp-c-text-1);
+}
+
+.vix-breadcrumb-separator {
+  color: var(--vp-c-text-3);
+}
+
+@media (max-width: 768px) {
+  .vix-breadcrumb {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 4px;
+    margin-bottom: 20px;
+  }
+}

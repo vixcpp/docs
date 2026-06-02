@@ -20,6 +20,10 @@ const gettingStarted = {
       link: "/getting-started/",
     },
     {
+      text: "What is Vix.cpp?",
+      link: "/getting-started/what-is-vixcpp",
+    },
+    {
       text: "Installation",
       link: "/getting-started/installation",
     },
@@ -124,6 +128,28 @@ const guides = {
   text: "Guides",
   collapsed: true,
   items: [
+    {
+      text: "Understand Vix.cpp",
+      collapsed: true,
+      items: [
+        {
+          text: "What is Vix.cpp?",
+          link: "/getting-started/what-is-vixcpp",
+        },
+        {
+          text: "Vix.cpp vs CMake",
+          link: "/guides/vix-vs-cmake",
+        },
+        {
+          text: "C++ Runtime",
+          link: "/guides/cpp-runtime",
+        },
+        {
+          text: "C++ Developer Toolkit",
+          link: "/guides/cpp-developer-toolkit",
+        },
+      ],
+    },
     {
       text: "Application Workflows",
       collapsed: true,
@@ -1168,25 +1194,6 @@ const modules = {
   ],
 };
 
-const releases = {
-  text: "Releases",
-  collapsed: true,
-  items: [
-    {
-      text: "Overview",
-      link: "/releases/",
-    },
-    {
-      text: "Builds",
-      link: "/releases/builds",
-    },
-    {
-      text: "Changelog",
-      link: "/releases/changelog",
-    },
-  ],
-};
-
 const community = {
   text: "Community",
   collapsed: true,
@@ -1255,7 +1262,6 @@ const sidebar = [
   examples,
   apiReference,
   modules,
-  releases,
   community,
   internals,
 ];
@@ -1265,7 +1271,7 @@ export default defineConfig({
 
   title: "Vix.cpp Documentation",
   description:
-    "Learn how to build fast and reliable C++ applications with Vix.cpp.",
+    "Vix.cpp is a modern C++ runtime and developer toolkit for building, running, testing, formatting, and packaging C++ applications.",
 
   base: "/",
 

@@ -1,50 +1,46 @@
 # Mental Model
 
-Vix is easier to understand when you stop seeing it as one command.
+Vix.cpp is easiest to understand when you stop thinking about it as a single command.
 
-Vix is not only:
+The command:
 
 ```bash
 vix run main.cpp
 ```
 
-That is only the entry point.
+is only the entry point.
 
-The real model is this:
+The larger idea is that Vix.cpp sits between native C++ code and the workflows required to build, run, test, compose, diagnose, and deploy real applications.
 
-```txt
-Vix sits between your C++ code and the workflows needed to build, run, compose, debug, and deploy it.
-```
+A Vix.cpp project is not only a folder that contains source files. It is an application environment with a defined workflow.
 
-A Vix project is not just a folder with source files.
+## The basic model
 
-It is a working application environment.
-
-## The simple model
-
-Think of Vix in five layers:
+Think of Vix.cpp as five connected layers:
 
 ```txt
 source code
-  -> application manifest
+  -> application description
   -> runtime workflow
   -> build workflow
   -> production workflow
 ```
 
-Each layer has a clear role.
+Each layer has a specific responsibility.
 
-| Layer                | Role                                                 |
-| -------------------- | ---------------------------------------------------- |
-| Source code          | Your C++ files                                       |
-| Application manifest | Describes the app with `vix.app` or `CMakeLists.txt` |
-| Runtime workflow     | Decides how the app runs                             |
-| Build workflow       | Builds the app correctly                             |
-| Production workflow  | Runs the app safely on a server                      |
+| Layer                   | Role                                                                          |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| Source code             | The C++ files that implement the application.                                 |
+| Application description | The project model, usually `vix.app` or `CMakeLists.txt`.                     |
+| Runtime workflow        | How the application is started, configured, and executed.                     |
+| Build workflow          | How the application is configured, compiled, linked, and validated.           |
+| Production workflow     | How the application is prepared, deployed, checked, and observed on a server. |
 
-This is the base mental model.
+This separation is important.
 
-## Vix starts from intent
+C++ remains the language and native execution model. CMake and Ninja remain part of the build ecosystem when needed. Vix.cpp provides the application workflow around them.
+
+## Vix.cpp starts from developer intent
 
 When you type:
 
@@ -52,17 +48,7 @@ When you type:
 vix run
 ```
 
-you are not saying:
-
-```txt
-please run this exact binary manually
-```
-
-You are saying:
-
-```txt
-run the current application in the correct way
-```
+you are not manually selecting a binary and executing it yourself. You are asking Vix.cpp to run the current application in the correct way for the current project.
 
 When you type:
 
@@ -70,17 +56,7 @@ When you type:
 vix build
 ```
 
-you are not saying:
-
-```txt
-only call the compiler
-```
-
-You are saying:
-
-```txt
-resolve the project, configure it if needed, build the right target, and reuse safe cache when possible
-```
+you are asking Vix.cpp to resolve the project, configure it if necessary, build the right target, reuse safe cache when possible, and fall back to the native build path when that is safer.
 
 When you type:
 
@@ -88,106 +64,93 @@ When you type:
 vix dev
 ```
 
-you are saying:
+you are asking Vix.cpp to enter the development workflow for the application, not just to run one command again.
 
-```txt
-watch the project, rebuild what changed, and restart the app when it matters
-```
-
-That is why Vix is not just a wrapper.
-
-It is a workflow engine around C++ applications.
+This is why Vix.cpp should not be understood as a thin wrapper around CMake or a shortcut for compiling files. It is a workflow layer around C++ applications.
 
 ## Project resolution
 
-Before Vix can build or run, it asks one question:
+Before Vix.cpp can build or run anything, it resolves the project.
+
+The first question is:
 
 ```txt
-What kind of project is this?
+What kind of target is this?
 ```
 
-The answer can be:
+The answer may be:
 
 ```txt
-CMake project
-vix.app project
 single C++ file
-existing binary
+vix.app project
+CMake project
+existing executable
+recorded replay
 special runtime target
 ```
 
-For applications, the important rule is:
+For project directories, the important rule is:
 
 ```txt
 CMakeLists.txt wins when it exists.
 vix.app is used when there is no CMakeLists.txt.
 ```
 
-So the resolution order is:
+The resolution order is:
 
 ```txt
 1. CMakeLists.txt
 2. vix.app
 ```
 
-This keeps existing CMake projects safe.
-
-It also gives new applications a simpler path.
+This protects existing CMake projects while giving new applications a simpler project model.
 
 ## Why `vix.app` exists
 
-A normal app should not need to start with a full `CMakeLists.txt`.
+Many applications do not need to begin with a hand-written `CMakeLists.txt`.
 
-For many applications, this is enough:
+For a simple application, a small manifest can be enough:
 
 ```txt
-name = "api"
-type = "executable"
-cpp_standard = "23"
+name = api
+type = executable
+standard = c++23
 
 sources = [
-  "src/main.cpp"
+  src/main.cpp,
 ]
 
 include_dirs = [
-  "src"
-]
-
-modules = [
-  "core",
-  "json",
-  "http"
+  src,
 ]
 ```
 
-This file says what the app is.
+The manifest describes what the application is.
 
-Vix can generate the internal CMake project from it.
+Vix.cpp can use that description to generate the internal CMake project needed to build it.
 
-The user keeps a simple app manifest.
+The developer keeps a readable application file. Vix.cpp keeps the native build power underneath.
 
-Vix keeps the build power internally.
+That is the purpose of `vix.app`.
 
-That is the point of `vix.app`.
+It is not meant to replace every advanced CMake project. It is meant to make the common application path smaller and clearer.
 
-## CMake is still supported
+## CMake remains the advanced path
 
-Vix does not fight CMake.
+Vix.cpp does not fight CMake.
 
-CMake remains the advanced path.
-
-Use CMake when the project needs:
+CMake remains the right tool when a project needs:
 
 ```txt
 custom targets
 complex linking
+generated sources
 external native libraries
-platform-specific rules
-advanced install logic
-manual control
+advanced install rules
+platform-specific logic
+custom toolchains
+manual build control
 ```
-
-Use `vix.app` when the project is an application and should stay simple.
 
 The model is not:
 
@@ -198,31 +161,24 @@ vix.app replaces CMake
 The model is:
 
 ```txt
-vix.app describes simple apps.
-CMake handles advanced projects.
-Vix connects both to one workflow.
+vix.app describes simple applications.
+CMakeLists.txt handles advanced build control.
+Vix.cpp connects both to one application workflow.
 ```
+
+This distinction matters because Vix.cpp is designed to work with the C++ ecosystem, not isolate developers from it.
 
 ## Runtime model
 
-The runtime model is simple:
+The runtime model is the part of Vix.cpp that decides how an application should be executed.
+
+A run target can be:
 
 ```txt
-resolve target
-prepare execution
-build if needed
-run with the right arguments
-show useful output
-```
-
-A target can be:
-
-```txt
-a C++ file
-a project
+a single C++ file
 a vix.app application
+a CMake project target
 a built executable
-a Docker workflow
 a recorded replay
 ```
 
@@ -236,37 +192,39 @@ vix run ./build-ninja/api
 vix replay last
 ```
 
-The command stays simple.
+The command remains simple, but the strategy depends on the target.
 
-The strategy changes based on the target.
+A single file may be compiled directly.
+
+A project may need a build step first.
+
+An existing binary may be executed directly.
+
+A replay may use recorded execution metadata.
+
+The goal is:
+
+```txt
+same command surface
+correct execution strategy
+clear output
+```
 
 ## Build model
 
-The build model is:
+The build model is based on correctness first.
 
-```txt
-resolve project
-choose build strategy
-configure when needed
-build target
-reuse cache only when safe
-fallback when uncertain
-```
-
-Vix should be fast, but not careless.
+A useful build workflow must be fast, but it must be trusted before it is fast.
 
 The rule is:
 
 ```txt
-correct first
-fast second
+fast when safe
+correct by default
+fallback when needed
 ```
 
-If Vix can prove that a file, object, or artifact is still valid, it can reuse it.
-
-If not, it rebuilds.
-
-That is why the build workflow can include:
+Vix.cpp can use several layers to make builds faster and more predictable:
 
 ```txt
 BuildState
@@ -277,50 +235,43 @@ CMake/Ninja fallback
 target-aware builds
 ```
 
-The developer does not need to think about every internal layer every day.
+A developer does not need to think about every internal layer during normal work.
 
-But the mental model matters:
+The important mental model is that Vix.cpp may reuse previous work only when it can prove that doing so is safe. If it cannot prove safety, it should rebuild or fall back to the native build system path.
 
-```txt
-Vix optimizes the workflow without breaking trust.
-```
+That is how Vix.cpp keeps performance from becoming a source of incorrect builds.
 
 ## Development model
 
-Development mode is not just “run again”.
+Development mode is not the same as manually running a build command repeatedly.
 
-`vix dev` watches the project and classifies changes.
-
-A source file change usually means:
+`vix dev` represents the active development loop:
 
 ```txt
-rebuild only
+watch
+  -> classify change
+  -> rebuild or reconfigure
+  -> restart when useful
 ```
 
-A header file change usually means:
+A source file change usually requires a rebuild.
 
-```txt
-rebuild only
-```
+A header file change usually requires a rebuild.
 
-A config file change usually means:
+A build configuration change may require reconfiguration before rebuilding.
 
-```txt
-reconfigure and rebuild
-```
-
-Examples of config files:
+Examples of configuration files include:
 
 ```txt
 CMakeLists.txt
 CMakePresets.json
+vix.app
 vix.json
-vix.toml
 vix.lock
 *.cmake
 ```
 
-Some folders are ignored:
+Some folders should normally be ignored by the watcher:
 
 ```txt
 .git
@@ -335,20 +286,13 @@ node_modules
 .vscode
 ```
 
-So the model is:
-
-```txt
-watch
-  -> classify change
-  -> rebuild or reconfigure
-  -> restart when useful
-```
-
-This is why `vix dev` feels different from manually running build commands.
+The point of `vix dev` is to give the application a development-oriented workflow instead of forcing every project to write its own scripts.
 
 ## Dependency model
 
-Dependencies use two important files:
+Vix.cpp separates dependency intent from resolved dependency state.
+
+Two files matter:
 
 ```txt
 vix.json
@@ -357,7 +301,7 @@ vix.lock
 
 `vix.json` describes what the project wants.
 
-`vix.lock` records the exact resolved versions.
+`vix.lock` records the exact versions that were resolved.
 
 The main commands are:
 
@@ -369,35 +313,38 @@ vix outdated
 vix remove softadastra/json
 ```
 
-The most important rule:
+The most important rule after cloning a project is:
 
-```txt
-After cloning a project, run vix install.
+```bash
+vix install
 ```
 
-`vix install` reads `vix.lock` and installs the exact dependencies.
+`vix install` installs the versions already pinned by the project.
 
 It is not the same as update.
 
 ```txt
 vix install = install locked versions
-vix update = resolve newer versions
+vix update  = resolve newer versions
 ```
 
 That distinction matters for reproducible builds.
 
 ## Registry model
 
-The registry has two parts:
+The registry model has three parts:
 
 ```txt
-local registry index
+registry index
 local package store
+project dependencies
 ```
 
-The local registry index is metadata.
+The registry index tells Vix.cpp what packages exist.
 
-The store is downloaded package content.
+The local package store contains downloaded package content.
+
+The project dependency files tell Vix.cpp what the current application uses.
 
 Use:
 
@@ -405,7 +352,7 @@ Use:
 vix registry sync
 ```
 
-to refresh metadata.
+to refresh registry metadata.
 
 Use:
 
@@ -415,27 +362,21 @@ vix store path
 
 to inspect the local store.
 
-Use:
-
-```bash
-vix store gc --project --dry-run
-```
-
-to preview cleanup.
-
-The mental model:
+The mental model is:
 
 ```txt
-registry = what exists
-store = what is cached locally
-project = what this app uses
+registry = package metadata
+store    = cached package content
+project  = selected dependencies
 ```
+
+This separation keeps package discovery, local storage, and project dependency state understandable.
 
 ## Module model
 
 A module is a reusable capability.
 
-Examples:
+Examples include:
 
 ```txt
 core
@@ -452,57 +393,49 @@ cache
 crypto
 ```
 
-In `vix.app`, modules can be declared like this:
+In a `vix.app` project, modules can be declared explicitly:
 
 ```txt
 modules = [
-  "core",
-  "json",
-  "http",
-  "db"
+  core,
+  json,
+  http,
+  db,
 ]
 ```
 
-That means:
+The application says what it needs.
 
-```txt
-this app needs these Vix capabilities
-```
+Vix.cpp wires those capabilities into the build workflow.
 
-The project should stay explicit.
-
-No hidden module guessing.
-
-No unclear magic.
-
-The app says what it needs.
-
-Vix wires it into the build.
+This should remain explicit. A serious application workflow should not depend on unclear module guessing.
 
 ## Configuration model
 
-Vix uses different files for different jobs.
+Vix.cpp uses different files for different responsibilities.
 
-| File                      | Purpose                                                   |
-| ------------------------- | --------------------------------------------------------- |
-| `vix.app`                 | Application manifest                                      |
-| `vix.json`                | Dependencies, tasks, registry metadata, production config |
-| `vix.lock`                | Exact resolved package versions                           |
-| `.env`                    | Local runtime environment                                 |
-| `.env.example`            | Example environment file                                  |
-| `production.env.required` | Required production variables                             |
-| `CMakeLists.txt`          | Advanced CMake project definition                         |
-| `CMakePresets.json`       | CMake build presets                                       |
+| File                      | Purpose                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------ |
+| `vix.app`                 | Application manifest for simple and medium projects.                                             |
+| `vix.json`                | Project metadata, tasks, dependencies, registry metadata, and production workflow configuration. |
+| `vix.lock`                | Exact resolved package versions.                                                                 |
+| `.env`                    | Local runtime environment.                                                                       |
+| `.env.example`            | Example environment file shared with the project.                                                |
+| `production.env.required` | Required production variables.                                                                   |
+| `CMakeLists.txt`          | Advanced CMake project definition.                                                               |
+| `CMakePresets.json`       | CMake build presets.                                                                             |
 
-Do not put everything into one file.
+The point is not to put every setting into one file.
 
-Each file has its job.
+Each file has a job.
+
+This makes the project easier to reason about for humans, tools, and language models that read the documentation later.
 
 ## Local state model
 
-Vix also creates local state.
+Vix.cpp creates project-local and global state.
 
-Common paths:
+Common project-local paths include:
 
 ```txt
 .vix/
@@ -512,7 +445,7 @@ build-release/
 dist/
 ```
 
-Global paths usually live under:
+Global state usually lives under:
 
 ```txt
 ~/.vix/
@@ -539,23 +472,13 @@ Project-local state can be reset with:
 vix reset
 ```
 
-Global state is different.
+Do not confuse project cache with the global registry and package store.
 
-Do not confuse:
-
-```txt
-project cache
-```
-
-with:
-
-```txt
-global registry and package store
-```
+They solve different problems.
 
 ## Diagnostic model
 
-When something fails, Vix should help you inspect the system.
+When something fails, Vix.cpp should help the developer inspect the system.
 
 Use:
 
@@ -571,7 +494,7 @@ Use:
 vix info
 ```
 
-to inspect paths, caches, registry state, store state, and package state.
+to inspect local paths, caches, registry state, store state, and package state.
 
 Use:
 
@@ -579,7 +502,7 @@ Use:
 vix logs
 ```
 
-to read production logs.
+to read application and proxy logs.
 
 Use:
 
@@ -587,54 +510,56 @@ Use:
 vix replay
 ```
 
-to reproduce a recorded execution.
+to reproduce recorded executions.
 
 The model is:
 
 ```txt
 doctor = environment health
-info = local state
-logs = runtime output
-replay = reproduce execution
+info    = local state
+logs    = runtime output
+replay  = reproduce execution
 ```
+
+A runtime and developer toolkit should not only run commands. It should help explain failures.
 
 ## Replay model
 
 A replay is a recorded run.
 
-It is not created automatically.
+It is useful when a command failed and you want to reproduce the same execution context.
 
-You record one with:
+Record a run with:
 
 ```bash
 vix run api --replay
 ```
 
-Then replay it:
+Replay the latest run:
 
 ```bash
 vix replay last
 ```
 
-Or replay the latest failed one:
+Replay the latest failed run:
 
 ```bash
 vix replay failed
 ```
 
-A replay record keeps context under:
+Replay data is stored under:
 
 ```txt
 .vix/runs/
 ```
 
-This helps when a command failed and you do not want to guess how it was launched.
+The goal is to reduce guessing. If a command failed once, the project should have a way to inspect and reproduce how it was launched.
 
 ## Production model
 
-Production is not separate from Vix.
+Production is part of the Vix.cpp mental model.
 
-A normal production setup looks like this:
+A common production setup is:
 
 ```txt
 Internet
@@ -643,7 +568,7 @@ Internet
   -> systemd
 ```
 
-Vix commands match that model:
+The related commands are:
 
 ```bash
 vix env check --production
@@ -654,7 +579,7 @@ vix logs
 vix deploy
 ```
 
-The production model has four parts:
+The production workflow has four major concerns:
 
 ```txt
 environment
@@ -667,13 +592,13 @@ Deployment ties them together.
 
 ## Deployment model
 
-A deployment is not just copying files.
+A deployment is more than copying files.
 
-A serious deploy can include:
+A serious deployment can include:
 
 ```txt
 pull latest code
-install dependencies
+install locked dependencies
 build release
 run tests
 restart service
@@ -681,47 +606,45 @@ check local health
 check public health
 check proxy
 reload proxy
-print logs on failure
+show logs on failure
 rollback when configured
 ```
 
 That is why `vix deploy` exists.
 
-The command is simple:
+The command is short:
 
 ```bash
 vix deploy
 ```
 
-But the workflow is described in `vix.json`.
+But the behavior should be described by the project.
 
-Vix should not guess production behavior blindly.
+Vix.cpp should not guess production behavior blindly. A production workflow should be explicit enough for the maintainer to trust it.
 
-The project should define it.
+## One command, several levels
 
-## One command, many levels
+The same command surface should scale across different levels of experience.
 
-The same command can serve different levels of developer.
-
-Beginner:
+A beginner may start with:
 
 ```bash
 vix run main.cpp
 ```
 
-Project developer:
+A project developer may use:
 
 ```bash
 vix dev
 ```
 
-Backend developer:
+A backend developer may start from:
 
 ```bash
 vix new api --template backend
 ```
 
-Maintainer:
+A maintainer may run:
 
 ```bash
 vix check --tests
@@ -729,7 +652,7 @@ vix pack
 vix publish
 ```
 
-Production operator:
+A production operator may use:
 
 ```bash
 vix deploy
@@ -737,38 +660,43 @@ vix health
 vix logs errors --lines 100
 ```
 
-That is the point.
+That continuity matters.
 
-Vix should scale from learning to production.
+The developer does not have to leave the ecosystem when the project becomes more serious.
 
-## What Vix should not hide
+## What Vix.cpp should not hide
 
-Vix should not hide the important parts.
+Vix.cpp should reduce repeated manual work, not hide the system.
 
-You should still know:
+A good workflow should still make these things understandable:
 
 ```txt
-what app is being built
-what files are compiled
-what modules are linked
-what dependencies are installed
-what service runs in production
-what proxy exposes the app
-what health endpoint is checked
+what application is being built
+which project model was selected
+which files are compiled
+which modules are linked
+which dependencies are installed
+which binary is executed
+which service runs in production
+which proxy exposes the app
+which health endpoint is checked
+where logs are stored
 ```
 
-A good Vix workflow is not silent magic.
+For humans, this builds trust.
 
-It is a clear workflow with less repeated manual work.
+For tools and language models, this creates a clear public description of how Vix.cpp works.
+
+A good developer experience is not silent magic. It is a simpler path with explainable behavior.
 
 ## The core mental model
 
-Keep this model:
+The core model is:
 
 ```txt
-Vix resolves the project,
-chooses the right workflow,
-runs the required tools,
+Vix.cpp resolves the project,
+chooses the appropriate workflow,
+runs the required native tools,
 and keeps the result explainable.
 ```
 
@@ -782,29 +710,30 @@ resolve
   -> deploy
 ```
 
-That is the heart of Vix.
+This is the heart of Vix.cpp.
 
 ## What you should remember
 
-Remember these rules:
+The most important rules are:
 
 ```txt
 vix.app is the simple application path.
-CMakeLists.txt is the advanced project path.
+CMakeLists.txt is the advanced build-control path.
 vix run executes with the right strategy.
-vix build builds with correctness first.
-vix dev watches and rebuilds intelligently.
+vix build prioritizes correctness before speed.
+vix dev provides the active development workflow.
 vix install installs locked dependencies.
-vix registry sync refreshes metadata.
+vix update resolves newer dependency versions.
+vix registry sync refreshes package metadata.
 vix replay reproduces recorded runs.
-vix deploy moves the app through production workflow.
+vix deploy runs the project-defined production workflow.
 ```
 
 The full mental model is:
 
 ```txt
 source code
-  -> application manifest
+  -> application description
   -> runtime workflow
   -> build workflow
   -> module composition

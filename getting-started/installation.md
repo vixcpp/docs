@@ -1,9 +1,7 @@
 # Installation
 
 This page shows how to install Vix.cpp and verify that it works on your machine.
-
 For Getting Started and real C++ application development, install the full SDK.
-
 Starting with **Vix.cpp v2.6.0**, the recommended installation is the full SDK installation.
 
 The full SDK includes:

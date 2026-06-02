@@ -1,8 +1,8 @@
 # Your First HTTP Server
 
-This page shows how to build your first HTTP server with Vix.cpp.
+This page shows how to build a small HTTP server with Vix.cpp.
 
-You will create:
+You will create four routes:
 
 ```txt
 GET /
@@ -11,11 +11,13 @@ GET /hello/{name}
 GET /users/{id}
 ```
 
-The goal is to understand the core Vix HTTP model:
+The goal is to understand the basic Vix HTTP model:
 
 ```txt
 App -> route -> Request -> Response -> app.run()
 ```
+
+A Vix HTTP server is still a native C++ application. Vix.cpp provides the runtime API and the development workflow around it.
 
 ## Start from your project
 
@@ -25,7 +27,7 @@ Use the project created in the previous page:
 cd ~/tmp/hello
 ```
 
-Open:
+Open the main source file:
 
 ```txt
 src/main.cpp
@@ -41,9 +43,9 @@ VIX_LOG_LEVEL=info
 VIX_LOG_FORMAT=kv
 ```
 
-The server port belongs in `.env`.
+The port belongs in configuration, not in the application logic.
 
-The source code should stay focused on application logic.
+This lets the same source code run on different ports in local development, testing, staging, or production.
 
 ## Create a minimal server
 
@@ -68,13 +70,13 @@ int main()
 }
 ```
 
-Run it:
+Start the application in development mode:
 
 ```bash
 vix dev
 ```
 
-Open another terminal and test it:
+Open another terminal and test the route:
 
 ```bash
 curl -i http://127.0.0.1:8080/
@@ -88,11 +90,15 @@ Hello from Vix.cpp
 
 ## What this code does
 
+The application starts with:
+
 ```cpp
 App app;
 ```
 
-Creates the Vix application.
+This creates the Vix application object.
+
+The route is registered with:
 
 ```cpp
 app.get("/", [](Request &, Response &res) {
@@ -100,35 +106,33 @@ app.get("/", [](Request &, Response &res) {
 });
 ```
 
-Registers a `GET /` route.
+This means: when the server receives a `GET /` request, send a plain text response.
+
+The server starts with:
 
 ```cpp
 app.run();
 ```
 
-Starts the HTTP server using the environment configuration.
-
-In this guide, the port comes from:
-
-```dotenv
-SERVER_PORT=8080
-```
+Because the port is configured in `.env`, the source code does not need to hardcode it.
 
 ## Core concepts
 
-| Part                   | Purpose                                                 |
-| ---------------------- | ------------------------------------------------------- |
-| `#include <vix.hpp>`   | Imports the main Vix API.                               |
-| `using namespace vix;` | Lets you use `App`, `Request`, and `Response` directly. |
-| `App app;`             | Creates the HTTP application.                           |
-| `app.get(...)`         | Registers a GET route.                                  |
-| `Request &req`         | Reads what the client sent.                             |
-| `Response &res`        | Sends what your app returns.                            |
-| `app.run()`            | Starts the server using environment configuration.      |
+| Part                   | Purpose                                                         |
+| ---------------------- | --------------------------------------------------------------- |
+| `#include <vix.hpp>`   | Imports the main Vix API.                                       |
+| `using namespace vix;` | Lets the example use `App`, `Request`, and `Response` directly. |
+| `App app;`             | Creates the HTTP application.                                   |
+| `app.get(...)`         | Registers a GET route.                                          |
+| `Request &req`         | Represents the incoming request.                                |
+| `Response &res`        | Builds and sends the response.                                  |
+| `app.run()`            | Starts the server using the runtime configuration.              |
+
+This is the core shape of a Vix HTTP application.
 
 ## Return JSON
 
-Most backend services return JSON.
+Most backend services return JSON rather than plain text.
 
 Replace the `/` route with:
 
@@ -156,9 +160,11 @@ Expected response shape:
 }
 ```
 
+The exact formatting may differ, but the response should contain the same data.
+
 ## Add a health route
 
-A health route is useful for checking whether your server is alive.
+A health route is useful for checking whether the server is running.
 
 Add this before `app.run()`:
 
@@ -186,9 +192,11 @@ Expected response shape:
 }
 ```
 
+Health routes are commonly used by deployment systems, reverse proxies, monitoring tools, and local development scripts.
+
 ## Add a path parameter
 
-Path parameters let you read values from the URL.
+Path parameters let a route read values from the URL.
 
 Add this route before `app.run()`:
 
@@ -224,11 +232,13 @@ Here:
 req.param("name")
 ```
 
-reads the `{name}` part from the route:
+reads the `{name}` segment from:
 
 ```txt
 /hello/{name}
 ```
+
+So `/hello/Gaspard` gives `"Gaspard"`.
 
 ## Add query parameters
 
@@ -268,9 +278,23 @@ Expected response shape:
 }
 ```
 
+Here:
+
+```cpp
+req.param("id")
+```
+
+reads the route parameter.
+
+```cpp
+req.query_value("page", "1")
+```
+
+reads the `page` query parameter and returns `"1"` if it is missing.
+
 ## Response helpers
 
-Vix gives you several response helpers:
+Vix provides response helpers for common HTTP responses:
 
 ```cpp
 res.send("Hello world");
@@ -281,7 +305,7 @@ res.header("Cache-Control", "no-cache");
 res.file("public/index.html");
 ```
 
-Use:
+Use them according to the response you want to send:
 
 | Method                      | Use when                           |
 | --------------------------- | ---------------------------------- |
@@ -364,9 +388,9 @@ curl -i "http://127.0.0.1:8080/users/42?page=2&limit=20"
 
 ## Organize routes with functions
 
-When your app grows, avoid putting everything directly in `main()`.
+As the application grows, avoid placing every route directly inside `main()`.
 
-You can organize routes like this:
+You can group related routes in functions:
 
 ```cpp
 #include <vix.hpp>
@@ -417,9 +441,9 @@ int main()
 }
 ```
 
-This keeps `main()` small and makes the app easier to maintain.
+This keeps `main()` small and makes the application easier to maintain.
 
-For larger backends, use the backend template instead of growing a single `main.cpp` forever.
+For larger backends, use the backend template instead of growing a single file indefinitely:
 
 ```bash
 vix new api --template backend
@@ -427,9 +451,9 @@ vix new api --template backend
 
 ## Common mistakes
 
-### Forgetting to run the server
+### Forgetting to start the server
 
-Routes do nothing until you call:
+Routes do nothing until the application starts:
 
 ```cpp
 app.run();
@@ -457,7 +481,7 @@ SERVER_PORT=8080
 
 ### Forgetting to return after an error
 
-When you send an error response, return immediately.
+When you send an error response inside a route, return immediately.
 
 ```cpp
 app.get("/users/{id}", [](Request &req, Response &res) {
@@ -480,6 +504,8 @@ app.get("/users/{id}", [](Request &req, Response &res) {
 });
 ```
 
+Without `return`, the handler may continue and try to send another response.
+
 ### Port 8080 is already in use
 
 If the server cannot start, change the port in `.env`:
@@ -496,7 +522,7 @@ vix dev
 
 ### Running from the wrong folder
 
-Run project commands from inside your project:
+Run project commands from inside the project directory:
 
 ```bash
 cd ~/tmp/hello
@@ -538,36 +564,36 @@ Configuration stays outside the code:
 SERVER_PORT=8080
 ```
 
-Use:
+Use development mode while editing:
 
 ```bash
 vix dev
 ```
 
-during development.
-
-Use:
+Use direct run mode when you simply want to start the app:
 
 ```bash
 vix run
 ```
 
-when you want to start the app directly.
-
 ## You finished Getting Started
 
 You now know how to:
 
-- install Vix
-- verify your environment
+- verify your Vix.cpp environment
 - run a single C++ file
 - create a simple Vix project
+- configure a server with `.env`
 - build and run your first HTTP server
+- define routes
+- return text and JSON
+- read route parameters
+- read query parameters
 
-Next, choose where you want to go:
+From here, continue with the path that matches what you want to build next:
 
 - [Project Templates](/templates/)
 - [The Vix Book](/book/01-introduction)
 - [Build a REST API](/guides/build-rest-api)
-- [Routes](/book/04-routes)
-- [Request and Response](/book/05-request-response)
+- [C++ Runtime](/guides/cpp-runtime)
+- [C++ Developer Toolkit](/guides/cpp-developer-toolkit)

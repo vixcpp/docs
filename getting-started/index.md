@@ -1,16 +1,18 @@
 # Welcome to Vix.cpp
 
-Vix.cpp is a modern C++ runtime and developer toolkit for building fast, reliable, production-ready applications with a smoother workflow.
+Vix.cpp is a modern C++ runtime and developer toolkit for building native applications with a clearer development workflow.
+
+It keeps the C++ model intact: real C++ source files, real compilers, real native binaries, and compatibility with the existing build ecosystem. What Vix.cpp adds is the operational layer around the project: commands, project structure, runtime modules, diagnostics, tests, formatting, packaging, and development workflows.
 
 Current version: **v2.6.0**
 
-It gives C++ a direct development experience:
+A single C++ file can be run directly:
 
 ```bash
 vix run main.cpp
 ```
 
-And a complete project workflow:
+A project can be created, built, and started through the same command surface:
 
 ```bash
 vix new api
@@ -19,9 +21,7 @@ vix build
 vix run
 ```
 
-Vix is not just a web framework.
-
-It is a runtime foundation for backend services, JSON APIs, WebSocket apps, CLI tools, AI agents, games, P2P systems, local-first systems, templates, fast builds, and production-ready C++ projects.
+Vix.cpp is not only an HTTP framework. It is a runtime foundation and developer toolkit for backend services, JSON APIs, WebSocket applications, CLI tools, AI agents, games, P2P systems, local-first systems, templates, fast builds, and production-oriented C++ projects.
 
 ## Offline PDF
 
@@ -30,20 +30,50 @@ You can download the complete Vix.cpp documentation as a PDF:
 - [Download the Vix.cpp Documentation PDF](/vixcpp-documentation.pdf)
 - [Download the Vix.cpp Documentation PDF in French](/vixcpp-documentation-fr.pdf)
 
-## What is Vix.cpp?
+## What Vix.cpp is for
 
-Vix.cpp helps you build C++ applications without starting every project by manually wiring the build system, runtime commands, logs, dependencies, modules, and development workflow.
+C++ gives developers performance, control, portability, and access to a mature ecosystem. The challenge is often the workflow around the language.
 
-C++ gives you power, performance, and control.
+A real C++ application usually needs more than source files:
 
-Vix gives you the missing application workflow around it.
+- project creation
+- build configuration
+- dependency setup
+- runtime commands
+- tests
+- formatting
+- logs
+- diagnostics
+- packaging
+- deployment preparation
 
-> Keep the power of C++.
-> Make the application workflow simpler.
+These pieces are often assembled manually with CMake files, shell scripts, CI configuration, package tools, formatting tools, and project-specific conventions.
 
-Vix does not replace C++.
+Vix.cpp brings the common parts of that workflow into one application-oriented toolchain.
 
-It gives C++ a runtime-oriented development experience.
+```txt
+C++ source code
+  -> Vix.cpp workflow
+  -> native executable or library
+```
+
+The goal is not to replace C++. The goal is to make the path from C++ code to a working application more direct.
+
+## How Vix.cpp fits into the C++ ecosystem
+
+Vix.cpp works above the native C++ toolchain.
+
+It can use CMake and Ninja when needed. It can work with existing `CMakeLists.txt` projects. For simpler projects, it can use a `vix.app` manifest and generate the internal CMake project automatically.
+
+```txt
+Existing CMake project:
+  CMakeLists.txt -> Vix workflow -> build and run
+
+Simple Vix project:
+  vix.app -> generated CMake -> build and run
+```
+
+This keeps Vix.cpp compatible with the C++ ecosystem while giving developers a cleaner command surface for daily work.
 
 ## What you can build
 
@@ -53,7 +83,7 @@ With Vix.cpp, you can build:
 - HTTP servers
 - JSON APIs
 - WebSocket applications
-- CLI tools
+- command-line tools
 - C++ libraries
 - template-based web applications
 - AI agent applications
@@ -62,12 +92,15 @@ With Vix.cpp, you can build:
 - local-first and offline-first systems
 - production services behind Nginx and systemd
 
+Different project types can use different modules, but the development workflow remains familiar.
+
 ## Quick example
 
 Create `server.cpp`:
 
 ```cpp
 #include <vix.hpp>
+
 using namespace vix;
 
 int main()
@@ -75,7 +108,7 @@ int main()
   App app;
 
   app.get("/", [](Request &, Response &res) {
-    res.send("Hello from Vix.cpp");
+    res.text("Hello from Vix.cpp");
   });
 
   app.run(8080);
@@ -96,6 +129,8 @@ Open:
 http://localhost:8080/
 ```
 
+This is still native C++. Vix.cpp provides the workflow that builds and runs it.
+
 ## The core workflow
 
 Run a single C++ file:
@@ -104,12 +139,22 @@ Run a single C++ file:
 vix run main.cpp
 ```
 
-Create a real project:
+Create a project:
 
 ```bash
 vix new api
 cd api
+```
+
+Build it:
+
+```bash
 vix build
+```
+
+Run it:
+
+```bash
 vix run
 ```
 
@@ -124,6 +169,12 @@ Run checks and tests:
 ```bash
 vix check
 vix tests
+```
+
+Format source files:
+
+```bash
+vix fmt
 ```
 
 ## Install
@@ -142,11 +193,13 @@ irm https://vixcpp.com/install.ps1 | iex
 
 More installation options:
 
-[https://vixcpp.com/install](https://vixcpp.com/install)
+https://vixcpp.com/install
 
 ## Runtime modules
 
-Vix.cpp is designed as an application runtime layer, not only as an HTTP server.
+Vix.cpp is designed as an application runtime layer, not only as a web server.
+
+It includes modules for application development, networking, storage, diagnostics, concurrency, and production-oriented workflows.
 
 ```txt
 agent        async        cache        cli          conversion
@@ -158,41 +211,46 @@ sync         template     tests        threadpool   time
 utils        validation   webrpc       websocket
 ```
 
-These modules give Vix a broader foundation for real applications: networking, async execution, storage, validation, middleware, templates, WebSocket, P2P, sync, AI agents, games, and production-oriented tooling.
+These modules let Vix.cpp support different application shapes while keeping a common foundation.
 
-## How Getting Started is organized
+A backend service may use HTTP, JSON, validation, middleware, logging, database access, and tests.
 
-This section gives you the shortest path from zero to a running Vix application.
+A CLI tool may use filesystem utilities, formatted output, argument handling, packaging, and diagnostics.
+
+A local-first application may use storage, sync, caching, P2P, and reliability-oriented modules.
+
+## Getting Started path
+
+This section gives the shortest path from installation to a running Vix application.
 
 Read it in order:
 
-1. [Installation](/getting-started/installation)
-2. [Set Up Your Environment](/getting-started/setup-environment)
-3. [Run Your First C++ File](/getting-started/run-your-first-file)
-4. [Create Your First Project](/getting-started/create-your-first-project)
-5. [Your First HTTP Server](/getting-started/first-http-server)
+1. [What is Vix.cpp?](/getting-started/what-is-vixcpp)
+2. [Installation](/getting-started/installation)
+3. [Set Up Your Environment](/getting-started/setup-environment)
+4. [Run Your First C++ File](/getting-started/run-your-first-file)
+5. [Create Your First Project](/getting-started/create-your-first-project)
+6. [Your First HTTP Server](/getting-started/first-http-server)
+
+The goal is to understand the workflow first, then move into deeper concepts.
 
 ## Getting Started vs The Vix Book
 
-Getting Started is short and practical.
-
-It helps you move through the first workflow:
+Getting Started is practical. It focuses on the first path:
 
 ```txt
 install -> verify -> run -> create project -> start server
 ```
 
-The Vix Book goes deeper.
+The Vix Book goes deeper. It explains the mental model behind Vix.cpp, then covers application structure, routes, requests, responses, JSON APIs, middleware, validation, database access, WebSocket, async runtime, cache, sync, P2P, and production deployment.
 
-It explains the mental model behind Vix, then teaches routes, requests, responses, JSON APIs, middleware, validation, database, WebSocket, async runtime, cache, sync, P2P, and production deployment.
+Start with Getting Started if you want to run something quickly.
 
-Start here first.
-
-Then continue with the book when you want to understand Vix step by step.
+Continue with The Vix Book when you want to understand the design and build larger applications.
 
 ## What you need
 
-You only need basic C++ knowledge:
+You only need basic C++ knowledge to begin:
 
 - functions
 - headers
@@ -202,40 +260,40 @@ You only need basic C++ knowledge:
 
 You do not need to be a CMake expert to start.
 
-Vix can create a project, build it, run it, and give you a clean development loop.
+Vix.cpp can create a project, build it, run it, test it, format it, and give you a clean development loop.
 
 ## Built with Vix.cpp
 
 ### Kordex
 
-A JavaScript and TypeScript runtime layer built on Vix and Softadastra.
+A JavaScript and TypeScript runtime layer built on Vix.cpp and Softadastra.
 
-[https://github.com/softadastra/kordex](https://github.com/softadastra/kordex)
+https://github.com/softadastra/kordex
 
 ### Softadastra
 
 A local-first and offline-first runtime foundation for reliable applications.
 
-[https://github.com/softadastra/softadastra](https://github.com/softadastra/softadastra)
+https://github.com/softadastra/softadastra
 
 ### PulseGrid
 
 Real-time service monitoring built with Vix.cpp.
 
-[https://github.com/softadastra/PulseGrid](https://github.com/softadastra/PulseGrid)
+https://github.com/softadastra/PulseGrid
 
 ### Vix Game
 
 A game-oriented project built on the Vix.cpp runtime foundation.
 
-[https://github.com/vixcpp/vix-game](https://github.com/vixcpp/vix-game)
+https://github.com/vixcpp/vix-game
 
 ## Links
 
-- Website: [https://vixcpp.com](https://vixcpp.com)
-- Registry: [https://registry.vixcpp.com](https://registry.vixcpp.com)
-- Engineering notes: [https://blog.vixcpp.com](https://blog.vixcpp.com)
-- GitHub: [https://github.com/vixcpp/vix](https://github.com/vixcpp/vix)
+- Website: https://vixcpp.com
+- Registry: https://registry.vixcpp.com
+- Engineering notes: https://blog.vixcpp.com
+- GitHub: https://github.com/vixcpp/vix
 
 ## First command to remember
 
@@ -243,8 +301,9 @@ A game-oriented project built on the Vix.cpp runtime foundation.
 vix run main.cpp
 ```
 
-This command is the fastest way to run a C++ file with Vix.
-When your app grows, move to a project:
+This is the fastest way to try Vix.cpp with a single C++ file.
+
+When the code grows into an application, move to a project:
 
 ```bash
 vix new api
@@ -254,6 +313,6 @@ vix dev
 
 ## Next step
 
-Install Vix on your machine.
+Understand the role of Vix.cpp in the C++ ecosystem.
 
-Next: [Installation](/getting-started/installation)
+Next: [What is Vix.cpp?](/getting-started/what-is-vixcpp)

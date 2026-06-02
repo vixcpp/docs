@@ -2,6 +2,7 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import DefaultTheme from "vitepress/theme";
 import { useRoute } from "vitepress";
+import Breadcrumb from "./Breadcrumb.vue";
 
 const { Layout } = DefaultTheme;
 const route = useRoute();
@@ -280,6 +281,10 @@ onBeforeUnmount(() => {
   </header>
 
   <Layout>
+    <template #doc-before>
+      <Breadcrumb />
+    </template>
+
     <template #layout-bottom>
       <footer class="vix-footer" role="contentinfo">
         <div class="vix-footer-inner">

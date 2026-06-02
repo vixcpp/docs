@@ -1,91 +1,76 @@
 # Application Model
 
-A Vix application is a C++ project with a clear entry point, a clear manifest, and a clear workflow.
+A Vix.cpp application is a native C++ project with a defined entry point, project description, runtime workflow, build workflow, and operational model.
 
-The model is simple:
+Vix.cpp does not treat an application as only a collection of `.cpp` files. It treats it as a software unit that can be created, configured, built, run, tested, packaged, diagnosed, and deployed through a consistent workflow.
+
+The application model can be summarized like this:
 
 ```txt
-application
-  -> source files
-  -> modules
+source code
+  -> application description
+  -> modules and dependencies
   -> configuration
-  -> runtime
+  -> runtime workflow
   -> build output
+  -> production workflow
 ```
 
-Vix does not treat an application as only a pile of `.cpp` files.
-
-It treats it as something that can be created, run, built, tested, packaged, and deployed.
+This model is what allows a Vix.cpp project to move from a small local application to a production service without changing the basic way developers operate it.
 
 ## The application starts with intent
 
-When you create an app, the first question is not:
+When a developer creates a project, the first question should not be only:
 
 ```txt
 Where is the CMakeLists.txt?
 ```
 
-The first question is:
+The better first question is:
 
 ```txt
 What kind of application is this?
 ```
 
-Examples:
+A backend service, a CLI tool, a game, a reusable library, and a P2P node do not need the same starting structure.
 
-```txt
-backend API
-web app
-CLI tool
-game
-P2P node
-library
-```
-
-That is why Vix templates matter.
-
-A backend should not start like an empty folder.
-
-It should start with backend structure.
+Vix.cpp uses templates to give the project an initial shape:
 
 ```bash
 vix new api --template backend
 ```
 
-A game should not start like a backend.
-
 ```bash
-vix new mario --game
+vix new tool --app
 ```
-
-A library should not start like an app.
 
 ```bash
 vix new mathlib --lib
 ```
 
-The template gives the first shape.
-
-The application model gives the rules.
+The template does not finish the architecture for you. It gives the project a correct starting point so the application can grow from a clear foundation.
 
 ## The application root
 
-The application root is the folder where Vix resolves the project.
+The application root is the directory where Vix.cpp resolves the project.
 
-Example:
+A backend project may look like this:
 
 ```txt
 api/
 ├── vix.app
 ├── vix.json
 ├── vix.lock
+├── .env.example
+├── production.env.required
 ├── src/
 ├── tests/
 ├── migrations/
-└── public/
+├── public/
+└── data/
 ```
 
-From inside that folder, commands should feel natural:
+From this directory, the main commands should feel natural:
 
 ```bash
 vix dev
@@ -95,9 +80,9 @@ vix check --tests
 vix deploy
 ```
 
-The root is important because Vix reads project files from there and writes local state there.
+The root matters because Vix.cpp reads project files from there and writes local state there.
 
-Common local state:
+Common project-local state includes:
 
 ```txt
 .vix/
@@ -107,100 +92,92 @@ build-release/
 dist/
 ```
 
-## The two project inputs
+These directories are generated state. They are not the source model of the application.
 
-Vix supports two main project inputs:
+## Project inputs
+
+Vix.cpp supports two main project inputs:
 
 ```txt
 CMakeLists.txt
 vix.app
 ```
 
-Resolution order:
+The resolution order is:
 
 ```txt
 1. CMakeLists.txt
 2. vix.app
 ```
 
-This means:
+If `CMakeLists.txt` exists, Vix.cpp uses the existing CMake project.
 
-```txt
-If CMakeLists.txt exists, Vix uses the CMake project.
-If CMakeLists.txt does not exist and vix.app exists, Vix uses vix.app.
-```
+If there is no `CMakeLists.txt` and `vix.app` exists, Vix.cpp uses the `vix.app` manifest.
 
-This protects existing projects.
-
-It also gives new applications a simpler path.
+This rule protects existing CMake projects while giving new applications a simpler path.
 
 ## `vix.app`
 
-`vix.app` is the simple application manifest.
+`vix.app` is the simple application manifest for Vix.cpp.
 
-It describes the app without forcing the developer to write a full CMake file.
+It describes what the application is and what needs to be built.
 
 Example:
 
 ```txt
-name = "api"
-type = "executable"
-cpp_standard = "23"
+name = api
+type = executable
+standard = c++23
 
 sources = [
-  "src/main.cpp",
-  "src/app/AppFactory.cpp",
-  "src/routes/HealthRoutes.cpp"
+  src/main.cpp,
+  src/app/AppFactory.cpp,
+  src/routes/HealthRoutes.cpp,
 ]
 
 include_dirs = [
-  "src"
+  src,
 ]
 
 modules = [
-  "core",
-  "json",
-  "http"
+  core,
+  json,
+  http,
 ]
 ```
 
-This file answers basic questions:
+This file answers basic build questions:
 
 ```txt
-What is the app called?
-What type of target is it?
+What is the application called?
+What kind of target is it?
 Which C++ standard does it use?
-Which files are compiled?
+Which source files are compiled?
 Which include directories are used?
-Which Vix modules are needed?
+Which Vix.cpp modules are required?
 ```
 
-Vix can generate an internal CMake project from this.
+For many applications, this is enough to start.
 
-The generated project lives under:
+Vix.cpp can generate the internal CMake project from this description.
+
+The generated file lives under:
 
 ```txt
 .vix/generated/app/CMakeLists.txt
 ```
 
-The user keeps `vix.app`.
-
-Vix handles the generated build layer.
+Developers should edit `vix.app`, not the generated CMake file.
 
 ## Why `vix.app` matters
 
-A backend developer should be able to describe the app like this:
+Many C++ applications do not need advanced CMake logic at the beginning.
 
-```txt
-name = "api"
-type = "executable"
-sources = [...]
-modules = [...]
-```
+A developer should be able to describe a normal application with a small manifest instead of starting from a full build system definition.
 
-That is enough for many apps.
+The difference is practical.
 
-They should not have to start by writing:
+Instead of beginning with:
 
 ```txt
 cmake_minimum_required(...)
@@ -210,15 +187,22 @@ target_include_directories(...)
 target_link_libraries(...)
 ```
 
-CMake is still there when needed.
+a simple application can begin with:
 
-But it should not be the first wall.
+```txt
+name = api
+type = executable
+sources = [...]
+modules = [...]
+```
+
+CMake is still available when needed. But it does not have to be the first wall every application developer hits.
 
 ## When to use CMake directly
 
-Use `CMakeLists.txt` when the project needs advanced control.
+Use `CMakeLists.txt` when the build itself needs advanced control.
 
-Examples:
+Examples include:
 
 ```txt
 custom targets
@@ -228,23 +212,29 @@ platform-specific build logic
 advanced linking
 custom code generation
 large multi-target projects
+exported CMake packages
+toolchain-specific behavior
 ```
 
-When `CMakeLists.txt` exists, Vix preserves it.
+When `CMakeLists.txt` exists, Vix.cpp respects it.
 
 The model is:
 
 ```txt
 vix.app = simple application manifest
 CMakeLists.txt = advanced build definition
-Vix = one workflow over both
+Vix.cpp = one workflow over both
 ```
+
+This is important for experienced C++ developers. Vix.cpp is not a closed ecosystem. It works with the native C++ build ecosystem.
 
 ## `vix.json`
 
-`vix.app` describes how to build the application.
+`vix.app` describes the application build model.
 
-`vix.json` describes project metadata, dependencies, tasks, registry data, and production workflow.
+`vix.json` describes the project workflow model.
+
+It can contain project metadata, dependency information, tasks, registry configuration, and production workflow settings.
 
 Example:
 
@@ -263,7 +253,7 @@ Example:
 }
 ```
 
-For production, `vix.json` can also contain:
+For production, `vix.json` can also describe service and health behavior:
 
 ```json
 {
@@ -276,7 +266,6 @@ For production, `vix.json` can also contain:
       "env_file": "/home/vix/apps/api/.env"
     },
     "health": {
-      "service": "api",
       "local": "http://127.0.0.1:8080/health",
       "public": "https://api.example.com/health"
     }
@@ -287,26 +276,16 @@ For production, `vix.json` can also contain:
 Keep the distinction clear:
 
 ```txt
-vix.app = app build model
+vix.app  = application build model
 vix.json = project workflow model
 vix.lock = exact dependency model
 ```
 
 ## `vix.lock`
 
-`vix.lock` records exact dependency versions.
+`vix.lock` records the exact dependency state of the project.
 
-If `vix.json` says:
-
-```txt
-I need this dependency range.
-```
-
-Then `vix.lock` says:
-
-```txt
-This exact version and commit were resolved.
-```
+If `vix.json` describes what the project needs, `vix.lock` records what was actually resolved.
 
 After cloning a project, use:
 
@@ -314,18 +293,22 @@ After cloning a project, use:
 vix install
 ```
 
-That installs locked dependencies.
+This installs the locked dependency versions.
 
-Do not use update when you only need reproducibility.
+Do not use update when the goal is reproducibility.
 
 ```txt
 vix install = reproduce the locked state
-vix update = change the locked state
+vix update  = change the locked state
 ```
+
+This distinction matters for teams, CI, release builds, and production systems.
 
 ## Source layout
 
-A simple backend can use this layout:
+A serious backend should not keep all logic inside `main.cpp`.
+
+A maintainable backend can use a layout like this:
 
 ```txt
 src/
@@ -340,24 +323,21 @@ src/
 │   ├── HealthRoutes.hpp
 │   └── HealthRoutes.cpp
 ├── middleware/
+├── validation/
 ├── services/
 ├── database/
 └── errors/
 ```
 
-The important rule:
+The rule is simple:
 
 ```txt
-main.cpp should stay small.
+main.cpp should start the application, not contain the whole application.
 ```
-
-`main.cpp` starts the app.
-
-The rest of the application lives in focused files.
 
 ## Small `main.cpp`
 
-Example:
+A clean entry point can look like this:
 
 ```cpp
 #include <vix.hpp>
@@ -377,21 +357,21 @@ int main()
 }
 ```
 
-This is easy to understand.
+This keeps the responsibilities separate.
 
-The app is created somewhere else.
+Configuration is loaded by the config layer.
 
-Configuration is loaded somewhere else.
+The application is created by the app factory.
 
-Routes are registered somewhere else.
+Routes are registered elsewhere.
 
-`main.cpp` does not become the whole backend.
+`main.cpp` remains readable.
 
 ## Application factory
 
-The application factory creates and configures the app.
+An application factory creates and configures the Vix app.
 
-Example:
+Header:
 
 ```cpp
 #pragma once
@@ -426,9 +406,7 @@ namespace api
 }
 ```
 
-This keeps app creation testable.
-
-It also keeps route registration organized.
+This makes application setup easier to test and easier to extend.
 
 ## Routes
 
@@ -444,7 +422,7 @@ routes/
 └── AdminRoutes.hpp
 ```
 
-A health route should exist early.
+A health route should exist early:
 
 ```txt
 GET /health
@@ -460,9 +438,7 @@ Example response:
 }
 ```
 
-This route is not just for development.
-
-It is used by production checks:
+This route is useful locally, but it also matters in production:
 
 ```bash
 vix health local
@@ -470,9 +446,11 @@ vix health public
 vix deploy
 ```
 
+A production workflow should be able to verify that the application is alive.
+
 ## API response shape
 
-Use one predictable shape.
+A backend should use a predictable response shape.
 
 Success:
 
@@ -503,7 +481,7 @@ Error:
 }
 ```
 
-A stable response shape helps clients, tests, logs, and debugging.
+A stable response shape helps clients, tests, logs, API documentation, and language models that need to understand examples from the documentation.
 
 ## Configuration
 
@@ -536,57 +514,55 @@ JWT_SECRET=change-me
 SESSION_SECRET=change-me
 ```
 
-Check local env:
+Check local configuration:
 
 ```bash
 vix env check
 ```
 
-Check production env:
+Check production configuration:
 
 ```bash
 vix env check --production
 ```
 
-The app should not hardcode secrets.
-
-The app should not hardcode production paths.
+The application should not hardcode secrets, production paths, hostnames, or deployment-specific values.
 
 ## Modules
 
-A Vix app is composed from modules.
+A Vix.cpp application is composed from modules.
 
 Example:
 
 ```txt
 modules = [
-  "core",
-  "json",
-  "http",
-  "validation",
-  "middleware",
-  "db",
-  "log"
+  core,
+  json,
+  http,
+  validation,
+  middleware,
+  db,
+  log,
 ]
 ```
 
-Modules make the app explicit.
+Modules make the application explicit.
 
-If the app uses JSON, say it.
+If the app uses JSON, declare JSON.
 
-If the app uses HTTP, say it.
+If the app uses HTTP, declare HTTP.
 
-If the app uses database support, say it.
+If the app uses database support, declare database support.
 
-No hidden guessing.
+A good application model should avoid hidden guessing.
 
 ## Dependencies
 
 Registry packages are different from built-in modules.
 
-Use registry packages when you need reusable external packages.
+Use registry packages when the project needs reusable external packages.
 
-Workflow:
+Typical workflow:
 
 ```bash
 vix registry sync
@@ -595,7 +571,7 @@ vix add softadastra/json
 vix install
 ```
 
-After adding a dependency, the project state changes:
+After adding a dependency, project state can change in:
 
 ```txt
 vix.json
@@ -604,11 +580,13 @@ vix.lock
 .vix/vix_deps.cmake
 ```
 
-After cloning the project, only this should be needed:
+After cloning the project, the expected command is:
 
 ```bash
 vix install
 ```
+
+That should reproduce the locked dependency state.
 
 ## Tasks
 
@@ -628,11 +606,11 @@ Example:
 }
 ```
 
-Tasks are useful when the project has repeated workflows.
+Tasks are useful for repeated workflows.
 
-They should not hide important behavior.
+They should not hide important behavior behind unclear names.
 
-Use clear names.
+Good task names describe what the command does.
 
 ## Tests
 
@@ -659,7 +637,7 @@ Run tests:
 vix tests
 ```
 
-Or run validation:
+Or run broader validation:
 
 ```bash
 vix check --tests
@@ -669,7 +647,7 @@ The application model is incomplete without tests.
 
 ## Static files
 
-Some apps need public files.
+Some applications serve public files.
 
 Example:
 
@@ -680,17 +658,18 @@ public/
 └── assets/
 ```
 
-Static files belong outside `src/`.
+Keep served files outside `src/`.
 
-`src/` is code.
+```txt
+src/    = C++ source code
+public/ = served public content
+```
 
-`public/` is served content.
-
-This keeps the application layout understandable.
+This keeps the layout understandable.
 
 ## Database files
 
-For SQLite apps, keep database files out of source directories.
+For SQLite applications, keep database files outside source directories.
 
 Example:
 
@@ -699,7 +678,7 @@ data/
 └── app.db
 ```
 
-Migrations:
+Migrations belong in a dedicated folder:
 
 ```txt
 migrations/
@@ -707,7 +686,7 @@ migrations/
 └── 2026_01_01_000001_create_users.down.sql
 ```
 
-Commands:
+Database commands may include:
 
 ```bash
 vix db status
@@ -715,7 +694,7 @@ vix db migrate
 vix db backup
 ```
 
-For ORM tooling:
+For ORM workflows:
 
 ```bash
 vix orm status --db api --dir ./migrations
@@ -737,18 +716,18 @@ vix make test AuthService
 vix make config app --websocket --database
 ```
 
-The model:
+The model is:
 
 ```txt
-vix new = create a project
+vix new  = create a project
 vix make = add files to a project
 ```
 
-Do not confuse them.
+Do not confuse project creation with file generation.
 
 ## Runtime arguments
 
-Application arguments should be passed after `--`.
+Application arguments are separated from Vix arguments with `--`.
 
 Example:
 
@@ -756,15 +735,15 @@ Example:
 vix run -- --port 8080
 ```
 
-The first part belongs to Vix.
+The first part belongs to Vix.cpp.
 
-The second part belongs to the app.
+The second part belongs to the application.
 
 ```txt
-vix run [vix options] -- [app arguments]
+vix run [vix options] -- [application arguments]
 ```
 
-This distinction matters in scripts and replay workflows.
+This distinction matters in scripts, CI, and replay workflows.
 
 ## Replay
 
@@ -786,7 +765,7 @@ Replay the latest failed run:
 vix replay failed
 ```
 
-The app model includes replay because real applications fail.
+The application model includes replay because real applications fail.
 
 When they fail, the exact run context matters.
 
@@ -864,33 +843,33 @@ vix reset
 
 ## Packaging
 
-A reusable project can be packed.
+A project can be packed when it is ready to be distributed.
 
 ```bash
 vix pack
 ```
 
-Verify it:
+Verify the package:
 
 ```bash
 vix verify
 ```
 
-Cache it:
+Cache a verified package:
 
 ```bash
 vix cache --path ./dist/api@1.0.0
 ```
 
-For application developers, packaging is not always the first concern.
+For application developers, packaging may not be the first concern.
 
-For library and distribution workflows, it matters.
+For libraries, SDKs, release artifacts, and distribution workflows, it becomes important.
 
-## Production config
+## Production configuration
 
-A production-ready app should have production config in `vix.json`.
+A production-ready application should have production configuration in `vix.json`.
 
-Important sections:
+Important sections include:
 
 ```txt
 production.service
@@ -900,7 +879,7 @@ production.logs
 production.deploy
 ```
 
-This lets Vix run:
+These sections allow Vix.cpp to run commands such as:
 
 ```bash
 vix service init
@@ -922,20 +901,20 @@ Local development:
 vix dev
 ```
 
-Production service:
+Production service management:
 
 ```bash
 vix service init
 vix service status
 ```
 
-Local check:
+Local health check:
 
 ```bash
 vix health local
 ```
 
-Public check:
+Public health check:
 
 ```bash
 vix health public
@@ -947,13 +926,13 @@ Deployment:
 vix deploy
 ```
 
-The same app moves through different workflows.
+The same application moves through different workflows.
 
-But the app model stays the same.
+The application model stays consistent.
 
 ## A complete backend template
 
-A serious backend template should contain:
+A serious backend template should look like this:
 
 ```txt
 api/
@@ -979,7 +958,7 @@ api/
 └── data/
 ```
 
-That is the kind of app Vix should make easy to create.
+This is the kind of application Vix.cpp should make easy to create:
 
 ```bash
 vix new api --template backend
@@ -987,17 +966,17 @@ vix new api --template backend
 
 ## Application checklist
 
-A Vix application should answer these questions:
+A Vix.cpp application should be able to answer these questions:
 
 ```txt
-What is the app name?
+What is the application name?
 What type of target is it?
 What source files are compiled?
 What modules are used?
 What dependencies are installed?
-What env variables are required?
-How is the app run locally?
-How is the app built?
+What environment variables are required?
+How is the application run locally?
+How is it built?
 How is it tested?
 How is it checked?
 How is it deployed?
@@ -1005,17 +984,19 @@ How are logs read?
 How is health checked?
 ```
 
-If the project cannot answer these questions, the application model is not complete.
+If the project cannot answer these questions, the application model is incomplete.
+
+These questions also make the project easier for humans, tools, CI systems, and language models to understand.
 
 ## What you should remember
 
-A Vix application is not only source code.
+A Vix.cpp application is not only source code.
 
 It is:
 
 ```txt
 source files
-  -> manifest
+  -> application description
   -> modules
   -> dependencies
   -> runtime workflow
@@ -1032,21 +1013,9 @@ vix new api --template backend
 
 for a real backend starting point.
 
-Use:
+Use `vix.app` for the simple application manifest.
 
-```txt
-vix.app
-```
-
-for the simple application manifest.
-
-Use:
-
-```txt
-vix.json
-```
-
-for project workflow, dependencies, tasks, registry metadata, and production config.
+Use `vix.json` for project workflow, dependencies, tasks, registry metadata, and production configuration.
 
 Use:
 
@@ -1070,7 +1039,7 @@ Use:
 vix deploy
 ```
 
-when the app is ready for production.
+when the application is ready for production.
 
 ## Next chapter
 

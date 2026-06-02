@@ -1,6 +1,8 @@
 # Run Your First C++ File
 
-This page shows how to run a single C++ file with Vix.
+This page shows how to run a single C++ file with Vix.cpp.
+
+Single-file mode is the fastest way to try Vix.cpp without creating a full project. It is useful for learning, quick experiments, small tools, examples, and testing small pieces of code.
 
 The main command is:
 
@@ -8,11 +10,11 @@ The main command is:
 vix run main.cpp
 ```
 
-Use this mode for quick experiments, small examples, and learning.
+Vix.cpp detects the source file, builds it with the native C++ toolchain, then runs the generated program.
 
 ## Create a workspace
 
-Create a clean folder:
+Create a clean folder for the example:
 
 ```bash
 mkdir -p ~/tmp/vix-first-file
@@ -21,7 +23,7 @@ cd ~/tmp/vix-first-file
 
 ## Create `main.cpp`
 
-Create the file:
+Create a minimal C++ file:
 
 ```bash
 cat > main.cpp <<'CPP'
@@ -47,6 +49,8 @@ Expected output:
 Hello from Vix.cpp
 ```
 
+At this point, you have compiled and executed a native C++ program through the Vix.cpp workflow.
+
 ## What happened?
 
 When you run:
@@ -55,19 +59,37 @@ When you run:
 vix run main.cpp
 ```
 
-Vix detects a single C++ source file, builds it, then runs the generated program.
+Vix.cpp treats `main.cpp` as a single-file program.
 
-You do not need to create a full project for this mode.
+It prepares the build, compiles the file, links the executable, and starts it.
 
-Single-file mode is useful for:
+You do not need a project folder, a `CMakeLists.txt`, or a `vix.app` file for this mode.
 
-- testing small ideas
-- learning Vix APIs
-- writing small tools
-- running examples
-- validating quick C++ code
+```txt
+main.cpp
+  -> vix run
+  -> native executable
+  -> program output
+```
 
-## Run a small HTTP app
+This mode is intentionally small. It gives you a direct path from a C++ file to a running program.
+
+## When single-file mode is useful
+
+Use single-file mode when you want to:
+
+- test a small idea
+- learn a Vix.cpp API
+- write a small local tool
+- run a documentation example
+- validate a short C++ snippet
+- experiment before creating a project
+
+When the code grows into multiple files, tests, dependencies, or a stable application, move to a Vix project.
+
+## Run a small HTTP server
+
+A single file can also use Vix.cpp runtime APIs.
 
 Replace `main.cpp`:
 
@@ -92,7 +114,7 @@ int main()
 CPP
 ```
 
-Create `.env`:
+Create a local `.env` file:
 
 ```bash
 cat > .env <<'EOF'
@@ -102,7 +124,7 @@ VIX_LOG_FORMAT=kv
 EOF
 ```
 
-Run it:
+Run the server:
 
 ```bash
 vix run main.cpp
@@ -116,13 +138,13 @@ HTTP:    http://localhost:8080/
 Status:  ready
 ```
 
-Test it in another terminal:
+Open another terminal and test it:
 
 ```bash
 curl -i http://127.0.0.1:8080/
 ```
 
-Expected response:
+Expected response body:
 
 ```txt
 Hello from Vix.cpp
@@ -134,9 +156,27 @@ Stop the server with:
 Ctrl+C
 ```
 
+## Why `.env` is used
+
+The server port is stored in `.env` so the source code stays focused on application logic.
+
+```dotenv
+SERVER_PORT=8080
+```
+
+Then the code can simply call:
+
+```cpp
+app.run();
+```
+
+This is better than hardcoding the port in every example when the application is meant to behave like a real project later.
+
 ## Return JSON
 
-Replace `main.cpp` with a JSON response:
+Most backend services return JSON.
+
+Replace `main.cpp` with:
 
 ```bash
 cat > main.cpp <<'CPP'
@@ -175,14 +215,34 @@ Run it:
 vix run main.cpp
 ```
 
-Test it:
+Test both routes:
 
 ```bash
 curl -i http://127.0.0.1:8080/
 curl -i http://127.0.0.1:8080/health
 ```
 
+Expected response shape for `/`:
+
+```json
+{
+  "message": "Hello from Vix.cpp",
+  "mode": "single-file"
+}
+```
+
+Expected response shape for `/health`:
+
+```json
+{
+  "ok": true,
+  "service": "first-file"
+}
+```
+
 ## Add a route parameter
+
+Route parameters let the application read values from the URL.
 
 Update `main.cpp`:
 
@@ -247,7 +307,21 @@ Expected response shape:
 }
 ```
 
+The value `Gaspard` comes from this route segment:
+
+```txt
+/hello/{name}
+```
+
+And is read with:
+
+```cpp
+req.param("name")
+```
+
 ## Add a query parameter
+
+Query parameters are values passed after `?` in the URL.
 
 Update `main.cpp` again:
 
@@ -322,9 +396,29 @@ Expected response shape:
 }
 ```
 
+Here:
+
+```cpp
+req.param("id")
+```
+
+reads the route parameter:
+
+```txt
+/users/{id}
+```
+
+And:
+
+```cpp
+req.query_value("page", "1")
+```
+
+reads the query parameter. If `page` is missing, the default value is `"1"`.
+
 ## Pass runtime arguments
 
-Runtime arguments are passed to your program with `--run`.
+Runtime arguments are arguments passed to your program after it starts.
 
 Create a small argument example:
 
@@ -346,35 +440,41 @@ int main(int argc, char **argv)
 CPP
 ```
 
-Run it:
+Run it with program arguments:
 
 ```bash
 vix run main.cpp --run --name Vix
 ```
 
-## Pass compiler flags
+The arguments after `--run` are passed to your program, not to the compiler.
 
-Use `--` for compiler and linker flags:
+## Pass compiler and linker flags
+
+Use `--` when you want to pass flags to the compiler or linker.
+
+Optimization flags:
 
 ```bash
 vix run main.cpp -- -O2 -DNDEBUG
 ```
 
-Add include paths:
+Include paths:
 
 ```bash
 vix run main.cpp -- -I./include
 ```
 
-Link with libraries:
+Libraries:
 
 ```bash
 vix run main.cpp -- -lssl -lcrypto
 ```
 
+Everything after `--` is treated as a compiler or linker option in single-file mode.
+
 ## `--run` vs `--`
 
-Use `--run` for arguments passed to your program:
+Use `--run` for arguments passed to the program:
 
 ```bash
 vix run main.cpp --run --name Vix
@@ -386,17 +486,24 @@ Use `--` for compiler or linker flags:
 vix run main.cpp -- -O2 -DNDEBUG
 ```
 
-Do not use `--` for runtime arguments.
+These two separators solve different problems.
+
+```txt
+--run  -> program arguments
+--     -> compiler and linker flags
+```
 
 ## Use watch mode
 
-During development, you can rebuild and restart when the file changes:
+During development, you can ask Vix.cpp to rebuild and restart when the file changes:
 
 ```bash
 vix run main.cpp --watch
 ```
 
-For full projects, you will usually use:
+This is useful for a small single-file program.
+
+For full projects, prefer:
 
 ```bash
 vix dev
@@ -404,7 +511,9 @@ vix dev
 
 ## Use sanitizers
 
-For memory debugging:
+Sanitizers help detect memory errors and undefined behavior.
+
+For memory-related debugging:
 
 ```bash
 vix run main.cpp --san
@@ -416,9 +525,11 @@ For undefined behavior checks:
 vix run main.cpp --ubsan
 ```
 
+Use these options when debugging suspicious behavior or validating code before moving it into a larger project.
+
 ## When to create a project
 
-A single file is perfect for learning and small tests.
+Single-file mode is useful, but it is not meant to replace a project structure.
 
 Move to a project when you need:
 
@@ -427,8 +538,81 @@ Move to a project when you need:
 - dependencies
 - tests
 - `.env.example`
-- a stable folder structure
+- stable configuration
+- reusable tasks
+- packaging
 - production builds
+
+Create a project with:
+
+```bash
+vix new hello --app
+cd hello
+vix dev
+```
+
+A project gives the code a stable place to grow.
+
+## Common mistakes
+
+### Passing runtime arguments with `--`
+
+Wrong:
+
+```bash
+vix run main.cpp -- --name Vix
+```
+
+Correct:
+
+```bash
+vix run main.cpp --run --name Vix
+```
+
+Use `--run` for program arguments.
+
+### Passing compiler flags with `--run`
+
+Wrong:
+
+```bash
+vix run main.cpp --run -O2
+```
+
+Correct:
+
+```bash
+vix run main.cpp -- -O2
+```
+
+Use `--` for compiler and linker flags.
+
+### Forgetting `.env` for the server port
+
+If the HTTP example does not start on the expected port, check the `.env` file:
+
+```dotenv
+SERVER_PORT=8080
+```
+
+Then run again:
+
+```bash
+vix run main.cpp
+```
+
+### Keeping too much code in one file
+
+Single-file mode is for small programs and examples.
+
+When the file grows too much, move to a project:
+
+```bash
+vix new hello --app
+cd hello
+```
+
+Then split the code into `src/`, `include/`, and `tests/`.
 
 ## What you should remember
 
@@ -438,13 +622,13 @@ Run a single C++ file:
 vix run main.cpp
 ```
 
-Use `.env` for configuration:
+Use `.env` for runtime configuration:
 
 ```dotenv
 SERVER_PORT=8080
 ```
 
-Use `--run` for runtime arguments:
+Use `--run` for program arguments:
 
 ```bash
 vix run main.cpp --run --name Vix
@@ -456,7 +640,7 @@ Use `--` for compiler and linker flags:
 vix run main.cpp -- -O2 -DNDEBUG
 ```
 
-When the app grows, create a real project.
+Move to a project when the code becomes an application.
 
 ## Next step
 

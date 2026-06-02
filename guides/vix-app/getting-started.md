@@ -1,10 +1,61 @@
 # Getting Started with vix.app
 
-This guide shows how to create a small C++ project with `vix.app`.
+`vix.app` is the simplest way to create and build a C++ application with Vix.cpp.
 
-A `vix.app` project does not need a handwritten `CMakeLists.txt`.
+Instead of starting with a handwritten `CMakeLists.txt`, you describe your application in a small manifest file and let Vix.cpp generate the internal build project automatically.
 
-You describe the project in a small manifest file, then Vix builds and runs it.
+The result is still a native C++ application.
+
+Your code is compiled by a normal C++ compiler and built through the native C++ toolchain. `vix.app` simply provides a more approachable project description for common application workflows.
+
+A typical `vix.app` project looks like this:
+
+```txt
+hello/
+├── vix.app
+└── src/
+    └── main.cpp
+```
+
+The manifest describes the application:
+
+```ini
+name = hello
+type = executable
+standard = c++20
+
+sources = [
+  src/main.cpp,
+]
+```
+
+Then Vix.cpp handles the build workflow:
+
+```txt
+vix.app
+  -> generated CMake project
+  -> native build
+  -> executable
+```
+
+This approach is useful when you want to focus on building an application instead of writing build-system configuration.
+
+For advanced projects that need full build control, you can still use a normal `CMakeLists.txt`.
+
+## What you will build
+
+In this guide you will learn how to:
+
+- create a minimal `vix.app` project
+- build and run an application
+- add include directories
+- use compile definitions
+- add compiler options
+- link external libraries
+- copy resources
+- understand how Vix.cpp resolves projects
+
+By the end of the guide you will understand the core ideas behind the `vix.app` project model and when it should be used instead of a handwritten `CMakeLists.txt`.
 
 ## Create the project
 
@@ -406,6 +457,24 @@ Commands:
 vix build
 vix run
 ```
+
+## What to remember
+
+`vix.app` is the simple application manifest for Vix.cpp.
+
+It allows developers to describe a C++ application without writing a `CMakeLists.txt` manually.
+
+Vix.cpp uses `vix.app` to generate an internal CMake project and build a native executable or library through the standard C++ toolchain.
+
+For simple and medium projects, `vix.app` provides a cleaner application-oriented workflow.
+
+For advanced build requirements, a normal `CMakeLists.txt` can still be used.
+
+In short:
+
+vix.app = application manifest
+CMakeLists.txt = advanced build definition
+Vix.cpp = workflow that supports both
 
 ## Next steps
 
