@@ -2494,3 +2494,19 @@ body.vix-local-nav-fixed .VPSidebar {
     padding-right: 32px !important;
   }
 }
+/* ============================================================
+   Final mobile spacing override
+   ============================================================ */
+
+@media (max-width: 959px) {
+  .VPContent,
+  .VPContent.has-sidebar,
+  .VPContent.has-sidebar[data-v-9a6c75ad] {
+    padding-top: 10px !important;
+    margin-top: 0 !important;
+  }
+
+  body.vix-banner-visible .vix-nav {
+    padding-top: 20px !important;
+  }
+}
