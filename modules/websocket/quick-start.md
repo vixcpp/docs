@@ -197,12 +197,14 @@ ws.on_typed_message(
 From JavaScript:
 
 ```js
-socket.send(JSON.stringify({
-  type: "chat.message",
-  payload: {
-    text: "Hello"
-  }
-}));
+socket.send(
+  JSON.stringify({
+    type: "chat.message",
+    payload: {
+      text: "Hello",
+    },
+  }),
+);
 ```
 
 ## Send JSON from the C++ client

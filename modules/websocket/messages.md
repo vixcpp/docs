@@ -20,9 +20,9 @@ Or use the umbrella header:
 
 The WebSocket module supports two main message styles:
 
-| Style | Purpose |
-|---|---|
-| Raw text messages | Simple text payloads received from WebSocket frames. |
+| Style               | Purpose                                                  |
+| ------------------- | -------------------------------------------------------- |
+| Raw text messages   | Simple text payloads received from WebSocket frames.     |
 | Typed JSON messages | Structured application events with `type` and `payload`. |
 
 Raw messages are useful for simple protocols.
@@ -99,11 +99,11 @@ ws.on_typed_message(
 
 The handler receives:
 
-| Argument | Purpose |
-|---|---|
+| Argument  | Purpose                         |
+| --------- | ------------------------------- |
 | `session` | The connected WebSocket client. |
-| `type` | The message type. |
-| `payload` | The structured payload. |
+| `type`    | The message type.               |
+| `payload` | The structured payload.         |
 
 ## Typed message flow
 
@@ -156,14 +156,14 @@ Example:
 
 ## Common fields
 
-| Field | Purpose |
-|---|---|
-| `id` | Optional message identifier. |
-| `kind` | Message category, often `event`. |
-| `room` | Optional room or channel target. |
-| `type` | Application event type. |
-| `ts` | Optional timestamp. |
-| `payload` | Event data. |
+| Field     | Purpose                          |
+| --------- | -------------------------------- |
+| `id`      | Optional message identifier.     |
+| `kind`    | Message category, often `event`. |
+| `room`    | Optional room or channel target. |
+| `type`    | Application event type.          |
+| `ts`      | Optional timestamp.              |
+| `payload` | Event data.                      |
 
 ## Minimal typed message
 
@@ -299,12 +299,14 @@ From a browser client:
 const socket = new WebSocket("ws://localhost:9090");
 
 socket.onopen = () => {
-  socket.send(JSON.stringify({
-    type: "chat.message",
-    payload: {
-      text: "Hello from browser"
-    }
-  }));
+  socket.send(
+    JSON.stringify({
+      type: "chat.message",
+      payload: {
+        text: "Hello from browser",
+      },
+    }),
+  );
 };
 ```
 
@@ -406,15 +408,15 @@ ws.on_typed_message(
 
 ## Raw vs typed messages
 
-| Need | Use |
-|---|---|
-| Echo simple text | Raw message |
-| Quick prototype | Raw message |
-| Structured events | Typed message |
+| Need                       | Use           |
+| -------------------------- | ------------- |
+| Echo simple text           | Raw message   |
+| Quick prototype            | Raw message   |
+| Structured events          | Typed message |
 | Multiple realtime features | Typed message |
-| Persistence and replay | Typed message |
-| Long-polling bridge | Typed message |
-| Room-based fallback | Typed message |
+| Persistence and replay     | Typed message |
+| Long-polling bridge        | Typed message |
+| Room-based fallback        | Typed message |
 
 ## Message parsing
 

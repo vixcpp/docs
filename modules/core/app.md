@@ -135,7 +135,7 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"}
+      "status", "ok"
     });
   });
 
@@ -161,7 +161,7 @@ int main()
     const std::string id = req.param("id");
 
     res.json({
-      {"id", id}
+      "id", id
     });
   });
 
@@ -208,8 +208,8 @@ app.get("/api/status", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.json({
-    {"status", "ok"},
-    {"runtime", "Vix.cpp"}
+    "status", "ok",
+    "runtime", "Vix.cpp"
   });
 });
 ```
@@ -224,7 +224,7 @@ app.get("/forbidden", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.status(403).json({
-    {"error", "forbidden"}
+    "error", "forbidden"
   });
 });
 ```
@@ -297,7 +297,7 @@ app.use("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next next)
   if (token.empty())
   {
     res.status(401).json({
-      {"error", "missing authorization header"}
+      "error", "missing authorization header"
     });
     return;
   }
@@ -333,7 +333,7 @@ app.protect("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next n
   if (!allowed)
   {
     res.status(403).json({
-      {"error", "forbidden"}
+      "error", "forbidden"
     });
     return;
   }
@@ -386,14 +386,14 @@ int main()
     {
       (void)req;
 
-      res.json({{"status", "ok"}});
+      res.json({"status", "ok"});
     });
 
     api.post("/users", [](vix::Request &req, vix::Response &res)
     {
       (void)req;
 
-      res.status(201).json({{"created", true}});
+      res.status(201).json({"created", true});
     });
   });
 
@@ -423,7 +423,7 @@ app.group("/api", [](auto &api)
     {
       (void)req;
 
-      res.json({{"status", "ok"}});
+      res.json({"status", "ok"});
     });
   });
 });
@@ -476,7 +476,7 @@ app.get_heavy("/reports", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.json({
-    {"report", "ready"}
+    "report", "ready"
   });
 });
 ```
@@ -841,7 +841,7 @@ int main()
   app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
   {
     res.json({
-      {"id", req.param("id")}
+      "id", req.param("id")
     });
   });
 
@@ -852,8 +852,8 @@ int main()
       (void)req;
 
       res.json({
-        {"status", "ok"},
-        {"server", "Vix.cpp"}
+        "status", "ok",
+        "server", "Vix.cpp"
       });
     });
   });
@@ -868,38 +868,38 @@ int main()
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `App()` | Create an app with the default executor. |
-| `run(port)` | Start the server and block until shutdown. |
-| `listen(port)` | Start the server asynchronously. |
-| `wait()` | Wait until shutdown is requested. |
-| `close()` | Stop the server and release resources. |
-| `get(path, handler)` | Register a GET route. |
-| `post(path, handler)` | Register a POST route. |
-| `put(path, handler)` | Register a PUT route. |
-| `patch(path, handler)` | Register a PATCH route. |
-| `del(path, handler)` | Register a DELETE route. |
-| `head(path, handler)` | Register a HEAD route. |
-| `options(path, handler)` | Register an OPTIONS route. |
-| `get_heavy(path, handler)` | Register a heavy GET route. |
-| `post_heavy(path, handler)` | Register a heavy POST route. |
-| `use(middleware)` | Register global middleware. |
-| `use(prefix, middleware)` | Register prefix middleware. |
-| `protect(prefix, middleware)` | Protect a prefix. |
-| `protect_exact(path, middleware)` | Protect one exact path. |
-| `group(prefix, fn)` | Register grouped routes. |
-| `static_dir(root, mount)` | Mount static files. |
-| `templates(directory)` | Configure template rendering. |
-| `has_views()` | Check whether templates are configured. |
-| `views()` | Access the template view. |
-| `config()` | Access app configuration. |
-| `router()` | Access the router. |
-| `server()` | Access the HTTP server. |
-| `executor()` | Access the runtime executor. |
-| `setDevMode(value)` | Enable or disable development mode. |
-| `is_running()` | Check whether the app is running. |
-| `set_shutdown_callback(cb)` | Register shutdown logic. |
+| API                               | Purpose                                    |
+| --------------------------------- | ------------------------------------------ |
+| `App()`                           | Create an app with the default executor.   |
+| `run(port)`                       | Start the server and block until shutdown. |
+| `listen(port)`                    | Start the server asynchronously.           |
+| `wait()`                          | Wait until shutdown is requested.          |
+| `close()`                         | Stop the server and release resources.     |
+| `get(path, handler)`              | Register a GET route.                      |
+| `post(path, handler)`             | Register a POST route.                     |
+| `put(path, handler)`              | Register a PUT route.                      |
+| `patch(path, handler)`            | Register a PATCH route.                    |
+| `del(path, handler)`              | Register a DELETE route.                   |
+| `head(path, handler)`             | Register a HEAD route.                     |
+| `options(path, handler)`          | Register an OPTIONS route.                 |
+| `get_heavy(path, handler)`        | Register a heavy GET route.                |
+| `post_heavy(path, handler)`       | Register a heavy POST route.               |
+| `use(middleware)`                 | Register global middleware.                |
+| `use(prefix, middleware)`         | Register prefix middleware.                |
+| `protect(prefix, middleware)`     | Protect a prefix.                          |
+| `protect_exact(path, middleware)` | Protect one exact path.                    |
+| `group(prefix, fn)`               | Register grouped routes.                   |
+| `static_dir(root, mount)`         | Mount static files.                        |
+| `templates(directory)`            | Configure template rendering.              |
+| `has_views()`                     | Check whether templates are configured.    |
+| `views()`                         | Access the template view.                  |
+| `config()`                        | Access app configuration.                  |
+| `router()`                        | Access the router.                         |
+| `server()`                        | Access the HTTP server.                    |
+| `executor()`                      | Access the runtime executor.               |
+| `setDevMode(value)`               | Enable or disable development mode.        |
+| `is_running()`                    | Check whether the app is running.          |
+| `set_shutdown_callback(cb)`       | Register shutdown logic.                   |
 
 ## Next steps
 

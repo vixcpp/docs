@@ -132,28 +132,28 @@ vix::print("user", id, "active", active);
 
 ## Public API overview
 
-| API | Purpose |
-| --- | --- |
-| `vix::print(...)` | Print values to the default output stream. |
-| `vix::print(config, ...)` | Print values using a `print_config`. |
-| `vix::print(options, ...)` | Print values using lightweight options. |
-| `vix::print_py(...)` | Print with Python-like raw string behavior. |
-| `vix::print_to(os, ...)` | Print values to a specific stream. |
-| `vix::eprint(...)` | Print values to `std::cerr`. |
-| `vix::print_inline(...)` | Print without a trailing newline. |
-| `vix::sprint(...)` | Format values into a `std::string`. |
-| `vix::to_string(value)` | Format one value into a `std::string`. |
-| `vix::write_to(os, value)` | Write one value to a stream. |
-| `vix::print_named(label, value)` | Print `label: value`. |
-| `vix::print_separator()` | Print a separator line. |
-| `vix::print_header(title)` | Print a titled section header. |
-| `vix::print_each(range)` | Print each range element on its own line. |
-| `vix::print_table(map)` | Print a map-like container as a table. |
-| `vix::pprint(value)` | Pretty-print nested structures on multiple lines. |
-| `vix::pprint_all(...)` | Pretty-print multiple values. |
-| `vix::print_stats(range)` | Print min, max, sum, and average for numeric ranges. |
-| `vix::rendering_path<T>()` | Return how a type will be rendered. |
-| `vix::print_rendering_paths<Ts...>()` | Print rendering paths for several types. |
+| API                                   | Purpose                                              |
+| ------------------------------------- | ---------------------------------------------------- |
+| `vix::print(...)`                     | Print values to the default output stream.           |
+| `vix::print(config, ...)`             | Print values using a `print_config`.                 |
+| `vix::print(options, ...)`            | Print values using lightweight options.              |
+| `vix::print_py(...)`                  | Print with Python-like raw string behavior.          |
+| `vix::print_to(os, ...)`              | Print values to a specific stream.                   |
+| `vix::eprint(...)`                    | Print values to `std::cerr`.                         |
+| `vix::print_inline(...)`              | Print without a trailing newline.                    |
+| `vix::sprint(...)`                    | Format values into a `std::string`.                  |
+| `vix::to_string(value)`               | Format one value into a `std::string`.               |
+| `vix::write_to(os, value)`            | Write one value to a stream.                         |
+| `vix::print_named(label, value)`      | Print `label: value`.                                |
+| `vix::print_separator()`              | Print a separator line.                              |
+| `vix::print_header(title)`            | Print a titled section header.                       |
+| `vix::print_each(range)`              | Print each range element on its own line.            |
+| `vix::print_table(map)`               | Print a map-like container as a table.               |
+| `vix::pprint(value)`                  | Pretty-print nested structures on multiple lines.    |
+| `vix::pprint_all(...)`                | Pretty-print multiple values.                        |
+| `vix::print_stats(range)`             | Print min, max, sum, and average for numeric ranges. |
+| `vix::rendering_path<T>()`            | Return how a type will be rendered.                  |
+| `vix::print_rendering_paths<Ts...>()` | Print rendering paths for several types.             |
 
 ## `print_config`
 
@@ -178,17 +178,17 @@ A | B | C
 
 ### Fields
 
-| Field | Default | Purpose |
-| --- | --- | --- |
-| `separator` | `" "` | Text between multiple arguments. |
-| `end` | `"\n"` | Text printed after all arguments. |
-| `out` | `&std::cout` | Destination stream. |
-| `color` | `false` | ANSI color support, experimental. |
-| `max_items` | `256` | Maximum items rendered in a container. |
-| `show_type` | `false` | Type annotations, currently reserved. |
-| `compact` | `false` | Compact rendering mode, mainly for pretty internals. |
-| `indent_str` | `"  "` | Indentation unit. |
-| `raw_strings` | `true` | Print strings without quotes by default. |
+| Field         | Default      | Purpose                                              |
+| ------------- | ------------ | ---------------------------------------------------- |
+| `separator`   | `" "`        | Text between multiple arguments.                     |
+| `end`         | `"\n"`       | Text printed after all arguments.                    |
+| `out`         | `&std::cout` | Destination stream.                                  |
+| `color`       | `false`      | ANSI color support, experimental.                    |
+| `max_items`   | `256`        | Maximum items rendered in a container.               |
+| `show_type`   | `false`      | Type annotations, currently reserved.                |
+| `compact`     | `false`      | Compact rendering mode, mainly for pretty internals. |
+| `indent_str`  | `"  "`       | Indentation unit.                                    |
+| `raw_strings` | `true`       | Print strings without quotes by default.             |
 
 ## `options`
 
@@ -212,18 +212,18 @@ Output:
 
 ### Fields
 
-| Field | Default | Purpose |
-| --- | --- | --- |
-| `sep` | `" "` | Text between arguments. |
-| `end` | `"\n"` | Text after the arguments. |
-| `file` | `&std::cout` | Output stream. |
-| `flush` | `false` | Flush the stream after printing. |
-| `raw_strings` | `true` | Print strings without quotes. |
-| `max_items` | `256` | Maximum container items. |
-| `compact` | `true` | Compact output. |
-| `indent` | `"  "` | Indentation unit. |
-| `show_type` | `false` | Type annotations, currently reserved. |
-| `color` | `false` | ANSI color support, experimental. |
+| Field         | Default      | Purpose                               |
+| ------------- | ------------ | ------------------------------------- |
+| `sep`         | `" "`        | Text between arguments.               |
+| `end`         | `"\n"`       | Text after the arguments.             |
+| `file`        | `&std::cout` | Output stream.                        |
+| `flush`       | `false`      | Flush the stream after printing.      |
+| `raw_strings` | `true`       | Print strings without quotes.         |
+| `max_items`   | `256`        | Maximum container items.              |
+| `compact`     | `true`       | Compact output.                       |
+| `indent`      | `"  "`       | Indentation unit.                     |
+| `show_type`   | `false`      | Type annotations, currently reserved. |
+| `color`       | `false`      | ANSI color support, experimental.     |
 
 ## Custom separator
 
@@ -530,35 +530,35 @@ scores: stats(empty)
 
 The print engine supports many common C++ types automatically.
 
-| Type category | Examples |
-| --- | --- |
-| Booleans | `bool` |
-| Characters | `char`, `wchar_t`, `char8_t`, `char16_t`, `char32_t` |
-| Strings | `std::string`, `std::string_view`, `const char *` |
-| Wide strings | `std::wstring`, `std::wstring_view`, `const wchar_t *` |
-| Numbers | `int`, `double`, `std::size_t`, etc. |
-| Null | `nullptr` |
-| Enums | `enum`, `enum class` |
-| Filesystem | `std::filesystem::path` |
-| Optional | `std::optional<T>` |
-| Variant | `std::variant<Ts...>` |
-| Any | `std::any` |
-| Reference wrapper | `std::reference_wrapper<T>` |
-| Chrono duration | `std::chrono::seconds`, milliseconds, etc. |
-| Chrono time point | `std::chrono::time_point` |
-| Smart pointers | `std::unique_ptr`, `std::shared_ptr`, `std::weak_ptr` |
-| Raw pointers | `T *` |
-| Function pointers | function pointer values |
-| Ranges | `std::vector`, `std::list`, `std::deque`, etc. |
-| Sets | `std::set`, `std::unordered_set`, etc. |
-| Maps | `std::map`, `std::unordered_map`, etc. |
-| Container adapters | `std::stack`, `std::queue`, `std::priority_queue` |
-| Tuple-like values | `std::tuple`, `std::pair`, `std::array` |
-| Error types | `std::error_code`, `std::error_condition` |
-| Byte | `std::byte` |
-| Monostate | `std::monostate` |
-| Streamable types | Any type with `operator<<` |
-| Custom formatted types | `vix::formatter<T>` or `vix_format` |
+| Type category          | Examples                                               |
+| ---------------------- | ------------------------------------------------------ |
+| Booleans               | `bool`                                                 |
+| Characters             | `char`, `wchar_t`, `char8_t`, `char16_t`, `char32_t`   |
+| Strings                | `std::string`, `std::string_view`, `const char *`      |
+| Wide strings           | `std::wstring`, `std::wstring_view`, `const wchar_t *` |
+| Numbers                | `int`, `double`, `std::size_t`, etc.                   |
+| Null                   | `nullptr`                                              |
+| Enums                  | `enum`, `enum class`                                   |
+| Filesystem             | `std::filesystem::path`                                |
+| Optional               | `std::optional<T>`                                     |
+| Variant                | `std::variant<Ts...>`                                  |
+| Any                    | `std::any`                                             |
+| Reference wrapper      | `std::reference_wrapper<T>`                            |
+| Chrono duration        | `std::chrono::seconds`, milliseconds, etc.             |
+| Chrono time point      | `std::chrono::time_point`                              |
+| Smart pointers         | `std::unique_ptr`, `std::shared_ptr`, `std::weak_ptr`  |
+| Raw pointers           | `T *`                                                  |
+| Function pointers      | function pointer values                                |
+| Ranges                 | `std::vector`, `std::list`, `std::deque`, etc.         |
+| Sets                   | `std::set`, `std::unordered_set`, etc.                 |
+| Maps                   | `std::map`, `std::unordered_map`, etc.                 |
+| Container adapters     | `std::stack`, `std::queue`, `std::priority_queue`      |
+| Tuple-like values      | `std::tuple`, `std::pair`, `std::array`                |
+| Error types            | `std::error_code`, `std::error_condition`              |
+| Byte                   | `std::byte`                                            |
+| Monostate              | `std::monostate`                                       |
+| Streamable types       | Any type with `operator<<`                             |
+| Custom formatted types | `vix::formatter<T>` or `vix_format`                    |
 
 If C++23 `std::expected` is available, `std::expected<T, E>` is also supported.
 

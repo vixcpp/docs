@@ -865,20 +865,20 @@ HTTPServer::join_threads
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `HTTPServer(config, executor)` | Construct a server from configuration and executor. |
-| `run()` | Start I/O threads, startup coroutine, and monitoring. |
-| `start_accept()` | Start the async accept loop. |
-| `calculate_io_thread_count()` | Compute the number of I/O threads. |
-| `getRouter()` | Return the shared router. |
-| `monitor_metrics()` | Start the background monitor thread. |
-| `stop_async()` | Request asynchronous shutdown. |
-| `stop_blocking()` | Stop and wait for internal threads. |
-| `join_threads()` | Join server-owned threads. |
-| `is_stop_requested()` | Return whether shutdown was requested. |
-| `bound_port()` | Return the actual bound TCP port. |
-| `executor()` | Return the shared runtime executor. |
+| API                            | Purpose                                               |
+| ------------------------------ | ----------------------------------------------------- |
+| `HTTPServer(config, executor)` | Construct a server from configuration and executor.   |
+| `run()`                        | Start I/O threads, startup coroutine, and monitoring. |
+| `start_accept()`               | Start the async accept loop.                          |
+| `calculate_io_thread_count()`  | Compute the number of I/O threads.                    |
+| `getRouter()`                  | Return the shared router.                             |
+| `monitor_metrics()`            | Start the background monitor thread.                  |
+| `stop_async()`                 | Request asynchronous shutdown.                        |
+| `stop_blocking()`              | Stop and wait for internal threads.                   |
+| `join_threads()`               | Join server-owned threads.                            |
+| `is_stop_requested()`          | Return whether shutdown was requested.                |
+| `bound_port()`                 | Return the actual bound TCP port.                     |
+| `executor()`                   | Return the shared runtime executor.                   |
 
 ## Best practices
 

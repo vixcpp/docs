@@ -61,11 +61,11 @@ It provides a fallback path.
 
 ## Main types
 
-| Type | Purpose |
-|---|---|
-| `LongPollingSession` | Stores buffered messages for one polling session. |
-| `LongPollingManager` | Manages long-polling sessions and message buffers. |
-| `LongPollingBridge` | Bridges WebSocket messages and long-polling sessions. |
+| Type                 | Purpose                                               |
+| -------------------- | ----------------------------------------------------- |
+| `LongPollingSession` | Stores buffered messages for one polling session.     |
+| `LongPollingManager` | Manages long-polling sessions and message buffers.    |
+| `LongPollingBridge`  | Bridges WebSocket messages and long-polling sessions. |
 
 ## LongPollingSession
 
@@ -153,11 +153,11 @@ vix::websocket::LongPollingManager manager{
 
 Arguments:
 
-| Argument | Purpose |
-|---|---|
-| `sessionTtl` | Inactivity time before a session expires. |
-| `maxBufferPerSession` | Maximum queued messages per session. |
-| `metrics` | Optional metrics collector. |
+| Argument              | Purpose                                   |
+| --------------------- | ----------------------------------------- |
+| `sessionTtl`          | Inactivity time before a session expires. |
+| `maxBufferPerSession` | Maximum queued messages per session.      |
+| `metrics`             | Optional metrics collector.               |
 
 ## Create a manager
 
@@ -210,10 +210,10 @@ auto messages = manager.poll("room:general", 50, true);
 
 Arguments:
 
-| Argument | Purpose |
-|---|---|
-| `sessionId` | Session buffer to read from. |
-| `maxMessages` | Maximum messages to return. |
+| Argument          | Purpose                                           |
+| ----------------- | ------------------------------------------------- |
+| `sessionId`       | Session buffer to read from.                      |
+| `maxMessages`     | Maximum messages to return.                       |
 | `createIfMissing` | Whether to create a session if it does not exist. |
 
 The returned messages are removed from the buffer.
@@ -533,16 +533,16 @@ poll();
 await fetch("/ws/send", {
   method: "POST",
   headers: {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
     session_id: "room:general",
     room: "general",
     type: "chat.message",
     payload: {
-      text: "Hello from HTTP"
-    }
-  })
+      text: "Hello from HTTP",
+    },
+  }),
 });
 ```
 
@@ -552,14 +552,14 @@ Long-polling can update `WebSocketMetrics`.
 
 Relevant metrics include:
 
-| Metric | Meaning |
-|---|---|
-| `lp_sessions_total` | Total long-polling sessions created. |
-| `lp_sessions_active` | Current active long-polling sessions. |
-| `lp_polls_total` | Total poll calls served. |
-| `lp_messages_buffered` | Current buffered messages. |
-| `lp_messages_enqueued_total` | Total messages enqueued. |
-| `lp_messages_drained_total` | Total messages drained. |
+| Metric                       | Meaning                               |
+| ---------------------------- | ------------------------------------- |
+| `lp_sessions_total`          | Total long-polling sessions created.  |
+| `lp_sessions_active`         | Current active long-polling sessions. |
+| `lp_polls_total`             | Total poll calls served.              |
+| `lp_messages_buffered`       | Current buffered messages.            |
+| `lp_messages_enqueued_total` | Total messages enqueued.              |
+| `lp_messages_drained_total`  | Total messages drained.               |
 
 Example:
 

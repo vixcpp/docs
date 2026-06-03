@@ -50,10 +50,10 @@ Broadcasting means sending one message to multiple sessions.
 
 The module supports two common broadcast models:
 
-| Broadcast type | Meaning |
-|---|---|
+| Broadcast type   | Meaning                                 |
+| ---------------- | --------------------------------------- |
 | Global broadcast | Send to every active WebSocket session. |
-| Room broadcast | Send only to sessions inside one room. |
+| Room broadcast   | Send only to sessions inside one room.  |
 
 Use global broadcast for system-wide events.
 
@@ -279,11 +279,11 @@ Use room broadcast when the message belongs to a specific group.
 ws.broadcast_text_to_room("project:42", "project updated");
 ```
 
-| Need | Use |
-|---|---|
-| Send to all clients | `broadcast_text(...)` |
-| Send to one group | `broadcast_text_to_room(...)` |
-| Reply to one client | `session.send_text(...)` |
+| Need                | Use                           |
+| ------------------- | ----------------------------- |
+| Send to all clients | `broadcast_text(...)`         |
+| Send to one group   | `broadcast_text_to_room(...)` |
+| Reply to one client | `session.send_text(...)`      |
 
 ## Reply to one client
 

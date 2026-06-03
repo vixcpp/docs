@@ -173,14 +173,14 @@ The table is created automatically if it does not exist. :contentReference[oaici
 
 ## Stored fields
 
-| Field | Purpose |
-|---|---|
-| `id` | Unique message id and replay cursor. |
-| `kind` | Message category, usually `event`. |
-| `room` | Optional room or channel id. |
-| `type` | Application event type. |
-| `ts` | Timestamp. |
-| `payload_json` | Serialized JSON payload. |
+| Field          | Purpose                              |
+| -------------- | ------------------------------------ |
+| `id`           | Unique message id and replay cursor. |
+| `kind`         | Message category, usually `event`.   |
+| `room`         | Optional room or channel id.         |
+| `type`         | Application event type.              |
+| `ts`           | Timestamp.                           |
+| `payload_json` | Serialized JSON payload.             |
 
 ## append
 
@@ -313,11 +313,11 @@ std::vector<JsonMessage> list_by_room(
 
 Arguments:
 
-| Argument | Purpose |
-|---|---|
-| `room` | Room identifier. |
-| `limit` | Maximum number of messages to return. |
-| `before_id` | Optional pagination cursor. |
+| Argument    | Purpose                               |
+| ----------- | ------------------------------------- |
+| `room`      | Room identifier.                      |
+| `limit`     | Maximum number of messages to return. |
+| `before_id` | Optional pagination cursor.           |
 
 ## List room history
 
@@ -377,10 +377,10 @@ std::vector<JsonMessage> replay_from(
 
 Arguments:
 
-| Argument | Purpose |
-|---|---|
-| `start_id` | Cursor id to start from. |
-| `limit` | Maximum number of messages to return. |
+| Argument   | Purpose                               |
+| ---------- | ------------------------------------- |
+| `start_id` | Cursor id to start from.              |
+| `limit`    | Maximum number of messages to return. |
 
 ## Replay after reconnect
 

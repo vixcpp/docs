@@ -375,23 +375,23 @@ Use the WebSocket module when your application needs:
 
 ## Documentation map
 
-| Page | Purpose |
-|---|---|
-| [Quick Start](./quick-start.md) | Build a minimal WebSocket server. |
-| [Concepts](./concepts.md) | Understand the WebSocket module architecture. |
-| [Configuration](./configuration.md) | Configure limits, timeouts, ping, and deflate. |
-| [Server](./server.md) | Use `vix::websocket::Server`. |
-| [Session](./session.md) | Understand one WebSocket connection. |
-| [Router](./router.md) | Dispatch open, close, error, and message events. |
-| [Messages](./messages.md) | Use raw and typed JSON messages. |
-| [Client](./client.md) | Use the native WebSocket client. |
-| [Rooms and Broadcasting](./rooms-and-broadcasting.md) | Broadcast globally or by room. |
-| [Long polling](./long-polling.md) | Use HTTP fallback delivery. |
-| [HTTP API](./http-api.md) | Expose WebSocket bridge endpoints through HTTP. |
-| [Attached runtime](./attached-runtime.md) | Run HTTP and WebSocket together. |
-| [Metrics](./metrics.md) | Export Prometheus-style metrics. |
-| [Message store](./message-store.md) | Use the message persistence abstraction. |
-| [SQLite message store](./sqlite-message-store.md) | Store messages in SQLite. |
-| [OpenAPI](./openapi.md) | Register WebSocket API documentation. |
-| [Shutdown](./shutdown.md) | Stop WebSocket servers safely. |
-| [API Reference](./api-reference.md) | Public API summary. |
+| Page                                                  | Purpose                                          |
+| ----------------------------------------------------- | ------------------------------------------------ |
+| [Quick Start](./quick-start.md)                       | Build a minimal WebSocket server.                |
+| [Concepts](./concepts.md)                             | Understand the WebSocket module architecture.    |
+| [Configuration](./configuration.md)                   | Configure limits, timeouts, ping, and deflate.   |
+| [Server](./server.md)                                 | Use `vix::websocket::Server`.                    |
+| [Session](./session.md)                               | Understand one WebSocket connection.             |
+| [Router](./router.md)                                 | Dispatch open, close, error, and message events. |
+| [Messages](./messages.md)                             | Use raw and typed JSON messages.                 |
+| [Client](./client.md)                                 | Use the native WebSocket client.                 |
+| [Rooms and Broadcasting](./rooms-and-broadcasting.md) | Broadcast globally or by room.                   |
+| [Long polling](./long-polling.md)                     | Use HTTP fallback delivery.                      |
+| [HTTP API](./http-api.md)                             | Expose WebSocket bridge endpoints through HTTP.  |
+| [Attached runtime](./attached-runtime.md)             | Run HTTP and WebSocket together.                 |
+| [Metrics](./metrics.md)                               | Export Prometheus-style metrics.                 |
+| [Message store](./message-store.md)                   | Use the message persistence abstraction.         |
+| [SQLite message store](./sqlite-message-store.md)     | Store messages in SQLite.                        |
+| [OpenAPI](./openapi.md)                               | Register WebSocket API documentation.            |
+| [Shutdown](./shutdown.md)                             | Stop WebSocket servers safely.                   |
+| [API Reference](./api-reference.md)                   | Public API summary.                              |

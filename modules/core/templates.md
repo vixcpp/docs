@@ -404,7 +404,7 @@ int main()
 Template can reference assets like:
 
 ```html
-<link rel="stylesheet" href="/assets/app.css">
+<link rel="stylesheet" href="/assets/app.css" />
 <script src="/assets/app.js"></script>
 ```
 
@@ -415,14 +415,14 @@ Example template file:
 ```html
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>{{ title }}</title>
-</head>
-<body>
-  <h1>{{ title }}</h1>
-  <p>{{ message }}</p>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ title }}</title>
+  </head>
+  <body>
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+  </body>
 </html>
 ```
 
@@ -778,15 +778,15 @@ public/
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `app.templates(directory)` | Configure the template root directory. |
-| `app.has_views()` | Return whether templates are configured. |
-| `app.views()` | Access the template view facade. |
-| `vix::tmpl::Context` | Store values passed to templates. |
-| `ctx.set(name, value)` | Store a template variable. |
-| `res.render(name, context)` | Render a template response. |
-| `app.static_dir(root, mount)` | Serve static assets used by templates. |
+| API                           | Purpose                                  |
+| ----------------------------- | ---------------------------------------- |
+| `app.templates(directory)`    | Configure the template root directory.   |
+| `app.has_views()`             | Return whether templates are configured. |
+| `app.views()`                 | Access the template view facade.         |
+| `vix::tmpl::Context`          | Store values passed to templates.        |
+| `ctx.set(name, value)`        | Store a template variable.               |
+| `res.render(name, context)`   | Render a template response.              |
+| `app.static_dir(root, mount)` | Serve static assets used by templates.   |
 
 ## Best practices
 

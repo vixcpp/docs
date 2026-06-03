@@ -123,14 +123,14 @@ app.static_dir(
 
 Arguments:
 
-| Argument | Purpose |
-|---|---|
-| `root` | Filesystem directory to serve. |
-| `mount` | URL prefix where files are exposed. |
-| `index_file` | File used when a directory is requested. |
-| `add_cache_control` | Whether to add a `Cache-Control` header. |
-| `cache_control` | Cache-Control header value. |
-| `fallthrough` | Whether missing files should continue to normal 404 handling. |
+| Argument            | Purpose                                                       |
+| ------------------- | ------------------------------------------------------------- |
+| `root`              | Filesystem directory to serve.                                |
+| `mount`             | URL prefix where files are exposed.                           |
+| `index_file`        | File used when a directory is requested.                      |
+| `add_cache_control` | Whether to add a `Cache-Control` header.                      |
+| `cache_control`     | Cache-Control header value.                                   |
+| `fallthrough`       | Whether missing files should continue to normal 404 handling. |
 
 ## Default options
 
@@ -442,21 +442,21 @@ This is useful for clients that only need headers.
 
 Vix detects common MIME types from file extensions.
 
-| Extension | Content-Type |
-|---|---|
-| `.html` | `text/html; charset=utf-8` |
-| `.css` | `text/css; charset=utf-8` |
-| `.js` | `application/javascript; charset=utf-8` |
-| `.json` | `application/json; charset=utf-8` |
-| `.png` | `image/png` |
-| `.jpg` | `image/jpeg` |
-| `.jpeg` | `image/jpeg` |
-| `.gif` | `image/gif` |
-| `.svg` | `image/svg+xml` |
-| `.ico` | `image/x-icon` |
-| `.txt` | `text/plain; charset=utf-8` |
-| `.woff` | `font/woff` |
-| `.woff2` | `font/woff2` |
+| Extension | Content-Type                            |
+| --------- | --------------------------------------- |
+| `.html`   | `text/html; charset=utf-8`              |
+| `.css`    | `text/css; charset=utf-8`               |
+| `.js`     | `application/javascript; charset=utf-8` |
+| `.json`   | `application/json; charset=utf-8`       |
+| `.png`    | `image/png`                             |
+| `.jpg`    | `image/jpeg`                            |
+| `.jpeg`   | `image/jpeg`                            |
+| `.gif`    | `image/gif`                             |
+| `.svg`    | `image/svg+xml`                         |
+| `.ico`    | `image/x-icon`                          |
+| `.txt`    | `text/plain; charset=utf-8`             |
+| `.woff`   | `font/woff`                             |
+| `.woff2`  | `font/woff2`                            |
 
 Unknown extensions use:
 
@@ -632,7 +632,7 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"}
+      "status", "ok"
     });
   });
 
@@ -681,7 +681,7 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"}
+      "status", "ok"
     });
   });
 
@@ -725,14 +725,14 @@ GET /
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `app.static_dir(root)` | Mount a static directory at `/`. |
-| `app.static_dir(root, mount)` | Mount a static directory at a URL prefix. |
-| `app.static_dir(root, mount, index_file, add_cache_control, cache_control, fallthrough)` | Mount static files with explicit options. |
-| `res.file(path)` | Send one file from a route handler. |
-| `res.header(name, value)` | Set response headers before sending a file. |
-| `res.type(mime)` | Set a custom content type when sending manually. |
+| API                                                                                      | Purpose                                          |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `app.static_dir(root)`                                                                   | Mount a static directory at `/`.                 |
+| `app.static_dir(root, mount)`                                                            | Mount a static directory at a URL prefix.        |
+| `app.static_dir(root, mount, index_file, add_cache_control, cache_control, fallthrough)` | Mount static files with explicit options.        |
+| `res.file(path)`                                                                         | Send one file from a route handler.              |
+| `res.header(name, value)`                                                                | Set response headers before sending a file.      |
+| `res.type(mime)`                                                                         | Set a custom content type when sending manually. |
 
 ## Best practices
 

@@ -87,11 +87,11 @@ vix::websocket::AttachedRuntime runtime{
 
 The constructor receives:
 
-| Argument | Purpose |
-|---|---|
-| `app` | Existing `vix::App` instance. |
-| `ws` | Existing `vix::websocket::Server` instance. |
-| `executor` | Shared runtime executor. |
+| Argument   | Purpose                                     |
+| ---------- | ------------------------------------------- |
+| `app`      | Existing `vix::App` instance.               |
+| `ws`       | Existing `vix::websocket::Server` instance. |
+| `executor` | Shared runtime executor.                    |
 
 The constructor starts the WebSocket server immediately and registers a shutdown callback on the HTTP app.
 
@@ -326,7 +326,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.json({
-    {"status", "ok"}
+    "status", "ok"
   });
 });
 ```
@@ -532,9 +532,9 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"},
-      {"http", true},
-      {"websocket", true}
+      "status", "ok",
+      "http", true,
+      "websocket", true
     });
   });
 

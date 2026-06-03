@@ -116,8 +116,8 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"},
-      {"server", "Vix.cpp"}
+      "status", "ok",
+      "server", "Vix.cpp"
     });
   });
 
@@ -162,7 +162,7 @@ req.param("id");
 ```cpp
 res.status(200);
 res.text("OK");
-res.json({{"ok", true}});
+res.json({"ok", true});
 res.redirect("/login");
 res.file("public/index.html");
 ```
@@ -183,7 +183,7 @@ int main()
     const std::string id = req.param("id");
 
     res.json({
-      {"user_id", id}
+      "user_id", id
     });
   });
 
@@ -251,7 +251,7 @@ app.use("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next next)
 
   if (!allowed)
   {
-    res.status(403).json({{"error", "forbidden"}});
+    res.status(403).json({"error", "forbidden"});
     return;
   }
 
@@ -276,14 +276,14 @@ int main()
     {
       (void)req;
 
-      res.json({{"status", "ok"}});
+      res.json({"status", "ok"});
     });
 
     api.get("/version", [](vix::Request &req, vix::Response &res)
     {
       (void)req;
 
-      res.json({{"version", "1.0.0"}});
+      res.json({"version", "1.0.0"});
     });
   });
 
@@ -431,7 +431,7 @@ app.get_heavy("/reports", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"status", "report generated"}});
+  res.json({"status", "report generated"});
 });
 ```
 

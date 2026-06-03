@@ -77,10 +77,10 @@ std::string output = metrics.render_prometheus();
 
 ## Connection metrics
 
-| Metric | Type | Meaning |
-|---|---|---|
-| `connections_total` | Counter | Total accepted WebSocket connections since startup. |
-| `connections_active` | Gauge | Current number of active WebSocket connections. |
+| Metric               | Type    | Meaning                                             |
+| -------------------- | ------- | --------------------------------------------------- |
+| `connections_total`  | Counter | Total accepted WebSocket connections since startup. |
+| `connections_active` | Gauge   | Current number of active WebSocket connections.     |
 
 Example:
 
@@ -97,9 +97,9 @@ metrics.connections_active.fetch_sub(1, std::memory_order_relaxed);
 
 ## Message metrics
 
-| Metric | Type | Meaning |
-|---|---|---|
-| `messages_in_total` | Counter | Total inbound messages processed. |
+| Metric               | Type    | Meaning                                    |
+| -------------------- | ------- | ------------------------------------------ |
+| `messages_in_total`  | Counter | Total inbound messages processed.          |
 | `messages_out_total` | Counter | Total outbound messages sent or broadcast. |
 
 Example:
@@ -113,8 +113,8 @@ Use these metrics to track realtime traffic volume.
 
 ## Error metrics
 
-| Metric | Type | Meaning |
-|---|---|---|
+| Metric         | Type    | Meaning                                          |
+| -------------- | ------- | ------------------------------------------------ |
 | `errors_total` | Counter | Total WebSocket or long-polling errors observed. |
 
 Example:
@@ -133,10 +133,10 @@ Use this when:
 
 ## Long-polling session metrics
 
-| Metric | Type | Meaning |
-|---|---|---|
-| `lp_sessions_total` | Counter | Total long-polling sessions created. |
-| `lp_sessions_active` | Gauge | Current active long-polling sessions. |
+| Metric               | Type    | Meaning                               |
+| -------------------- | ------- | ------------------------------------- |
+| `lp_sessions_total`  | Counter | Total long-polling sessions created.  |
+| `lp_sessions_active` | Gauge   | Current active long-polling sessions. |
 
 The long-polling manager can update these when sessions are created or removed.
 
@@ -147,8 +147,8 @@ metrics.lp_sessions_active.fetch_add(1, std::memory_order_relaxed);
 
 ## Long-polling poll metrics
 
-| Metric | Type | Meaning |
-|---|---|---|
+| Metric           | Type    | Meaning                               |
+| ---------------- | ------- | ------------------------------------- |
 | `lp_polls_total` | Counter | Total long-polling poll calls served. |
 
 Each call to poll can increment this value.
@@ -161,11 +161,11 @@ This helps you understand how often HTTP fallback clients are polling.
 
 ## Long-polling buffer metrics
 
-| Metric | Type | Meaning |
-|---|---|---|
-| `lp_messages_buffered` | Gauge-like | Current number of buffered messages across sessions. |
-| `lp_messages_enqueued_total` | Counter | Total messages enqueued into long-polling buffers. |
-| `lp_messages_drained_total` | Counter | Total messages drained from long-polling buffers. |
+| Metric                       | Type       | Meaning                                              |
+| ---------------------------- | ---------- | ---------------------------------------------------- |
+| `lp_messages_buffered`       | Gauge-like | Current number of buffered messages across sessions. |
+| `lp_messages_enqueued_total` | Counter    | Total messages enqueued into long-polling buffers.   |
+| `lp_messages_drained_total`  | Counter    | Total messages drained from long-polling buffers.    |
 
 These metrics help you detect whether fallback clients are keeping up.
 

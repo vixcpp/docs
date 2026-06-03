@@ -113,8 +113,8 @@ int main()
     (void)req;
 
     res.json({
-      {"method", "GET"},
-      {"route", "/users"}
+      "method", "GET",
+      "route", "/users"
     });
   });
 
@@ -123,8 +123,8 @@ int main()
     (void)req;
 
     res.status(201).json({
-      {"method", "POST"},
-      {"created", true}
+      "method", "POST",
+      "created", true
     });
   });
 
@@ -151,7 +151,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.json({
-    {"status", "ok"}
+    "status", "ok"
   });
 });
 ```
@@ -193,7 +193,7 @@ app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
   const std::string id = req.param("id");
 
   res.json({
-    {"id", id}
+    "id", id
   });
 });
 ```
@@ -220,8 +220,8 @@ A route can contain several parameters.
 app.get("/users/{user_id}/posts/{post_id}", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"user_id", req.param("user_id")},
-    {"post_id", req.param("post_id")}
+    "user_id", req.param("user_id"),
+    "post_id", req.param("post_id")
   });
 });
 ```
@@ -261,8 +261,8 @@ You can read query values from the request.
 app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"id", req.param("id")},
-    {"page", req.query_value("page", "1")}
+    "id", req.param("id"),
+    "page", req.query_value("page", "1")
   });
 });
 ```
@@ -318,14 +318,14 @@ int main()
     {
       (void)req;
 
-      res.json({{"status", "ok"}});
+      res.json({"status", "ok"});
     });
 
     api.get("/version", [](vix::Request &req, vix::Response &res)
     {
       (void)req;
 
-      res.json({{"version", "1.0.0"}});
+      res.json({"version", "1.0.0"});
     });
   });
 
@@ -356,7 +356,7 @@ app.group("/api", [](auto &api)
       (void)req;
 
       res.json({
-        {"status", "ok"}
+        "status", "ok"
       });
     });
   });
@@ -380,14 +380,14 @@ api.get("/status", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"status", "ok"}});
+  res.json({"status", "ok"});
 });
 
 api.post("/users", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.status(201).json({{"created", true}});
+  res.status(201).json({"created", true});
 });
 ```
 
@@ -438,7 +438,7 @@ app.protect("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next n
   if (auth.empty())
   {
     res.status(401).json({
-      {"error", "missing authorization header"}
+      "error", "missing authorization header"
     });
     return;
   }
@@ -502,7 +502,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"status", "ok"}});
+  res.json({"status", "ok"});
 });
 ```
 
@@ -574,7 +574,7 @@ app.get_heavy("/reports", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.json({
-    {"report", "ready"}
+    "report", "ready"
   });
 });
 ```
@@ -587,7 +587,7 @@ app.post_heavy("/reports", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.status(202).json({
-    {"accepted", true}
+    "accepted", true
   });
 });
 ```
@@ -826,7 +826,7 @@ int main()
   app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
   {
     res.json({
-      {"id", req.param("id")}
+      "id", req.param("id")
     });
   });
 
@@ -837,7 +837,7 @@ int main()
       (void)req;
 
       res.json({
-        {"status", "ok"}
+        "status", "ok"
       });
     });
   });
@@ -847,7 +847,7 @@ int main()
     (void)req;
 
     res.json({
-      {"report", "ready"}
+      "report", "ready"
     });
   });
 
@@ -876,25 +876,25 @@ Static fallback:
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `app.get(path, handler)` | Register a GET route. |
-| `app.post(path, handler)` | Register a POST route. |
-| `app.put(path, handler)` | Register a PUT route. |
-| `app.patch(path, handler)` | Register a PATCH route. |
-| `app.del(path, handler)` | Register a DELETE route. |
-| `app.head(path, handler)` | Register a HEAD route. |
-| `app.options(path, handler)` | Register an OPTIONS route. |
-| `app.get_heavy(path, handler)` | Register a heavy GET route. |
-| `app.post_heavy(path, handler)` | Register a heavy POST route. |
-| `app.group(prefix, fn)` | Register routes under a prefix. |
-| `app.use(middleware)` | Register global middleware. |
-| `app.use(prefix, middleware)` | Register prefix middleware. |
-| `app.protect(prefix, middleware)` | Protect a prefix. |
-| `app.protect_exact(path, middleware)` | Protect one exact path. |
-| `app.router()` | Access the shared router. |
-| `router->has_route(method, path)` | Check if a route exists. |
-| `router->routes()` | Read registered route metadata. |
+| API                                   | Purpose                         |
+| ------------------------------------- | ------------------------------- |
+| `app.get(path, handler)`              | Register a GET route.           |
+| `app.post(path, handler)`             | Register a POST route.          |
+| `app.put(path, handler)`              | Register a PUT route.           |
+| `app.patch(path, handler)`            | Register a PATCH route.         |
+| `app.del(path, handler)`              | Register a DELETE route.        |
+| `app.head(path, handler)`             | Register a HEAD route.          |
+| `app.options(path, handler)`          | Register an OPTIONS route.      |
+| `app.get_heavy(path, handler)`        | Register a heavy GET route.     |
+| `app.post_heavy(path, handler)`       | Register a heavy POST route.    |
+| `app.group(prefix, fn)`               | Register routes under a prefix. |
+| `app.use(middleware)`                 | Register global middleware.     |
+| `app.use(prefix, middleware)`         | Register prefix middleware.     |
+| `app.protect(prefix, middleware)`     | Protect a prefix.               |
+| `app.protect_exact(path, middleware)` | Protect one exact path.         |
+| `app.router()`                        | Access the shared router.       |
+| `router->has_route(method, path)`     | Check if a route exists.        |
+| `router->routes()`                    | Read registered route metadata. |
 
 ## Best practices
 
@@ -905,7 +905,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"status", "ok"}});
+  res.json({"status", "ok"});
 });
 ```
 

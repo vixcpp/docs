@@ -80,12 +80,12 @@ This registers documentation for the default WebSocket-related paths.
 
 ## Default documented routes
 
-| Method | Path | Purpose |
-|---|---|---|
-| `GET` | `/ws` | WebSocket upgrade endpoint. |
-| `GET` | `/ws/poll` | Long-polling pull endpoint. |
+| Method | Path       | Purpose                     |
+| ------ | ---------- | --------------------------- |
+| `GET`  | `/ws`      | WebSocket upgrade endpoint. |
+| `GET`  | `/ws/poll` | Long-polling pull endpoint. |
 | `POST` | `/ws/send` | Long-polling push endpoint. |
-| `GET` | `/metrics` | WebSocket metrics endpoint. |
+| `GET`  | `/metrics` | WebSocket metrics endpoint. |
 
 ## WebSocket upgrade route
 
@@ -127,10 +127,10 @@ So the WebSocket route is documented for discovery and client understanding, not
 
 The WebSocket upgrade route documents responses such as:
 
-| Status | Meaning |
-|---|---|
-| `101` | Switching Protocols. The WebSocket upgrade succeeded. |
-| `426` | Upgrade Required. The route was called as plain HTTP. |
+| Status | Meaning                                               |
+| ------ | ----------------------------------------------------- |
+| `101`  | Switching Protocols. The WebSocket upgrade succeeded. |
+| `426`  | Upgrade Required. The route was called as plain HTTP. |
 
 ## WebSocket vendor extensions
 
@@ -163,19 +163,19 @@ GET /ws/poll?session_id=room:general&max=50
 
 Query parameters:
 
-| Parameter | Purpose |
-|---|---|
-| `session_id` | Long-polling session or channel id. |
-| `max` | Maximum number of messages to return. |
+| Parameter    | Purpose                               |
+| ------------ | ------------------------------------- |
+| `session_id` | Long-polling session or channel id.   |
+| `max`        | Maximum number of messages to return. |
 
 ## Long-polling pull responses
 
 Common responses:
 
-| Status | Meaning |
-|---|---|
-| `200` | Messages returned successfully. |
-| `503` | Long-polling bridge is not attached. |
+| Status | Meaning                              |
+| ------ | ------------------------------------ |
+| `200`  | Messages returned successfully.      |
+| `503`  | Long-polling bridge is not attached. |
 
 Example response shape:
 
@@ -226,15 +226,15 @@ Body:
 
 The request body can contain:
 
-| Field | Required | Purpose |
-|---|---|---|
-| `type` | Yes | Application event type. |
-| `payload` | No | Event data. |
-| `session_id` | No | Long-polling target session id. |
-| `room` | No | Logical room or channel. |
-| `kind` | No | Message category. |
-| `id` | No | Message id. |
-| `ts` | No | Timestamp. |
+| Field        | Required | Purpose                         |
+| ------------ | -------- | ------------------------------- |
+| `type`       | Yes      | Application event type.         |
+| `payload`    | No       | Event data.                     |
+| `session_id` | No       | Long-polling target session id. |
+| `room`       | No       | Logical room or channel.        |
+| `kind`       | No       | Message category.               |
+| `id`         | No       | Message id.                     |
+| `ts`         | No       | Timestamp.                      |
 
 The only required field is:
 
@@ -246,11 +246,11 @@ type
 
 Common responses:
 
-| Status | Meaning |
-|---|---|
-| `202` | Message accepted and queued. |
-| `400` | Invalid JSON body or missing fields. |
-| `503` | Long-polling bridge is not attached. |
+| Status | Meaning                              |
+| ------ | ------------------------------------ |
+| `202`  | Message accepted and queued.         |
+| `400`  | Invalid JSON body or missing fields. |
+| `503`  | Long-polling bridge is not attached. |
 
 ## Metrics route
 
@@ -272,10 +272,10 @@ vix_ws_connections_total 12
 
 Common responses:
 
-| Status | Meaning |
-|---|---|
-| `200` | Metrics returned successfully. |
-| `501` | Metrics endpoint is not configured in this app. |
+| Status | Meaning                                         |
+| ------ | ----------------------------------------------- |
+| `200`  | Metrics returned successfully.                  |
+| `501`  | Metrics endpoint is not configured in this app. |
 
 ## Register custom paths
 

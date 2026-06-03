@@ -91,12 +91,12 @@ The interface is asynchronous and uses `vix::async::core::task`.
 
 ## Transport methods
 
-| Method | Purpose |
-|---|---|
-| `async_read(buffer, token)` | Read bytes into a buffer. |
-| `async_write(buffer, token)` | Write bytes from a buffer. |
-| `is_open()` | Return whether the underlying connection is open. |
-| `close()` | Close the transport safely. |
+| Method                       | Purpose                                           |
+| ---------------------------- | ------------------------------------------------- |
+| `async_read(buffer, token)`  | Read bytes into a buffer.                         |
+| `async_write(buffer, token)` | Write bytes from a buffer.                        |
+| `is_open()`                  | Return whether the underlying connection is open. |
+| `close()`                    | Close the transport safely.                       |
 
 ## Transport and async
 
@@ -645,15 +645,15 @@ Both:
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `Transport::async_read(buffer, token)` | Read bytes from the connection. |
-| `Transport::async_write(buffer, token)` | Write bytes to the connection. |
-| `Transport::is_open()` | Check whether the connection is open. |
-| `Transport::close()` | Close the connection. |
-| `PlainTransport(tcp_stream)` | Adapt a TCP stream to `Transport`. |
-| `TlsTransport(tcp_stream, config)` | Adapt a TCP stream to encrypted `Transport`. |
-| `TlsTransport::async_handshake(token)` | Perform the TLS server handshake. |
+| API                                     | Purpose                                      |
+| --------------------------------------- | -------------------------------------------- |
+| `Transport::async_read(buffer, token)`  | Read bytes from the connection.              |
+| `Transport::async_write(buffer, token)` | Write bytes to the connection.               |
+| `Transport::is_open()`                  | Check whether the connection is open.        |
+| `Transport::close()`                    | Close the connection.                        |
+| `PlainTransport(tcp_stream)`            | Adapt a TCP stream to `Transport`.           |
+| `TlsTransport(tcp_stream, config)`      | Adapt a TCP stream to encrypted `Transport`. |
+| `TlsTransport::async_handshake(token)`  | Perform the TLS server handshake.            |
 
 ## Best practices
 

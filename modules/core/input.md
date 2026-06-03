@@ -1,4 +1,3 @@
-
 # Input
 
 The `input` API provides simple interactive input for Vix console applications.
@@ -147,9 +146,9 @@ City: Kampala
 
 ## Public API overview
 
-| API | Purpose |
-| --- | --- |
-| `vix::input()` | Read one full line from `std::cin`. |
+| API                  | Purpose                                                  |
+| -------------------- | -------------------------------------------------------- |
+| `vix::input()`       | Read one full line from `std::cin`.                      |
 | `vix::input(prompt)` | Print a prompt, then read one full line from `std::cin`. |
 
 ## `input()`
@@ -263,12 +262,12 @@ Example internal behavior:
 
 Possible errors:
 
-| Situation | Error |
-| --- | --- |
+| Situation                | Error                                                        |
+| ------------------------ | ------------------------------------------------------------ |
 | Prompt cannot be written | `vix::input failed: could not write prompt to output stream` |
 | Prompt cannot be flushed | `vix::input failed: could not flush prompt to output stream` |
-| Input stream is closed | `vix::input failed: input stream is closed` |
-| Input stream fails | `vix::input failed: could not read from input stream` |
+| Input stream is closed   | `vix::input failed: input stream is closed`                  |
+| Input stream fails       | `vix::input failed: could not read from input stream`        |
 
 ## Handle input errors
 

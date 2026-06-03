@@ -81,27 +81,27 @@ struct Config
 
 ## Default values
 
-| Field | Default | Meaning |
-|---|---:|---|
-| `maxMessageSize` | `65536` | Maximum accepted WebSocket message size in bytes. |
-| `idleTimeout` | `60s` | Maximum idle time before closing a connection. |
-| `enablePerMessageDeflate` | `true` | Enables per-message deflate support. |
-| `autoPingPong` | `true` | Automatically handles ping/pong behavior. |
-| `pingInterval` | `30s` | Interval between heartbeat ping frames. |
+| Field                     | Default | Meaning                                           |
+| ------------------------- | ------: | ------------------------------------------------- |
+| `maxMessageSize`          | `65536` | Maximum accepted WebSocket message size in bytes. |
+| `idleTimeout`             |   `60s` | Maximum idle time before closing a connection.    |
+| `enablePerMessageDeflate` |  `true` | Enables per-message deflate support.              |
+| `autoPingPong`            |  `true` | Automatically handles ping/pong behavior.         |
+| `pingInterval`            |   `30s` | Interval between heartbeat ping frames.           |
 
 ## Environment variables
 
 The common environment variables are:
 
-| Variable | Example | Purpose |
-|---|---:|---|
-| `WEBSOCKET_HOST` | `0.0.0.0` | Address used by the WebSocket listener. |
-| `WEBSOCKET_PORT` | `9090` | Port used by the WebSocket listener. |
-| `WEBSOCKET_MAX_MESSAGE_SIZE` | `65536` | Maximum accepted message size in bytes. |
-| `WEBSOCKET_IDLE_TIMEOUT` | `60` | Idle timeout in seconds. |
-| `WEBSOCKET_ENABLE_DEFLATE` | `true` | Enable per-message deflate. |
-| `WEBSOCKET_PING_INTERVAL` | `30` | Ping interval in seconds. |
-| `WEBSOCKET_AUTO_PING_PONG` | `true` | Automatically handle ping/pong frames. |
+| Variable                     |   Example | Purpose                                 |
+| ---------------------------- | --------: | --------------------------------------- |
+| `WEBSOCKET_HOST`             | `0.0.0.0` | Address used by the WebSocket listener. |
+| `WEBSOCKET_PORT`             |    `9090` | Port used by the WebSocket listener.    |
+| `WEBSOCKET_MAX_MESSAGE_SIZE` |   `65536` | Maximum accepted message size in bytes. |
+| `WEBSOCKET_IDLE_TIMEOUT`     |      `60` | Idle timeout in seconds.                |
+| `WEBSOCKET_ENABLE_DEFLATE`   |    `true` | Enable per-message deflate.             |
+| `WEBSOCKET_PING_INTERVAL`    |      `30` | Ping interval in seconds.               |
+| `WEBSOCKET_AUTO_PING_PONG`   |    `true` | Automatically handle ping/pong frames.  |
 
 ## Host
 
@@ -121,11 +121,11 @@ WEBSOCKET_HOST=127.0.0.1
 
 Common values:
 
-| Value | Meaning |
-|---|---|
-| `0.0.0.0` | Listen on available interfaces. |
-| `127.0.0.1` | Listen only on localhost. |
-| `localhost` | Local development host. |
+| Value       | Meaning                         |
+| ----------- | ------------------------------- |
+| `0.0.0.0`   | Listen on available interfaces. |
+| `127.0.0.1` | Listen only on localhost.       |
+| `localhost` | Local development host.         |
 
 ## Port
 

@@ -70,7 +70,7 @@ int main()
   {
     (void)req;
 
-    res.json({{"status", "ok"}});
+    res.json({"status", "ok"});
   });
 
   auto doc = vix::openapi::build_from_router(
@@ -100,7 +100,7 @@ int main()
   {
     (void)req;
 
-    res.json({{"status", "ok"}});
+    res.json({"status", "ok"});
   });
 
   vix::openapi::register_openapi_and_docs(
@@ -232,14 +232,14 @@ doc.responses["200"] = {
 
 A `RouteDoc` can contain:
 
-| Field | Purpose |
-|---|---|
-| `summary` | Short one-line route summary. |
-| `description` | Longer route description. |
-| `tags` | OpenAPI tags. |
-| `request_body` | OpenAPI request body object. |
-| `responses` | OpenAPI responses object. |
-| `x` | Vendor-specific OpenAPI extensions. |
+| Field          | Purpose                             |
+| -------------- | ----------------------------------- |
+| `summary`      | Short one-line route summary.       |
+| `description`  | Longer route description.           |
+| `tags`         | OpenAPI tags.                       |
+| `request_body` | OpenAPI request body object.        |
+| `responses`    | OpenAPI responses object.           |
+| `x`            | Vendor-specific OpenAPI extensions. |
 
 ## RouteDoc example
 
@@ -288,7 +288,7 @@ int main()
       {
         (void)req;
 
-        res.json({{"status", "ok"}});
+        res.json({"status", "ok"});
       });
 
   vix::router::RouteDoc doc;
@@ -748,7 +748,7 @@ int main()
         (void)req;
 
         res.json({
-          {"status", "ok"}
+          "status", "ok"
         });
       });
 
@@ -784,39 +784,39 @@ http://localhost:8080/docs
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `method_to_openapi(method)` | Convert an HTTP method to an OpenAPI operation key. |
-| `default_responses()` | Return the default `200 OK` response object. |
-| `make_operation_id(method, path)` | Build a stable operation ID from method and path. |
-| `build_from_router(router, title, version)` | Build an OpenAPI 3 document from the router and registry. |
-| `register_openapi_and_docs(router, title, version)` | Register `/openapi.json` and `/docs` routes. |
-| `Registry::add(method, path, doc)` | Register extra route documentation. |
-| `Registry::snapshot()` | Return a copy of registered extra docs. |
-| `Registry::clear()` | Clear extra docs. |
+| API                                                 | Purpose                                                   |
+| --------------------------------------------------- | --------------------------------------------------------- |
+| `method_to_openapi(method)`                         | Convert an HTTP method to an OpenAPI operation key.       |
+| `default_responses()`                               | Return the default `200 OK` response object.              |
+| `make_operation_id(method, path)`                   | Build a stable operation ID from method and path.         |
+| `build_from_router(router, title, version)`         | Build an OpenAPI 3 document from the router and registry. |
+| `register_openapi_and_docs(router, title, version)` | Register `/openapi.json` and `/docs` routes.              |
+| `Registry::add(method, path, doc)`                  | Register extra route documentation.                       |
+| `Registry::snapshot()`                              | Return a copy of registered extra docs.                   |
+| `Registry::clear()`                                 | Clear extra docs.                                         |
 
 ## RouteDoc summary
 
-| Field | Purpose |
-|---|---|
-| `summary` | One-line operation summary. |
-| `description` | Detailed operation description. |
-| `tags` | Grouping tags for the operation. |
-| `request_body` | OpenAPI request body metadata. |
-| `responses` | OpenAPI responses metadata. |
-| `x` | Vendor-specific extensions. |
+| Field          | Purpose                          |
+| -------------- | -------------------------------- |
+| `summary`      | One-line operation summary.      |
+| `description`  | Detailed operation description.  |
+| `tags`         | Grouping tags for the operation. |
+| `request_body` | OpenAPI request body metadata.   |
+| `responses`    | OpenAPI responses metadata.      |
+| `x`            | Vendor-specific extensions.      |
 
 ## Header map
 
-| Area | Header |
-|---|---|
-| OpenAPI generator | `<vix/openapi/OpenApi.hpp>` |
-| Registry | `<vix/openapi/Registry.hpp>` |
-| Docs route registration | `<vix/openapi/register_docs.hpp>` |
-| Route documentation | `<vix/router/RouteDoc.hpp>` |
-| Router | `<vix/router/Router.hpp>` |
-| Docs UI | `<vix/openapi/DocsUI.hpp>` |
-| Swagger assets | `<vix/openapi/assets/SwaggerAssets.hpp>` |
+| Area                    | Header                                   |
+| ----------------------- | ---------------------------------------- |
+| OpenAPI generator       | `<vix/openapi/OpenApi.hpp>`              |
+| Registry                | `<vix/openapi/Registry.hpp>`             |
+| Docs route registration | `<vix/openapi/register_docs.hpp>`        |
+| Route documentation     | `<vix/router/RouteDoc.hpp>`              |
+| Router                  | `<vix/router/Router.hpp>`                |
+| Docs UI                 | `<vix/openapi/DocsUI.hpp>`               |
+| Swagger assets          | `<vix/openapi/assets/SwaggerAssets.hpp>` |
 
 ## Best practices
 

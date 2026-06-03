@@ -158,7 +158,7 @@ app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
   if (!req.has_header("Authorization"))
   {
     res.status(401).json({
-      {"error", "missing authorization header"}
+      "error", "missing authorization header"
     });
 
     return;
@@ -211,7 +211,7 @@ app.use("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next next)
   if (token.empty())
   {
     res.status(401).json({
-      {"error", "missing authorization header"}
+      "error", "missing authorization header"
     });
     return;
   }
@@ -275,7 +275,7 @@ app.protect("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next n
   if (!allowed)
   {
     res.status(401).json({
-      {"error", "unauthorized"}
+      "error", "unauthorized"
     });
     return;
   }
@@ -456,7 +456,7 @@ int main()
     if (token.empty())
     {
       res.status(401).json({
-        {"error", "missing authorization header"}
+        "error", "missing authorization header"
       });
       return;
     }
@@ -469,8 +469,8 @@ int main()
     (void)req;
 
     res.json({
-      {"id", "42"},
-      {"name", "Ada"}
+      "id", "42",
+      "name", "Ada"
     });
   });
 
@@ -504,7 +504,7 @@ app.use("/api", [](vix::Request &req, vix::Response &res, vix::App::Next next)
   if (req.method() == "POST" && content_type.empty())
   {
     res.status(400).json({
-      {"error", "missing content type"}
+      "error", "missing content type"
     });
     return;
   }
@@ -560,7 +560,7 @@ app.get("/me", [](vix::Request &req, vix::Response &res)
   const auto &user = req.state().get<CurrentUser>();
 
   res.json({
-    {"id", user.id}
+    "id", user.id
   });
 });
 ```
@@ -577,13 +577,13 @@ app.get("/me", [](vix::Request &req, vix::Response &res)
   if (!user)
   {
     res.status(401).json({
-      {"error", "unauthorized"}
+      "error", "unauthorized"
     });
     return;
   }
 
   res.json({
-    {"id", user->id}
+    "id", user->id
   });
 });
 ```
@@ -608,7 +608,7 @@ int main()
       if (!allowed)
       {
         res.status(401).json({
-          {"error", "unauthorized"}
+          "error", "unauthorized"
         });
         return;
       }
@@ -654,7 +654,7 @@ app.group("/api", [](auto &api)
       (void)req;
 
       res.json({
-        {"status", "ok"}
+        "status", "ok"
       });
     });
   });
@@ -686,7 +686,7 @@ app.use("/locked", [](vix::Request &req, vix::Response &res, vix::App::Next next
   (void)next;
 
   res.status(423).json({
-    {"error", "locked"}
+    "error", "locked"
   });
 });
 
@@ -706,7 +706,7 @@ app.use("/api", [](vix::Request &req, vix::Response &res, vix::App::Next next)
   if (req.header("X-Disabled") == "1")
   {
     res.status(403).json({
-      {"error", "disabled"}
+      "error", "disabled"
     });
     return;
   }
@@ -794,7 +794,6 @@ Recommended:
 
 ```cpp
 app.use("/admin", admin_middleware);
-
 app.get("/admin/dashboard", dashboard_handler);
 ```
 
@@ -802,7 +801,6 @@ Avoid:
 
 ```cpp
 app.get("/admin/dashboard", dashboard_handler);
-
 app.use("/admin", admin_middleware);
 ```
 
@@ -847,8 +845,7 @@ int main()
     next();
 
     const auto end = std::chrono::steady_clock::now();
-    const auto ms =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     res.header("X-Response-Time-Ms", std::to_string(ms));
 
@@ -862,7 +859,7 @@ int main()
     if (token.empty())
     {
       res.status(401).json({
-        {"error", "missing authorization header"}
+        "error", "missing authorization header"
       });
       return;
     }
@@ -884,7 +881,7 @@ int main()
     const auto &user = req.state().get<CurrentUser>();
 
     res.json({
-      {"id", user.id}
+      "id", user.id
     });
   });
 
@@ -896,19 +893,19 @@ int main()
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `app.use(middleware)` | Register global middleware. |
-| `app.use(prefix, middleware)` | Register prefix middleware. |
-| `app.protect(prefix, middleware)` | Protect a route prefix. |
-| `app.protect_exact(path, middleware)` | Protect one exact path. |
-| `Group::use(middleware)` | Register middleware for a group prefix. |
-| `Group::protect(prefix, middleware)` | Protect a group sub-prefix. |
-| `Group::protect_exact(path, middleware)` | Protect one exact group path. |
-| `vix::App::Next` | Continue to the next middleware or final handler. |
-| `req.state().set<T>(value)` | Store request-scoped data. |
-| `req.state().get<T>()` | Read required request-scoped data. |
-| `req.state().try_get<T>()` | Read optional request-scoped data. |
+| API                                      | Purpose                                           |
+| ---------------------------------------- | ------------------------------------------------- |
+| `app.use(middleware)`                    | Register global middleware.                       |
+| `app.use(prefix, middleware)`            | Register prefix middleware.                       |
+| `app.protect(prefix, middleware)`        | Protect a route prefix.                           |
+| `app.protect_exact(path, middleware)`    | Protect one exact path.                           |
+| `Group::use(middleware)`                 | Register middleware for a group prefix.           |
+| `Group::protect(prefix, middleware)`     | Protect a group sub-prefix.                       |
+| `Group::protect_exact(path, middleware)` | Protect one exact group path.                     |
+| `vix::App::Next`                         | Continue to the next middleware or final handler. |
+| `req.state().set<T>(value)`              | Store request-scoped data.                        |
+| `req.state().get<T>()`                   | Read required request-scoped data.                |
+| `req.state().try_get<T>()`               | Read optional request-scoped data.                |
 
 ## Best practices
 
@@ -932,7 +929,7 @@ Always call `next()` only when the request should continue.
 ```cpp
 if (!allowed)
 {
-  res.status(403).json({{"error", "forbidden"}});
+  res.status(403).json({"error", "forbidden"});
   return;
 }
 

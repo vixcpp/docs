@@ -363,12 +363,12 @@ executor.post([]()
 
 `TaskOptions` contains:
 
-| Field | Purpose |
-|---|---|
-| `priority` | Priority value reserved for scheduling policy. |
-| `timeout` | Timeout measurement threshold. |
-| `deadline` | Deadline value reserved for scheduling policy. |
-| `may_block` | Marks whether the task may block. |
+| Field       | Purpose                                        |
+| ----------- | ---------------------------------------------- |
+| `priority`  | Priority value reserved for scheduling policy. |
+| `timeout`   | Timeout measurement threshold.                 |
+| `deadline`  | Deadline value reserved for scheduling policy. |
+| `may_block` | Marks whether the task may block.              |
 
 In the current model, timeout is used for metrics.
 
@@ -450,11 +450,11 @@ vix::print("timed out:", m.timed_out);
 
 Metrics contain:
 
-| Field | Meaning |
-|---|---|
-| `pending` | Number of pending runtime tasks. |
-| `active` | Number of tasks currently active through tracked `post(...)`. |
-| `timed_out` | Number of tasks that exceeded their timeout threshold. |
+| Field       | Meaning                                                       |
+| ----------- | ------------------------------------------------------------- |
+| `pending`   | Number of pending runtime tasks.                              |
+| `active`    | Number of tasks currently active through tracked `post(...)`. |
+| `timed_out` | Number of tasks that exceeded their timeout threshold.        |
 
 ## Submitted task count
 
@@ -688,11 +688,11 @@ executor.submit([]() -> vix::runtime::TaskResult
 
 Results:
 
-| Result | Meaning |
-|---|---|
-| `complete` | The task finished. |
-| `yield` | The task should be scheduled again. |
-| `failed` | The task failed. |
+| Result     | Meaning                             |
+| ---------- | ----------------------------------- |
+| `complete` | The task finished.                  |
+| `yield`    | The task should be scheduled again. |
+| `failed`   | The task failed.                    |
 
 ## Yielding task
 
@@ -832,9 +832,9 @@ int main()
     const auto m = app.executor().metrics();
 
     res.json({
-      {"pending", m.pending},
-      {"active", m.active},
-      {"timed_out", m.timed_out}
+      "pending", m.pending,
+      "active", m.active,
+      "timed_out", m.timed_out
     });
   });
 
@@ -846,37 +846,37 @@ int main()
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `RuntimeExecutor(config)` | Create an executor from runtime config. |
-| `RuntimeExecutor(workers)` | Create an executor with a worker count. |
-| `RuntimeExecutor(runtime)` | Create an executor from an existing runtime. |
-| `start()` | Start the underlying runtime. |
-| `stop()` | Stop the underlying runtime. |
-| `stop_and_wait()` | Wait for current work to drain, then stop. |
-| `started()` | Return whether the executor has started. |
-| `running()` | Return whether the runtime is running. |
-| `accepting()` | Return whether new work is accepted. |
-| `submit(Task)` | Submit a pre-built runtime task. |
-| `submit(TaskFn, affinity)` | Submit a low-level runtime task function. |
-| `post(fn, options)` | Submit a normal void callable. |
-| `post_http_fast(fn, affinity)` | Submit a short HTTP fast-path task. |
-| `metrics()` | Return executor metrics. |
-| `wait_idle()` | Wait until pending and active work reach zero. |
-| `submitted_tasks()` | Return accepted submission count. |
-| `rejected_tasks()` | Return rejected submission count. |
-| `fast_http_submitted_tasks()` | Return fast HTTP submission count. |
+| API                            | Purpose                                        |
+| ------------------------------ | ---------------------------------------------- |
+| `RuntimeExecutor(config)`      | Create an executor from runtime config.        |
+| `RuntimeExecutor(workers)`     | Create an executor with a worker count.        |
+| `RuntimeExecutor(runtime)`     | Create an executor from an existing runtime.   |
+| `start()`                      | Start the underlying runtime.                  |
+| `stop()`                       | Stop the underlying runtime.                   |
+| `stop_and_wait()`              | Wait for current work to drain, then stop.     |
+| `started()`                    | Return whether the executor has started.       |
+| `running()`                    | Return whether the runtime is running.         |
+| `accepting()`                  | Return whether new work is accepted.           |
+| `submit(Task)`                 | Submit a pre-built runtime task.               |
+| `submit(TaskFn, affinity)`     | Submit a low-level runtime task function.      |
+| `post(fn, options)`            | Submit a normal void callable.                 |
+| `post_http_fast(fn, affinity)` | Submit a short HTTP fast-path task.            |
+| `metrics()`                    | Return executor metrics.                       |
+| `wait_idle()`                  | Wait until pending and active work reach zero. |
+| `submitted_tasks()`            | Return accepted submission count.              |
+| `rejected_tasks()`             | Return rejected submission count.              |
+| `fast_http_submitted_tasks()`  | Return fast HTTP submission count.             |
 
 ## Metrics summary
 
-| Metric | Meaning |
-|---|---|
-| `pending` | Tasks waiting in the runtime. |
-| `active` | Tasks currently active through tracked `post(...)`. |
-| `timed_out` | Tasks that exceeded their configured timeout threshold. |
-| `submitted_tasks()` | Total accepted submissions. |
-| `rejected_tasks()` | Total rejected submissions. |
-| `fast_http_submitted_tasks()` | Accepted fast-path HTTP submissions. |
+| Metric                        | Meaning                                                 |
+| ----------------------------- | ------------------------------------------------------- |
+| `pending`                     | Tasks waiting in the runtime.                           |
+| `active`                      | Tasks currently active through tracked `post(...)`.     |
+| `timed_out`                   | Tasks that exceeded their configured timeout threshold. |
+| `submitted_tasks()`           | Total accepted submissions.                             |
+| `rejected_tasks()`            | Total rejected submissions.                             |
+| `fast_http_submitted_tasks()` | Accepted fast-path HTTP submissions.                    |
 
 ## Best practices
 

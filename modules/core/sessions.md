@@ -311,9 +311,9 @@ Example handler:
 app.post("/echo", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"method", req.method()},
-    {"path", req.path()},
-    {"body", req.body()}
+    "method", req.method(),
+    "path", req.path(),
+    "body", req.body()
   });
 });
 ```
@@ -337,7 +337,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.json({
-    {"status", "ok"}
+    "status", "ok"
   });
 });
 ```
@@ -664,7 +664,7 @@ Then the handler writes a response.
 
 ```cpp
 res.json({
-  {"status", "ok"}
+  "status", "ok"
 });
 ```
 
@@ -686,7 +686,7 @@ They use:
 
 ```cpp
 res.text("OK");
-res.json({{"ok", true}});
+res.json({"ok", true});
 res.file("public/index.html");
 ```
 
@@ -765,14 +765,14 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"}
+      "status", "ok"
     });
   });
 
   app.post("/api/echo", [](vix::Request &req, vix::Response &res)
   {
     res.json({
-      {"body", req.body()}
+      "body", req.body()
     });
   });
 
@@ -799,16 +799,16 @@ client
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `Session(stream, router, config, executor)` | Create a session from a TCP stream. |
+| API                                            | Purpose                                    |
+| ---------------------------------------------- | ------------------------------------------ |
+| `Session(stream, router, config, executor)`    | Create a session from a TCP stream.        |
 | `Session(transport, router, config, executor)` | Create a session from a generic transport. |
-| `run()` | Start the session lifecycle. |
-| `read_request()` | Read and parse the next request. |
-| `dispatch_request(req)` | Dispatch a request to the router. |
-| `send_response(res)` | Serialize and write a response. |
-| `send_error(status, msg)` | Send a standard error response. |
-| `close_stream_gracefully()` | Close the transport safely. |
+| `run()`                                        | Start the session lifecycle.               |
+| `read_request()`                               | Read and parse the next request.           |
+| `dispatch_request(req)`                        | Dispatch a request to the router.          |
+| `send_response(res)`                           | Serialize and write a response.            |
+| `send_error(status, msg)`                      | Send a standard error response.            |
+| `close_stream_gracefully()`                    | Close the transport safely.                |
 
 Most of these methods are internal to Core.
 
@@ -836,7 +836,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"status", "ok"}});
+  res.json({"status", "ok"});
 });
 ```
 
@@ -845,7 +845,7 @@ Return immediately after sending errors.
 ```cpp
 if (!allowed)
 {
-  res.status(403).json({{"error", "forbidden"}});
+  res.status(403).json({"error", "forbidden"});
   return;
 }
 ```

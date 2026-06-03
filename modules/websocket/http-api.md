@@ -51,10 +51,10 @@ This lets one application support both realtime WebSocket clients and HTTP fallb
 
 ## Common endpoints
 
-| Endpoint | Purpose |
-|---|---|
-| `GET /ws/poll` | Poll queued messages for a session. |
-| `POST /ws/send` | Send a typed message through HTTP. |
+| Endpoint        | Purpose                             |
+| --------------- | ----------------------------------- |
+| `GET /ws/poll`  | Poll queued messages for a session. |
+| `POST /ws/send` | Send a typed message through HTTP.  |
 
 These endpoints are also documented by the WebSocket OpenAPI helper.
 
@@ -70,10 +70,10 @@ GET /ws/poll?session_id=room:general&max=50
 
 The endpoint reads:
 
-| Query parameter | Purpose |
-|---|---|
-| `session_id` | Long-polling session or channel id. |
-| `max` | Maximum number of messages to return. |
+| Query parameter | Purpose                               |
+| --------------- | ------------------------------------- |
+| `session_id`    | Long-polling session or channel id.   |
+| `max`           | Maximum number of messages to return. |
 
 Example response:
 
@@ -356,16 +356,16 @@ poll();
 await fetch("/ws/send", {
   method: "POST",
   headers: {
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
     session_id: "room:general",
     room: "general",
     type: "chat.message",
     payload: {
-      text: "Hello from HTTP"
-    }
-  })
+      text: "Hello from HTTP",
+    },
+  }),
 });
 ```
 
@@ -463,12 +463,12 @@ type
 
 Common response codes:
 
-| Status | Meaning |
-|---|---|
-| `200` | Poll returned successfully. |
-| `202` | Message accepted by `/ws/send`. |
-| `400` | Invalid JSON body or missing required fields. |
-| `503` | Long-polling bridge is not attached. |
+| Status | Meaning                                       |
+| ------ | --------------------------------------------- |
+| `200`  | Poll returned successfully.                   |
+| `202`  | Message accepted by `/ws/send`.               |
+| `400`  | Invalid JSON body or missing required fields. |
+| `503`  | Long-polling bridge is not attached.          |
 
 ## Metrics
 

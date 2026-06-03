@@ -56,9 +56,9 @@ int main()
   app.get("/debug", [](vix::Request &req, vix::Response &res)
   {
     res.json({
-      {"method", req.method()},
-      {"path", req.path()},
-      {"target", req.target()}
+      "method", req.method(),
+      "path", req.path(),
+      "target", req.target()
     });
   });
 
@@ -92,7 +92,7 @@ Use `method()` to read the request method.
 app.get("/method", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"method", req.method()}
+    "method", req.method()
   });
 });
 ```
@@ -119,7 +119,7 @@ The target includes the path and query string.
 app.get("/debug", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"target", req.target()}
+    "target", req.target()
   });
 });
 ```
@@ -146,7 +146,7 @@ Use `path()` to read the path without the query string.
 app.get("/debug", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"path", req.path()}
+    "path", req.path()
   });
 });
 ```
@@ -173,7 +173,7 @@ Use `query_string()` to read the raw query string without `?`.
 app.get("/search", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"query_string", req.query_string()}
+    "query_string", req.query_string()
   });
 });
 ```
@@ -203,8 +203,8 @@ app.get("/search", [](vix::Request &req, vix::Response &res)
   const std::string page = req.query_value("page", "1");
 
   res.json({
-    {"q", q},
-    {"page", page}
+    "q", q,
+    "page", page
   });
 });
 ```
@@ -254,13 +254,13 @@ app.get("/search", [](vix::Request &req, vix::Response &res)
   if (!req.has_query("q"))
   {
     res.status(400).json({
-      {"error", "missing query parameter q"}
+      "error", "missing query parameter q"
     });
     return;
   }
 
   res.json({
-    {"q", req.query_value("q")}
+    "q", req.query_value("q")
   });
 });
 ```
@@ -275,7 +275,7 @@ app.get("/search", [](vix::Request &req, vix::Response &res)
   const auto &query = req.query();
 
   res.json({
-    {"count", query.size()}
+    "count", query.size()
   });
 });
 ```
@@ -288,7 +288,7 @@ Use `param(...)` to read a route parameter.
 app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"id", req.param("id")}
+    "id", req.param("id")
   });
 });
 ```
@@ -327,13 +327,13 @@ app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
   if (!req.has_param("id"))
   {
     res.status(400).json({
-      {"error", "missing id"}
+      "error", "missing id"
     });
     return;
   }
 
   res.json({
-    {"id", req.param("id")}
+    "id", req.param("id")
   });
 });
 ```
@@ -348,9 +348,9 @@ app.get("/users/{user_id}/posts/{post_id}", [](vix::Request &req, vix::Response 
   const auto &params = req.params();
 
   res.json({
-    {"count", params.size()},
-    {"user_id", req.param("user_id")},
-    {"post_id", req.param("post_id")}
+    "count", params.size(),
+    "user_id", req.param("user_id"),
+    "post_id", req.param("post_id")
   });
 });
 ```
@@ -379,7 +379,7 @@ Use `header(...)` to read a header value.
 app.get("/agent", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"user_agent", req.header("User-Agent")}
+    "user_agent", req.header("User-Agent")
   });
 });
 ```
@@ -396,13 +396,13 @@ app.get("/auth", [](vix::Request &req, vix::Response &res)
   if (!req.has_header("Authorization"))
   {
     res.status(401).json({
-      {"error", "missing authorization header"}
+      "error", "missing authorization header"
     });
     return;
   }
 
   res.json({
-    {"authorized", true}
+    "authorized", true
   });
 });
 ```
@@ -417,7 +417,7 @@ app.get("/headers", [](vix::Request &req, vix::Response &res)
   const auto &headers = req.headers();
 
   res.json({
-    {"count", headers.size()}
+    "count", headers.size()
   });
 });
 ```
@@ -455,7 +455,7 @@ app.post("/json", [](vix::Request &req, vix::Response &res)
   const auto &body = req.json();
 
   res.json({
-    {"received", body}
+    "received", body
   });
 });
 ```
@@ -494,7 +494,7 @@ app.post("/users", [](vix::Request &req, vix::Response &res)
   auto user = req.json_as<User>();
 
   res.status(201).json({
-    {"created", true}
+    "created", true
   });
 });
 ```
@@ -535,7 +535,7 @@ app.get("/me", [](vix::Request &req, vix::Response &res)
   const auto &user = req.state().get<CurrentUser>();
 
   res.json({
-    {"id", user.id}
+    "id", user.id
   });
 });
 ```
@@ -563,13 +563,13 @@ app.get("/me", [](vix::Request &req, vix::Response &res)
   if (!user)
   {
     res.status(401).json({
-      {"error", "unauthorized"}
+      "error", "unauthorized"
     });
     return;
   }
 
   res.json({
-    {"id", user->id}
+    "id", user->id
   });
 });
 ```
@@ -597,7 +597,7 @@ int main()
     if (token.empty())
     {
       res.status(401).json({
-        {"error", "missing authorization header"}
+        "error", "missing authorization header"
       });
       return;
     }
@@ -612,7 +612,7 @@ int main()
     const auto &user = req.state().get<CurrentUser>();
 
     res.json({
-      {"id", user.id}
+      "id", user.id
     });
   });
 
@@ -677,7 +677,7 @@ Use `with_params(...)` to return a copy of a request with new route parameters.
 
 ```cpp
 auto next_req = req.with_params({
-  {"id", "42"}
+  "id", "42"
 });
 ```
 
@@ -749,7 +749,6 @@ Middleware can read request data, validate it, or attach state.
 
 ```cpp
 #include <vix.hpp>
-
 #include <string>
 
 struct CurrentUser
@@ -775,7 +774,7 @@ int main()
     if (token.empty())
     {
       res.status(401).json({
-        {"error", "missing authorization header"}
+        "error", "missing authorization header"
       });
       return;
     }
@@ -788,17 +787,17 @@ int main()
   app.get("/api/users/{id}", [](vix::Request &req, vix::Response &res)
   {
     res.json({
-      {"id", req.param("id")},
-      {"page", req.query_value("page", "1")},
-      {"method", req.method()},
-      {"path", req.path()}
+      "id", req.param("id"),
+      "page", req.query_value("page", "1"),
+      "method", req.method(),
+      "path", req.path()
     });
   });
 
   app.post("/api/echo", [](vix::Request &req, vix::Response &res)
   {
     res.json({
-      {"body", req.body()}
+      "body", req.body()
     });
   });
 
@@ -807,7 +806,7 @@ int main()
     const auto &user = req.state().get<CurrentUser>();
 
     res.json({
-      {"id", user.id}
+      "id", user.id
     });
   });
 
@@ -819,35 +818,35 @@ int main()
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `method()` | Return the HTTP method. |
-| `set_method(method)` | Set the HTTP method. |
-| `target()` | Return the full request target. |
-| `set_target(target)` | Set the target and recompute path/query data. |
-| `path()` | Return the path without query string. |
-| `query_string()` | Return the raw query string. |
-| `query()` | Return parsed query parameters. |
-| `has_query(name)` | Check whether a query parameter exists. |
-| `query_value(name, fallback)` | Return a query parameter value. |
-| `params()` | Return route parameters. |
-| `set_params(params)` | Replace route parameters. |
-| `has_param(name)` | Check whether a route parameter exists. |
-| `param(name, fallback)` | Return a route parameter value. |
-| `headers()` | Return all headers. |
-| `set_headers(headers)` | Replace all headers. |
-| `header(name)` | Return one header value. |
-| `has_header(name)` | Check whether a header exists. |
-| `set_header(name, value)` | Set one header. |
-| `remove_header(name)` | Remove one header. |
-| `body()` | Return the request body. |
-| `set_body(body)` | Replace the request body. |
-| `json()` | Parse and return the body as JSON. |
-| `json_as<T>()` | Convert the JSON body to type `T`. |
-| `has_state()` | Check whether state storage exists. |
-| `state()` | Access request-scoped state. |
-| `has_state_type<T>()` | Check whether state contains `T`. |
-| `with_params(params)` | Return a request copy with new parameters. |
+| API                           | Purpose                                       |
+| ----------------------------- | --------------------------------------------- |
+| `method()`                    | Return the HTTP method.                       |
+| `set_method(method)`          | Set the HTTP method.                          |
+| `target()`                    | Return the full request target.               |
+| `set_target(target)`          | Set the target and recompute path/query data. |
+| `path()`                      | Return the path without query string.         |
+| `query_string()`              | Return the raw query string.                  |
+| `query()`                     | Return parsed query parameters.               |
+| `has_query(name)`             | Check whether a query parameter exists.       |
+| `query_value(name, fallback)` | Return a query parameter value.               |
+| `params()`                    | Return route parameters.                      |
+| `set_params(params)`          | Replace route parameters.                     |
+| `has_param(name)`             | Check whether a route parameter exists.       |
+| `param(name, fallback)`       | Return a route parameter value.               |
+| `headers()`                   | Return all headers.                           |
+| `set_headers(headers)`        | Replace all headers.                          |
+| `header(name)`                | Return one header value.                      |
+| `has_header(name)`            | Check whether a header exists.                |
+| `set_header(name, value)`     | Set one header.                               |
+| `remove_header(name)`         | Remove one header.                            |
+| `body()`                      | Return the request body.                      |
+| `set_body(body)`              | Replace the request body.                     |
+| `json()`                      | Parse and return the body as JSON.            |
+| `json_as<T>()`                | Convert the JSON body to type `T`.            |
+| `has_state()`                 | Check whether state storage exists.           |
+| `state()`                     | Access request-scoped state.                  |
+| `has_state_type<T>()`         | Check whether state contains `T`.             |
+| `with_params(params)`         | Return a request copy with new parameters.    |
 
 ## Best practices
 
@@ -886,7 +885,7 @@ Validate input before using it.
 ```cpp
 if (!req.has_query("q"))
 {
-  res.status(400).json({{"error", "missing q"}});
+  res.status(400).json({"error", "missing q"});
   return;
 }
 ```

@@ -301,13 +301,13 @@ ws.on_message(
 
 Use `Router` directly only when you are working on lower-level WebSocket internals.
 
-| Need | Use |
-|---|---|
-| Build normal realtime app | `vix::websocket::Server` |
-| Receive raw messages | `Server::on_message(...)` |
-| Receive typed JSON messages | `Server::on_typed_message(...)` |
-| Work on low-level dispatch | `vix::websocket::Router` |
-| Connect custom session engine | `vix::websocket::Router` |
+| Need                          | Use                             |
+| ----------------------------- | ------------------------------- |
+| Build normal realtime app     | `vix::websocket::Server`        |
+| Receive raw messages          | `Server::on_message(...)`       |
+| Receive typed JSON messages   | `Server::on_typed_message(...)` |
+| Work on low-level dispatch    | `vix::websocket::Router`        |
+| Connect custom session engine | `vix::websocket::Router`        |
 
 ## Router and Session
 

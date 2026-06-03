@@ -47,21 +47,21 @@ AttachedRuntime
 
 The public WebSocket module is built around these types:
 
-| Type | Purpose |
-|---|---|
-| `vix::websocket::Server` | High-level WebSocket server. |
-| `vix::websocket::LowLevelServer` | Low-level async listener and connection engine. |
-| `vix::websocket::Session` | One connected WebSocket client. |
-| `vix::websocket::Router` | Dispatches open, close, error, and message events. |
-| `vix::websocket::Client` | Native WebSocket client. |
-| `vix::websocket::Config` | WebSocket runtime configuration. |
-| `vix::websocket::JsonMessage` | Typed JSON message model. |
-| `vix::websocket::LongPollingManager` | HTTP polling session manager. |
-| `vix::websocket::LongPollingBridge` | Bridge between WebSocket and long-polling. |
-| `vix::websocket::WebSocketMetrics` | Prometheus-style counters and gauges. |
-| `vix::websocket::IMessageStore` | Abstract message persistence interface. |
-| `vix::websocket::SqliteMessageStore` | SQLite-backed message store. |
-| `vix::websocket::AttachedRuntime` | HTTP + WebSocket runtime integration. |
+| Type                                 | Purpose                                            |
+| ------------------------------------ | -------------------------------------------------- |
+| `vix::websocket::Server`             | High-level WebSocket server.                       |
+| `vix::websocket::LowLevelServer`     | Low-level async listener and connection engine.    |
+| `vix::websocket::Session`            | One connected WebSocket client.                    |
+| `vix::websocket::Router`             | Dispatches open, close, error, and message events. |
+| `vix::websocket::Client`             | Native WebSocket client.                           |
+| `vix::websocket::Config`             | WebSocket runtime configuration.                   |
+| `vix::websocket::JsonMessage`        | Typed JSON message model.                          |
+| `vix::websocket::LongPollingManager` | HTTP polling session manager.                      |
+| `vix::websocket::LongPollingBridge`  | Bridge between WebSocket and long-polling.         |
+| `vix::websocket::WebSocketMetrics`   | Prometheus-style counters and gauges.              |
+| `vix::websocket::IMessageStore`      | Abstract message persistence interface.            |
+| `vix::websocket::SqliteMessageStore` | SQLite-backed message store.                       |
+| `vix::websocket::AttachedRuntime`    | HTTP + WebSocket runtime integration.              |
 
 ## High-level server
 
@@ -442,13 +442,13 @@ WebSocket configuration is derived from the core Vix config.
 
 The WebSocket-specific config includes:
 
-| Field | Purpose |
-|---|---|
-| `maxMessageSize` | Maximum accepted message size. |
-| `idleTimeout` | Idle connection timeout. |
+| Field                     | Purpose                                  |
+| ------------------------- | ---------------------------------------- |
+| `maxMessageSize`          | Maximum accepted message size.           |
+| `idleTimeout`             | Idle connection timeout.                 |
 | `enablePerMessageDeflate` | Enables per-message compression support. |
-| `autoPingPong` | Automatically handles ping/pong frames. |
-| `pingInterval` | Interval for heartbeat ping frames. |
+| `autoPingPong`            | Automatically handles ping/pong frames.  |
+| `pingInterval`            | Interval for heartbeat ping frames.      |
 
 Example `.env` values:
 
@@ -573,13 +573,13 @@ This is useful when you want one realtime layer that can work with both WebSocke
 
 It tracks:
 
-| Metric area | Examples |
-|---|---|
-| Connections | total accepted connections, active connections |
-| Messages | inbound total, outbound total |
-| Errors | total errors |
-| Long-polling | sessions total, active sessions, poll calls |
-| Buffers | buffered messages, enqueued messages, drained messages |
+| Metric area  | Examples                                               |
+| ------------ | ------------------------------------------------------ |
+| Connections  | total accepted connections, active connections         |
+| Messages     | inbound total, outbound total                          |
+| Errors       | total errors                                           |
+| Long-polling | sessions total, active sessions, poll calls            |
+| Buffers      | buffered messages, enqueued messages, drained messages |
 
 Metrics can be rendered in Prometheus text format:
 

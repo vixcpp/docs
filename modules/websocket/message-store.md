@@ -163,11 +163,11 @@ auto messages = store.list_by_room("general", 50);
 
 Arguments:
 
-| Argument | Purpose |
-|---|---|
-| `room` | Room identifier. |
-| `limit` | Maximum number of messages to return. |
-| `before_id` | Optional cursor for pagination. |
+| Argument    | Purpose                               |
+| ----------- | ------------------------------------- |
+| `room`      | Room identifier.                      |
+| `limit`     | Maximum number of messages to return. |
+| `before_id` | Optional cursor for pagination.       |
 
 Example with cursor:
 
@@ -194,10 +194,10 @@ auto messages = store.replay_from("00000000000000000001", 100);
 
 Arguments:
 
-| Argument | Purpose |
-|---|---|
-| `start_id` | Cursor id to start replay from. |
-| `limit` | Maximum number of messages to return. |
+| Argument   | Purpose                               |
+| ---------- | ------------------------------------- |
+| `start_id` | Cursor id to start replay from.       |
+| `limit`    | Maximum number of messages to return. |
 
 Use `replay_from(...)` for:
 

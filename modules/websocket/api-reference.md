@@ -50,23 +50,23 @@ namespace vix
 
 ## Public API overview
 
-| API | Purpose |
-|---|---|
-| `Config` | WebSocket runtime configuration. |
-| `JsonMessage` | Typed JSON message model. |
-| `Server` | High-level WebSocket server. |
-| `LowLevelServer` | Low-level native async WebSocket engine. |
-| `Session` | One connected WebSocket client. |
-| `Router` | Dispatches open, close, error, and message events. |
-| `Client` | Native WebSocket client. |
-| `LongPollingSession` | In-memory long-polling session buffer. |
-| `LongPollingManager` | Thread-safe manager for polling sessions. |
-| `LongPollingBridge` | Bridge between WebSocket and long-polling. |
-| `WebSocketMetrics` | Prometheus-style metrics counters and gauges. |
-| `IMessageStore` | Abstract message persistence interface. |
-| `SqliteMessageStore` | SQLite-backed message store. |
-| `AttachedRuntime` | Runs WebSocket beside a `vix::App`. |
-| `register_ws_docs(...)` | Registers OpenAPI docs for WebSocket endpoints. |
+| API                     | Purpose                                            |
+| ----------------------- | -------------------------------------------------- |
+| `Config`                | WebSocket runtime configuration.                   |
+| `JsonMessage`           | Typed JSON message model.                          |
+| `Server`                | High-level WebSocket server.                       |
+| `LowLevelServer`        | Low-level native async WebSocket engine.           |
+| `Session`               | One connected WebSocket client.                    |
+| `Router`                | Dispatches open, close, error, and message events. |
+| `Client`                | Native WebSocket client.                           |
+| `LongPollingSession`    | In-memory long-polling session buffer.             |
+| `LongPollingManager`    | Thread-safe manager for polling sessions.          |
+| `LongPollingBridge`     | Bridge between WebSocket and long-polling.         |
+| `WebSocketMetrics`      | Prometheus-style metrics counters and gauges.      |
+| `IMessageStore`         | Abstract message persistence interface.            |
+| `SqliteMessageStore`    | SQLite-backed message store.                       |
+| `AttachedRuntime`       | Runs WebSocket beside a `vix::App`.                |
+| `register_ws_docs(...)` | Registers OpenAPI docs for WebSocket endpoints.    |
 
 ## Config
 
@@ -1466,31 +1466,31 @@ int main()
 
 ## API by use case
 
-| Use case | API |
-|---|---|
-| Start WebSocket server | `vix::websocket::Server` |
-| Handle connection open | `Server::on_open(...)` |
-| Handle raw message | `Server::on_message(...)` |
-| Handle typed JSON message | `Server::on_typed_message(...)` |
-| Reply to one client | `Session::send_text(...)` |
-| Send binary payload | `Session::send_binary(...)` |
-| Close one client | `Session::close(...)` |
-| Broadcast to all clients | `Server::broadcast_text(...)` |
-| Broadcast to room | `Server::broadcast_text_to_room(...)` |
-| Join room | `Server::join_room(...)` |
-| Leave room | `Server::leave_room(...)` |
-| Create C++ client | `Client::create(...)` |
-| Send client text | `Client::send_text(...)` |
-| Send client typed JSON | `Client::send_json_message(...)` |
-| Enable heartbeat | `Client::enable_heartbeat(...)` |
-| Enable reconnect | `Client::enable_auto_reconnect(...)` |
-| Use long-polling | `LongPollingManager`, `LongPollingBridge` |
-| Export metrics | `WebSocketMetrics::render_prometheus()` |
-| Run metrics exporter | `run_metrics_http_exporter(...)` |
-| Store messages | `IMessageStore` |
-| Store in SQLite | `SqliteMessageStore` |
-| Attach HTTP + WebSocket | `AttachedRuntime` |
-| Register OpenAPI docs | `register_ws_docs(...)` |
+| Use case                  | API                                       |
+| ------------------------- | ----------------------------------------- |
+| Start WebSocket server    | `vix::websocket::Server`                  |
+| Handle connection open    | `Server::on_open(...)`                    |
+| Handle raw message        | `Server::on_message(...)`                 |
+| Handle typed JSON message | `Server::on_typed_message(...)`           |
+| Reply to one client       | `Session::send_text(...)`                 |
+| Send binary payload       | `Session::send_binary(...)`               |
+| Close one client          | `Session::close(...)`                     |
+| Broadcast to all clients  | `Server::broadcast_text(...)`             |
+| Broadcast to room         | `Server::broadcast_text_to_room(...)`     |
+| Join room                 | `Server::join_room(...)`                  |
+| Leave room                | `Server::leave_room(...)`                 |
+| Create C++ client         | `Client::create(...)`                     |
+| Send client text          | `Client::send_text(...)`                  |
+| Send client typed JSON    | `Client::send_json_message(...)`          |
+| Enable heartbeat          | `Client::enable_heartbeat(...)`           |
+| Enable reconnect          | `Client::enable_auto_reconnect(...)`      |
+| Use long-polling          | `LongPollingManager`, `LongPollingBridge` |
+| Export metrics            | `WebSocketMetrics::render_prometheus()`   |
+| Run metrics exporter      | `run_metrics_http_exporter(...)`          |
+| Store messages            | `IMessageStore`                           |
+| Store in SQLite           | `SqliteMessageStore`                      |
+| Attach HTTP + WebSocket   | `AttachedRuntime`                         |
+| Register OpenAPI docs     | `register_ws_docs(...)`                   |
 
 ## Related pages
 

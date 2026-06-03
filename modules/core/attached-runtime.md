@@ -515,8 +515,8 @@ int main()
       (void)req;
 
       res.json({
-        {"http", true},
-        {"websocket", true}
+        "http", true,
+        "websocket", true
       });
     });
 
@@ -559,17 +559,17 @@ int main()
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `vix::websocket::AttachedRuntime` | Attach a WebSocket server to an HTTP app. |
-| `AttachedRuntime(app, ws, exec)` | Start WebSocket and register HTTP shutdown callback. |
-| `request_stop()` | Request non-blocking WebSocket shutdown. |
-| `finalize_shutdown()` | Perform final blocking shutdown exactly once. |
-| `register_ws_openapi_docs_once()` | Register WebSocket OpenAPI docs once per process. |
-| `run_http_and_ws(app, ws, exec, cfg)` | Run HTTP and WebSocket together with a shared config. |
-| `run_http_and_ws(app, ws, exec, port)` | Run HTTP and WebSocket together on a port. |
-| `serve_http_and_ws(configPath, port, fn)` | Build and run HTTP + WebSocket from a config path. |
-| `serve_http_and_ws(fn)` | Build and run HTTP + WebSocket using `.env` and port `8080`. |
+| API                                       | Purpose                                                      |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| `vix::websocket::AttachedRuntime`         | Attach a WebSocket server to an HTTP app.                    |
+| `AttachedRuntime(app, ws, exec)`          | Start WebSocket and register HTTP shutdown callback.         |
+| `request_stop()`                          | Request non-blocking WebSocket shutdown.                     |
+| `finalize_shutdown()`                     | Perform final blocking shutdown exactly once.                |
+| `register_ws_openapi_docs_once()`         | Register WebSocket OpenAPI docs once per process.            |
+| `run_http_and_ws(app, ws, exec, cfg)`     | Run HTTP and WebSocket together with a shared config.        |
+| `run_http_and_ws(app, ws, exec, port)`    | Run HTTP and WebSocket together on a port.                   |
+| `serve_http_and_ws(configPath, port, fn)` | Build and run HTTP + WebSocket from a config path.           |
+| `serve_http_and_ws(fn)`                   | Build and run HTTP + WebSocket using `.env` and port `8080`. |
 
 ## Best practices
 

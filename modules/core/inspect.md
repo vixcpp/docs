@@ -86,15 +86,15 @@ The exact output can vary depending on options such as `show_type`, `compact`, a
 
 ## Inspect vs print
 
-| API | Purpose |
-| --- | --- |
-| `vix::print` | Simple readable output. |
-| `vix::inspect` | Debugging-oriented value inspection. |
-| `vix::inspect_type` | Type metadata inspection. |
-| `vix::inspect_meta` | Value plus type metadata. |
-| `vix::inspect_tree` | Tree view for nested structures. |
-| `vix::inspect_bytes` | Raw byte dump for trivially copyable values. |
-| `vix::inspect_numeric` | Numeric range statistics. |
+| API                    | Purpose                                      |
+| ---------------------- | -------------------------------------------- |
+| `vix::print`           | Simple readable output.                      |
+| `vix::inspect`         | Debugging-oriented value inspection.         |
+| `vix::inspect_type`    | Type metadata inspection.                    |
+| `vix::inspect_meta`    | Value plus type metadata.                    |
+| `vix::inspect_tree`    | Tree view for nested structures.             |
+| `vix::inspect_bytes`   | Raw byte dump for trivially copyable values. |
+| `vix::inspect_numeric` | Numeric range statistics.                    |
 
 Use `inspect` while debugging.
 
@@ -104,32 +104,32 @@ Use `log` for production logs.
 
 ## Public API overview
 
-| API | Purpose |
-| --- | --- |
-| `vix::inspect(value)` | Inspect a value to stdout. |
-| `vix::inspect(value, opts)` | Inspect a value with custom options. |
-| `vix::inspect_to(os, value)` | Inspect a value to a specific stream. |
-| `vix::inspect_to_string(value)` | Return inspection output as a string. |
-| `vix::inspect_type<T>()` | Inspect type metadata for `T`. |
-| `vix::inspect_type(value)` | Inspect the deduced type of a value. |
-| `vix::inspect_line(...)` | Inspect multiple values on one line. |
-| `vix::inspect_value(label, value)` | Inspect a named value. |
-| `vix::inspect_all(...)` | Inspect multiple values, one per line. |
-| `vix::inspect_meta(value)` | Inspect value and full type metadata. |
-| `vix::inspect_compact(value)` | Return compact inspection string. |
-| `vix::inspect_verbose(value)` | Inspect with type tags, metadata, and addresses. |
-| `vix::inspect_report(obj)` | Detailed report for `field_map` structs. |
-| `vix::inspect_container(c)` | Container size, capacity, value type, elements. |
-| `vix::inspect_bytes(value)` | Hex dump of raw object bytes. |
-| `vix::inspect_diff(a, b)` | Compare two values side by side. |
-| `vix::inspect_check(label, expected, actual)` | Print PASS or FAIL check. |
-| `vix::inspect_tap(value)` | Inspect and return the same value. |
-| `vix::inspect_if(condition, value)` | Inspect only when condition is true. |
-| `vix::tap_with(value, fn)` | Run a callback and return the same value. |
-| `vix::inspect_numeric(range)` | Numeric range statistics and histogram. |
-| `vix::inspect_tree(value)` | Visual tree representation. |
-| `vix::inspect_path<T>()` | Return the selected inspection path. |
-| `vix::inspect_paths<Ts...>()` | Print inspection paths for many types. |
+| API                                           | Purpose                                          |
+| --------------------------------------------- | ------------------------------------------------ |
+| `vix::inspect(value)`                         | Inspect a value to stdout.                       |
+| `vix::inspect(value, opts)`                   | Inspect a value with custom options.             |
+| `vix::inspect_to(os, value)`                  | Inspect a value to a specific stream.            |
+| `vix::inspect_to_string(value)`               | Return inspection output as a string.            |
+| `vix::inspect_type<T>()`                      | Inspect type metadata for `T`.                   |
+| `vix::inspect_type(value)`                    | Inspect the deduced type of a value.             |
+| `vix::inspect_line(...)`                      | Inspect multiple values on one line.             |
+| `vix::inspect_value(label, value)`            | Inspect a named value.                           |
+| `vix::inspect_all(...)`                       | Inspect multiple values, one per line.           |
+| `vix::inspect_meta(value)`                    | Inspect value and full type metadata.            |
+| `vix::inspect_compact(value)`                 | Return compact inspection string.                |
+| `vix::inspect_verbose(value)`                 | Inspect with type tags, metadata, and addresses. |
+| `vix::inspect_report(obj)`                    | Detailed report for `field_map` structs.         |
+| `vix::inspect_container(c)`                   | Container size, capacity, value type, elements.  |
+| `vix::inspect_bytes(value)`                   | Hex dump of raw object bytes.                    |
+| `vix::inspect_diff(a, b)`                     | Compare two values side by side.                 |
+| `vix::inspect_check(label, expected, actual)` | Print PASS or FAIL check.                        |
+| `vix::inspect_tap(value)`                     | Inspect and return the same value.               |
+| `vix::inspect_if(condition, value)`           | Inspect only when condition is true.             |
+| `vix::tap_with(value, fn)`                    | Run a callback and return the same value.        |
+| `vix::inspect_numeric(range)`                 | Numeric range statistics and histogram.          |
+| `vix::inspect_tree(value)`                    | Visual tree representation.                      |
+| `vix::inspect_path<T>()`                      | Return the selected inspection path.             |
+| `vix::inspect_paths<Ts...>()`                 | Print inspection paths for many types.           |
 
 ## `inspect_options`
 
@@ -146,16 +146,16 @@ vix::inspect(std::vector<int>{1, 2, 3}, opts);
 
 ### Fields
 
-| Field | Default | Purpose |
-| --- | --- | --- |
-| `max_depth` | `8` | Maximum recursive nesting depth. |
-| `max_items` | `64` | Maximum items per container. |
-| `show_type` | `true` | Show type annotations when supported. |
-| `show_meta` | `false` | Enable full metadata mode for verbose use. |
-| `compact` | `false` | Use compact single-line output. |
-| `show_address` | `false` | Show or follow object addresses when supported. |
-| `indent_str` | `"  "` | Indentation unit. |
-| `out` | `&std::cout` | Output stream. |
+| Field          | Default      | Purpose                                         |
+| -------------- | ------------ | ----------------------------------------------- |
+| `max_depth`    | `8`          | Maximum recursive nesting depth.                |
+| `max_items`    | `64`         | Maximum items per container.                    |
+| `show_type`    | `true`       | Show type annotations when supported.           |
+| `show_meta`    | `false`      | Enable full metadata mode for verbose use.      |
+| `compact`      | `false`      | Use compact single-line output.                 |
+| `show_address` | `false`      | Show or follow object addresses when supported. |
+| `indent_str`   | `"  "`       | Indentation unit.                               |
+| `out`          | `&std::cout` | Output stream.                                  |
 
 ## Default options
 
@@ -301,35 +301,35 @@ Each value is inspected on its own line.
 
 `inspect` supports the same broad type categories as the Vix rendering engine, with extra diagnostic information.
 
-| Type category | Examples |
-| --- | --- |
-| Booleans | `bool` |
-| Characters | `char`, `wchar_t`, `char8_t`, `char16_t`, `char32_t` |
-| Strings | `std::string`, `std::string_view`, `const char *` |
-| Wide strings | `std::wstring`, `std::wstring_view`, `const wchar_t *` |
-| Numbers | `int`, `double`, `std::size_t`, etc. |
-| Null | `nullptr` |
-| Enums | `enum`, `enum class` |
-| Filesystem | `std::filesystem::path` |
-| Optional | `std::optional<T>` |
-| Variant | `std::variant<Ts...>` |
-| Any | `std::any` |
-| Reference wrapper | `std::reference_wrapper<T>` |
-| Chrono duration | `std::chrono::seconds`, milliseconds, etc. |
-| Chrono time point | `std::chrono::time_point` |
-| Smart pointers | `std::unique_ptr`, `std::shared_ptr`, `std::weak_ptr` |
-| Raw pointers | `T *` |
-| Function pointers | function pointer values |
-| Ranges | `std::vector`, `std::list`, `std::deque`, etc. |
-| Sets | `std::set`, `std::unordered_set`, etc. |
-| Maps | `std::map`, `std::unordered_map`, etc. |
-| Container adapters | `std::stack`, `std::queue`, `std::priority_queue` |
-| Tuple-like values | `std::tuple`, `std::pair`, `std::array` |
-| Error types | `std::error_code`, `std::error_condition` |
-| Byte | `std::byte` |
-| Monostate | `std::monostate` |
-| Streamable types | Any type with `operator<<` |
-| Custom inspected types | `vix::inspector<T>`, `vix_inspect`, or `field_map<T>` |
+| Type category          | Examples                                               |
+| ---------------------- | ------------------------------------------------------ |
+| Booleans               | `bool`                                                 |
+| Characters             | `char`, `wchar_t`, `char8_t`, `char16_t`, `char32_t`   |
+| Strings                | `std::string`, `std::string_view`, `const char *`      |
+| Wide strings           | `std::wstring`, `std::wstring_view`, `const wchar_t *` |
+| Numbers                | `int`, `double`, `std::size_t`, etc.                   |
+| Null                   | `nullptr`                                              |
+| Enums                  | `enum`, `enum class`                                   |
+| Filesystem             | `std::filesystem::path`                                |
+| Optional               | `std::optional<T>`                                     |
+| Variant                | `std::variant<Ts...>`                                  |
+| Any                    | `std::any`                                             |
+| Reference wrapper      | `std::reference_wrapper<T>`                            |
+| Chrono duration        | `std::chrono::seconds`, milliseconds, etc.             |
+| Chrono time point      | `std::chrono::time_point`                              |
+| Smart pointers         | `std::unique_ptr`, `std::shared_ptr`, `std::weak_ptr`  |
+| Raw pointers           | `T *`                                                  |
+| Function pointers      | function pointer values                                |
+| Ranges                 | `std::vector`, `std::list`, `std::deque`, etc.         |
+| Sets                   | `std::set`, `std::unordered_set`, etc.                 |
+| Maps                   | `std::map`, `std::unordered_map`, etc.                 |
+| Container adapters     | `std::stack`, `std::queue`, `std::priority_queue`      |
+| Tuple-like values      | `std::tuple`, `std::pair`, `std::array`                |
+| Error types            | `std::error_code`, `std::error_condition`              |
+| Byte                   | `std::byte`                                            |
+| Monostate              | `std::monostate`                                       |
+| Streamable types       | Any type with `operator<<`                             |
+| Custom inspected types | `vix::inspector<T>`, `vix_inspect`, or `field_map<T>`  |
 
 If C++23 `std::expected` is available, `std::expected<T, E>` is also supported.
 
@@ -705,15 +705,15 @@ Internally, Vix builds a `type_metadata` object.
 
 It includes:
 
-| Field group | Examples |
-| --- | --- |
-| Type names | `name`, `full_name` |
-| Memory layout | `size_bytes`, `align_bytes` |
-| Categories | `is_integral`, `is_class`, `is_enum`, `is_pointer`, etc. |
-| Qualifiers | `is_const`, `is_volatile` |
-| Class traits | `is_aggregate`, `is_standard_layout`, `is_trivially_copyable`, etc. |
-| Construction traits | `is_default_constructible`, `is_copy_constructible`, etc. |
-| Sign traits | `is_signed`, `is_unsigned` |
+| Field group         | Examples                                                            |
+| ------------------- | ------------------------------------------------------------------- |
+| Type names          | `name`, `full_name`                                                 |
+| Memory layout       | `size_bytes`, `align_bytes`                                         |
+| Categories          | `is_integral`, `is_class`, `is_enum`, `is_pointer`, etc.            |
+| Qualifiers          | `is_const`, `is_volatile`                                           |
+| Class traits        | `is_aggregate`, `is_standard_layout`, `is_trivially_copyable`, etc. |
+| Construction traits | `is_default_constructible`, `is_copy_constructible`, etc.           |
+| Sign traits         | `is_signed`, `is_unsigned`                                          |
 
 You can build metadata manually:
 
@@ -1238,12 +1238,12 @@ std::string short_name = vix::demangle::short_type_name<std::vector<int>>();
 
 Useful helpers:
 
-| API | Purpose |
-| --- | --- |
-| `vix::demangle::type_name<T>()` | Full human-readable type name when supported. |
-| `vix::demangle::type_name_of(value)` | Type name of a deduced value. |
-| `vix::demangle::shorten(name)` | Remove common namespace noise. |
-| `vix::demangle::short_type_name<T>()` | Shortened type name. |
+| API                                   | Purpose                                       |
+| ------------------------------------- | --------------------------------------------- |
+| `vix::demangle::type_name<T>()`       | Full human-readable type name when supported. |
+| `vix::demangle::type_name_of(value)`  | Type name of a deduced value.                 |
+| `vix::demangle::shorten(name)`        | Remove common namespace noise.                |
+| `vix::demangle::short_type_name<T>()` | Shortened type name.                          |
 
 On GCC and Clang, Vix uses ABI demangling when available. On other compilers, it falls back to `typeid().name()`.
 

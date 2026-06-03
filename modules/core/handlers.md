@@ -107,7 +107,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.json({
-    {"status", "ok"}
+    "status", "ok"
   });
 });
 ```
@@ -124,9 +124,9 @@ Use `req` to read request data.
 app.get("/debug", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"method", req.method()},
-    {"path", req.path()},
-    {"target", req.target()}
+    "method", req.method(),
+    "path", req.path(),
+    "target", req.target()
   });
 });
 ```
@@ -155,7 +155,7 @@ Use `req.param(...)` to read route parameters.
 app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"id", req.param("id")}
+    "id", req.param("id")
   });
 });
 ```
@@ -180,8 +180,8 @@ Example response:
 app.get("/users/{user_id}/posts/{post_id}", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"user_id", req.param("user_id")},
-    {"post_id", req.param("post_id")}
+    "user_id", req.param("user_id"),
+    "post_id", req.param("post_id")
   });
 });
 ```
@@ -212,8 +212,8 @@ app.get("/search", [](vix::Request &req, vix::Response &res)
   const std::string page = req.query_value("page", "1");
 
   res.json({
-    {"q", q},
-    {"page", page}
+    "q", q,
+    "page", page
   });
 });
 ```
@@ -243,13 +243,13 @@ app.get("/search", [](vix::Request &req, vix::Response &res)
   if (!req.has_query("q"))
   {
     res.status(400).json({
-      {"error", "missing query parameter q"}
+      "error", "missing query parameter q"
     });
     return;
   }
 
   res.json({
-    {"q", req.query_value("q")}
+    "q", req.query_value("q")
   });
 });
 ```
@@ -262,7 +262,7 @@ Use `req.header(...)` to read a header.
 app.get("/agent", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"user_agent", req.header("User-Agent")}
+    "user_agent", req.header("User-Agent")
   });
 });
 ```
@@ -275,12 +275,12 @@ app.get("/auth", [](vix::Request &req, vix::Response &res)
   if (!req.has_header("Authorization"))
   {
     res.status(401).json({
-      {"error", "missing authorization header"}
+      "error", "missing authorization header"
     });
     return;
   }
 
-  res.json({{"authorized", true}});
+  res.json({"authorized", true});
 });
 ```
 
@@ -317,7 +317,7 @@ app.post("/users", [](vix::Request &req, vix::Response &res)
   const auto &body = req.json();
 
   res.status(201).json({
-    {"received", body}
+    "received", body
   });
 });
 ```
@@ -351,8 +351,8 @@ app.get("/api/status", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.json({
-    {"status", "ok"},
-    {"server", "Vix.cpp"}
+    "status", "ok",
+    "server", "Vix.cpp"
   });
 });
 ```
@@ -367,7 +367,7 @@ app.post("/users", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.status(201).json({
-    {"created", true}
+    "created", true
   });
 });
 ```
@@ -384,7 +384,7 @@ app.get("/admin", [](vix::Request &req, vix::Response &res)
   if (!allowed)
   {
     res.status(403).json({
-      {"error", "forbidden"}
+      "error", "forbidden"
     });
     return;
   }
@@ -529,7 +529,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
   (void)res;
 
   return vix::json::Json{
-    {"status", "ok"}
+    "status", "ok"
   };
 });
 ```
@@ -570,7 +570,7 @@ app.get("/private", [](vix::Request &req, vix::Response &res)
   if (!req.has_header("Authorization"))
   {
     res.status(401).json({
-      {"error", "unauthorized"}
+      "error", "unauthorized"
     });
     return;
   }
@@ -635,7 +635,7 @@ app.get("/me", [](vix::Request &req, vix::Response &res)
   const auto &user = req.state().get<CurrentUser>();
 
   res.json({
-    {"id", user.id}
+    "id", user.id
   });
 });
 ```
@@ -645,11 +645,11 @@ Use `try_get` when the value may be absent.
 ```cpp
 if (auto *user = req.state().try_get<CurrentUser>())
 {
-  res.json({{"id", user->id}});
+  res.json({"id", user->id});
   return;
 }
 
-res.status(401).json({{"error", "unauthorized"}});
+res.status(401).json({"error", "unauthorized"});
 ```
 
 ## Handler errors
@@ -779,14 +779,14 @@ int main()
   app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
   {
     res.json({
-      {"id", req.param("id")}
+      "id", req.param("id")
     });
   });
 
   app.post("/echo", [](vix::Request &req, vix::Response &res)
   {
     res.json({
-      {"body", req.body()}
+      "body", req.body()
     });
   });
 
@@ -795,7 +795,7 @@ int main()
     const auto &user = req.state().get<CurrentUser>();
 
     res.json({
-      {"id", user.id}
+      "id", user.id
     });
   });
 
@@ -814,32 +814,32 @@ int main()
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `req.method()` | Return the HTTP method. |
-| `req.path()` | Return the path without query string. |
-| `req.target()` | Return the full request target. |
-| `req.body()` | Return the request body. |
-| `req.param(name)` | Return a route parameter. |
-| `req.has_param(name)` | Check if a route parameter exists. |
-| `req.query()` | Return parsed query parameters. |
-| `req.query_value(name, fallback)` | Return one query parameter. |
-| `req.has_query(name)` | Check if a query parameter exists. |
-| `req.header(name)` | Return a request header. |
-| `req.has_header(name)` | Check if a header exists. |
-| `req.json()` | Parse body as JSON. |
-| `req.json_as<T>()` | Convert JSON body to type `T`. |
-| `req.state()` | Access request-scoped state. |
-| `res.status(code)` | Set HTTP status. |
-| `res.text(data)` | Send plain text. |
-| `res.json(value)` | Send JSON. |
-| `res.redirect(url)` | Send redirect. |
-| `res.file(path)` | Send file. |
-| `res.render(name, context)` | Render a template. |
-| `res.header(name, value)` | Set a header. |
-| `res.type(mime)` | Set content type. |
-| `res.send()` | Send an empty or current response. |
-| `res.sendStatus(code)` | Send a status response. |
+| API                               | Purpose                               |
+| --------------------------------- | ------------------------------------- |
+| `req.method()`                    | Return the HTTP method.               |
+| `req.path()`                      | Return the path without query string. |
+| `req.target()`                    | Return the full request target.       |
+| `req.body()`                      | Return the request body.              |
+| `req.param(name)`                 | Return a route parameter.             |
+| `req.has_param(name)`             | Check if a route parameter exists.    |
+| `req.query()`                     | Return parsed query parameters.       |
+| `req.query_value(name, fallback)` | Return one query parameter.           |
+| `req.has_query(name)`             | Check if a query parameter exists.    |
+| `req.header(name)`                | Return a request header.              |
+| `req.has_header(name)`            | Check if a header exists.             |
+| `req.json()`                      | Parse body as JSON.                   |
+| `req.json_as<T>()`                | Convert JSON body to type `T`.        |
+| `req.state()`                     | Access request-scoped state.          |
+| `res.status(code)`                | Set HTTP status.                      |
+| `res.text(data)`                  | Send plain text.                      |
+| `res.json(value)`                 | Send JSON.                            |
+| `res.redirect(url)`               | Send redirect.                        |
+| `res.file(path)`                  | Send file.                            |
+| `res.render(name, context)`       | Render a template.                    |
+| `res.header(name, value)`         | Set a header.                         |
+| `res.type(mime)`                  | Set content type.                     |
+| `res.send()`                      | Send an empty or current response.    |
+| `res.sendStatus(code)`            | Send a status response.               |
 
 ## Best practices
 
@@ -850,7 +850,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"status", "ok"}});
+  res.json({"status", "ok"});
 });
 ```
 
@@ -869,7 +869,7 @@ app.get("/users/{id}", handler);
 Return explicit error responses.
 
 ```cpp
-res.status(400).json({{"error", "bad request"}});
+res.status(400).json({"error", "bad request"});
 ```
 
 Avoid long blocking work directly inside handlers. Use the runtime/executor model for expensive work when needed.

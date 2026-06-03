@@ -77,11 +77,11 @@ tls.key_file = "/etc/letsencrypt/live/example.com/privkey.pem";
 
 The configuration contains:
 
-| Field | Purpose |
-|---|---|
-| `enabled` | Enable or disable TLS. |
+| Field       | Purpose                       |
+| ----------- | ----------------------------- |
+| `enabled`   | Enable or disable TLS.        |
 | `cert_file` | Path to the certificate file. |
-| `key_file` | Path to the private key file. |
+| `key_file`  | Path to the private key file. |
 
 ## Configuration checks
 
@@ -95,11 +95,11 @@ tls.is_valid();
 
 Meaning:
 
-| Method | Meaning |
-|---|---|
-| `is_enabled()` | Returns `true` if TLS is enabled. |
+| Method            | Meaning                                                    |
+| ----------------- | ---------------------------------------------------------- |
+| `is_enabled()`    | Returns `true` if TLS is enabled.                          |
 | `is_configured()` | Returns `true` if certificate and key paths are not empty. |
-| `is_valid()` | Returns `true` if TLS is enabled and configured. |
+| `is_valid()`      | Returns `true` if TLS is enabled and configured.           |
 
 Example:
 
@@ -518,7 +518,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"status", "ok"}});
+  res.json({"status", "ok"});
 });
 ```
 
@@ -724,8 +724,8 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"},
-      {"tls", true}
+      "status", "ok",
+      "tls", true
     });
   });
 
@@ -743,24 +743,24 @@ https://localhost:8443
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `TlsConfig::enabled` | Enable or disable TLS. |
-| `TlsConfig::cert_file` | Certificate file path. |
-| `TlsConfig::key_file` | Private key file path. |
-| `TlsConfig::is_enabled()` | Return whether TLS is enabled. |
-| `TlsConfig::is_configured()` | Return whether certificate and key paths are set. |
-| `TlsConfig::is_valid()` | Return whether TLS is enabled and configured. |
-| `Config::isTlsEnabled()` | Return whether TLS is enabled in app configuration. |
-| `Config::getTlsCertFile()` | Return TLS certificate path. |
-| `Config::getTlsKeyFile()` | Return TLS private key path. |
-| `Config::getTlsConfig()` | Return a complete `TlsConfig`. |
-| `TlsSession::run()` | Perform TLS session lifecycle. |
-| `TlsTransport::async_handshake()` | Perform TLS server handshake. |
-| `TlsTransport::async_read()` | Read decrypted bytes. |
-| `TlsTransport::async_write()` | Write encrypted bytes. |
-| `TlsTransport::is_open()` | Check whether the TLS transport is open. |
-| `TlsTransport::close()` | Close TLS and TCP resources. |
+| API                               | Purpose                                             |
+| --------------------------------- | --------------------------------------------------- |
+| `TlsConfig::enabled`              | Enable or disable TLS.                              |
+| `TlsConfig::cert_file`            | Certificate file path.                              |
+| `TlsConfig::key_file`             | Private key file path.                              |
+| `TlsConfig::is_enabled()`         | Return whether TLS is enabled.                      |
+| `TlsConfig::is_configured()`      | Return whether certificate and key paths are set.   |
+| `TlsConfig::is_valid()`           | Return whether TLS is enabled and configured.       |
+| `Config::isTlsEnabled()`          | Return whether TLS is enabled in app configuration. |
+| `Config::getTlsCertFile()`        | Return TLS certificate path.                        |
+| `Config::getTlsKeyFile()`         | Return TLS private key path.                        |
+| `Config::getTlsConfig()`          | Return a complete `TlsConfig`.                      |
+| `TlsSession::run()`               | Perform TLS session lifecycle.                      |
+| `TlsTransport::async_handshake()` | Perform TLS server handshake.                       |
+| `TlsTransport::async_read()`      | Read decrypted bytes.                               |
+| `TlsTransport::async_write()`     | Write encrypted bytes.                              |
+| `TlsTransport::is_open()`         | Check whether the TLS transport is open.            |
+| `TlsTransport::close()`           | Close TLS and TCP resources.                        |
 
 ## Best practices
 

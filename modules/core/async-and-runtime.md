@@ -333,11 +333,11 @@ vix::runtime::TaskResult::failed
 
 Meaning:
 
-| Result | Meaning |
-|---|---|
-| `complete` | The task finished. |
-| `yield` | The task should be scheduled again later. |
-| `failed` | The task failed. |
+| Result     | Meaning                                   |
+| ---------- | ----------------------------------------- |
+| `complete` | The task finished.                        |
+| `yield`    | The task should be scheduled again later. |
+| `failed`   | The task failed.                          |
 
 ## Yielding work
 
@@ -396,17 +396,17 @@ failed
 
 ## Comparison
 
-| Concept | Used for |
-|---|---|
-| `vix::async::core::task<T>` | Coroutine-based async operations. |
-| `vix::async::core::io_context` | Running async I/O tasks. |
-| `vix::async::net::tcp_listener` | Accepting TCP connections. |
-| `vix::async::net::tcp_stream` | Reading and writing TCP bytes. |
-| `vix::runtime::Runtime` | Running internal scheduled tasks. |
-| `vix::runtime::Task` | Low-level runtime work unit. |
-| `vix::executor::RuntimeExecutor` | Adapter from Core to runtime. |
-| `vix::server::HTTPServer` | Native HTTP server built on async. |
-| `vix::session::Session` | One client connection lifecycle. |
+| Concept                          | Used for                           |
+| -------------------------------- | ---------------------------------- |
+| `vix::async::core::task<T>`      | Coroutine-based async operations.  |
+| `vix::async::core::io_context`   | Running async I/O tasks.           |
+| `vix::async::net::tcp_listener`  | Accepting TCP connections.         |
+| `vix::async::net::tcp_stream`    | Reading and writing TCP bytes.     |
+| `vix::runtime::Runtime`          | Running internal scheduled tasks.  |
+| `vix::runtime::Task`             | Low-level runtime work unit.       |
+| `vix::executor::RuntimeExecutor` | Adapter from Core to runtime.      |
+| `vix::server::HTTPServer`        | Native HTTP server built on async. |
+| `vix::session::Session`          | One client connection lifecycle.   |
 
 ## Thread model
 
@@ -681,9 +681,9 @@ int main()
     const auto m = app.executor().metrics();
 
     res.json({
-      {"pending", m.pending},
-      {"active", m.active},
-      {"timed_out", m.timed_out}
+      "pending", m.pending,
+      "active", m.active,
+      "timed_out", m.timed_out
     });
   });
 
@@ -795,7 +795,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"status", "ok"}});
+  res.json({"status", "ok"});
 });
 ```
 
@@ -807,7 +807,7 @@ app.get("/reports", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   // Call a service that handles the expensive work.
-  res.json({{"report", "ready"}});
+  res.json({"report", "ready"});
 });
 ```
 
@@ -820,7 +820,7 @@ app.get_heavy("/reports", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"report", "ready"}});
+  res.json({"report", "ready"});
 });
 ```
 
@@ -955,9 +955,9 @@ int main()
     const auto metrics = app.executor().metrics();
 
     res.json({
-      {"pending", metrics.pending},
-      {"active", metrics.active},
-      {"timed_out", metrics.timed_out}
+      "pending", metrics.pending,
+      "active", metrics.active,
+      "timed_out", metrics.timed_out
     });
   });
 
@@ -966,7 +966,7 @@ int main()
     (void)req;
 
     res.json({
-      {"report", "ready"}
+      "report", "ready"
     });
   });
 
@@ -978,21 +978,21 @@ int main()
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `vix::async::core::io_context` | Runs async I/O tasks. |
-| `vix::async::core::task<T>` | Coroutine-based async result. |
-| `vix::async::core::spawn_detached` | Start a detached async task. |
-| `vix::async::net::tcp_listener` | Accept TCP connections. |
-| `vix::async::net::tcp_stream` | Read and write TCP bytes. |
-| `vix::executor::RuntimeExecutor` | Bridge Core to `vix::runtime`. |
-| `RuntimeExecutor::post` | Submit normal callable work. |
-| `RuntimeExecutor::submit` | Submit low-level runtime work. |
-| `RuntimeExecutor::post_http_fast` | Submit short HTTP fast-path work. |
-| `RuntimeExecutor::metrics` | Read runtime executor metrics. |
-| `vix::runtime::Runtime` | Internal runtime engine. |
-| `vix::runtime::Task` | Runtime task unit. |
-| `vix::runtime::TaskResult` | Runtime task result. |
+| API                                | Purpose                           |
+| ---------------------------------- | --------------------------------- |
+| `vix::async::core::io_context`     | Runs async I/O tasks.             |
+| `vix::async::core::task<T>`        | Coroutine-based async result.     |
+| `vix::async::core::spawn_detached` | Start a detached async task.      |
+| `vix::async::net::tcp_listener`    | Accept TCP connections.           |
+| `vix::async::net::tcp_stream`      | Read and write TCP bytes.         |
+| `vix::executor::RuntimeExecutor`   | Bridge Core to `vix::runtime`.    |
+| `RuntimeExecutor::post`            | Submit normal callable work.      |
+| `RuntimeExecutor::submit`          | Submit low-level runtime work.    |
+| `RuntimeExecutor::post_http_fast`  | Submit short HTTP fast-path work. |
+| `RuntimeExecutor::metrics`         | Read runtime executor metrics.    |
+| `vix::runtime::Runtime`            | Internal runtime engine.          |
+| `vix::runtime::Task`               | Runtime task unit.                |
+| `vix::runtime::TaskResult`         | Runtime task result.              |
 
 ## Best practices
 

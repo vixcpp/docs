@@ -112,13 +112,13 @@ Session(
 
 Arguments:
 
-| Argument | Purpose |
-|---|---|
-| `stream` | Accepted native TCP stream. |
-| `cfg` | WebSocket runtime configuration. |
-| `router` | Dispatches open, close, error, and message events. |
-| `executor` | Runtime executor used by the WebSocket stack. |
-| `ioc` | Async I/O context used for reads, writes, and posted work. |
+| Argument   | Purpose                                                    |
+| ---------- | ---------------------------------------------------------- |
+| `stream`   | Accepted native TCP stream.                                |
+| `cfg`      | WebSocket runtime configuration.                           |
+| `router`   | Dispatches open, close, error, and message events.         |
+| `executor` | Runtime executor used by the WebSocket stack.              |
+| `ioc`      | Async I/O context used for reads, writes, and posted work. |
 
 Most users do not call this constructor directly.
 
@@ -657,11 +657,11 @@ ws.broadcast_text_to_room("general", "room message");
 
 Use the right level:
 
-| Need | Use |
-|---|---|
-| Reply to one client | `session.send_text(...)` |
-| Send to all clients | `ws.broadcast_text(...)` |
-| Send to one room | `ws.broadcast_text_to_room(...)` |
+| Need                | Use                              |
+| ------------------- | -------------------------------- |
+| Reply to one client | `session.send_text(...)`         |
+| Send to all clients | `ws.broadcast_text(...)`         |
+| Send to one room    | `ws.broadcast_text_to_room(...)` |
 
 ## Session lifecycle
 

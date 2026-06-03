@@ -214,7 +214,7 @@ A route is registered through the app:
 app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
 {
   res.json({
-    {"id", req.param("id")}
+    "id", req.param("id")
   });
 });
 ```
@@ -294,7 +294,7 @@ Or stop the request early:
 
 ```cpp
 res.status(401).json({
-  {"error", "unauthorized"}
+  "error", "unauthorized"
 });
 ```
 
@@ -431,8 +431,8 @@ app.get("/users/{id}", [](vix::Request &req, vix::Response &res)
   const std::string page = req.query_value("page", "1");
 
   res.json({
-    {"id", id},
-    {"page", page}
+    "id", id,
+    "page", page
   });
 });
 ```
@@ -446,7 +446,7 @@ It wraps the native response object and provides convenient methods.
 ```cpp
 res.status(200);
 res.text("OK");
-res.json({{"ok", true}});
+res.json({"ok", true});
 res.redirect("/login");
 res.file("public/index.html");
 res.render("index.html", ctx);
@@ -743,7 +743,7 @@ app.get_heavy("/reports", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"status", "ready"}});
+  res.json({"status", "ready"});
 });
 ```
 
@@ -766,17 +766,17 @@ This lets the router and runtime model identify costly routes.
 
 Core keeps these responsibilities separate:
 
-| Layer | Responsibility |
-|---|---|
-| `App` | Developer-facing application facade. |
-| `Router` | Match method and path to handlers. |
-| `RequestHandler` | Adapt user handlers to the router interface. |
-| `HTTPServer` | Own I/O context, listener, accept loop, and server lifecycle. |
-| `Session` | Parse requests and write responses for one connection. |
-| `Transport` | Abstract plain TCP and TLS. |
-| `RuntimeExecutor` | Bridge application work to `vix::runtime`. |
-| `vix::async` | Network I/O, timers, cancellation, coroutines. |
-| `vix::runtime` | Lightweight internal task execution. |
+| Layer             | Responsibility                                                |
+| ----------------- | ------------------------------------------------------------- |
+| `App`             | Developer-facing application facade.                          |
+| `Router`          | Match method and path to handlers.                            |
+| `RequestHandler`  | Adapt user handlers to the router interface.                  |
+| `HTTPServer`      | Own I/O context, listener, accept loop, and server lifecycle. |
+| `Session`         | Parse requests and write responses for one connection.        |
+| `Transport`       | Abstract plain TCP and TLS.                                   |
+| `RuntimeExecutor` | Bridge application work to `vix::runtime`.                    |
+| `vix::async`      | Network I/O, timers, cancellation, coroutines.                |
+| `vix::runtime`    | Lightweight internal task execution.                          |
 
 ## Minimal mental model
 

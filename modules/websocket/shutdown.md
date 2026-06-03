@@ -56,14 +56,14 @@ safe finalization path
 
 ## Main shutdown APIs
 
-| API | Meaning |
-|---|---|
-| `Server::stop_async()` | Request non-blocking WebSocket shutdown. |
-| `Server::stop()` | Stop the server and join internal threads. |
-| `Session::close(...)` | Close one session normally. |
-| `Session::shutdown_now()` | Force immediate session shutdown. |
-| `AttachedRuntime::request_stop()` | Request non-blocking stop for attached runtime. |
-| `AttachedRuntime::finalize_shutdown()` | Final blocking shutdown for attached runtime. |
+| API                                    | Meaning                                         |
+| -------------------------------------- | ----------------------------------------------- |
+| `Server::stop_async()`                 | Request non-blocking WebSocket shutdown.        |
+| `Server::stop()`                       | Stop the server and join internal threads.      |
+| `Session::close(...)`                  | Close one session normally.                     |
+| `Session::shutdown_now()`              | Force immediate session shutdown.               |
+| `AttachedRuntime::request_stop()`      | Request non-blocking stop for attached runtime. |
+| `AttachedRuntime::finalize_shutdown()` | Final blocking shutdown for attached runtime.   |
 
 ## Server shutdown model
 

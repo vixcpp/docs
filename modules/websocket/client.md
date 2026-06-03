@@ -73,10 +73,10 @@ auto client =
 
 The arguments are:
 
-| Argument | Purpose |
-|---|---|
-| `host` | Hostname or IP address. |
-| `port` | Service or port as a string. |
+| Argument | Purpose                         |
+| -------- | ------------------------------- |
+| `host`   | Hostname or IP address.         |
+| `port`   | Service or port as a string.    |
 | `target` | WebSocket path, default is `/`. |
 
 Example URLs:
@@ -598,12 +598,14 @@ A browser client looks like this:
 const socket = new WebSocket("ws://localhost:9090");
 
 socket.onopen = () => {
-  socket.send(JSON.stringify({
-    type: "chat.message",
-    payload: {
-      text: "Hello"
-    }
-  }));
+  socket.send(
+    JSON.stringify({
+      type: "chat.message",
+      payload: {
+        text: "Hello",
+      },
+    }),
+  );
 };
 
 socket.onmessage = (event) => {

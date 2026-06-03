@@ -384,23 +384,23 @@ Use `}}` for a literal closing brace.
 
 ## Supported placeholder syntax
 
-| Syntax | Meaning |
-|---|---|
-| `{}` | Insert next automatic argument. |
-| `{0}` | Insert argument at index `0`. |
-| `{1}` | Insert argument at index `1`. |
-| <code v-pre>{{</code> | Insert literal `{`. |
-| <code v-pre>}}</code> | Insert literal `}`. |
+| Syntax                | Meaning                         |
+| --------------------- | ------------------------------- |
+| `{}`                  | Insert next automatic argument. |
+| `{0}`                 | Insert argument at index `0`.   |
+| `{1}`                 | Insert argument at index `1`.   |
+| <code v-pre>{{</code> | Insert literal `{`.             |
+| <code v-pre>}}</code> | Insert literal `}`.             |
 
 ## Unsupported syntax
 
-| Syntax | Reason |
-|---|---|
-| `{:>10}` | Format specifiers are not supported. |
-| `{:.2f}` | Format specifiers are not supported. |
-| `{:x}` | Format specifiers are not supported. |
-| `{name}` | Named placeholders are not supported. |
-| `{}` mixed with `{0}` | Mixed indexing is rejected. |
+| Syntax                | Reason                                |
+| --------------------- | ------------------------------------- |
+| `{:>10}`              | Format specifiers are not supported.  |
+| `{:.2f}`              | Format specifiers are not supported.  |
+| `{:x}`                | Format specifiers are not supported.  |
+| `{name}`              | Named placeholders are not supported. |
+| `{}` mixed with `{0}` | Mixed indexing is rejected.           |
 
 ## Formatting strings
 
@@ -810,33 +810,33 @@ format error: format argument index out of range
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `vix::format(fmt, args...)` | Return a new formatted string. |
-| `vix::format_append(out, fmt, args...)` | Append formatted output to an existing string. |
-| `vix::format_to(out, fmt, args...)` | Replace an existing string with formatted output. |
-| `vix::format_error` | Exception thrown for invalid format strings or invalid argument access. |
+| API                                     | Purpose                                                                 |
+| --------------------------------------- | ----------------------------------------------------------------------- |
+| `vix::format(fmt, args...)`             | Return a new formatted string.                                          |
+| `vix::format_append(out, fmt, args...)` | Append formatted output to an existing string.                          |
+| `vix::format_to(out, fmt, args...)`     | Replace an existing string with formatted output.                       |
+| `vix::format_error`                     | Exception thrown for invalid format strings or invalid argument access. |
 
 ## Placeholder summary
 
-| Placeholder | Meaning |
-|---|---|
-| `{}` | Insert the next automatic argument. |
-| `{0}` | Insert argument at index `0`. |
-| `{1}` | Insert argument at index `1`. |
-| <code v-pre>{{</code> | Insert literal `{`. |
-| <code v-pre>}}</code> | Insert literal `}`. |
+| Placeholder           | Meaning                             |
+| --------------------- | ----------------------------------- |
+| `{}`                  | Insert the next automatic argument. |
+| `{0}`                 | Insert argument at index `0`.       |
+| `{1}`                 | Insert argument at index `1`.       |
+| <code v-pre>{{</code> | Insert literal `{`.                 |
+| <code v-pre>}}</code> | Insert literal `}`.                 |
 
 ## Error summary
 
-| Invalid input | Error reason |
-|---|---|
-| `{` | Unmatched opening brace. |
-| `}` | Single closing brace. |
-| `{abc}` | Invalid explicit index. |
-| `{:>10}` | Format specifiers are not supported. |
-| `{} {0}` | Cannot mix automatic and explicit indexing. |
-| `{2}` with two arguments | Argument index out of range. |
+| Invalid input            | Error reason                                |
+| ------------------------ | ------------------------------------------- |
+| `{`                      | Unmatched opening brace.                    |
+| `}`                      | Single closing brace.                       |
+| `{abc}`                  | Invalid explicit index.                     |
+| `{:>10}`                 | Format specifiers are not supported.        |
+| `{} {0}`                 | Cannot mix automatic and explicit indexing. |
+| `{2}` with two arguments | Argument index out of range.                |
 
 ## Best practices
 
@@ -898,13 +898,13 @@ Use it for simple readable strings, not advanced alignment or numeric formatting
 
 ## Related APIs
 
-| API | Purpose |
-|---|---|
-| `vix::print(...)` | Print values to stdout. |
-| `vix::sprint(...)` | Convert multiple printable values to a string. |
-| `vix::to_string(value)` | Convert one printable value to a string. |
-| `vix::write_to(os, value)` | Write one value to a stream. |
-| `vix::formatter<T>` | Customize rendering for a type. |
+| API                        | Purpose                                        |
+| -------------------------- | ---------------------------------------------- |
+| `vix::print(...)`          | Print values to stdout.                        |
+| `vix::sprint(...)`         | Convert multiple printable values to a string. |
+| `vix::to_string(value)`    | Convert one printable value to a string.       |
+| `vix::write_to(os, value)` | Write one value to a stream.                   |
+| `vix::formatter<T>`        | Customize rendering for a type.                |
 
 ## Next steps
 

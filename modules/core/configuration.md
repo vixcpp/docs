@@ -284,10 +284,10 @@ cfg.getLogDropOnOverflow();
 
 These control:
 
-| API | Purpose |
-|---|---|
-| `getLogAsync()` | Whether async logging is enabled. |
-| `getLogQueueMax()` | Maximum async log queue size. |
+| API                      | Purpose                                             |
+| ------------------------ | --------------------------------------------------- |
+| `getLogAsync()`          | Whether async logging is enabled.                   |
+| `getLogQueueMax()`       | Maximum async log queue size.                       |
 | `getLogDropOnOverflow()` | Whether logs may be dropped when the queue is full. |
 
 The app also reads logging behavior from environment variables such as `VIX_LOG_LEVEL` and `VIX_LOG_FORMAT`.
@@ -304,10 +304,10 @@ cfg.getWafMaxBodyBytes();
 
 These control request checks in the session layer.
 
-| API | Purpose |
-|---|---|
-| `getWafMode()` | WAF mode: `off`, `basic`, or `strict`. |
-| `getWafMaxTargetLen()` | Maximum allowed target length. |
+| API                    | Purpose                                  |
+| ---------------------- | ---------------------------------------- |
+| `getWafMode()`         | WAF mode: `off`, `basic`, or `strict`.   |
+| `getWafMaxTargetLen()` | Maximum allowed target length.           |
 | `getWafMaxBodyBytes()` | Maximum body bytes checked by WAF logic. |
 
 ## WAF modes
@@ -799,8 +799,8 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"},
-      {"tls", false}
+      "status", "ok",
+      "tls", false
     });
   });
 
@@ -838,8 +838,8 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"},
-      {"tls", true}
+      "status", "ok",
+      "tls", true
     });
   });
 
@@ -851,36 +851,36 @@ int main()
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `Config(path)` | Construct config with an optional config path. |
-| `loadConfig()` | Reload configuration from environment files. |
-| `set(key, value)` | Set a dotted configuration value. |
-| `has(key)` | Check whether a dotted key exists. |
-| `getInt(key, fallback)` | Read an integer config value. |
-| `getBool(key, fallback)` | Read a boolean config value. |
-| `getString(key, fallback)` | Read a string config value. |
-| `setServerPort(port)` | Set the HTTP server port. |
-| `getServerPort()` | Return the HTTP server port. |
-| `getRequestTimeout()` | Return request timeout in milliseconds. |
-| `getIOThreads()` | Return configured I/O threads. |
-| `isBenchMode()` | Return whether benchmark mode is enabled. |
-| `getSessionTimeoutSec()` | Return session timeout in seconds. |
-| `getWafMode()` | Return WAF mode. |
-| `getWafMaxTargetLen()` | Return maximum WAF target length. |
-| `getWafMaxBodyBytes()` | Return maximum WAF body bytes. |
-| `isTlsEnabled()` | Return whether TLS is enabled. |
-| `getTlsCertFile()` | Return TLS certificate path. |
-| `getTlsKeyFile()` | Return TLS private key path. |
-| `getTlsConfig()` | Return complete TLS configuration. |
-| `getLogAsync()` | Return async logging setting. |
-| `getLogQueueMax()` | Return async log queue max size. |
-| `getLogDropOnOverflow()` | Return log overflow behavior. |
-| `getDbHost()` | Return database host. |
-| `getDbUser()` | Return database user. |
-| `getDbName()` | Return database name. |
-| `getDbPort()` | Return database port. |
-| `getDbPasswordFromEnv()` | Return database password from environment. |
+| API                        | Purpose                                        |
+| -------------------------- | ---------------------------------------------- |
+| `Config(path)`             | Construct config with an optional config path. |
+| `loadConfig()`             | Reload configuration from environment files.   |
+| `set(key, value)`          | Set a dotted configuration value.              |
+| `has(key)`                 | Check whether a dotted key exists.             |
+| `getInt(key, fallback)`    | Read an integer config value.                  |
+| `getBool(key, fallback)`   | Read a boolean config value.                   |
+| `getString(key, fallback)` | Read a string config value.                    |
+| `setServerPort(port)`      | Set the HTTP server port.                      |
+| `getServerPort()`          | Return the HTTP server port.                   |
+| `getRequestTimeout()`      | Return request timeout in milliseconds.        |
+| `getIOThreads()`           | Return configured I/O threads.                 |
+| `isBenchMode()`            | Return whether benchmark mode is enabled.      |
+| `getSessionTimeoutSec()`   | Return session timeout in seconds.             |
+| `getWafMode()`             | Return WAF mode.                               |
+| `getWafMaxTargetLen()`     | Return maximum WAF target length.              |
+| `getWafMaxBodyBytes()`     | Return maximum WAF body bytes.                 |
+| `isTlsEnabled()`           | Return whether TLS is enabled.                 |
+| `getTlsCertFile()`         | Return TLS certificate path.                   |
+| `getTlsKeyFile()`          | Return TLS private key path.                   |
+| `getTlsConfig()`           | Return complete TLS configuration.             |
+| `getLogAsync()`            | Return async logging setting.                  |
+| `getLogQueueMax()`         | Return async log queue max size.               |
+| `getLogDropOnOverflow()`   | Return log overflow behavior.                  |
+| `getDbHost()`              | Return database host.                          |
+| `getDbUser()`              | Return database user.                          |
+| `getDbName()`              | Return database name.                          |
+| `getDbPort()`              | Return database port.                          |
+| `getDbPasswordFromEnv()`   | Return database password from environment.     |
 
 ## Best practices
 

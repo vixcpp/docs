@@ -105,8 +105,8 @@ app.get("/api/status", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.json({
-    {"status", "ok"},
-    {"server", "Vix.cpp"}
+    "status", "ok",
+    "server", "Vix.cpp"
   });
 });
 ```
@@ -130,7 +130,7 @@ app.post("/users", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.status(201).json({
-    {"created", true}
+    "created", true
   });
 });
 ```
@@ -155,7 +155,7 @@ app.get("/admin", [](vix::Request &req, vix::Response &res)
   if (!allowed)
   {
     res.status(403).json({
-      {"error", "forbidden"}
+      "error", "forbidden"
     });
     return;
   }
@@ -391,8 +391,8 @@ app.post("/users", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.status(201).json({
-    {"id", 42},
-    {"created", true}
+    "id", 42,
+    "created", true
   });
 });
 ```
@@ -407,7 +407,7 @@ app.get("/private", [](vix::Request &req, vix::Response &res)
   if (!req.has_header("Authorization"))
   {
     res.status(401).json({
-      {"error", "unauthorized"}
+      "error", "unauthorized"
     });
     return;
   }
@@ -426,7 +426,7 @@ This allows chaining.
 
 ```cpp
 res.status(201).json({
-  {"created", true}
+  "created", true
 });
 ```
 
@@ -435,7 +435,7 @@ Another example:
 ```cpp
 res.status(403)
    .header("X-Reason", "auth")
-   .json({{"error", "forbidden"}});
+   .json({"error", "forbidden"});
 ```
 
 ## Access the native response
@@ -538,7 +538,7 @@ app.get("/status", [](vix::Request &req, vix::Response &res)
   (void)req;
 
   res.status(vix::http::OK).json({
-    {"status", "ok"}
+    "status", "ok"
   });
 });
 ```
@@ -609,7 +609,7 @@ app.get("/ok", [](vix::Request &req, vix::Response &res)
 {
   (void)req;
 
-  res.json({{"ok", true}});
+  res.json({"ok", true});
 });
 ```
 
@@ -618,7 +618,7 @@ When sending an error early, return immediately.
 ```cpp
 if (!allowed)
 {
-  res.status(403).json({{"error", "forbidden"}});
+  res.status(403).json({"error", "forbidden"});
   return;
 }
 ```
@@ -645,7 +645,7 @@ app.use("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next next)
 {
   if (!req.has_header("Authorization"))
   {
-    res.status(401).json({{"error", "unauthorized"}});
+    res.status(401).json({"error", "unauthorized"});
     return;
   }
 
@@ -711,8 +711,8 @@ int main()
     (void)req;
 
     res.json({
-      {"status", "ok"},
-      {"server", "Vix.cpp"}
+      "status", "ok",
+      "server", "Vix.cpp"
     });
   });
 
@@ -721,7 +721,7 @@ int main()
     (void)req;
 
     res.status(201).json({
-      {"created", true}
+      "created", true
     });
   });
 
@@ -754,54 +754,54 @@ int main()
 
 ## API summary
 
-| API | Purpose |
-|---|---|
-| `res.status(code)` | Set the HTTP status code. |
-| `res.set_status(code)` | Alias for `status(code)`. |
-| `res.status_c<Code>()` | Set a compile-time status code. |
-| `res.send()` | Send an empty or current response. |
-| `res.send(value)` | Send a value. |
-| `res.sendStatus(code)` | Send a status response. |
-| `res.text(data)` | Send plain text. |
-| `res.json(value)` | Send JSON. |
-| `res.redirect(url)` | Send a redirect. |
-| `res.redirect(code, url)` | Send a redirect with a status code. |
-| `res.file(path)` | Send a file. |
-| `res.render(name, context)` | Render a template. |
-| `res.header(name, value)` | Set a header. |
-| `res.set(name, value)` | Alias for `header(name, value)`. |
-| `res.append(name, value)` | Append a header value. |
-| `res.type(mime)` | Set `Content-Type`. |
-| `res.contentType(mime)` | Alias for `type(mime)`. |
-| `res.has_header(name)` | Check whether a header is set. |
-| `res.has_body()` | Check whether the response body is non-empty. |
+| API                         | Purpose                                       |
+| --------------------------- | --------------------------------------------- |
+| `res.status(code)`          | Set the HTTP status code.                     |
+| `res.set_status(code)`      | Alias for `status(code)`.                     |
+| `res.status_c<Code>()`      | Set a compile-time status code.               |
+| `res.send()`                | Send an empty or current response.            |
+| `res.send(value)`           | Send a value.                                 |
+| `res.sendStatus(code)`      | Send a status response.                       |
+| `res.text(data)`            | Send plain text.                              |
+| `res.json(value)`           | Send JSON.                                    |
+| `res.redirect(url)`         | Send a redirect.                              |
+| `res.redirect(code, url)`   | Send a redirect with a status code.           |
+| `res.file(path)`            | Send a file.                                  |
+| `res.render(name, context)` | Render a template.                            |
+| `res.header(name, value)`   | Set a header.                                 |
+| `res.set(name, value)`      | Alias for `header(name, value)`.              |
+| `res.append(name, value)`   | Append a header value.                        |
+| `res.type(mime)`            | Set `Content-Type`.                           |
+| `res.contentType(mime)`     | Alias for `type(mime)`.                       |
+| `res.has_header(name)`      | Check whether a header is set.                |
+| `res.has_body()`            | Check whether the response body is non-empty. |
 
 ## Native response API summary
 
-| API | Purpose |
-|---|---|
-| `status()` | Return the status code. |
-| `set_status(code)` | Set the status code. |
-| `body()` | Return the body. |
-| `set_body(body)` | Replace the body. |
-| `headers()` | Return response headers. |
-| `set_header(name, value)` | Set one header. |
-| `remove_header(name)` | Remove one header. |
-| `clear_headers()` | Remove all headers. |
-| `should_close()` | Return whether the connection should close. |
-| `set_should_close(value)` | Set close behavior. |
-| `reason()` | Return custom reason phrase. |
-| `set_reason(reason)` | Set custom reason phrase. |
-| `version()` | Return HTTP version. |
-| `set_version(version)` | Set HTTP version. |
-| `to_http_string()` | Serialize the response to HTTP text. |
+| API                       | Purpose                                     |
+| ------------------------- | ------------------------------------------- |
+| `status()`                | Return the status code.                     |
+| `set_status(code)`        | Set the status code.                        |
+| `body()`                  | Return the body.                            |
+| `set_body(body)`          | Replace the body.                           |
+| `headers()`               | Return response headers.                    |
+| `set_header(name, value)` | Set one header.                             |
+| `remove_header(name)`     | Remove one header.                          |
+| `clear_headers()`         | Remove all headers.                         |
+| `should_close()`          | Return whether the connection should close. |
+| `set_should_close(value)` | Set close behavior.                         |
+| `reason()`                | Return custom reason phrase.                |
+| `set_reason(reason)`      | Set custom reason phrase.                   |
+| `version()`               | Return HTTP version.                        |
+| `set_version(version)`    | Set HTTP version.                           |
+| `to_http_string()`        | Serialize the response to HTTP text.        |
 
 ## Best practices
 
 Send one clear response per handler.
 
 ```cpp
-res.json({{"ok", true}});
+res.json({"ok", true});
 ```
 
 Return immediately after sending an error.
@@ -809,7 +809,7 @@ Return immediately after sending an error.
 ```cpp
 if (!allowed)
 {
-  res.status(403).json({{"error", "forbidden"}});
+  res.status(403).json({"error", "forbidden"});
   return;
 }
 ```
@@ -817,7 +817,7 @@ if (!allowed)
 Use `json(...)` for API responses.
 
 ```cpp
-res.json({{"status", "ok"}});
+res.json({"status", "ok"});
 ```
 
 Use `text(...)` for simple plain text.
@@ -829,7 +829,7 @@ res.text("OK");
 Use `status(...)` before the body.
 
 ```cpp
-res.status(201).json({{"created", true}});
+res.status(201).json({"created", true});
 ```
 
 Use `static_dir(...)` for directories and `file(...)` for single files.
