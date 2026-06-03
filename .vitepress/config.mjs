@@ -203,6 +203,48 @@ const guides = {
       ],
     },
     {
+      text: "Data",
+      collapsed: true,
+      items: [
+        {
+          text: "JSON",
+          link: "/guides/json/",
+        },
+        {
+          text: "Quick Start",
+          link: "/guides/json/quick-start",
+        },
+        {
+          text: "Build JSON",
+          link: "/guides/json/build-json",
+        },
+        {
+          text: "Parse JSON",
+          link: "/guides/json/parse-json",
+        },
+        {
+          text: "Write JSON",
+          link: "/guides/json/write-json",
+        },
+        {
+          text: "Safe Access",
+          link: "/guides/json/safe-access",
+        },
+        {
+          text: "JPath",
+          link: "/guides/json/jpath",
+        },
+        {
+          text: "Simple Token",
+          link: "/guides/json/simple-token",
+        },
+        {
+          text: "JSON with HTTP",
+          link: "/guides/json/http",
+        },
+      ],
+    },
+    {
       text: "Database",
       collapsed: true,
       items: [
