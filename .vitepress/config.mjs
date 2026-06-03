@@ -1434,6 +1434,7 @@ function gtag(){dataLayer.push(arguments);}
 gtag("js", new Date());
 gtag("config", "G-1B67VYZMXF");
 gtag("config", "AW-17078961408");
+gtag("event", "ads_conversion_Pr_sentation_1", {});
 `,
     ],
   ],
