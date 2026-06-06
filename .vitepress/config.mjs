@@ -966,6 +966,60 @@ const modules = {
           ],
         },
         {
+          text: "Middleware",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/middleware/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/middleware/quick-start",
+            },
+            {
+              text: "Core Concepts",
+              link: "/modules/middleware/concepts",
+            },
+            {
+              text: "Basics",
+              link: "/modules/middleware/basics",
+            },
+            {
+              text: "Security",
+              link: "/modules/middleware/security",
+            },
+            {
+              text: "Authentication",
+              link: "/modules/middleware/authentication",
+            },
+            {
+              text: "Parsers",
+              link: "/modules/middleware/parsers",
+            },
+            {
+              text: "Performance",
+              link: "/modules/middleware/performance",
+            },
+            {
+              text: "Observability",
+              link: "/modules/middleware/observability",
+            },
+            {
+              text: "HTTP Cache",
+              link: "/modules/middleware/http-cache",
+            },
+            {
+              text: "App Integration",
+              link: "/modules/middleware/app-integration",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/middleware/api-reference",
+            },
+          ],
+        },
+        {
           text: "Async",
           collapsed: true,
           items: [
