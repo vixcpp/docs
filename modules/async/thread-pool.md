@@ -714,15 +714,15 @@ Use the thread pool for blocking or CPU-heavy work. Keep scheduler callbacks sho
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context. |
-| [Tasks](/modules/async/tasks) | Learn coroutine tasks. |
-| [Spawn](/modules/async/spawn) | Learn how to start async work. |
-| [Timers](/modules/async/timers) | Learn delays and timer callbacks. |
-| [Cancellation](/modules/async/cancellation) | Learn cancellation tokens. |
-| [when_all / when_any](/modules/async/when) | Learn task composition. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                           |
+| --------------------------------------------- | --------------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context.        |
+| [Tasks](/modules/async/tasks)                 | Learn coroutine tasks.            |
+| [Spawn](/modules/async/spawn)                 | Learn how to start async work.    |
+| [Timers](/modules/async/timers)               | Learn delays and timer callbacks. |
+| [Cancellation](/modules/async/cancellation)   | Learn cancellation tokens.        |
+| [when_all / when_any](/modules/async/when)    | Learn task composition.           |
+| [API Reference](/modules/async/api-reference) | See the public API surface.       |
 
 ## Next step
 

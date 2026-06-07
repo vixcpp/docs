@@ -15,9 +15,9 @@ Use this page when you want to run several tasks concurrently and wait until all
 
 Vix Async provides two task composition helpers.
 
-| API | Purpose |
-|---|---|
-| `when_all` | Run multiple tasks and wait for all results. |
+| API        | Purpose                                                   |
+| ---------- | --------------------------------------------------------- |
+| `when_all` | Run multiple tasks and wait for all results.              |
 | `when_any` | Run multiple tasks and wait for the first completed task. |
 
 Both APIs need a scheduler.
@@ -393,10 +393,10 @@ auto result = co_await vix::async::core::when_any(
     second());
 ```
 
-| Field | Meaning |
-|---|---|
-| `result.first` | Index of the first completed task. |
-| `result.second` | Tuple of optional result slots. |
+| Field           | Meaning                            |
+| --------------- | ---------------------------------- |
+| `result.first`  | Index of the first completed task. |
+| `result.second` | Tuple of optional result slots.    |
 
 Example:
 
@@ -484,9 +484,9 @@ timeout
 
 ## when_all vs when_any
 
-| API | Completes when | Return value |
-|---|---|---|
-| `when_all` | All tasks finish. | Tuple of all results. |
+| API        | Completes when       | Return value                           |
+| ---------- | -------------------- | -------------------------------------- |
+| `when_all` | All tasks finish.    | Tuple of all results.                  |
 | `when_any` | First task finishes. | Pair of winner index and result slots. |
 
 Use `when_all` when all results are required. Use `when_any` when the first result is enough.
@@ -745,15 +745,15 @@ Use `when_all` when every result is required. Use `when_any` for races, fallback
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context and scheduler. |
-| [Tasks](/modules/async/tasks) | Learn `task<T>` and `task<void>`. |
-| [Spawn](/modules/async/spawn) | Learn how to start tasks. |
-| [Timers](/modules/async/timers) | Learn timer-based tasks. |
-| [Cancellation](/modules/async/cancellation) | Learn cooperative cancellation. |
-| [Thread pool](/modules/async/thread-pool) | Learn background execution. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                                  |
+| --------------------------------------------- | ---------------------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context and scheduler. |
+| [Tasks](/modules/async/tasks)                 | Learn `task<T>` and `task<void>`.        |
+| [Spawn](/modules/async/spawn)                 | Learn how to start tasks.                |
+| [Timers](/modules/async/timers)               | Learn timer-based tasks.                 |
+| [Cancellation](/modules/async/cancellation)   | Learn cooperative cancellation.          |
+| [Thread pool](/modules/async/thread-pool)     | Learn background execution.              |
+| [API Reference](/modules/async/api-reference) | See the public API surface.              |
 
 ## Next step
 

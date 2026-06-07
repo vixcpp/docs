@@ -1,14 +1,27 @@
 # Authentication
 
-The `auth` group contains middleware for authentication, authorization, and sessions.
+The `auth` group identifies callers and protects private routes.
 
-It provides small HTTP building blocks: API key checks, JWT validation, RBAC context creation, role and permission guards, and signed cookie sessions.
+It provides API key authentication, JWT authentication, RBAC authorization, permission checks, and sessions.
 
-For most application code, include:
+Security middleware protects the HTTP surface.
 
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
+```txt
+CORS
+CSRF
+security headers
+IP filter
+rate limit
+```
+
+Authentication middleware protects access to private application behavior.
+
+```txt
+API keys
+JWT claims
+roles
+permissions
+sessions
 ```
 
 The authentication middleware lives under:
@@ -17,7 +30,7 @@ The authentication middleware lives under:
 namespace vix::middleware::auth
 ```
 
-When using `vix::App`, prefer the helpers under:
+When using `vix::App`, prefer the App helpers:
 
 ```cpp
 namespace vix::middleware::app
@@ -25,191 +38,335 @@ namespace vix::middleware::app
 
 ## What authentication provides
 
-The auth group includes:
+The `auth` group includes:
 
-```txt
-api_key()
-  checks an API key from a header, query parameter, or custom extractor
+| Middleware            | Purpose                                                |
+| --------------------- | ------------------------------------------------------ |
+| `api_key()`           | Authenticate requests using an API key                 |
+| `jwt()`               | Authenticate requests using a Bearer JWT               |
+| `rbac_context()`      | Build an authorization context from JWT claims         |
+| `require_role()`      | Require one role                                       |
+| `require_any_role()`  | Require at least one role                              |
+| `require_perm()`      | Require one permission                                 |
+| `require_any_perm()`  | Require at least one permission                        |
+| `require_all_perms()` | Require all listed permissions                         |
+| `session()`           | Load, create, update, and destroy server-side sessions |
 
-jwt()
-  validates a Bearer JWT and stores its claims
+For normal `vix::App` applications, use App presets when available:
 
-rbac_context()
-  builds an authorization context from JWT claims
-
-require_role()
-  requires one role
-
-require_any_role()
-  requires at least one role from a list
-
-require_perm()
-  requires one permission
-
-require_any_perm()
-  requires at least one permission from a list
-
-require_all_perms()
-  requires all permissions from a list
-
-session()
-  loads or creates a signed cookie session
+```cpp
+middleware::app::api_key_dev(...)
+middleware::app::jwt_dev(...)
+middleware::app::session_dev(...)
 ```
 
-The module separates authentication from authorization.
+For RBAC and custom options, use the lower-level middleware with `app::adapt_ctx(...)`.
 
-Authentication answers:
+## Authentication vs authorization
 
-```txt
-Who is making the request?
-```
-
-Authorization answers:
+Authentication verifies identity.
 
 ```txt
-Is this request allowed to do this action?
+Who is calling?
 ```
 
-## Basic API key protection
+Authorization verifies access.
 
-API key authentication is the simplest auth middleware.
+```txt
+Is this caller allowed to do this?
+```
+
+Example:
+
+```txt
+JWT authentication
+  validates the token
+  stores JwtClaims
+
+RBAC authorization
+  reads JwtClaims
+  builds Authz
+  checks roles and permissions
+```
+
+Keep this mental model:
+
+```txt
+authentication first
+authorization after
+handler last
+```
+
+Example order:
+
+```cpp
+app.use("/admin", middleware::app::jwt_dev("dev_secret"));
+
+app.use("/admin", middleware::app::adapt_ctx(
+  middleware::auth::rbac_context({
+    .require_auth = true,
+    .use_resolver = false
+  })
+));
+
+app.use("/admin", middleware::app::adapt_ctx(
+  middleware::auth::require_role("admin")
+));
+```
+
+## API key authentication
+
+API keys are useful for:
+
+```txt
+internal APIs
+admin routes
+service-to-service calls
+simple private endpoints
+early prototypes
+```
+
+The App preset is:
+
+```cpp
+app.use("/secure", middleware::app::api_key_dev("secret"));
+```
+
+Example:
 
 ```cpp
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
+using namespace vix;
+
 int main()
 {
-  vix::App app;
+  App app;
 
-  vix::middleware::app::protect_prefix(
-    app,
-    "/admin",
-    vix::middleware::app::api_key_auth("secret")
-  );
+  app.use("/secure", middleware::app::api_key_dev("secret"));
 
-  app.get("/admin/status", [](vix::Request &req, vix::Response &res)
+  app.get("/", [](Request &, Response &res)
   {
-    (void)req;
+    res.text("GET /secure requires x-api-key: secret");
+  });
+
+  app.get("/secure", [](Request &req, Response &res)
+  {
+    auto &key = req.state<middleware::auth::ApiKey>();
 
     res.json({
-      "admin", true
+      "ok", true,
+      "key_size", static_cast<long long>(key.value.size())
     });
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-Request:
+Test missing key:
+
+```bash
+curl -i http://127.0.0.1:8080/secure
+```
+
+Expected status:
+
+```txt
+401 Unauthorized
+```
+
+Test invalid key:
 
 ```bash
 curl -i \
-  http://127.0.0.1:8080/admin/status \
+  http://127.0.0.1:8080/secure \
+  -H "x-api-key: wrong"
+```
+
+Expected status:
+
+```txt
+403 Forbidden
+```
+
+Test valid key:
+
+```bash
+curl -i \
+  http://127.0.0.1:8080/secure \
   -H "x-api-key: secret"
 ```
 
-If the key is missing, the middleware returns:
+Expected status:
 
 ```txt
-401 missing_api_key
+200 OK
 ```
 
-If the key is present but invalid, it returns:
-
-```txt
-403 invalid_api_key
-```
-
-## API key request state
-
-When the API key is accepted, the middleware stores this state:
+The API key middleware stores:
 
 ```cpp
 vix::middleware::auth::ApiKey
 ```
 
-A handler can read it:
+The handler can read it with:
 
 ```cpp
-app.get("/admin/status", [](vix::Request &req, vix::Response &res)
-{
-  auto &key = req.state<vix::middleware::auth::ApiKey>();
-
-  res.json({
-    "authenticated", true,
-    "key_size", key.value.size()
-  });
-});
+auto &key = req.state<vix::middleware::auth::ApiKey>();
 ```
 
-Do not return real API keys to clients in normal applications. This example only shows how the state is accessed.
+Do not return real API keys in production responses.
 
-## Configure API key middleware
+The example only shows how typed request state works.
 
-Use `ApiKeyOptions` when you need explicit control.
+## API key from query parameter
+
+API keys can also be extracted from a query parameter when configured.
 
 ```cpp
 vix::middleware::auth::ApiKeyOptions opt;
 
 opt.header = "x-api-key";
-opt.required = true;
-opt.allowed_keys.insert("secret");
+opt.query_param = "api_key";
+opt.allowed_keys = {"secret"};
 
-auto mw = vix::middleware::auth::api_key(opt);
+app.use("/secure", vix::middleware::app::adapt_ctx(
+  vix::middleware::auth::api_key(opt)
+));
+```
+
+Now both requests can work:
+
+```bash
+curl -i \
+  http://127.0.0.1:8080/secure \
+  -H "x-api-key: secret"
+```
+
+```bash
+curl -i \
+  "http://127.0.0.1:8080/secure?api_key=secret"
+```
+
+Prefer headers for production APIs.
+
+Query parameters can appear in logs, browser history, proxy logs, and analytics tools.
+
+## Configure API key authentication
+
+Use `ApiKeyOptions` for explicit behavior.
+
+```cpp
+vix::middleware::auth::ApiKeyOptions opt;
+
+opt.header = "x-api-key";
+opt.query_param = "";
+opt.required = true;
+opt.allowed_keys = {"secret"};
+
+app.use("/secure", vix::middleware::app::adapt_ctx(
+  vix::middleware::auth::api_key(opt)
+));
 ```
 
 Main options:
 
-```txt
-header
-  header used to read the API key
+| Option         | Purpose                           |
+| -------------- | --------------------------------- |
+| `header`       | Header used to read the API key   |
+| `query_param`  | Query parameter used as fallback  |
+| `required`     | Whether missing keys are rejected |
+| `allowed_keys` | Static set of accepted keys       |
+| `extract`      | Custom extraction function        |
+| `validate`     | Custom validation function        |
 
-query_param
-  optional query parameter used to read the API key
-
-required
-  reject the request when the key is missing
-
-allowed_keys
-  accepted static keys
-
-extract
-  custom function used to extract the key
-
-validate
-  custom function used to validate the key
-```
-
-For simple internal tools, `allowed_keys` can be enough. For real systems, prefer a validation function backed by your own storage or secret management.
-
-## Custom API key validation
+Use `validate` when the key must be checked against a database, cache, or external service.
 
 ```cpp
-vix::middleware::auth::ApiKeyOptions opt;
-
-opt.header = "x-api-key";
-
 opt.validate = [](const std::string &key)
 {
   return key == "secret";
 };
-
-auto mw = vix::middleware::auth::api_key(opt);
 ```
 
-The middleware only checks the key. The application decides where valid keys come from.
+Common errors:
+
+| Status | Code              | Meaning                         |
+| ------ | ----------------- | ------------------------------- |
+| `401`  | `missing_api_key` | No key was provided             |
+| `403`  | `invalid_api_key` | A key was provided but rejected |
 
 ## JWT authentication
 
-`jwt()` validates a Bearer token from the `Authorization` header.
+JWT authentication validates a Bearer token and stores claims in request state.
 
-The expected request shape is:
+The App preset is:
+
+```cpp
+app.use("/secure", middleware::app::jwt_dev("dev_secret"));
+```
+
+Example:
+
+```cpp
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/secure", middleware::app::jwt_dev("dev_secret"));
+
+  app.get("/", [](Request &, Response &res)
+  {
+    res.text("GET /secure requires Authorization: Bearer <token>");
+  });
+
+  app.get("/secure", [](Request &req, Response &res)
+  {
+    auto &claims = req.state<middleware::auth::JwtClaims>();
+
+    res.json({
+      "ok", true,
+      "sub", claims.subject
+    });
+  });
+
+  app.run(8080);
+}
+```
+
+Test without token:
+
+```bash
+curl -i http://127.0.0.1:8080/secure
+```
+
+Expected status:
 
 ```txt
-Authorization: Bearer <token>
+401 Unauthorized
+```
+
+Test with token:
+
+```bash
+TOKEN="..."
+
+curl -i \
+  http://127.0.0.1:8080/secure \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Expected status:
+
+```txt
+200 OK
 ```
 
 When the token is valid, the middleware stores:
@@ -218,231 +375,149 @@ When the token is valid, the middleware stores:
 vix::middleware::auth::JwtClaims
 ```
 
-in request state.
-
-## Use JWT with App
+The handler can read:
 
 ```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use("/api", vix::middleware::app::jwt_auth("dev_secret"));
-
-  app.get("/api/me", [](vix::Request &req, vix::Response &res)
-  {
-    auto &claims = req.state<vix::middleware::auth::JwtClaims>();
-
-    res.json({
-      "subject", claims.subject
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
+auto &claims = req.state<vix::middleware::auth::JwtClaims>();
 ```
-
-Request:
-
-```bash
-curl -i \
-  http://127.0.0.1:8080/api/me \
-  -H "Authorization: Bearer <token>"
-```
-
-If the token is missing or invalid, the handler is not called.
 
 ## JWT claims
 
-`JwtClaims` contains the decoded information the middleware exposes to the request.
+JWT middleware extracts identity information into `JwtClaims`.
 
-Common fields include:
+Common values include:
 
 ```txt
 subject
-  the token subject, usually from sub
-
 roles
-  roles extracted from token payload when present
-
 payload
-  decoded JSON payload
 ```
 
-A handler can read the subject:
+Example handler:
 
 ```cpp
-auto &claims = req.state<vix::middleware::auth::JwtClaims>();
+app.get("/secure", [](vix::Request &req, vix::Response &res)
+{
+  auto &claims = req.state<vix::middleware::auth::JwtClaims>();
 
-res.json({
-  "subject", claims.subject
+  res.json({
+    "ok", true,
+    "sub", claims.subject,
+    "roles_count", static_cast<long long>(claims.roles.size())
+  });
 });
 ```
 
-It can also inspect the payload when needed:
+Use the claims to identify the caller.
 
-```cpp
-auto &claims = req.state<vix::middleware::auth::JwtClaims>();
+Use RBAC middleware to decide what the caller is allowed to do.
 
-if (claims.payload.contains("email"))
-{
-  const std::string email = claims.payload["email"].get<std::string>();
-}
-```
+## Configure JWT authentication
 
-Keep handlers simple. For larger applications, transform claims into your own user model in your application layer.
-
-## Configure JWT
-
-Use `JwtOptions` when you need explicit validation settings.
+Use lower-level options when the preset is not enough.
 
 ```cpp
 vix::middleware::auth::JwtOptions opt;
 
 opt.secret = "dev_secret";
-opt.verify_exp = true;
-opt.issuer = "https://auth.example.com";
-opt.audience = "api";
+opt.verify_exp = false;
 
-auto mw = vix::middleware::auth::jwt(opt);
+app.use("/secure", vix::middleware::app::adapt_ctx(
+  vix::middleware::auth::jwt(opt)
+));
 ```
 
-Common options include:
+In development examples, `verify_exp` may be disabled to make demo tokens easier.
+
+For production, expiration validation should normally be enabled.
+
+Keep secrets out of source code in real applications. Read them from configuration or environment variables.
+
+## RBAC
+
+RBAC means role-based access control.
+
+The usual flow is:
 
 ```txt
-secret
-  HMAC secret used to verify the token
+JWT middleware
+  validates token
+  stores JwtClaims
 
-verify_exp
-  verify expiration when exp is present
-
-issuer
-  expected issuer when configured
-
-audience
-  expected audience when configured
-
-required
-  reject missing tokens when true
-
-query_param
-  optional query parameter token source
-```
-
-The current middleware is designed for HS256-style JWT validation. If your application uses another signing strategy, adapt validation at the application boundary or provide a dedicated middleware.
-
-## Authorization with RBAC
-
-RBAC means Role-Based Access Control.
-
-In this module, RBAC is built in two steps.
-
-First, authenticate the request and store JWT claims:
-
-```txt
-jwt()
-```
-
-Then build authorization state from those claims:
-
-```txt
 rbac_context()
+  reads JwtClaims
+  creates Authz
+
+require_role() / require_perm()
+  checks Authz
+
+handler
+  runs only when authorization passes
 ```
 
-After that, role and permission guards can check access:
-
-```txt
-require_role()
-require_perm()
-```
-
-The order matters.
-
-```txt
-jwt
-  -> rbac_context
-  -> require_role / require_perm
-  -> handler
-```
-
-## Require a role
+Example:
 
 ```cpp
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
+using namespace vix;
+
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use("/admin", vix::middleware::app::jwt_auth("dev_secret"));
-  app.use("/admin", vix::middleware::app::rbac());
-  app.use("/admin", vix::middleware::app::require_role("admin"));
+  vix::middleware::auth::JwtOptions jwt_opt;
+  jwt_opt.secret = "dev_secret";
+  jwt_opt.verify_exp = false;
 
-  app.get("/admin/status", [](vix::Request &req, vix::Response &res)
+  vix::middleware::auth::RbacOptions rbac_opt;
+  rbac_opt.require_auth = true;
+  rbac_opt.use_resolver = false;
+
+  app.use("/admin", middleware::app::adapt_ctx(
+    middleware::auth::jwt(jwt_opt)
+  ));
+
+  app.use("/admin", middleware::app::adapt_ctx(
+    middleware::auth::rbac_context(rbac_opt)
+  ));
+
+  app.use("/admin", middleware::app::adapt_ctx(
+    middleware::auth::require_role("admin")
+  ));
+
+  app.use("/admin", middleware::app::adapt_ctx(
+    middleware::auth::require_perm("products:write")
+  ));
+
+  app.get("/admin", [](Request &req, Response &res)
   {
-    (void)req;
+    auto &authz = req.state<middleware::auth::Authz>();
 
     res.json({
-      "admin", true
+      "ok", true,
+      "sub", authz.subject,
+      "has_admin", authz.has_role("admin"),
+      "has_products_write", authz.has_perm("products:write")
     });
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-The JWT payload should contain a compatible role value, for example:
-
-```json
-{
-  "sub": "user123",
-  "roles": ["admin"]
-}
-```
-
-If the role is missing, the middleware returns:
+This route requires:
 
 ```txt
-403 forbidden
+valid JWT
+role: admin
+permission: products:write
 ```
 
-## Require a permission
+If any step fails, the handler is not called.
 
-```cpp
-app.use("/products", vix::middleware::app::jwt_auth("dev_secret"));
-app.use("/products", vix::middleware::app::rbac());
-app.use("/products", vix::middleware::app::require_perm("products:write"));
-```
-
-The JWT payload can contain permissions:
-
-```json
-{
-  "sub": "user123",
-  "perms": ["products:write", "orders:read"]
-}
-```
-
-The middleware also understands permissions from a `scope` string when present.
-
-Example:
-
-```json
-{
-  "sub": "user123",
-  "scope": "products:write orders:read"
-}
-```
-
-## Authz request state
+## Authz state
 
 `rbac_context()` stores:
 
@@ -458,209 +533,246 @@ roles
 perms
 ```
 
-A handler can inspect it:
+The handler can read it:
 
 ```cpp
-app.get("/api/me", [](vix::Request &req, vix::Response &res)
-{
-  auto &authz = req.state<vix::middleware::auth::Authz>();
+auto &authz = req.state<vix::middleware::auth::Authz>();
 
-  res.json({
-    "subject", authz.subject,
-    "is_admin", authz.has_role("admin")
-  });
-});
+const bool is_admin = authz.has_role("admin");
+const bool can_write = authz.has_perm("products:write");
 ```
 
-The role and permission helpers use the same `Authz` state internally.
+Authorization checks should usually be done by middleware before the handler.
+
+Handler checks are useful for optional behavior or response shaping.
+
+## RBAC options
+
+Use `RbacOptions` to control how RBAC state is built.
+
+```cpp
+vix::middleware::auth::RbacOptions opt;
+
+opt.roles_key = "roles";
+opt.perms_key = "perms";
+opt.require_auth = true;
+opt.use_resolver = true;
+```
+
+Main options:
+
+| Option         | Purpose                                         |
+| -------------- | ----------------------------------------------- |
+| `roles_key`    | JWT payload key used for roles                  |
+| `perms_key`    | JWT payload key used for permissions            |
+| `require_auth` | Reject request when `JwtClaims` is missing      |
+| `use_resolver` | Use a `PermissionResolver` service if available |
+
+`rbac_context()` can read permissions from JWT claims.
+
+It can also enrich roles and permissions through a resolver service.
 
 ## Permission resolver
 
-`PermissionResolver` is an extension point.
-
-It lets the application enrich roles or permissions after the JWT has been decoded.
-
-This is useful when the token contains only the subject, and roles or permissions must come from your application storage.
+A `PermissionResolver` can enrich authorization data.
 
 ```cpp
-struct MyPermissionResolver : vix::middleware::auth::PermissionResolver
+struct MyResolver final : vix::middleware::auth::PermissionResolver
 {
   void resolve(
-      std::string_view subject,
-      std::unordered_set<std::string> &roles,
-      std::unordered_set<std::string> &perms) override
+    std::string_view subject,
+    std::unordered_set<std::string> &roles,
+    std::unordered_set<std::string> &perms) override
   {
     if (subject == "user123")
+    {
       roles.insert("admin");
-
-    perms.insert("products:write");
+      perms.insert("products:write");
+    }
   }
 };
 ```
 
-The middleware builds the initial `Authz` from JWT claims, then calls the resolver when one is available and enabled.
+This is useful when:
+
+```txt
+JWT contains identity
+database contains roles
+permissions are managed centrally
+tenants have dynamic access rules
+```
+
+The resolver is looked up from middleware services.
+
+Use this pattern for advanced integrations.
+
+For simple examples, keep `use_resolver = false`.
+
+## Role and permission middleware
+
+Available checks include:
+
+```cpp
+vix::middleware::auth::require_role("admin")
+vix::middleware::auth::require_any_role({"admin", "owner"})
+vix::middleware::auth::require_perm("products:write")
+vix::middleware::auth::require_any_perm({"products:write", "products:delete"})
+vix::middleware::auth::require_all_perms({"products:write", "orders:read"})
+```
+
+Install them with `adapt_ctx()`:
+
+```cpp
+app.use("/admin", vix::middleware::app::adapt_ctx(
+  vix::middleware::auth::require_role("admin")
+));
+```
+
+Common errors:
+
+| Status | Code            | Meaning                         |
+| ------ | --------------- | ------------------------------- |
+| `401`  | `missing_auth`  | JWT/auth context is missing     |
+| `401`  | `missing_authz` | RBAC context is missing         |
+| `403`  | `forbidden`     | Role or permission check failed |
 
 ## Sessions
 
-`session()` loads or creates a signed cookie session.
+`session()` loads or creates a server-side session and stores it in request state.
 
-It exposes the session in request state as:
+A session can hold small key/value data for the current client.
 
-```cpp
-vix::middleware::auth::Session
-```
-
-The session has:
-
-```txt
-id
-data
-is_new
-dirty
-destroyed
-```
-
-A handler can read and write session values.
+Example:
 
 ```cpp
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
+using namespace vix;
+
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use(vix::middleware::app::session_dev("dev_secret"));
+  vix::middleware::auth::SessionOptions opt;
+  opt.secret = "dev";
 
-  app.get("/counter", [](vix::Request &req, vix::Response &res)
+  app.use(middleware::app::adapt_ctx(
+    middleware::auth::session(opt)
+  ));
+
+  app.get("/session", [](Request &req, Response &res)
   {
-    auto &session = req.state<vix::middleware::auth::Session>();
+    auto &session = req.state<middleware::auth::Session>();
 
-    int count = 0;
+    int n = 0;
 
-    if (auto value = session.get("count"))
-      count = std::stoi(*value);
+    if (auto current = session.get("n"))
+      n = std::stoi(*current);
 
-    ++count;
+    session.set("n", std::to_string(n + 1));
 
-    session.set("count", std::to_string(count));
-
-    res.json({
-      "count", count
-    });
+    res.text("n=" + std::to_string(n + 1));
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-The middleware saves the session after the handler runs when the session is new or dirty.
+Test:
 
-## Session cookie
-
-The session cookie stores a signed session id.
-
-The cookie value has this shape:
-
-```txt
-sid.signature
+```bash
+curl -i -c cookies.txt -b cookies.txt http://127.0.0.1:8080/session
+curl -i -c cookies.txt -b cookies.txt http://127.0.0.1:8080/session
+curl -i -c cookies.txt -b cookies.txt http://127.0.0.1:8080/session
 ```
 
-The signature is used to detect tampering.
+Expected response shape:
 
-The session data itself is stored in the configured session store, not directly in the cookie.
+```txt
+n=1
+n=2
+n=3
+```
 
-## Configure sessions
+The middleware stores:
 
-Use `SessionOptions` for explicit session behavior.
+```cpp
+vix::middleware::auth::Session
+```
+
+The handler can read and update it.
+
+## Session options
+
+Use `SessionOptions` to configure session behavior.
 
 ```cpp
 vix::middleware::auth::SessionOptions opt;
 
-opt.secret = "dev_secret";
+opt.secret = "dev";
 opt.cookie_name = "sid";
 opt.cookie_path = "/";
-opt.http_only = true;
 opt.secure = false;
+opt.http_only = true;
 opt.same_site = "Lax";
 opt.auto_create = true;
+opt.ttl = std::chrono::hours(24 * 7);
 
-auto mw = vix::middleware::auth::session(opt);
+app.use(vix::middleware::app::adapt_ctx(
+  vix::middleware::auth::session(opt)
+));
 ```
 
 Main options:
 
-```txt
-store
-  session storage backend
+| Option        | Purpose                               |
+| ------------- | ------------------------------------- |
+| `store`       | Custom session store                  |
+| `secret`      | Secret used by the session middleware |
+| `cookie_name` | Session cookie name                   |
+| `cookie_path` | Cookie path                           |
+| `secure`      | Add `Secure` to session cookie        |
+| `http_only`   | Add `HttpOnly` to session cookie      |
+| `same_site`   | SameSite cookie policy                |
+| `ttl`         | Session lifetime                      |
+| `auto_create` | Create a session when missing         |
 
-secret
-  secret used to sign the session id
+Use `secure = true` only when serving over HTTPS.
 
-cookie_name
-  session cookie name
-
-cookie_path
-  cookie path
-
-secure
-  add Secure to the cookie
-
-http_only
-  add HttpOnly to the cookie
-
-same_site
-  SameSite cookie value
-
-ttl
-  session lifetime
-
-auto_create
-  create a session when none exists
-```
-
-`secret` is required. If it is missing, the middleware returns a configuration error.
+In production, use a strong secret from configuration.
 
 ## Session store
 
-The session middleware uses an `ISessionStore`.
-
-The default in-memory store is process-local.
-
-It is useful for:
-
-```txt
-local development
-tests
-small examples
-single-process applications
-```
-
-For durable or shared sessions, provide your own store.
+The module provides an in-memory session store.
 
 ```cpp
-struct MySessionStore : vix::middleware::auth::ISessionStore
+vix::middleware::auth::InMemorySessionStore
+```
+
+In-memory storage is useful for development and simple demos.
+
+For production, use a store that survives process restarts and works across instances.
+
+Possible production stores include:
+
+```txt
+database-backed store
+Redis-backed store
+custom durable store
+```
+
+Implement:
+
+```cpp
+class ISessionStore
 {
-  std::optional<vix::middleware::auth::Session>
-  load(const std::string &sid) override
-  {
-    return std::nullopt;
-  }
+public:
+  virtual ~ISessionStore() = default;
 
-  void save(
-      const vix::middleware::auth::Session &session,
-      std::chrono::seconds ttl) override
-  {
-    (void)session;
-    (void)ttl;
-  }
-
-  void destroy(const std::string &sid) override
-  {
-    (void)sid;
-  }
+  virtual std::optional<Session> load(const std::string &sid) = 0;
+  virtual void save(const Session &s, std::chrono::seconds ttl) = 0;
+  virtual void destroy(const std::string &sid) = 0;
 };
 ```
 
@@ -669,161 +781,197 @@ Then pass it through `SessionOptions`.
 ```cpp
 vix::middleware::auth::SessionOptions opt;
 
-opt.secret = "dev_secret";
+opt.secret = "prod_secret";
 opt.store = std::make_shared<MySessionStore>();
-
-auto mw = vix::middleware::auth::session(opt);
 ```
 
-## Destroy a session
+## API key vs JWT vs session
 
-A handler can destroy the current session.
+Use this rule:
+
+| Need                         | Use                   |
+| ---------------------------- | --------------------- |
+| Simple service route         | API key               |
+| Stateless API authentication | JWT                   |
+| Role and permission checks   | JWT + RBAC            |
+| Browser session state        | Session               |
+| Cookie-based form protection | Session + CSRF        |
+| Internal admin endpoint      | API key or JWT + RBAC |
+
+A common API stack:
 
 ```cpp
-app.post("/logout", [](vix::Request &req, vix::Response &res)
+app.use("/api", middleware::app::security_headers_dev());
+app.use("/api", middleware::app::cors_dev());
+app.use("/api", middleware::app::rate_limit_dev());
+
+app.use("/api/admin", middleware::app::api_key_dev("secret"));
+```
+
+A common JWT stack:
+
+```cpp
+app.use("/api/private", middleware::app::jwt_dev("dev_secret"));
+
+app.use("/api/private", middleware::app::adapt_ctx(
+  middleware::auth::rbac_context({
+    .require_auth = true,
+    .use_resolver = false
+  })
+));
+```
+
+A common browser stack:
+
+```cpp
+app.use("/app", middleware::app::security_headers_dev());
+app.use("/app", middleware::app::csrf_dev());
+
+app.use("/app", middleware::app::adapt_ctx(
+  middleware::auth::session({
+    .secret = "dev"
+  })
+));
+```
+
+## Complete example
+
+This example protects an admin route using API key authentication and keeps a simple session counter.
+
+```cpp
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
 {
-  auto &session = req.state<vix::middleware::auth::Session>();
+  App app;
 
-  session.destroy();
+  app.use("/api", middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::rate_limit_dev());
 
-  res.json({
-    "ok", true
+  app.use("/api/admin", middleware::app::api_key_dev("secret"));
+
+  vix::middleware::auth::SessionOptions session_opt;
+  session_opt.secret = "dev";
+
+  app.use("/session", middleware::app::adapt_ctx(
+    middleware::auth::session(session_opt)
+  ));
+
+  app.get("/api/health", [](Request &, Response &res)
+  {
+    res.json({
+      "ok", true
+    });
   });
-});
+
+  app.get("/api/admin/status", [](Request &req, Response &res)
+  {
+    auto &key = req.state<middleware::auth::ApiKey>();
+
+    res.json({
+      "ok", true,
+      "admin", true,
+      "key_size", static_cast<long long>(key.value.size())
+    });
+  });
+
+  app.get("/session", [](Request &req, Response &res)
+  {
+    auto &session = req.state<middleware::auth::Session>();
+
+    int n = 0;
+
+    if (auto current = session.get("n"))
+      n = std::stoi(*current);
+
+    session.set("n", std::to_string(n + 1));
+
+    res.text("n=" + std::to_string(n + 1));
+  });
+
+  app.run(8080);
+}
 ```
 
-After the handler returns, the middleware removes the session from the store and expires the cookie.
+Run:
 
-## Authentication order
-
-Order is important.
-
-For API key authentication:
-
-```txt
-api_key
-  -> handler
+```bash
+vix run authentication_demo.cpp
 ```
 
-For JWT authentication:
+Test public route:
 
-```txt
-jwt
-  -> handler
+```bash
+curl -i http://127.0.0.1:8080/api/health
 ```
 
-For JWT plus RBAC:
+Test admin route without key:
 
-```txt
-jwt
-  -> rbac_context
-  -> require_role / require_perm
-  -> handler
+```bash
+curl -i http://127.0.0.1:8080/api/admin/status
 ```
 
-For sessions:
+Test admin route with key:
 
-```txt
-session
-  -> handler reads or modifies Session
+```bash
+curl -i \
+  http://127.0.0.1:8080/api/admin/status \
+  -H "x-api-key: secret"
 ```
 
-A middleware that needs state from another middleware must run after that state is created.
+Test session route:
 
-## Common errors
-
-Authentication middleware can stop the request and return normalized errors.
-
-Common responses include:
-
-```txt
-401 missing_api_key
-  API key is required
-
-403 invalid_api_key
-  API key is present but invalid
-
-401 invalid_token
-  JWT is missing, malformed, expired, or has an invalid signature
-
-401 missing_auth
-  RBAC requires authentication but no JWT claims exist
-
-401 missing_authz
-  a role or permission guard ran before rbac_context
-
-403 forbidden
-  authenticated request does not have the required role or permission
-
-500 session_misconfigured
-  session store or secret is missing
+```bash
+curl -i -c cookies.txt -b cookies.txt http://127.0.0.1:8080/session
+curl -i -c cookies.txt -b cookies.txt http://127.0.0.1:8080/session
 ```
-
-The exact body follows the normalized middleware error format.
-
-## Development and production
-
-Development helpers are useful for local examples.
-
-```cpp
-app.use("/api", vix::middleware::app::jwt_auth("dev_secret"));
-app.use(vix::middleware::app::session_dev("dev_secret"));
-```
-
-Production applications should configure authentication explicitly.
-
-Important production decisions include:
-
-```txt
-where secrets come from
-which JWT issuer is trusted
-which JWT audience is expected
-how expiration is handled
-where sessions are stored
-whether cookies use Secure
-which SameSite policy is correct
-how API keys are rotated
-where permissions are resolved
-```
-
-The middleware provides HTTP authentication and authorization primitives. The application still owns identity, user management, secret storage, and business permissions.
-
-## What this module does not decide
-
-The auth group does not create users.
-
-It does not store passwords.
-
-It does not issue JWTs.
-
-It does not manage OAuth flows.
-
-It does not decide your business roles.
-
-It does not replace database authorization checks.
-
-It verifies request credentials, builds request auth state, and helps protect handlers.
 
 ## Summary
 
-`api_key()` authenticates requests with a simple key.
+Use the authentication group to identify callers and protect private routes.
 
-`jwt()` validates Bearer JWTs and stores claims.
+Start simple:
 
-`rbac_context()` builds authorization state from claims.
+```cpp
+app.use("/api/admin", middleware::app::api_key_dev("secret"));
+```
 
-`require_role()` and `require_perm()` enforce access rules.
+Use JWT for stateless API identity:
 
-`session()` provides signed cookie sessions with pluggable storage.
+```cpp
+app.use("/api/private", middleware::app::jwt_dev("dev_secret"));
+```
 
-Use these pieces together only when the request flow needs them. Keep each route protected by the smallest middleware chain that makes sense.
+Use RBAC after JWT when roles and permissions matter:
 
-## Next steps
+```cpp
+app.use("/api/private", middleware::app::adapt_ctx(
+  middleware::auth::rbac_context()
+));
 
-Continue with:
+app.use("/api/private", middleware::app::adapt_ctx(
+  middleware::auth::require_role("admin")
+));
+```
 
-- [Parsers](./parsers)
-- [Security](./security)
-- [HTTP Cache](./http-cache)
-- [App Integration](./app-integration)
-- [API Reference](./api-reference)
+Use sessions when browser or server-side state matters:
+
+```cpp
+app.use(middleware::app::adapt_ctx(
+  middleware::auth::session({
+    .secret = "dev"
+  })
+));
+```
+
+Remember the order:
+
+```txt
+security first
+authentication next
+authorization after authentication
+handler last
+```

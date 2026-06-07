@@ -711,15 +711,15 @@ Use `task<void>` for the main async application function. Use `task<T>` for asyn
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context and scheduler loop. |
-| [Spawn](/modules/async/spawn) | Learn detached task startup. |
-| [Timers](/modules/async/timers) | Learn coroutine sleeps and delayed callbacks. |
-| [Cancellation](/modules/async/cancellation) | Learn cooperative cancellation. |
-| [Thread pool](/modules/async/thread-pool) | Learn background execution. |
-| [when_all / when_any](/modules/async/when) | Learn task composition. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                                       |
+| --------------------------------------------- | --------------------------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context and scheduler loop. |
+| [Spawn](/modules/async/spawn)                 | Learn detached task startup.                  |
+| [Timers](/modules/async/timers)               | Learn coroutine sleeps and delayed callbacks. |
+| [Cancellation](/modules/async/cancellation)   | Learn cooperative cancellation.               |
+| [Thread pool](/modules/async/thread-pool)     | Learn background execution.                   |
+| [when_all / when_any](/modules/async/when)    | Learn task composition.                       |
+| [API Reference](/modules/async/api-reference) | See the public API surface.                   |
 
 ## Next step
 

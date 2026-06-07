@@ -650,15 +650,15 @@ Use one top-level `task<void>` for the main async application. Start the top-lev
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context and scheduler loop. |
-| [Tasks](/modules/async/tasks) | Learn `task<T>` and `task<void>`. |
-| [Timers](/modules/async/timers) | Learn coroutine sleeps and delayed callbacks. |
-| [Cancellation](/modules/async/cancellation) | Learn cooperative cancellation. |
-| [Thread pool](/modules/async/thread-pool) | Learn background execution. |
-| [when_all / when_any](/modules/async/when) | Learn task composition. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                                       |
+| --------------------------------------------- | --------------------------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context and scheduler loop. |
+| [Tasks](/modules/async/tasks)                 | Learn `task<T>` and `task<void>`.             |
+| [Timers](/modules/async/timers)               | Learn coroutine sleeps and delayed callbacks. |
+| [Cancellation](/modules/async/cancellation)   | Learn cooperative cancellation.               |
+| [Thread pool](/modules/async/thread-pool)     | Learn background execution.                   |
+| [when_all / when_any](/modules/async/when)    | Learn task composition.                       |
+| [API Reference](/modules/async/api-reference) | See the public API surface.                   |
 
 ## Next step
 

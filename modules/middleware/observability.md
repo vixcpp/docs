@@ -1,25 +1,32 @@
 # Observability
 
-The `observability` group contains middleware and hooks for understanding what happens during HTTP request handling.
+The `observability` group helps you understand what happens inside the middleware pipeline.
 
-It provides tracing, metrics, and debug traces. These features help connect a request to its response, measure request activity, and inspect request flow during development.
+It is designed for backend visibility:
 
-For most application code, include:
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
+```txt id="m63frg"
+trace request flow
+measure request counts and durations
+debug middleware execution
+attach identifiers to responses
+inspect failures
 ```
+
+Observability does not change your business logic.
+
+It gives you better visibility into how requests move through your backend.
 
 The observability middleware lives under:
 
-```cpp
+```cpp id="w608dy"
 namespace vix::middleware::observability
 ```
 
-The lower-level pipeline support is available through:
+Most applications start with `vix::App`.
 
-```cpp
+Lower-level observability hooks are most useful with:
+
+```cpp id="rjvvmt"
 vix::middleware::HttpPipeline
 ```
 
@@ -27,148 +34,221 @@ vix::middleware::HttpPipeline
 
 The observability group includes:
 
-```txt
-tracing_hooks()
-  installs trace and span identifiers through pipeline hooks
+| Feature               | Purpose                                            |
+| --------------------- | -------------------------------------------------- |
+| `tracing_hooks()`     | Create trace and span identifiers around a request |
+| `tracing_mw()`        | Install tracing as normal middleware               |
+| `metrics_hooks()`     | Record request metrics through pipeline hooks      |
+| `debug_trace_hooks()` | Emit simple begin, end, and error debug lines      |
+| `debug_trace_mw()`    | Install debug trace as normal middleware           |
+| `safe_method(...)`    | Return a safe method label                         |
+| `safe_path(...)`      | Return a safe path label                           |
 
-tracing_mw()
-  installs trace and span identifiers as normal middleware
+Observability can be used in two ways:
 
-metrics_hooks()
-  records counters and durations through pipeline hooks
+```txt id="k0q41s"
+as normal middleware
+  with app.use(...)
 
-metrics_mw()
-  records counters and durations as normal middleware
-
-debug_trace_hooks()
-  writes readable begin, end, and error trace lines through hooks
-
-debug_trace_mw()
-  writes readable begin and end trace lines as normal middleware
+as pipeline hooks
+  with HttpPipeline
 ```
 
-The module supports two integration styles:
+Use normal middleware for App applications.
 
-```txt
-hooks
-  useful with HttpPipeline and pipeline-level observability
+Use hooks for low-level pipelines, tests, and custom integrations.
 
-middleware
-  useful when you want observability as a normal middleware function
+## Why observability matters
+
+A backend needs more than successful responses.
+
+You also need to know:
+
+```txt id="f9oz8x"
+which route was called
+how long it took
+which request id was used
+which trace id was generated
+whether the request failed
+which middleware stopped the request
+how many requests were processed
 ```
 
-Both styles are useful. The right one depends on how much control you need.
+Without observability, failures are harder to diagnose.
 
-## Observability and the request flow
+With observability, the pipeline becomes easier to inspect.
 
-Observability usually wraps request handling.
+## Request id first
 
-```txt
-request begins
-  -> trace id is created
-  -> metrics counter is incremented
-  -> handler runs
-  -> duration is recorded
-  -> response headers are emitted
+Observability is more useful when every request has an id.
+
+Install request id early:
+
+```cpp id="vuy3th"
+app.use("/api", middleware::app::request_id_dev());
 ```
 
-Some observability features are visible to clients through headers.
+Then handlers, logs, errors, and responses can refer to the same request.
 
-Other features go to sinks, such as in-memory collectors, metrics exporters, or debug log collectors.
+Example:
+
+```cpp id="xop3bb"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::request_id_dev());
+  app.use("/api", middleware::app::timing_dev());
+
+  app.get("/api/health", [](Request &req, Response &res)
+  {
+    auto *rid = req.try_state<middleware::basics::RequestId>();
+
+    res.json({
+      "ok", true,
+      "request_id", rid ? rid->value : ""
+    });
+  });
+
+  app.run(8080);
+}
+```
+
+Request:
+
+```bash id="ej08cl"
+curl -i http://127.0.0.1:8080/api/health
+```
+
+Response headers may include:
+
+```txt id="tetbhv"
+x-request-id: ...
+x-response-time: ...
+server-timing: total;dur=...
+```
+
+This is the simplest observability layer.
+
+## Timing
+
+Timing is part of the basics group, but it belongs in the observability story.
+
+It measures how long downstream work takes.
+
+```cpp id="hn237s"
+app.use("/api", middleware::app::timing_dev());
+```
+
+Typical response headers:
+
+```txt id="iwwfkn"
+x-response-time: 2ms
+server-timing: total;dur=2
+```
+
+Use timing when you want a quick view of request cost.
+
+For deeper metrics, use the observability hooks.
 
 ## Tracing
 
-Tracing gives each request identifiers that can be used to connect logs, metrics, and responses.
+Tracing creates identifiers that let you connect work across a request.
 
-The tracing middleware stores:
+The tracing context contains:
 
-```cpp
-vix::middleware::observability::TraceContext
-```
-
-`TraceContext` contains:
-
-```txt
+```txt id="so6ywn"
 trace_id
 span_id
 parent_span_id
 ```
 
-By default, tracing can emit response headers such as:
+The middleware can:
 
-```txt
-x-trace-id
-x-span-id
+```txt id="c3gdlw"
+accept incoming trace ids
+generate new trace ids
+generate span ids
+store TraceContext in request state
+emit trace headers in the response
 ```
 
-## Use tracing as middleware
+## Tracing as App middleware
 
-```cpp
+Use `tracing_mw()` with `app::adapt_ctx(...)`.
+
+```cpp id="c5s3kd"
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
+using namespace vix;
+
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use(vix::middleware::app::adapt_ctx(
-    vix::middleware::observability::tracing_mw()
+  app.use("/api", middleware::app::adapt_ctx(
+    middleware::observability::tracing_mw()
   ));
 
-  app.get("/", [](vix::Request &req, vix::Response &res)
+  app.get("/api/health", [](Request &req, Response &res)
   {
-    auto *trace =
-      req.try_state<vix::middleware::observability::TraceContext>();
+    auto *trace = req.try_state<middleware::observability::TraceContext>();
 
     res.json({
-      "trace_id", trace ? trace->trace_id : ""
+      "ok", true,
+      "trace_id", trace ? trace->trace_id : "",
+      "span_id", trace ? trace->span_id : ""
     });
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-Response shape:
+Request:
 
-```json
+```bash id="lxqikr"
+curl -i http://127.0.0.1:8080/api/health
+```
+
+Expected response shape:
+
+```json id="wjl8rf"
 {
-  "trace_id": "..."
+  "ok": true,
+  "trace_id": "...",
+  "span_id": "..."
 }
 ```
 
-The response can also include:
+The response can also include trace headers.
 
-```txt
-x-trace-id: ...
-x-span-id: ...
-```
+## Incoming trace headers
 
-## Incoming trace ids
+A client can send a trace id.
 
-Tracing can accept an incoming trace id.
-
-Request shape:
-
-```bash
+```bash id="iyyr0n"
 curl -i \
-  http://127.0.0.1:8080/ \
-  -H "x-trace-id: 0123456789abcdef0123456789abcdef"
+  http://127.0.0.1:8080/api/health \
+  -H "x-trace-id: 0123456789abcdef0123456789abcdef" \
+  -H "x-span-id: 0123456789abcdef"
 ```
 
-If the incoming trace id is valid, the middleware keeps it.
+If the incoming values are accepted, the middleware can reuse the trace id and store the incoming span as the parent span.
 
-If it is missing or invalid, the middleware generates a new one.
-
-The middleware always creates a new span id for the current request.
+This makes it possible to connect requests across services.
 
 ## Configure tracing
 
-Use `TracingOptions` when you need explicit behavior.
+Use `TracingOptions` for exact behavior.
 
-```cpp
+```cpp id="bdok9p"
 vix::middleware::observability::TracingOptions opt;
 
 opt.trace_header = "x-trace-id";
@@ -180,42 +260,29 @@ opt.accept_incoming_span = true;
 opt.emit_response_headers = true;
 opt.include_parent_in_response = false;
 
-auto mw = vix::middleware::observability::tracing_mw(opt);
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::observability::tracing_mw(opt)
+));
 ```
 
 Main options:
 
-```txt
-trace_header
-  request and response header used for the trace id
+| Option                       | Purpose                                    |
+| ---------------------------- | ------------------------------------------ |
+| `trace_header`               | Header used for trace id                   |
+| `span_header`                | Header used for span id                    |
+| `parent_span_header`         | Header used for parent span id             |
+| `accept_incoming_trace`      | Accept valid incoming trace ids            |
+| `accept_incoming_span`       | Accept valid incoming span ids             |
+| `emit_response_headers`      | Write trace headers to the response        |
+| `include_parent_in_response` | Include parent span id in response headers |
+| `enrich`                     | Custom callback to enrich `TraceContext`   |
 
-span_header
-  request and response header used for the span id
+## Enrich trace context
 
-parent_span_header
-  response header used for the parent span id when enabled
+`TracingOptions::enrich` lets you customize the trace context.
 
-accept_incoming_trace
-  accept a valid incoming trace id
-
-accept_incoming_span
-  accept a valid incoming span id as parent_span_id
-
-emit_response_headers
-  write trace headers to the response
-
-include_parent_in_response
-  include the parent span id in the response when present
-
-enrich
-  optional callback used to enrich TraceContext
-```
-
-## Enrich tracing context
-
-The `enrich` callback lets the application attach extra behavior while the trace context is being built.
-
-```cpp
+```cpp id="s1mcv6"
 vix::middleware::observability::TracingOptions opt;
 
 opt.enrich = [](vix::middleware::Context &ctx,
@@ -225,579 +292,568 @@ opt.enrich = [](vix::middleware::Context &ctx,
 
   if (trace.trace_id.empty())
     return;
+
+  // Add custom integration here later.
 };
 
-auto mw = vix::middleware::observability::tracing_mw(opt);
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::observability::tracing_mw(opt)
+));
 ```
 
-The current `TraceContext` contains trace and span identifiers. Application-specific correlation can be added around it in your own middleware or logging layer.
+Use this when you need to connect tracing with custom logging, tenants, services, or external observability tools.
 
-## Tracing hooks
+## Debug trace
 
-Hooks are useful when using `HttpPipeline`.
+Debug trace emits simple lines around request execution.
 
-```cpp
-#include <vix/middleware.hpp>
+It is useful when you are building or debugging middleware.
 
-int main()
-{
-  vix::middleware::HttpPipeline pipeline;
+It can show:
 
-  pipeline.set_hooks(
-    vix::middleware::observability::tracing_hooks()
-  );
-
-  return 0;
-}
+```txt id="lphp41"
+request begin
+request end
+error path
+method
+path
+status
+duration
 ```
 
-Tracing hooks use the pipeline lifecycle:
+Debug tracing can be used as hooks or as normal middleware.
 
-```txt
-on_begin
-  create TraceContext, store it in request state, emit headers
+## Debug trace as App middleware
 
-on_end
-  re-emit headers after downstream work
-
-on_error
-  re-emit headers on middleware error path
-```
-
-This helps keep trace headers present even when response handling changes downstream.
-
-## Metrics
-
-Metrics records counters and duration observations for requests.
-
-The metrics middleware can count:
-
-```txt
-requests
-responses
-errors
-duration observations
-```
-
-Metrics are written to a metrics sink.
-
-The module provides an in-memory sink for tests and local inspection.
-
-```cpp
-vix::middleware::observability::InMemoryMetrics
-```
-
-Production applications can provide their own sink that exports to their monitoring system.
-
-## Use metrics as middleware
-
-```cpp
+```cpp id="fvjrjw"
+#include <iostream>
 #include <memory>
+#include <string_view>
 
 #include <vix.hpp>
 #include <vix/middleware.hpp>
+
+class StdoutDebugTrace final
+  : public vix::middleware::observability::IDebugTraceSink
+{
+public:
+  void log(std::string_view line) override
+  {
+    std::cout << line << "\n";
+  }
+};
 
 int main()
 {
   vix::App app;
 
-  auto metrics =
-    std::make_shared<vix::middleware::observability::InMemoryMetrics>();
+  auto sink = std::make_shared<StdoutDebugTrace>();
 
-  app.use(vix::middleware::app::adapt_ctx(
-    vix::middleware::observability::metrics_mw(metrics)
+  app.use("/api", vix::middleware::app::adapt_ctx(
+    vix::middleware::observability::debug_trace_mw(sink)
   ));
 
-  app.get("/api/status", [](vix::Request &req, vix::Response &res)
+  app.get("/api/health", [](vix::Request &, vix::Response &res)
   {
-    (void)req;
-
     res.json({
-      "status", "ok"
+      "ok", true
     });
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-This example uses in-memory metrics. It is useful for tests and local inspection.
+Request:
 
-A real application can implement a custom metrics sink and forward observations to the monitoring backend it uses.
-
-## Metrics sink
-
-A metrics sink receives metric updates from the middleware.
-
-The in-memory sink is useful when you want to inspect values directly in tests.
-
-Example with `HttpPipeline`:
-
-```cpp
-auto sink =
-  std::make_shared<vix::middleware::observability::InMemoryMetrics>();
-
-vix::middleware::HttpPipeline pipeline;
-
-pipeline.set_hooks(
-  vix::middleware::observability::metrics_hooks(sink)
-);
+```bash id="nl4u0x"
+curl -i http://127.0.0.1:8080/api/health
 ```
 
-After running a request, tests can inspect counters and observations.
+Example debug output:
 
-```cpp
-auto total = sink->counter("vix_http_requests_total");
+```txt id="tze9r2"
+[vix.debug] begin method=GET path=/api/health
+[vix.debug] end method=GET path=/api/health status=200 ms=...
 ```
 
-The exact metric names depend on the configured prefix.
+Use this for local debugging.
 
-## Configure metrics
-
-Use `MetricsOptions` when you need explicit labels and naming.
-
-```cpp
-vix::middleware::observability::MetricsOptions opt;
-
-opt.prefix = "vix_http";
-opt.include_method = true;
-opt.include_path = true;
-opt.include_status = true;
-
-auto hooks =
-  vix::middleware::observability::metrics_hooks(sink, opt);
-```
-
-Common options include:
-
-```txt
-prefix
-  metric name prefix
-
-include_method
-  include the HTTP method in labels
-
-include_path
-  include the request path in labels
-
-include_status
-  include the response status in labels
-```
-
-Be careful with path labels in production. Raw paths can create too many metric series if they contain ids or unbounded values.
-
-For example:
-
-```txt
-/api/users/1
-/api/users/2
-/api/users/3
-```
-
-can become many separate label values.
-
-A production metrics backend usually prefers route patterns or normalized paths.
-
-## Debug trace
-
-Debug trace writes readable request lifecycle lines.
-
-It is meant for local development, tests, and low-level inspection.
-
-A debug trace can emit lines such as:
-
-```txt
-[vix.debug] begin method=GET path=/api/status
-[vix.debug] end method=GET path=/api/status status=200 ms=1.2
-```
-
-Debug tracing is not a replacement for structured logging or metrics. It is a simple way to see the middleware flow.
-
-## Use debug trace as middleware
-
-```cpp
-#include <memory>
-
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  auto debug =
-    std::make_shared<vix::middleware::observability::InMemoryDebugTrace>();
-
-  app.use(vix::middleware::app::adapt_ctx(
-    vix::middleware::observability::debug_trace_mw(debug)
-  ));
-
-  app.get("/", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.text("OK");
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-This stores debug lines in memory. For a real application, provide a sink that writes where you want the lines to go.
-
-## Debug trace sink
-
-A debug trace sink implements:
-
-```cpp
-vix::middleware::observability::IDebugTraceSink
-```
-
-A simple sink can forward lines to Vix logging.
-
-```cpp
-struct DebugSink : vix::middleware::observability::IDebugTraceSink
-{
-  void log(std::string_view line) override
-  {
-    vix::log::debug("{}", line);
-  }
-};
-```
-
-The middleware produces the line. The sink decides where it goes.
+Avoid noisy debug traces in high-traffic production paths unless your sink is designed for that volume.
 
 ## Configure debug trace
 
-Use `DebugTraceOptions` to choose what appears in the line.
+Use `DebugTraceOptions`.
 
-```cpp
+```cpp id="orv7q2"
 vix::middleware::observability::DebugTraceOptions opt;
 
 opt.include_method = true;
 opt.include_path = true;
 opt.include_status = true;
 opt.include_duration_ms = true;
+opt.include_trace_ids = true;
 opt.prefix = "[vix.debug]";
 
-auto mw =
-  vix::middleware::observability::debug_trace_mw(debug_sink, opt);
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::observability::debug_trace_mw(sink, opt)
+));
 ```
 
 Main options:
 
-```txt
-include_method
-  include the HTTP method
+| Option                | Purpose                           |
+| --------------------- | --------------------------------- |
+| `include_method`      | Include request method            |
+| `include_path`        | Include request path              |
+| `include_status`      | Include response status           |
+| `include_duration_ms` | Include duration                  |
+| `include_trace_ids`   | Reserved for trace id integration |
+| `prefix`              | Prefix added to debug lines       |
 
-include_path
-  include the request path
+## Metrics
 
-include_status
-  include response status in end logs
+Metrics record request activity.
 
-include_duration_ms
-  include elapsed milliseconds in end logs
+The metrics feature is designed around sinks and pipeline hooks.
 
-include_trace_ids
-  reserved for trace integration
+A metrics sink can collect:
 
-prefix
-  prefix added to every debug line
+```txt id="eymjdb"
+request count
+status count
+duration
+method labels
+path labels
 ```
 
-## Debug trace hooks
+Use metrics when you want to see how the application behaves over time.
 
-Debug trace hooks use the pipeline lifecycle.
+Examples:
 
-```cpp
-auto debug =
-  std::make_shared<vix::middleware::observability::InMemoryDebugTrace>();
+```txt id="xrsm0k"
+how many requests reached this pipeline
+how many returned 500
+which route is slow
+how many requests were rejected early
+```
 
+## In-memory metrics
+
+For tests and local experiments, use an in-memory sink.
+
+```cpp id="xxqau4"
+auto metrics = std::make_shared<
+  vix::middleware::observability::InMemoryMetrics
+>();
+```
+
+Then attach it through hooks with `HttpPipeline`.
+
+```cpp id="z2qvuw"
 vix::middleware::HttpPipeline pipeline;
 
 pipeline.set_hooks(
-  vix::middleware::observability::debug_trace_hooks(debug)
+  vix::middleware::observability::metrics_hooks(metrics)
 );
 ```
 
-Hook behavior:
+`HttpPipeline` is lower-level than `vix::App`.
 
-```txt
+Use it for tests and custom integrations.
+
+## Observability hooks with HttpPipeline
+
+`HttpPipeline` supports hooks:
+
+```txt id="kxewb7"
 on_begin
-  store start time and log begin
-
 on_end
-  compute elapsed time and log end
-
 on_error
-  log error code and status
 ```
 
-The middleware variant logs begin and end around `next()`. The hook variant also integrates with the pipeline error hook.
+Observability features can use those hooks.
 
-## Development observability
+Example:
 
-`HttpPipeline` can enable a default development observability setup.
+```cpp id="om1thi"
+#include <memory>
 
-```cpp
+#include <vix/http/Request.hpp>
+#include <vix/http/Response.hpp>
+#include <vix/http/ResponseWrapper.hpp>
+#include <vix/middleware.hpp>
+
+int main()
+{
+  auto metrics = std::make_shared<
+    vix::middleware::observability::InMemoryMetrics
+  >();
+
+  auto debug = std::make_shared<
+    vix::middleware::observability::InMemoryDebugTrace
+  >();
+
+  auto hooks = vix::middleware::merge_hooks(
+    vix::middleware::observability::tracing_hooks(),
+    vix::middleware::observability::metrics_hooks(metrics),
+    vix::middleware::observability::debug_trace_hooks(debug)
+  );
+
+  vix::middleware::HttpPipeline pipeline;
+
+  pipeline.set_hooks(std::move(hooks));
+
+  pipeline.use(vix::middleware::basics::request_id());
+  pipeline.use(vix::middleware::basics::timing());
+
+  // Build req and res in your test or integration layer.
+  // pipeline.run(req, res, final_handler);
+
+  return 0;
+}
+```
+
+This pattern is useful for tests and lower-level middleware validation.
+
+Normal applications should start with `vix::App` middleware.
+
+## Enable development observability
+
+`HttpPipeline` can enable development observability helpers.
+
+```cpp id="i5xriu"
 vix::middleware::HttpPipeline pipeline;
 
 pipeline.enable_dev_observability();
 ```
 
-This installs tracing, metrics, and debug tracing hooks with default in-memory sinks.
+This can install tracing, metrics, and debug tracing when the environment is considered development.
 
-By default, this only runs when the environment indicates development.
+Typical development environment values include:
 
-Accepted development values are:
-
-```txt
+```txt id="vqft4z"
 VIX_ENV=dev
 VIX_ENV=development
 VIX_ENV=local
 ```
 
-This is useful for tests, local tools, and custom pipeline usage.
+Use this for local inspection.
 
-## Force development observability
+For production, wire explicit sinks and policies.
 
-You can disable the environment check.
+## Safe labels
 
-```cpp
-vix::middleware::HttpPipeline pipeline;
+Observability code often needs method and path labels.
 
-pipeline.enable_dev_observability(false);
+The helpers are:
+
+```cpp id="bcl2tx"
+vix::middleware::observability::safe_method(req)
+vix::middleware::observability::safe_path(req)
 ```
 
-This enables the observability hooks even when `VIX_ENV` is not set to a development value.
+They return reasonable fallback values when method or path is empty.
 
-Use this intentionally. Development observability is useful, but production applications usually need explicit sinks and controlled metric labels.
+This avoids emitting empty labels in logs, metrics, and traces.
 
-## Custom development sinks
+Example:
 
-You can pass custom sinks to `enable_dev_observability`.
+```cpp id="rr1p1j"
+const std::string method =
+  vix::middleware::observability::safe_method(ctx.req());
 
-```cpp
-vix::middleware::HttpPipeline::DevObservabilitySinks sinks;
-
-sinks.metrics =
-  std::make_shared<vix::middleware::observability::InMemoryMetrics>();
-
-sinks.debug =
-  std::make_shared<vix::middleware::observability::InMemoryDebugTrace>();
-
-vix::middleware::HttpPipeline pipeline;
-
-pipeline.enable_dev_observability(sinks);
+const std::string path =
+  vix::middleware::observability::safe_path(ctx.req());
 ```
 
-If a sink is missing, the pipeline creates a default in-memory one.
+## Observability and errors
 
-## Hooks and merge order
+When a middleware short-circuits the request, observability should still help you understand what happened.
 
-`HttpPipeline` supports merged hooks.
+Examples of short-circuiting middleware:
 
-This allows tracing, metrics, and debug trace to run together.
-
-```cpp
-using namespace vix::middleware;
-using namespace vix::middleware::observability;
-
-auto hooks = merge_hooks(
-  tracing_hooks(),
-  metrics_hooks(metrics_sink),
-  debug_trace_hooks(debug_sink)
-);
-
-pipeline.set_hooks(std::move(hooks));
+```txt id="m6a8e9"
+rate limit
+body limit
+CORS preflight
+CSRF
+API key
+JWT
+RBAC
+HTTP cache hit
+parser errors
 ```
 
-When hooks are merged, begin hooks run in the order they are merged, and end hooks run in reverse wrapping order.
+Use request ids and tracing early in the pipeline so error responses still carry identifiers.
 
-This preserves the normal middleware shape:
+A practical order is:
 
-```txt
-begin A
-begin B
-handler
-end B
-end A
+```cpp id="sahvko"
+app.use("/api", middleware::app::request_id_dev());
+app.use("/api", middleware::app::timing_dev());
+
+app.use("/api", middleware::app::adapt_ctx(
+  middleware::observability::tracing_mw()
+));
+
+app.use("/api", middleware::app::security_headers_dev());
+app.use("/api", middleware::app::rate_limit_dev());
+app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
 ```
 
-## Observability middleware versus hooks
+This gives early request identity and timing around the rest of the chain.
 
-Use middleware when you want observability as one item in a normal middleware chain.
+## Observability and logging
 
-```txt
-middleware_a
-  -> tracing_mw
-  -> middleware_b
-  -> handler
+The basics group also provides `logger()`.
+
+It can write a request summary after the handler has run.
+
+Use it when you want middleware-level logs with a custom logger service.
+
+For most apps, combine:
+
+```txt id="nobn3g"
+request_id
+timing
+tracing
+debug_trace
+logger
 ```
 
-Use hooks when observability should attach to the pipeline lifecycle itself.
+according to your needs.
 
-```txt
-on_begin
-  -> middleware chain
-  -> handler
-on_end
-```
+For local debugging, debug trace can be enough.
 
-For `vix::App`, middleware style is usually easier.
+For production, prefer structured logs, request ids, metrics, and controlled trace propagation.
 
-For `HttpPipeline`, hooks are often more direct.
+## Complete App example
 
-## Reading observability state
+This example uses request id, timing, tracing, and debug trace as App middleware.
 
-Tracing stores `TraceContext` in request state.
+```cpp id="bsxa9e"
+#include <iostream>
+#include <memory>
+#include <string_view>
 
-```cpp
-auto *trace =
-  req.try_state<vix::middleware::observability::TraceContext>();
+#include <vix.hpp>
+#include <vix/middleware.hpp>
 
-if (trace)
+class StdoutDebugTrace final
+  : public vix::middleware::observability::IDebugTraceSink
 {
-  vix::print("trace", trace->trace_id);
+public:
+  void log(std::string_view line) override
+  {
+    std::cout << line << "\n";
+  }
+};
+
+int main()
+{
+  vix::App app;
+
+  auto debug = std::make_shared<StdoutDebugTrace>();
+
+  app.use("/api", vix::middleware::app::request_id_dev());
+  app.use("/api", vix::middleware::app::timing_dev());
+
+  app.use("/api", vix::middleware::app::adapt_ctx(
+    vix::middleware::observability::tracing_mw()
+  ));
+
+  app.use("/api", vix::middleware::app::adapt_ctx(
+    vix::middleware::observability::debug_trace_mw(debug)
+  ));
+
+  app.get("/api/health", [](vix::Request &req, vix::Response &res)
+  {
+    auto *rid =
+      req.try_state<vix::middleware::basics::RequestId>();
+
+    auto *trace =
+      req.try_state<vix::middleware::observability::TraceContext>();
+
+    res.json({
+      "ok", true,
+      "request_id", rid ? rid->value : "",
+      "trace_id", trace ? trace->trace_id : "",
+      "span_id", trace ? trace->span_id : ""
+    });
+  });
+
+  app.run(8080);
 }
 ```
 
-Debug trace stores a start marker internally when using hooks.
+Run:
 
-Metrics writes to a sink.
-
-Different observability features expose data in different places because they serve different purposes:
-
-```txt
-tracing
-  request state and response headers
-
-metrics
-  metrics sink
-
-debug trace
-  debug trace sink
+```bash id="bw4g2p"
+vix run observability_app_demo.cpp
 ```
 
-## Relationship with basics
+Request:
 
-The basics group already provides request IDs and timing.
-
-Observability adds trace identifiers, metrics, and debug traces.
-
-They can be used together.
-
-```txt
-request_id
-  useful for logs and client support
-
-timing
-  useful for response timing headers
-
-tracing
-  useful for correlation across systems
-
-metrics
-  useful for aggregated measurement
-
-debug_trace
-  useful for local flow inspection
+```bash id="vp33g7"
+curl -i http://127.0.0.1:8080/api/health
 ```
 
-Use the smallest set that gives the visibility you need.
+You should see:
 
-## Relationship with log
-
-`vix::log` is the application logging module.
-
-Observability middleware does not replace it.
-
-Debug trace and request logging can forward to `vix::log` through custom sinks or logger implementations.
-
-This keeps the middleware independent from one logging backend while still making integration simple.
-
-## Common order
-
-For a simple application, request metadata can run early.
-
-```txt
-recovery
-request_id
-timing
-tracing
-security
-parsers
-auth
-handler
-metrics/debug end
+```txt id="g25kau"
+request id in response state or headers
+trace id and span id in response body
+timing headers
+debug trace lines in stdout
 ```
 
-This is not a fixed rule. The correct order depends on what each middleware needs.
+## Complete HttpPipeline example
 
-Tracing can run early so trace ids are available to later middleware and handlers.
+This example shows the low-level pipeline model.
 
-Metrics usually wraps the handler so it can count final status and duration.
+```cpp id="iygnqc"
+#include <cassert>
+#include <memory>
 
-Debug trace can wrap the flow when you want begin and end lines.
+#include <vix/http/Request.hpp>
+#include <vix/http/Response.hpp>
+#include <vix/http/ResponseWrapper.hpp>
+#include <vix/middleware.hpp>
 
-## Development and production
+static vix::http::Request make_request()
+{
+  vix::http::Request::HeaderMap headers;
+  headers["Host"] = "localhost";
 
-Development observability can use in-memory sinks and debug lines.
+  return vix::http::Request(
+    "GET",
+    "/api/health",
+    std::move(headers),
+    ""
+  );
+}
 
-Production observability should usually use explicit integrations.
+int main()
+{
+  auto metrics = std::make_shared<
+    vix::middleware::observability::InMemoryMetrics
+  >();
 
-Important production decisions include:
+  auto debug = std::make_shared<
+    vix::middleware::observability::InMemoryDebugTrace
+  >();
 
-```txt
-where metrics are exported
-which labels are safe
-whether raw paths should be included
-where trace ids are propagated
-which headers are accepted from upstream
-where debug traces are written
-whether debug traces should be enabled at all
+  auto hooks = vix::middleware::merge_hooks(
+    vix::middleware::observability::tracing_hooks(),
+    vix::middleware::observability::metrics_hooks(metrics),
+    vix::middleware::observability::debug_trace_hooks(debug)
+  );
+
+  vix::middleware::HttpPipeline pipeline;
+
+  pipeline.set_hooks(std::move(hooks));
+  pipeline.use(vix::middleware::basics::request_id());
+  pipeline.use(vix::middleware::basics::timing());
+
+  auto req = make_request();
+
+  vix::http::Response raw_res;
+  vix::http::ResponseWrapper res(raw_res);
+
+  pipeline.run(req, res, [](auto &, auto &out)
+  {
+    out.status(200).text("OK");
+  });
+
+  assert(raw_res.status() == 200);
+  assert(raw_res.body() == "OK");
+
+  return 0;
+}
 ```
 
-Avoid enabling noisy debug traces globally in production unless that is an intentional operational choice.
+Use this style when testing middleware behavior without starting a server.
 
-## What this module does not do
+## App vs HttpPipeline
 
-The observability group does not provide a full distributed tracing backend.
+Use `vix::App` for normal applications.
 
-It does not provide a metrics server by itself.
+```cpp id="atc8wy"
+app.use("/api", middleware::app::request_id_dev());
+app.use("/api", middleware::app::timing_dev());
+app.use("/api", middleware::app::adapt_ctx(
+  middleware::observability::tracing_mw()
+));
+```
 
-It does not decide your logging storage.
+Use `HttpPipeline` for lower-level control.
 
-It does not normalize application route patterns automatically.
+```cpp id="c8vw3q"
+vix::middleware::HttpPipeline pipeline;
 
-It does not replace monitoring infrastructure.
+pipeline.set_hooks(...);
+pipeline.use(...);
+pipeline.run(req, res, final_handler);
+```
 
-It gives middleware-level hooks and sinks so Vix applications can expose request behavior clearly.
+The rule is simple:
+
+```txt id="fi5jbm"
+App
+  production route model
+
+HttpPipeline
+  tests and custom integrations
+```
+
+## What to use first
+
+For a normal backend, start with:
+
+```cpp id="hr5bp3"
+app.use("/api", middleware::app::request_id_dev());
+app.use("/api", middleware::app::timing_dev());
+
+app.use("/api", middleware::app::adapt_ctx(
+  middleware::observability::tracing_mw()
+));
+```
+
+Then add debug tracing when you need local inspection:
+
+```cpp id="p4yrmi"
+auto debug = std::make_shared<MyDebugTraceSink>();
+
+app.use("/api", middleware::app::adapt_ctx(
+  middleware::observability::debug_trace_mw(debug)
+));
+```
+
+Use metrics hooks when you are building tests, diagnostics, or a deeper runtime integration.
 
 ## Summary
 
-`tracing` gives each request trace and span identifiers.
+Use observability to make the backend visible.
 
-`metrics` records request counters, response counters, and duration observations.
+Start with:
 
-`debug_trace` writes readable request lifecycle lines.
+```txt id="s7ndep"
+request ids
+timing headers
+trace ids
+```
 
-Hooks integrate observability at the `HttpPipeline` lifecycle level.
+Add debug traces when diagnosing middleware flow.
 
-Middleware variants integrate observability as normal middleware.
+Use metrics hooks when you need counters and request summaries.
 
-Use development helpers for local inspection and explicit sinks for serious applications.
+Remember the separation:
 
-## Next steps
-
-Continue with:
-
-- [HTTP Cache](./http-cache)
-- [Performance](./performance)
-- [App Integration](./app-integration)
-- [API Reference](./api-reference)
+```txt id="qfku2e"
+request_id and timing are basics
+tracing and debug trace are observability
+metrics and hooks are lower-level pipeline tools
+vix::App is the normal application path
+HttpPipeline is for tests and custom integrations
+```

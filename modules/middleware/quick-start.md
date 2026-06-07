@@ -1,638 +1,587 @@
-# Middleware Quick Start
+# Quick Start
 
-This page shows the fastest way to use `vix::middleware` in a Vix application.
+This page shows the fastest useful way to start with `vix::middleware`.
 
-The goal is not to configure every middleware at once. The goal is to understand the normal workflow: include the module, install middleware on an app, let middleware protect or enrich requests, and read the data it stores when needed.
-
-For most application code, include:
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-```
-
-`vix::App` still owns the HTTP application. The middleware module provides reusable pieces that run around the routes.
-
-## Start with a normal Vix app
-
-A Vix application starts with `vix::App`.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.get("/", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.text("Hello from Vix");
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-Middleware is added with `app.use(...)`.
-
-```cpp
-app.use(vix::middleware::app::security_headers_dev());
-```
-
-The middleware will run for incoming requests before the response is sent.
-
-## Add security headers
-
-Security headers are a good first middleware because they do not change how routes are written.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::security_headers_dev());
-
-  app.get("/", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.text("home");
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-The route still returns the same body, but the response can also include headers such as:
+The goal is to build a small API that already behaves like a real backend:
 
 ```txt
-X-Content-Type-Options
-X-Frame-Options
-Referrer-Policy
-Permissions-Policy
+security headers
+CORS
+rate limiting
+body size limits
+strict JSON parsing
+typed request state
+route-level protection
 ```
 
-This kind of middleware usually calls the route handler first, then adds headers to the outgoing response.
+The example uses `vix::App`, because that is the normal application model for Vix backends.
 
-## Add CORS
+## Create a small API
 
-Use CORS middleware when a browser application needs to call your API from another origin.
+Create a file:
+
+```txt
+middleware_quick_start.cpp
+```
+
+Add this code:
 
 ```cpp
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
+using namespace vix;
+
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use(vix::middleware::app::cors_dev());
+  app.use("/api", middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::cors_dev({"https://example.com"}));
+  app.use("/api", middleware::app::rate_limit_dev(60));
+  app.use("/api", middleware::app::body_limit_write_dev(1024));
 
-  app.get("/api/status", [](vix::Request &req, vix::Response &res)
+  app.use("/api/users", middleware::app::json_strict_dev(1024));
+
+  app.get("/api/health", [](Request &, Response &res)
   {
-    (void)req;
-
     res.json({
-      "status", "ok"
+      "ok", true,
+      "service", "vix"
+    });
+  });
+
+  app.post("/api/users", [](Request &req, Response &res)
+  {
+    auto &body = req.state<middleware::parsers::JsonBody>();
+
+    const std::string name = body.value.value("name", "");
+    const std::string email = body.value.value("email", "");
+
+    if (name.empty())
+    {
+      res.status(422).json({
+        "ok", false,
+        "error", "Missing name"
+      });
+      return;
+    }
+
+    if (email.empty())
+    {
+      res.status(422).json({
+        "ok", false,
+        "error", "Missing email"
+      });
+      return;
+    }
+
+    res.status(201).json({
+      "ok", true,
+      "user", {
+        "name", name,
+        "email", email
+      }
     });
   });
 
   app.run(8080);
-
   return 0;
 }
 ```
 
-CORS middleware can handle preflight `OPTIONS` requests before they reach your route handler. For normal requests, it can add the required CORS headers after the handler runs.
-
-For production, configure allowed origins explicitly instead of using a permissive development setup.
-
-## Limit request body size
-
-`body_limit()` protects routes from bodies that are too large.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::body_limit_dev());
-
-  app.post("/upload", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.json({
-      "ok", true
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-If the request body is larger than the configured limit, the middleware can stop the request and return an error before the handler runs.
-
-This is useful before JSON, form, or multipart parsing.
-
-## Parse JSON bodies
-
-The JSON parser middleware reads the request body and stores a parsed value in request state.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::json_dev());
-
-  app.post("/api/echo", [](vix::Request &req, vix::Response &res)
-  {
-    auto &body = req.state<vix::middleware::parsers::JsonBody>();
-
-    res.json({
-      "received", body.value
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-Request:
+Run it:
 
 ```bash
-curl -i \
-  -X POST http://127.0.0.1:8080/api/echo \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Ada"}'
+vix run middleware_quick_start.cpp
 ```
 
-Response shape:
+The server listens on:
+
+```txt
+http://127.0.0.1:8080
+```
+
+## Test the health route
+
+```bash
+curl -i http://127.0.0.1:8080/api/health
+```
+
+Expected shape:
+
+```txt
+HTTP/1.1 200 OK
+```
+
+Body shape:
 
 ```json
 {
-  "received": {
-    "name": "Ada"
+  "ok": true,
+  "service": "vix"
+}
+```
+
+This route does not need a request body. It still receives the middleware installed on `/api`, such as security headers, CORS, and rate limiting.
+
+## Send valid JSON
+
+```bash
+curl -i \
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Ada","email":"ada@example.com"}'
+```
+
+Expected status:
+
+```txt
+201 Created
+```
+
+Expected body shape:
+
+```json
+{
+  "ok": true,
+  "user": {
+    "name": "Ada",
+    "email": "ada@example.com"
   }
 }
 ```
 
-The parser only parses the body. It does not decide which fields your application requires. Validation remains part of your handler or validation layer.
+The handler does not parse raw JSON manually.
 
-## Parse form bodies
-
-Use the form parser for `application/x-www-form-urlencoded` requests.
+The JSON parser middleware already parsed the body and stored it in typed request state:
 
 ```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::form_dev());
-
-  app.post("/contact", [](vix::Request &req, vix::Response &res)
-  {
-    auto &form = req.state<vix::middleware::parsers::FormBody>();
-
-    res.json({
-      "name", form.fields["name"]
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
+auto &body = req.state<vix::middleware::parsers::JsonBody>();
 ```
 
-Request:
+That is one of the main middleware patterns in Vix.
+
+A middleware does the reusable work once. The handler reads the result.
+
+## Send invalid JSON
 
 ```bash
 curl -i \
-  -X POST http://127.0.0.1:8080/contact \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d 'name=Ada'
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":}'
 ```
 
-Response shape:
-
-```json
-{
-  "name": "Ada"
-}
-```
-
-## Add rate limiting
-
-Rate limiting protects an endpoint from too many requests from the same client key.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use("/api", vix::middleware::app::rate_limit_dev());
-
-  app.get("/api/status", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.json({
-      "status", "ok"
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-If the limit is exceeded, the middleware returns `429 Too Many Requests`.
-
-The response can include headers such as:
+Expected status:
 
 ```txt
-X-RateLimit-Limit
-X-RateLimit-Remaining
-Retry-After
+400 Bad Request
 ```
 
-The default key usually comes from headers such as `x-forwarded-for`. In real deployments behind a proxy, make sure those headers are set by infrastructure you trust.
+The route handler is not called.
 
-## Protect a route with an API key
+The JSON middleware stops the request before the handler because the body is invalid.
 
-API key middleware checks a key from a header or query parameter.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  vix::middleware::app::protect_prefix(
-    app,
-    "/admin",
-    vix::middleware::app::api_key_auth("secret")
-  );
-
-  app.get("/admin/status", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.json({
-      "admin", true
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-Request:
+## Send the wrong content type
 
 ```bash
 curl -i \
-  http://127.0.0.1:8080/admin/status \
-  -H "x-api-key: secret"
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: text/plain" \
+  -d '{"name":"Ada"}'
 ```
 
-If the key is missing, the middleware returns `401`.
+Expected status:
 
-If the key is present but invalid, it returns `403`.
-
-## Use JWT authentication
-
-JWT middleware validates a Bearer token and stores the claims in request state.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use("/api", vix::middleware::app::jwt_auth("dev_secret"));
-
-  app.get("/api/me", [](vix::Request &req, vix::Response &res)
-  {
-    auto &claims = req.state<vix::middleware::auth::JwtClaims>();
-
-    res.json({
-      "subject", claims.subject
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
+```txt
+415 Unsupported Media Type
 ```
 
-Request shape:
+`json_strict_dev()` requires a JSON content type.
+
+That means the handler can assume that a successful request has already passed the JSON parser.
+
+## Send an empty body
 
 ```bash
 curl -i \
-  http://127.0.0.1:8080/api/me \
-  -H "Authorization: Bearer <token>"
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: application/json" \
+  -d ''
 ```
 
-The middleware expects a Bearer token. If the token is missing or invalid, the request does not reach the handler.
-
-## Use sessions
-
-Session middleware loads or creates a signed cookie session and stores it in request state.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::session_dev("dev_secret"));
-
-  app.get("/counter", [](vix::Request &req, vix::Response &res)
-  {
-    auto &session = req.state<vix::middleware::auth::Session>();
-
-    int count = 0;
-
-    if (auto value = session.get("count"))
-      count = std::stoi(*value);
-
-    ++count;
-    session.set("count", std::to_string(count));
-
-    res.json({
-      "count", count
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-The session id is stored in a signed cookie. The session data is stored in a session store.
-
-The development helper is useful for local use and examples. Applications that need durable sessions or shared sessions should provide a store that matches their deployment.
-
-## Add request IDs and timing
-
-Request IDs and timing are useful when debugging and observing requests.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::request_id_dev());
-  app.use(vix::middleware::app::timing_dev());
-
-  app.get("/", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.text("OK");
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-The response can include:
+Expected status:
 
 ```txt
-x-request-id
-x-response-time
-server-timing
+400 Bad Request
 ```
 
-The same values can also be stored in request state for middleware or handlers that need them.
+`json_strict_dev()` rejects an empty body.
 
-## Cache GET responses
+Use strict parsing for routes where a body is required.
 
-The HTTP cache middleware uses `vix::cache` to cache `GET` responses.
+Use the more relaxed JSON parser when an empty body is acceptable.
+
+## Send a body that is too large
+
+The example limits write request bodies to `1024` bytes:
 
 ```cpp
-#include <memory>
-
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-#include <vix/cache.hpp>
-
-int main()
-{
-  vix::App app;
-
-  auto store = std::make_shared<vix::cache::MemoryStore>();
-
-  vix::cache::CachePolicy policy;
-  policy.ttl_ms = 30'000;
-
-  auto cache = std::make_shared<vix::cache::Cache>(policy, store);
-
-  app.use("/api", vix::middleware::app::http_cache({
-    .cache = cache
-  }));
-
-  app.get("/api/status", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.json({
-      "status", "ok"
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
+app.use("/api", middleware::app::body_limit_write_dev(1024));
 ```
 
-On a cache hit, the middleware returns the stored response without calling the handler.
+Try a larger body:
 
-On a miss, it calls the handler and stores the response if it is cacheable.
+```bash
+python3 - <<'PY' > /tmp/large.json
+print('{"name":"' + 'a' * 2000 + '","email":"ada@example.com"}')
+PY
 
-The cache engine is provided by `vix::cache`. The middleware only connects it to HTTP requests and responses.
-
-## Add ETag support
-
-ETag middleware can mark a response with an `ETag` header.
-
-```cpp
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::etag_dev());
-
-  app.get("/api/version", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.json({
-      "version", "1.0.0"
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
+curl -i \
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: application/json" \
+  --data-binary @/tmp/large.json
 ```
 
-If the client later sends a matching `If-None-Match` header, the middleware can return `304 Not Modified`.
-
-## Use middleware only for a prefix
-
-Use prefix middleware when only part of the application needs a behavior.
-
-```cpp
-app.use("/api", vix::middleware::app::rate_limit_dev());
-app.use("/admin", vix::middleware::app::api_key_auth("secret"));
-```
-
-This keeps public pages, APIs, admin routes, and internal endpoints separate.
-
-For exact route protection, use:
-
-```cpp
-vix::middleware::app::protect(
-  app,
-  "/admin/status",
-  vix::middleware::app::api_key_auth("secret")
-);
-```
-
-For path prefix protection, use:
-
-```cpp
-vix::middleware::app::protect_prefix(
-  app,
-  "/admin",
-  vix::middleware::app::api_key_auth("secret")
-);
-```
-
-## Middleware order
-
-Order changes behavior.
-
-A good starting order is:
+Expected status:
 
 ```txt
-recovery
-request id
-timing
-security headers
-cors
+413 Payload Too Large
+```
+
+The body limit middleware rejects the request before JSON parsing.
+
+This order matters.
+
+```txt
+body limit
+  -> JSON parser
+  -> handler
+```
+
+Rejecting oversized requests early avoids unnecessary parsing work.
+
+## What happened in the request flow
+
+For `POST /api/users`, the request flow is:
+
+```txt
+request
+  -> security headers middleware
+  -> CORS middleware
+  -> rate limit middleware
+  -> body limit middleware
+  -> strict JSON parser
+  -> route handler
+  -> response
+```
+
+Some middleware works before the handler.
+
+```txt
+CORS
 rate limit
 body limit
-parsers
-authentication
-authorization
-handler
-response middleware
+JSON parser
 ```
 
-Do not treat this as a universal rule. It is a starting point.
-
-For example, CORS often needs to run early because preflight requests should be answered before authentication. Body limits should run before body parsers. JWT must run before RBAC. A logger that reads request timing must be placed so it can see the timing value after downstream middleware finishes.
-
-The important rule is to think about dependencies:
+Some middleware can work after the handler.
 
 ```txt
-If middleware B needs state from middleware A,
-A must run before B stores or exposes that state.
+security headers
+timing
+compression
+ETag
+logging
+metrics
 ```
 
-## Advanced pipeline usage
+A middleware continues the request by calling `next()`.
 
-Most applications should install middleware on `vix::App`.
+A middleware stops the request by sending a response and not calling `next()`.
 
-`HttpPipeline` is available when you need lower-level control, tests, or a custom integration.
+That is the core middleware model.
+
+## Add API key protection
+
+Now protect an admin route.
+
+Add this middleware before the route:
 
 ```cpp
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::middleware::HttpPipeline pipeline;
-
-  pipeline.use(vix::middleware::basics::request_id());
-  pipeline.use(vix::middleware::basics::timing());
-
-  return 0;
-}
+app.use("/api/admin", middleware::app::api_key_dev("dev_key_123"));
 ```
 
-The pipeline API is also useful for unit tests because it can run middleware without starting an HTTP server.
+Add the route:
 
-## What to remember
+```cpp
+app.get("/api/admin/status", [](Request &req, Response &res)
+{
+  auto &key = req.state<middleware::auth::ApiKey>();
 
-`vix::middleware` is not a second application framework.
+  res.json({
+    "ok", true,
+    "admin", true,
+    "key_size", static_cast<long long>(key.value.size())
+  });
+});
+```
 
-Core owns the app, routes, request, response, static files, and server lifecycle.
+Full protected section:
 
-The middleware module provides reusable HTTP behavior around those routes.
+```cpp
+app.use("/api/admin", middleware::app::api_key_dev("dev_key_123"));
 
-Use `vix::App` for normal application code. Use the middleware module when you need tested building blocks for request protection, parsing, authentication, caching, performance, and observability.
+app.get("/api/admin/status", [](Request &req, Response &res)
+{
+  auto &key = req.state<middleware::auth::ApiKey>();
+
+  res.json({
+    "ok", true,
+    "admin", true,
+    "key_size", static_cast<long long>(key.value.size())
+  });
+});
+```
+
+Test without a key:
+
+```bash
+curl -i http://127.0.0.1:8080/api/admin/status
+```
+
+Expected status:
+
+```txt
+401 Unauthorized
+```
+
+Test with the wrong key:
+
+```bash
+curl -i \
+  http://127.0.0.1:8080/api/admin/status \
+  -H "x-api-key: wrong"
+```
+
+Expected status:
+
+```txt
+403 Forbidden
+```
+
+Test with the valid key:
+
+```bash
+curl -i \
+  http://127.0.0.1:8080/api/admin/status \
+  -H "x-api-key: dev_key_123"
+```
+
+Expected status:
+
+```txt
+200 OK
+```
+
+When the key is valid, the middleware stores:
+
+```cpp
+vix::middleware::auth::ApiKey
+```
+
+The route can read it from request state.
+
+Do not return real API keys in production responses. The example only shows how typed state works.
+
+## Use prefixes intentionally
+
+Middleware installed on a prefix applies to matching routes.
+
+```cpp
+app.use("/api", middleware::app::rate_limit_dev());
+```
+
+This applies to:
+
+```txt
+/api
+/api/users
+/api/admin/status
+```
+
+Middleware installed on a more specific prefix applies only there.
+
+```cpp
+app.use("/api/users", middleware::app::json_strict_dev(1024));
+```
+
+This applies to:
+
+```txt
+/api/users
+/api/users/123
+```
+
+It does not apply to:
+
+```txt
+/api/health
+/api/admin/status
+```
+
+Use broad middleware for general backend behavior.
+
+Use narrow middleware for route-specific behavior.
+
+## Recommended order
+
+A practical order for many APIs is:
+
+```cpp
+app.use("/api", middleware::app::security_headers_dev());
+app.use("/api", middleware::app::cors_dev());
+app.use("/api", middleware::app::rate_limit_dev());
+app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
+
+app.use("/api/private", middleware::app::api_key_dev("secret"));
+app.use("/api/json", middleware::app::json_strict_dev(1024 * 1024));
+```
+
+The idea is:
+
+```txt
+security headers
+  add safe browser response headers
+
+CORS
+  handle browser cross-origin rules
+
+rate limit
+  reject abusive clients early
+
+body limit
+  reject large bodies before parsing
+
+authentication
+  reject unauthorized callers
+
+parser
+  parse the body before the handler
+
+handler
+  run application logic
+```
+
+The exact order can change by application, but this shape is a good starting point.
+
+## App presets vs low-level middleware
+
+For normal `vix::App` applications, prefer App presets:
+
+```cpp
+middleware::app::cors_dev()
+middleware::app::rate_limit_dev()
+middleware::app::json_strict_dev()
+middleware::app::api_key_dev("secret")
+```
+
+These return `vix::App::Middleware`, so they work directly with:
+
+```cpp
+app.use(...)
+```
+
+The lower-level middleware lives in namespaces such as:
+
+```cpp
+vix::middleware::security
+vix::middleware::auth
+vix::middleware::parsers
+vix::middleware::performance
+```
+
+When you need lower-level control, adapt it:
+
+```cpp
+auto mw = vix::middleware::app::adapt_ctx(
+  vix::middleware::parsers::json({
+    .require_content_type = true,
+    .allow_empty = false,
+    .max_bytes = 4096,
+    .store_in_state = true
+  })
+);
+
+app.use("/api/custom-json", std::move(mw));
+```
+
+Use the App presets first.
+
+Use lower-level middleware when the preset is not specific enough.
+
+## Version note
+
+For Vix.cpp `v2.6.2` and newer, this is enough:
+
+```cpp
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+```
+
+For Vix.cpp `v2.6.0` and `v2.6.1`, App integration headers may need to be included explicitly:
+
+```cpp
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+#include <vix/middleware/app/adapter.hpp>
+#include <vix/middleware/app/app_middleware.hpp>
+#include <vix/middleware/app/http_cache.hpp>
+#include <vix/middleware/app/presets.hpp>
+```
+
+Use the shorter form when your project is on `v2.6.2` or newer.
+
+## Static files are separate
+
+Static file serving is handled by `vix::App`, not by the middleware module.
+
+Use:
+
+```cpp
+app.static_dir("public", "/", "index.html");
+```
+
+for public files.
+
+Middleware can still enhance static responses through a static response hook, for example compression, but static file routing itself belongs to Core.
+
+Keep this mental model:
+
+```txt
+Core serves static files.
+Middleware protects and enhances HTTP behavior.
+```
 
 ## Next steps
 
 Continue with:
 
-- [Core Concepts](./concepts)
-- [Basics](./basics)
-- [Security](./security)
-- [Authentication](./authentication)
-- [Parsers](./parsers)
-- [Performance](./performance)
-- [Observability](./observability)
-- [HTTP Cache](./http-cache)
-- [App Integration](./app-integration)
+```txt
+App Integration
+Core Concepts
+Basics
+Security
+Authentication
+Parsers
+HTTP Cache
+Performance
+Observability
+API Reference
+```
+
+The quick start shows the normal path.
+
+The next pages explain how the pieces work and how to configure them.

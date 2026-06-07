@@ -600,15 +600,15 @@ Create one `cancel_source` per cancellable operation group. Pass `cancel_token` 
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context. |
-| [Tasks](/modules/async/tasks) | Learn coroutine tasks. |
-| [Timers](/modules/async/timers) | Learn cancellable timer sleeps. |
-| [Thread pool](/modules/async/thread-pool) | Learn cancellable background work. |
-| [TCP](/modules/async/tcp) | Learn cancellable TCP operations. |
-| [UDP](/modules/async/udp) | Learn cancellable UDP operations. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                            |
+| --------------------------------------------- | ---------------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context.         |
+| [Tasks](/modules/async/tasks)                 | Learn coroutine tasks.             |
+| [Timers](/modules/async/timers)               | Learn cancellable timer sleeps.    |
+| [Thread pool](/modules/async/thread-pool)     | Learn cancellable background work. |
+| [TCP](/modules/async/tcp)                     | Learn cancellable TCP operations.  |
+| [UDP](/modules/async/udp)                     | Learn cancellable UDP operations.  |
+| [API Reference](/modules/async/api-reference) | See the public API surface.        |
 
 ## Next step
 

@@ -201,11 +201,11 @@ const auto datagram = co_await socket->async_recv_from(
 
 The result contains:
 
-| Field | Purpose |
-|---|---|
-| `datagram.from.host` | Sender IP address. |
-| `datagram.from.port` | Sender port. |
-| `datagram.bytes` | Number of bytes received. |
+| Field                | Purpose                   |
+| -------------------- | ------------------------- |
+| `datagram.from.host` | Sender IP address.        |
+| `datagram.from.port` | Sender port.              |
+| `datagram.bytes`     | Number of bytes received. |
 
 Complete example:
 
@@ -569,16 +569,16 @@ stop context
 
 ## UDP API summary
 
-| API | Purpose |
-|---|---|
-| `make_udp_socket(ctx)` | Creates a UDP socket. |
-| `udp_endpoint` | Describes a UDP host and port. |
-| `udp_datagram` | Describes a received UDP datagram. |
-| `async_bind(endpoint)` | Binds the socket to a local endpoint. |
-| `async_send_to(buffer, endpoint, token)` | Sends one datagram. |
-| `async_recv_from(buffer, token)` | Receives one datagram. |
-| `close()` | Closes the socket. |
-| `is_open()` | Checks open state. |
+| API                                      | Purpose                               |
+| ---------------------------------------- | ------------------------------------- |
+| `make_udp_socket(ctx)`                   | Creates a UDP socket.                 |
+| `udp_endpoint`                           | Describes a UDP host and port.        |
+| `udp_datagram`                           | Describes a received UDP datagram.    |
+| `async_bind(endpoint)`                   | Binds the socket to a local endpoint. |
+| `async_send_to(buffer, endpoint, token)` | Sends one datagram.                   |
+| `async_recv_from(buffer, token)`         | Receives one datagram.                |
+| `close()`                                | Closes the socket.                    |
+| `is_open()`                              | Checks open state.                    |
 
 ## Common workflows
 
@@ -719,15 +719,15 @@ Bind before receiving. Keep buffers alive until the awaited operation completes.
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context. |
-| [Tasks](/modules/async/tasks) | Learn coroutine tasks. |
-| [Timers](/modules/async/timers) | Learn timeout-style flows. |
-| [Cancellation](/modules/async/cancellation) | Learn cancellation tokens. |
-| [TCP](/modules/async/tcp) | Learn TCP streams and listeners. |
-| [DNS](/modules/async/dns) | Learn hostname resolution. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                          |
+| --------------------------------------------- | -------------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context.       |
+| [Tasks](/modules/async/tasks)                 | Learn coroutine tasks.           |
+| [Timers](/modules/async/timers)               | Learn timeout-style flows.       |
+| [Cancellation](/modules/async/cancellation)   | Learn cancellation tokens.       |
+| [TCP](/modules/async/tcp)                     | Learn TCP streams and listeners. |
+| [DNS](/modules/async/dns)                     | Learn hostname resolution.       |
+| [API Reference](/modules/async/api-reference) | See the public API surface.      |
 
 ## Next step
 

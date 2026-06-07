@@ -1,545 +1,778 @@
 # API Reference
 
-This page summarizes the public API surface of the Vix middleware module.
+This page is a lookup reference for `vix::middleware`.
 
-It is a reference page. It does not replace the guide pages. Use it when you need to find the right namespace, type, option struct, middleware function, or integration helper.
+Read the guide pages first if you are new to the module:
 
-For most application code, include:
+1. [Quick Start](./quick-start)
+2. [App Integration](./app-integration)
+3. [Core Concepts](./concepts)
 
-```cpp id="ccyijw"
+Use this page when you already know what you want and need the namespace, type, helper, option, or state object.
+
+## Public include
+
+For Vix.cpp `v2.6.2` and newer:
+
+```cpp
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 ```
 
-The middleware module is exposed mainly through:
+For Vix.cpp `v2.6.0` and `v2.6.1`, App integration headers may need to be included explicitly:
 
-```cpp id="ak9g2s"
-namespace vix::middleware
-```
-
-Feature groups live under sub-namespaces such as:
-
-```cpp id="trua8d"
-vix::middleware::basics
-vix::middleware::security
-vix::middleware::auth
-vix::middleware::parsers
-vix::middleware::performance
-vix::middleware::observability
-vix::middleware::cookies
-vix::middleware::app
-vix::middleware::utils
-```
-
-## Public headers
-
-Normal application code should include:
-
-```cpp id="r8j0de"
-#include <vix/middleware.hpp>
-```
-
-or the full Vix header:
-
-```cpp id="vf3wpx"
+```cpp
 #include <vix.hpp>
+#include <vix/middleware.hpp>
+
+#include <vix/middleware/app/adapter.hpp>
+#include <vix/middleware/app/app_middleware.hpp>
+#include <vix/middleware/app/http_cache.hpp>
+#include <vix/middleware/app/presets.hpp>
 ```
 
-The internal aggregation header exists, but it is not the preferred public include for applications:
+## Main namespaces
 
-```cpp id="pftg8q"
-#include <vix/middleware/all.hpp>
-```
+| Namespace                        | Purpose                                          |
+| -------------------------------- | ------------------------------------------------ |
+| `vix::middleware`                | Core middleware aliases, pipeline, HTTP cache    |
+| `vix::middleware::app`           | `vix::App` integration helpers and presets       |
+| `vix::middleware::basics`        | Recovery, request id, timing, body limit, logger |
+| `vix::middleware::security`      | CORS, CSRF, headers, IP filter, rate limit       |
+| `vix::middleware::auth`          | API key, JWT, RBAC, sessions                     |
+| `vix::middleware::parsers`       | JSON, form, multipart parsers                    |
+| `vix::middleware::performance`   | Compression, ETag, static response hook          |
+| `vix::middleware::observability` | Tracing, metrics, debug trace                    |
+| `vix::middleware::cookies`       | Cookie helpers                                   |
+| `vix::middleware::utils`         | Internal utilities used by middleware            |
 
-Prefer the public module header.
+## Core types
 
-## Core aliases
+Defined by the middleware module:
 
-The middleware module exposes aliases for the HTTP request and response types used by Core.
-
-```cpp id="o44kpf"
+```cpp
 namespace vix::middleware
 {
   using Request = vix::http::Request;
   using Response = vix::http::ResponseWrapper;
+
+  using NextFn = vix::mw::NextFn;
+  using Next = vix::mw::Next;
+  using NextOnce = vix::mw::NextOnce;
+
+  using Error = vix::mw::Error;
+  using Services = vix::mw::Services;
+  using Context = vix::mw::Context;
+
+  using MiddlewareFn = std::function<void(Context &, Next)>;
+
+  using HttpMiddleware =
+    std::function<void(Request &, Response &, Next)>;
+
+  using Hooks = vix::mw::Hooks;
 }
 ```
 
-Common middleware types:
-
-```cpp id="e09zcf"
-using NextFn = vix::mw::NextFn;
-using Next = vix::mw::Next;
-using NextOnce = vix::mw::NextOnce;
-
-using Error = vix::mw::Error;
-using Services = vix::mw::Services;
-using Context = vix::mw::Context;
-
-using MiddlewareFn =
-  std::function<void(Context &, Next)>;
-
-using HttpMiddleware =
-  std::function<void(Request &, Response &, Next)>;
-```
-
-`MiddlewareFn` is the context-based middleware type.
-
-`HttpMiddleware` is the legacy HTTP middleware type.
-
 ## Core helpers
 
-```cpp id="jp54wn"
-MiddlewareFn from_http_middleware(HttpMiddleware legacy);
-HttpMiddleware to_http_middleware(MiddlewareFn mw, Services &services);
-
-MiddlewareFn noop();
-MiddlewareFn use_if(bool enabled, MiddlewareFn mw);
+```cpp
+vix::middleware::from_http_middleware(...)
+vix::middleware::to_http_middleware(...)
+vix::middleware::noop()
+vix::middleware::use_if(...)
 ```
 
-`from_http_middleware()` adapts a legacy HTTP middleware into a context-based middleware.
+Common usage:
 
-`to_http_middleware()` adapts a context-based middleware into a legacy HTTP middleware.
-
-`noop()` returns a middleware that only calls `next()`.
-
-`use_if()` returns the provided middleware when enabled, otherwise returns `noop()`.
-
-## Errors and results
-
-The middleware module re-exports common result and error helpers from `vix::mw`.
-
-```cpp id="bqkx8t"
-ok(...)
-fail(...)
-bad_request(...)
-unauthorized(...)
-forbidden(...)
-not_found(...)
-conflict(...)
-internal(...)
-normalize(...)
-to_json(...)
+```cpp
+auto mw = vix::middleware::from_http_middleware(my_http_middleware);
 ```
 
-These helpers are used by middleware that returns normalized JSON errors.
+## Error helpers
 
-A typical middleware error uses:
+Re-exported from `vix::mw`:
 
-```cpp id="ejp8od"
+```cpp
+vix::middleware::ok(...)
+vix::middleware::fail(...)
+vix::middleware::bad_request(...)
+vix::middleware::unauthorized(...)
+vix::middleware::forbidden(...)
+vix::middleware::not_found(...)
+vix::middleware::conflict(...)
+vix::middleware::internal(...)
+vix::middleware::normalize(...)
+vix::middleware::to_json(...)
+```
+
+Common pattern:
+
+```cpp
 vix::middleware::Error err;
 
 err.status = 401;
 err.code = "unauthorized";
 err.message = "Missing token";
-err.details["hint"] = "Use Authorization header";
 
 ctx.send_error(vix::middleware::normalize(std::move(err)));
 ```
 
-## HttpPipeline
+## App integration helpers
 
-`HttpPipeline` runs a list of middleware functions and an optional final handler.
+Namespace:
 
-```cpp id="bvv7e7"
-class HttpPipeline
-{
-public:
-  using Final = std::function<void(Request &, Response &)>;
-
-  Services &services() noexcept;
-  const Services &services() const noexcept;
-
-  Hooks &hooks() noexcept;
-  const Hooks &hooks() const noexcept;
-
-  HttpPipeline &set_hooks(Hooks h);
-
-  HttpPipeline &enable_dev_observability(bool only_if_dev_env = true);
-
-  HttpPipeline &enable_dev_observability(
-    DevObservabilitySinks sinks,
-    bool only_if_dev_env = true);
-
-  HttpPipeline &use(HttpMiddleware legacy);
-  HttpPipeline &use(MiddlewareFn mw);
-
-  std::size_t size() const noexcept;
-  void clear();
-
-  void run(Request &req, Response &res, Final final_handler) const;
-  void run(Request &req, Response &res) const;
-};
+```cpp
+namespace vix::middleware::app
 ```
 
-`HttpPipeline` is useful for custom middleware stacks, tests, and low-level integrations.
+Helpers:
 
-Most normal applications use `vix::App` with the helpers in `vix::middleware::app`.
-
-## Pipeline wrapping
-
-```cpp id="7xsgxo"
-template <typename Handler>
-auto wrap(Handler handler, HttpPipeline pipeline);
+```cpp
+vix::middleware::app::adapt(...)
+vix::middleware::app::adapt_ctx(...)
+vix::middleware::app::when(...)
+vix::middleware::app::protect_path(...)
+vix::middleware::app::protect_prefix_mw(...)
+vix::middleware::app::protect(...)
+vix::middleware::app::protect_prefix(...)
+vix::middleware::app::install(...)
+vix::middleware::app::install_exact(...)
+vix::middleware::app::chain(...)
 ```
 
-`wrap()` wraps a final handler with a middleware pipeline and returns a callable that accepts `Request` and `Response`.
+### `adapt_ctx`
 
-## Hooks
+Converts `MiddlewareFn` to `vix::App::Middleware`.
 
-`Hooks` comes from `vix::mw`.
-
-Common hook fields are:
-
-```cpp id="zuyxgd"
-on_begin
-on_end
-on_error
+```cpp
+app.use(vix::middleware::app::adapt_ctx(
+  vix::middleware::basics::request_id()
+));
 ```
 
-Hooks can be merged with:
+### `adapt`
 
-```cpp id="1grct0"
-merge_hooks(a, b)
+Converts `HttpMiddleware` to `vix::App::Middleware`.
+
+```cpp
+app.use(vix::middleware::app::adapt(my_http_middleware));
 ```
 
-Merged begin hooks run in merge order.
+### `when`
 
-Merged end hooks run in wrapping order after the request work has completed.
+Runs middleware only when the predicate matches.
 
-## PeriodicTask
-
-`PeriodicTask` runs a job at a fixed interval and dispatches the job through an executor.
-
-```cpp id="s7mhg9"
-class PeriodicTask final
-{
-public:
-  using Clock = std::chrono::steady_clock;
-
-  PeriodicTask(
-    vix::executor::IExecutor &ex,
-    std::chrono::milliseconds interval,
-    std::function<void()> job,
-    vix::executor::TaskOptions opt = {});
-
-  ~PeriodicTask();
-
-  void start();
-  void stop();
-
-  bool is_running() const noexcept;
-};
+```cpp
+auto only_post = vix::middleware::app::when(
+  [](const vix::Request &req)
+  {
+    return req.method() == "POST";
+  },
+  vix::middleware::app::body_limit_write_dev(1024)
+);
 ```
 
-It is useful for maintenance jobs such as periodic cleanup, cache pruning, or metrics flushing.
+### `protect`
 
-## Static directory bridge
+Installs middleware on one exact path.
 
-```cpp id="penrox"
-void register_static_dir();
+```cpp
+vix::middleware::app::protect(
+  app,
+  "/admin",
+  vix::middleware::app::api_key_dev("secret")
+);
 ```
 
-`register_static_dir()` registers the middleware static response hook on `vix::App`.
+### `protect_prefix`
 
-Static files are still served by Core through:
+Installs middleware on a route prefix.
 
-```cpp id="odsegx"
-app.static_dir("public", "/");
+```cpp
+vix::middleware::app::protect_prefix(
+  app,
+  "/admin",
+  vix::middleware::app::api_key_dev("secret")
+);
 ```
 
-The middleware module only provides the optional compression hook.
+### `chain`
 
-## Basics namespace
+Combines App middlewares in order.
 
-Basics live under:
+```cpp
+auto stack = vix::middleware::app::chain(
+  vix::middleware::app::body_limit_write_dev(4096),
+  vix::middleware::app::json_strict_dev(4096)
+);
 
-```cpp id="xnpss4"
+app.use("/api/users", std::move(stack));
+```
+
+## App presets
+
+The App presets return `vix::App::Middleware`.
+
+Common presets include:
+
+```cpp
+vix::middleware::app::recovery_dev(...)
+vix::middleware::app::request_id_dev(...)
+vix::middleware::app::timing_dev(...)
+vix::middleware::app::body_limit_dev(...)
+vix::middleware::app::body_limit_write_dev(...)
+
+vix::middleware::app::security_headers_dev(...)
+vix::middleware::app::cors_dev(...)
+vix::middleware::app::csrf_dev(...)
+vix::middleware::app::ip_filter_dev(...)
+vix::middleware::app::ip_filter_allow_deny_dev(...)
+vix::middleware::app::rate_limit_dev(...)
+vix::middleware::app::rate_limit_custom_dev(...)
+
+vix::middleware::app::api_key_dev(...)
+vix::middleware::app::jwt_dev(...)
+vix::middleware::app::session_dev(...)
+
+vix::middleware::app::json_dev(...)
+vix::middleware::app::json_strict_dev(...)
+vix::middleware::app::form_dev(...)
+vix::middleware::app::multipart_dev(...)
+vix::middleware::app::multipart_save_dev(...)
+
+vix::middleware::app::http_cache(...)
+vix::middleware::app::http_cache_mw(...)
+vix::middleware::app::install_http_cache(...)
+```
+
+Example:
+
+```cpp
+app.use("/api", vix::middleware::app::security_headers_dev());
+app.use("/api", vix::middleware::app::cors_dev());
+app.use("/api", vix::middleware::app::rate_limit_dev());
+app.use("/api/users", vix::middleware::app::json_strict_dev(4096));
+```
+
+## Basics
+
+Namespace:
+
+```cpp
 namespace vix::middleware::basics
 ```
 
-The basics group provides request body limits, request ids, timing, request logging, and exception recovery.
+### Recovery
 
-## body_limit
-
-```cpp id="4u4owo"
-struct BodyLimitOptions
-{
-  std::size_t max_bytes{1 * 1024 * 1024};
-  bool apply_to_get{false};
-  bool allow_chunked{true};
-
-  std::function<bool(const vix::middleware::Context &)> should_apply{};
-};
-
-MiddlewareFn body_limit(BodyLimitOptions opt = {});
+```cpp
+vix::middleware::basics::recovery(...)
 ```
 
-Behavior:
+Options:
 
-```txt id="kk3m18"
-rejects oversized request bodies with 413
-skips GET by default
-can require Content-Length when allow_chunked is false
-can use should_apply for custom matching
+```cpp
+struct RecoveryOptions
+{
+  bool include_exception_message;
+  bool include_code_location;
+  std::string code;
+  std::string message;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/api", vix::middleware::app::recovery_dev());
+```
+
+Lower-level usage:
+
+```cpp
+vix::middleware::basics::RecoveryOptions opt;
+
+opt.include_exception_message = false;
+opt.code = "internal_server_error";
+opt.message = "Internal Server Error";
+
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::basics::recovery(opt)
+));
+```
+
+### Request id
+
+```cpp
+vix::middleware::basics::request_id(...)
+```
+
+State type:
+
+```cpp
+vix::middleware::basics::RequestId
+```
+
+Options:
+
+```cpp
+struct RequestIdOptions
+{
+  std::string header_name;
+  bool accept_incoming;
+  bool generate_if_missing;
+  bool always_set_response_header;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/api", vix::middleware::app::request_id_dev());
+```
+
+Read state:
+
+```cpp
+auto *rid = req.try_state<vix::middleware::basics::RequestId>();
+```
+
+### Timing
+
+```cpp
+vix::middleware::basics::timing(...)
+```
+
+State type:
+
+```cpp
+vix::middleware::basics::Timing
+```
+
+Options:
+
+```cpp
+struct TimingOptions
+{
+  bool set_x_response_time;
+  bool set_server_timing;
+  std::string x_response_time_header;
+  std::string server_timing_header;
+  std::string server_timing_metric;
+  bool store_in_state;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/api", vix::middleware::app::timing_dev());
+```
+
+Read state:
+
+```cpp
+auto *timing = req.try_state<vix::middleware::basics::Timing>();
+```
+
+### Body limit
+
+```cpp
+vix::middleware::basics::body_limit(...)
+```
+
+Options:
+
+```cpp
+struct BodyLimitOptions
+{
+  std::size_t max_bytes;
+  bool apply_to_get;
+  bool allow_chunked;
+
+  std::function<bool(const vix::middleware::Context &)> should_apply;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/api", vix::middleware::app::body_limit_write_dev(1024 * 1024));
 ```
 
 Common errors:
 
-```txt id="ef3kw0"
-413 payload_too_large
-411 length_required
+| Status | Code                |
+| ------ | ------------------- |
+| `411`  | `length_required`   |
+| `413`  | `payload_too_large` |
+
+### Logger
+
+```cpp
+vix::middleware::basics::logger(...)
 ```
 
-## request_id
+Options:
 
-```cpp id="3p2ug4"
-struct RequestId
-{
-  std::string value;
-};
-
-struct RequestIdOptions
-{
-  std::string header_name{"x-request-id"};
-  bool accept_incoming{true};
-  bool generate_if_missing{true};
-  bool always_set_response_header{true};
-};
-
-MiddlewareFn request_id(RequestIdOptions opt = {});
-```
-
-Behavior:
-
-```txt id="w4h8jr"
-accepts a reasonable incoming request id
-generates one when missing
-stores RequestId in request state
-sets the response header when configured
-```
-
-Helper functions:
-
-```cpp id="o6hkor"
-bool is_reasonable_request_id(std::string_view s);
-std::string generate_request_id();
-```
-
-## timing
-
-```cpp id="u9xlqw"
-struct Timing
-{
-  std::int64_t total_ms{0};
-};
-
-struct TimingOptions
-{
-  bool set_x_response_time{true};
-  bool set_server_timing{true};
-
-  std::string x_response_time_header{"x-response-time"};
-  std::string server_timing_header{"server-timing"};
-  std::string server_timing_metric{"total"};
-
-  bool store_in_state{true};
-};
-
-MiddlewareFn timing(TimingOptions opt = {});
-```
-
-Behavior:
-
-```txt id="lg2ifo"
-measures downstream request processing time
-stores Timing in request state
-can set X-Response-Time
-can set Server-Timing
-```
-
-## logger
-
-```cpp id="how3ne"
-struct ILogger
-{
-  virtual ~ILogger() = default;
-  virtual void info(std::string_view msg) = 0;
-  virtual void warn(std::string_view msg) = 0;
-  virtual void error(std::string_view msg) = 0;
-};
-
+```cpp
 enum class LogFormat
 {
   Text,
   Json
 };
 
-struct LoggerOptions final
+struct LoggerOptions
 {
-  LogFormat format{LogFormat::Text};
-  bool log_request_id{true};
-  bool log_timing{true};
-  bool level_from_status{true};
-  bool include_user_agent{false};
-  bool include_forwarded_for{false};
-  bool require_timing{false};
+  LogFormat format;
+  bool log_request_id;
+  bool log_timing;
+  bool level_from_status;
+  bool include_user_agent;
+  bool include_forwarded_for;
+  bool require_timing;
 };
-
-MiddlewareFn logger(LoggerOptions opt = {});
 ```
 
-Behavior:
+Logger service interface:
 
-```txt id="f2c7mo"
-logs one summary line after downstream handling
-uses ILogger from Services
-can output text or JSON
-can choose log level from response status
-```
-
-Status mapping when `level_from_status` is true:
-
-```txt id="xlmf76"
-status >= 500 -> error
-status >= 400 -> warn
-otherwise     -> info
-```
-
-## recovery
-
-```cpp id="5nq9u6"
-struct RecoveryOptions final
+```cpp
+struct ILogger
 {
-  bool include_exception_message{false};
-  bool include_code_location{false};
-  std::string code{"internal_server_error"};
-  std::string message{"Internal Server Error"};
-};
+  virtual ~ILogger() = default;
 
-struct IRecoveryLogger
-{
-  virtual ~IRecoveryLogger() = default;
+  virtual void info(std::string_view msg) = 0;
+  virtual void warn(std::string_view msg) = 0;
   virtual void error(std::string_view msg) = 0;
 };
-
-MiddlewareFn recovery(RecoveryOptions opt = {});
 ```
 
-Behavior:
+## Security
 
-```txt id="h5mxfq"
-catches exceptions thrown by downstream middleware or handlers
-logs through IRecoveryLogger when available
-returns a normalized 500 error
-can include exception details in development
+Namespace:
+
+```cpp
+namespace vix::middleware::security
+```
+
+### Security headers
+
+```cpp
+vix::middleware::security::headers(...)
+```
+
+Options:
+
+```cpp
+struct SecurityHeadersOptions
+{
+  bool x_content_type_options;
+  bool x_frame_options;
+  bool x_xss_protection;
+  bool referrer_policy;
+  bool permissions_policy;
+
+  bool hsts;
+  int hsts_max_age;
+  bool hsts_include_subdomains;
+  bool hsts_preload;
+
+  std::string content_security_policy;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/api", vix::middleware::app::security_headers_dev());
+```
+
+### CORS
+
+```cpp
+vix::middleware::security::cors(...)
+```
+
+Options:
+
+```cpp
+struct CorsOptions
+{
+  std::vector<std::string> allowed_origins;
+  bool allow_any_origin;
+  bool allow_credentials;
+
+  std::vector<std::string> allow_methods;
+  std::vector<std::string> allow_headers;
+  std::vector<std::string> expose_headers;
+
+  int max_age_seconds;
+  bool vary_origin;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/api", vix::middleware::app::cors_dev({
+  "https://example.com"
+}));
 ```
 
 Common error:
 
-```txt id="7jrjbh"
-500 internal_server_error
+| Status | Code             |
+| ------ | ---------------- |
+| `403`  | `cors_forbidden` |
+
+### CSRF
+
+```cpp
+vix::middleware::security::csrf(...)
 ```
 
-## Authentication namespace
+Options:
 
-Authentication lives under:
-
-```cpp id="0ozacs"
-namespace vix::middleware::auth
-```
-
-It provides API keys, JWT, RBAC, and sessions.
-
-## api_key
-
-```cpp id="nnb5zy"
-struct ApiKey
+```cpp
+struct CsrfOptions
 {
-  std::string value;
+  std::string cookie_name;
+  std::string header_name;
+  bool protect_get;
 };
-
-struct ApiKeyOptions
-{
-  std::string header{"x-api-key"};
-  std::string query_param{};
-  bool required{true};
-
-  std::unordered_set<std::string> allowed_keys{};
-
-  std::function<std::string(const vix::middleware::Request &)> extract{};
-  std::function<bool(const std::string &)> validate{};
-};
-
-MiddlewareFn api_key(ApiKeyOptions opt = {});
 ```
 
-Behavior:
+App usage:
 
-```txt id="u4mby4"
-extracts an API key from a header, query parameter, or custom extractor
-validates using allowed_keys and/or validate
-stores ApiKey in request state on success
+```cpp
+app.use("/api", vix::middleware::app::csrf_dev());
+```
+
+Common error:
+
+| Status | Code          |
+| ------ | ------------- |
+| `403`  | `csrf_failed` |
+
+### IP filter
+
+```cpp
+vix::middleware::security::ip_filter(...)
+```
+
+Options:
+
+```cpp
+struct IpFilterOptions
+{
+  std::vector<std::string> allow;
+  std::vector<std::string> deny;
+  std::string header_name;
+  bool use_remote_addr_fallback;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/api", vix::middleware::app::ip_filter_allow_deny_dev(
+  "x-forwarded-for",
+  {"10.0.0.1"},
+  {"9.9.9.9"},
+  true
+));
 ```
 
 Common errors:
 
-```txt id="n57imc"
-401 missing_api_key
-403 invalid_api_key
+| Status | Code             |
+| ------ | ---------------- |
+| `403`  | `ip_denied`      |
+| `403`  | `ip_not_allowed` |
+
+### Rate limit
+
+```cpp
+vix::middleware::security::rate_limit(...)
 ```
 
-## jwt
+Options:
 
-JWT support lives in:
+```cpp
+struct RateLimitOptions
+{
+  double capacity;
+  double refill_per_sec;
+  bool add_headers;
+  std::string key_header;
 
-```cpp id="bfc8ab"
-#include <vix/middleware/auth/jwt.hpp>
+  std::function<std::string(const vix::middleware::Request &)> key_fn;
+};
 ```
 
-Common public types:
+App usage:
 
-```cpp id="qgokmj"
-struct JwtClaims;
-struct JwtOptions;
-
-MiddlewareFn jwt(JwtOptions opt = {});
+```cpp
+app.use("/api", vix::middleware::app::rate_limit_dev());
 ```
 
-Typical behavior:
+Custom usage:
 
-```txt id="t4xnt3"
-reads Bearer token from Authorization
-validates the token
-stores JwtClaims in request state
-rejects missing or invalid tokens when required
+```cpp
+app.use("/api", vix::middleware::app::rate_limit_custom_dev(
+  5.0,
+  0.0,
+  "x-forwarded-for"
+));
 ```
 
-Common request shape:
+State:
 
-```txt id="rxvqtj"
-Authorization: Bearer <token>
+```cpp
+vix::middleware::security::RateLimiterState
 ```
 
 Common error:
 
-```txt id="j5pr76"
-401 invalid_token
+| Status | Code           |
+| ------ | -------------- |
+| `429`  | `rate_limited` |
+
+## Authentication
+
+Namespace:
+
+```cpp
+namespace vix::middleware::auth
 ```
 
-## RBAC
+### API key
 
-```cpp id="pbq47o"
-struct Authz final
+```cpp
+vix::middleware::auth::api_key(...)
+```
+
+State type:
+
+```cpp
+vix::middleware::auth::ApiKey
+```
+
+Options:
+
+```cpp
+struct ApiKeyOptions
 {
-  std::string subject;
-  std::unordered_set<std::string> roles;
-  std::unordered_set<std::string> perms;
+  std::string header;
+  std::string query_param;
+  bool required;
 
-  bool has_role(std::string_view r) const;
-  bool has_perm(std::string_view p) const;
+  std::unordered_set<std::string> allowed_keys;
+
+  std::function<std::string(const vix::middleware::Request &)> extract;
+  std::function<bool(const std::string &)> validate;
 };
+```
 
+App usage:
+
+```cpp
+app.use("/secure", vix::middleware::app::api_key_dev("secret"));
+```
+
+Read state:
+
+```cpp
+auto &key = req.state<vix::middleware::auth::ApiKey>();
+```
+
+Common errors:
+
+| Status | Code              |
+| ------ | ----------------- |
+| `401`  | `missing_api_key` |
+| `403`  | `invalid_api_key` |
+
+### JWT
+
+```cpp
+vix::middleware::auth::jwt(...)
+```
+
+State type:
+
+```cpp
+vix::middleware::auth::JwtClaims
+```
+
+App usage:
+
+```cpp
+app.use("/secure", vix::middleware::app::jwt_dev("dev_secret"));
+```
+
+Read state:
+
+```cpp
+auto &claims = req.state<vix::middleware::auth::JwtClaims>();
+```
+
+Common errors include missing, malformed, invalid, or unauthorized Bearer tokens.
+
+Use the JWT guide for exact behavior in your build configuration.
+
+### RBAC
+
+```cpp
+vix::middleware::auth::rbac_context(...)
+vix::middleware::auth::require_role(...)
+vix::middleware::auth::require_any_role(...)
+vix::middleware::auth::require_perm(...)
+vix::middleware::auth::require_any_perm(...)
+vix::middleware::auth::require_all_perms(...)
+```
+
+State type:
+
+```cpp
+vix::middleware::auth::Authz
+```
+
+Options:
+
+```cpp
+struct RbacOptions
+{
+  std::string roles_key;
+  std::string perms_key;
+  bool require_auth;
+  bool use_resolver;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/admin", vix::middleware::app::adapt_ctx(
+  vix::middleware::auth::rbac_context()
+));
+
+app.use("/admin", vix::middleware::app::adapt_ctx(
+  vix::middleware::auth::require_role("admin")
+));
+```
+
+Read state:
+
+```cpp
+auto &authz = req.state<vix::middleware::auth::Authz>();
+
+authz.has_role("admin");
+authz.has_perm("products:write");
+```
+
+Resolver interface:
+
+```cpp
 struct PermissionResolver
 {
   virtual ~PermissionResolver() = default;
@@ -549,68 +782,51 @@ struct PermissionResolver
     std::unordered_set<std::string> &roles_inout,
     std::unordered_set<std::string> &perms_inout) = 0;
 };
-
-struct RbacOptions
-{
-  std::string roles_key{"roles"};
-  std::string perms_key{"perms"};
-  bool require_auth{true};
-  bool use_resolver{true};
-};
-```
-
-RBAC middleware:
-
-```cpp id="mp72e1"
-MiddlewareFn rbac_context(RbacOptions opt = {});
-
-MiddlewareFn require_role(std::string role);
-MiddlewareFn require_any_role(std::vector<std::string> roles);
-
-MiddlewareFn require_perm(std::string perm);
-MiddlewareFn require_any_perm(std::vector<std::string> perms);
-MiddlewareFn require_all_perms(std::vector<std::string> perms);
-```
-
-Expected order:
-
-```txt id="yb4ruq"
-jwt
-  -> rbac_context
-  -> require_role / require_perm
-  -> handler
 ```
 
 Common errors:
 
-```txt id="46l2o3"
-401 missing_auth
-401 missing_authz
-403 forbidden
+| Status | Code            |
+| ------ | --------------- |
+| `401`  | `missing_auth`  |
+| `401`  | `missing_authz` |
+| `403`  | `forbidden`     |
+
+### Session
+
+```cpp
+vix::middleware::auth::session(...)
 ```
 
-## session
+State type:
 
-```cpp id="h6qfkh"
-struct Session
+```cpp
+vix::middleware::auth::Session
+```
+
+Options:
+
+```cpp
+struct SessionOptions
 {
-  std::string id;
-  std::unordered_map<std::string, std::string> data;
+  std::shared_ptr<ISessionStore> store;
 
-  bool is_new{false};
-  bool dirty{false};
-  bool destroyed{false};
+  std::string secret;
+  std::string cookie_name;
+  std::string cookie_path;
 
-  void set(std::string k, std::string v);
-  std::optional<std::string> get(const std::string &k) const;
-  void erase(const std::string &k);
-  void destroy();
+  bool secure;
+  bool http_only;
+  std::string same_site;
+
+  std::chrono::seconds ttl;
+  bool auto_create;
 };
 ```
 
-Session storage interface:
+Store interface:
 
-```cpp id="iz3boo"
+```cpp
 class ISessionStore
 {
 public:
@@ -624,1169 +840,721 @@ public:
 
 Built-in store:
 
-```cpp id="jieww9"
-class InMemorySessionStore final : public ISessionStore;
+```cpp
+vix::middleware::auth::InMemorySessionStore
+```
+
+App usage:
+
+```cpp
+app.use(vix::middleware::app::adapt_ctx(
+  vix::middleware::auth::session({
+    .secret = "dev"
+  })
+));
+```
+
+Read state:
+
+```cpp
+auto &session = req.state<vix::middleware::auth::Session>();
+
+session.set("n", "1");
+auto value = session.get("n");
+session.erase("n");
+session.destroy();
+```
+
+## Parsers
+
+Namespace:
+
+```cpp
+namespace vix::middleware::parsers
+```
+
+### JSON
+
+```cpp
+vix::middleware::parsers::json(...)
+```
+
+State type:
+
+```cpp
+vix::middleware::parsers::JsonBody
 ```
 
 Options:
 
-```cpp id="c3z0cy"
-struct SessionOptions
+```cpp
+struct JsonParserOptions
 {
-  std::shared_ptr<ISessionStore> store{};
-
-  std::string secret;
-  std::string cookie_name{"sid"};
-  std::string cookie_path{"/"};
-
-  bool secure{false};
-  bool http_only{true};
-  std::string same_site{"Lax"};
-
-  std::chrono::seconds ttl{std::chrono::hours(24 * 7)};
-  bool auto_create{true};
+  bool require_content_type;
+  bool allow_empty;
+  std::size_t max_bytes;
+  bool store_in_state;
 };
-
-MiddlewareFn session(SessionOptions opt);
 ```
 
-Behavior:
+App usage:
 
-```txt id="70jep8"
-loads a session from a signed cookie
-creates a session when auto_create is true
-stores Session in request state
-saves dirty or new sessions after handler execution
-destroys session and expires cookie when Session::destroy() is called
+```cpp
+app.use("/api/users", vix::middleware::app::json_strict_dev(4096));
 ```
 
-Common error:
+Read state:
 
-```txt id="zbz2xi"
-500 session_misconfigured
+```cpp
+auto &body = req.state<vix::middleware::parsers::JsonBody>();
 ```
 
-## Cookies namespace
+Common errors:
 
-Cookie helpers live under:
+| Status | Code                     |
+| ------ | ------------------------ |
+| `400`  | `empty_body`             |
+| `400`  | `invalid_json`           |
+| `413`  | `payload_too_large`      |
+| `415`  | `unsupported_media_type` |
 
-```cpp id="v5jsls"
+### Form
+
+```cpp
+vix::middleware::parsers::form(...)
+```
+
+State type:
+
+```cpp
+vix::middleware::parsers::FormBody
+```
+
+Options:
+
+```cpp
+struct FormParserOptions
+{
+  bool require_content_type;
+  std::size_t max_bytes;
+  bool store_in_state;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/form", vix::middleware::app::form_dev(4096));
+```
+
+Read state:
+
+```cpp
+auto &form = req.state<vix::middleware::parsers::FormBody>();
+```
+
+### Multipart
+
+```cpp
+vix::middleware::parsers::multipart(...)
+vix::middleware::parsers::multipart_save(...)
+```
+
+State types:
+
+```cpp
+vix::middleware::parsers::MultipartInfo
+vix::middleware::parsers::MultipartForm
+```
+
+Options for metadata parser:
+
+```cpp
+struct MultipartOptions
+{
+  bool require_boundary;
+  std::size_t max_bytes;
+  bool store_in_state;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/upload", vix::middleware::app::multipart_save_dev("uploads"));
+```
+
+Read state:
+
+```cpp
+auto &form = req.state<vix::middleware::parsers::MultipartForm>();
+```
+
+Common errors:
+
+| Status | Code                     |
+| ------ | ------------------------ |
+| `400`  | `missing_boundary`       |
+| `413`  | `payload_too_large`      |
+| `415`  | `unsupported_media_type` |
+
+## HTTP helpers
+
+Namespace:
+
+```cpp
 namespace vix::middleware::cookies
 ```
 
-Types and functions:
+Types and helpers:
 
-```cpp id="b535qs"
-struct Cookie
+```cpp
+vix::middleware::cookies::Cookie
+
+vix::middleware::cookies::parse(...)
+vix::middleware::cookies::get(...)
+vix::middleware::cookies::set(...)
+vix::middleware::cookies::build_set_cookie_value(...)
+```
+
+Example:
+
+```cpp
+app.get("/cookie", [](vix::Request &, vix::Response &res)
 {
-  std::string name;
-  std::string value;
+  vix::middleware::cookies::Cookie cookie;
 
-  std::string path{"/"};
-  std::string domain{};
-  int max_age{-1};
-  bool http_only{true};
-  bool secure{false};
-  std::string same_site{"Lax"};
-};
+  cookie.name = "hello";
+  cookie.value = "vix";
+  cookie.max_age = 3600;
+  cookie.http_only = true;
+  cookie.same_site = "Lax";
 
-std::unordered_map<std::string, std::string>
-parse(const vix::middleware::Request &req);
+  vix::middleware::cookies::set(res, cookie);
 
-std::optional<std::string>
-get(const vix::middleware::Request &req, std::string_view name);
-
-std::string build_set_cookie_value(const Cookie &c);
-
-void set(vix::middleware::Response &res, const Cookie &c);
+  res.text("cookie set");
+});
 ```
 
-Current response headers use a single header value per key, so repeated `Set-Cookie` values are not preserved by this helper.
+## HTTP cache
 
-## Security namespace
+Namespace:
 
-Security middleware lives under:
-
-```cpp id="ql7rp3"
-namespace vix::middleware::security
+```cpp
+namespace vix::middleware
+namespace vix::middleware::app
 ```
 
-It provides CORS, CSRF, security headers, IP filtering, and rate limiting.
+Lower-level middleware:
 
-## cors
+```cpp
+vix::middleware::http_cache(...)
+```
 
-```cpp id="6unfc5"
-struct CorsOptions
+App helpers:
+
+```cpp
+vix::middleware::app::http_cache(...)
+vix::middleware::app::http_cache_mw(...)
+vix::middleware::app::install_http_cache(...)
+vix::middleware::app::make_default_cache(...)
+```
+
+App config:
+
+```cpp
+struct HttpCacheAppConfig
 {
-  std::vector<std::string> allowed_origins{};
-  bool allow_any_origin{true};
-  bool allow_credentials{false};
+  std::string prefix;
+  bool only_get;
+  int ttl_ms;
 
-  std::vector<std::string> allow_methods{
-    "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
-  };
+  bool allow_bypass;
+  std::string bypass_header;
+  std::string bypass_value;
 
-  std::vector<std::string> allow_headers{
-    "Content-Type", "Authorization"
-  };
+  std::vector<std::string> vary_headers;
+  std::shared_ptr<vix::cache::Cache> cache;
 
-  std::vector<std::string> expose_headers{};
-  int max_age_seconds{600};
-  bool vary_origin{true};
+  bool add_debug_header;
+  std::string debug_header;
 };
-
-MiddlewareFn cors(CorsOptions opt = CorsOptions());
 ```
 
-Behavior:
+Lower-level options:
 
-```txt id="3rbjs8"
-handles CORS preflight requests
-sets CORS response headers for allowed origins
-returns 204 for accepted preflight
-returns 403 for rejected preflight origin
-```
-
-Common error:
-
-```txt id="tkphhp"
-403 cors_forbidden
-```
-
-## csrf
-
-```cpp id="60j219"
-struct CsrfOptions
+```cpp
+struct HttpCacheOptions
 {
-  std::string cookie_name{"csrf_token"};
-  std::string header_name{"x-csrf-token"};
-  bool protect_get{false};
+  std::vector<std::string> vary_headers;
+  bool cache_200_only;
+  bool require_body;
+
+  bool allow_bypass;
+  std::string bypass_header;
+  std::string bypass_value;
+
+  std::function<vix::cache::CacheContext(Request &)> context_provider;
 };
-
-MiddlewareFn csrf(CsrfOptions opt = {});
 ```
 
-Behavior:
+App usage:
 
-```txt id="bxgsa8"
-protects POST, PUT, PATCH, DELETE by default
-checks token in cookie and header
-requires both tokens to match
+```cpp
+app.use("/api", vix::middleware::app::http_cache({
+  .ttl_ms = 30'000,
+  .allow_bypass = true,
+  .bypass_header = "x-vix-cache",
+  .bypass_value = "bypass",
+  .vary_headers = {"accept-language"}
+}));
 ```
 
-Common error:
+Common cache status header:
 
-```txt id="qxivuj"
-403 csrf_failed
+```txt
+x-vix-cache-status: miss
+x-vix-cache-status: hit
+x-vix-cache-status: bypass
 ```
 
-## headers
+## Performance
 
-```cpp id="dk7up1"
-struct SecurityHeadersOptions
-{
-  bool x_content_type_options{true};
-  bool x_frame_options{true};
-  bool x_xss_protection{false};
+Namespace:
 
-  bool referrer_policy{true};
-  bool permissions_policy{true};
-
-  bool hsts{false};
-  int hsts_max_age{31536000};
-  bool hsts_include_subdomains{true};
-  bool hsts_preload{false};
-
-  std::string content_security_policy{};
-};
-
-MiddlewareFn headers(SecurityHeadersOptions opt = {});
-```
-
-Behavior:
-
-```txt id="3cl26u"
-adds browser security headers after downstream handling
-can add CSP
-can add HSTS when explicitly enabled
-```
-
-Common headers:
-
-```txt id="liqkqp"
-X-Content-Type-Options
-X-Frame-Options
-Referrer-Policy
-Permissions-Policy
-Content-Security-Policy
-Strict-Transport-Security
-```
-
-## ip_filter
-
-```cpp id="6r7g6c"
-struct IpFilterOptions
-{
-  std::vector<std::string> allow{};
-  std::vector<std::string> deny{};
-
-  std::string header_name{"x-forwarded-for"};
-  bool use_remote_addr_fallback{true};
-};
-
-MiddlewareFn ip_filter(IpFilterOptions opt = {});
-```
-
-Behavior:
-
-```txt id="tyf37b"
-extracts client IP from configured header
-checks deny list first
-checks allow list when non-empty
-```
-
-Common errors:
-
-```txt id="3d7a7h"
-403 ip_denied
-403 ip_not_allowed
-```
-
-## rate_limit
-
-```cpp id="ctwryn"
-struct RateLimitOptions
-{
-  double capacity{60.0};
-  double refill_per_sec{1.0};
-
-  bool add_headers{true};
-
-  std::string key_header{"x-forwarded-for"};
-
-  std::function<std::string(const vix::middleware::Request &)> key_fn{};
-};
-
-struct RateLimiterState
-{
-  std::mutex mu;
-
-  std::unordered_map<
-    std::string,
-    std::unique_ptr<vix::middleware::utils::TokenBucket>
-  > buckets;
-};
-
-MiddlewareFn rate_limit(RateLimitOptions opt = {});
-```
-
-Behavior:
-
-```txt id="qisggm"
-uses one token bucket per client key
-consumes one token per request
-returns 429 when no token is available
-uses RateLimiterState from Services when provided
-otherwise uses fallback global state
-```
-
-Common headers:
-
-```txt id="lu3qv1"
-X-RateLimit-Limit
-X-RateLimit-Remaining
-Retry-After
-X-RateLimit-Reset
-```
-
-Common error:
-
-```txt id="h938ox"
-429 rate_limited
-```
-
-## Parsers namespace
-
-Parsers live under:
-
-```cpp id="7fp57e"
-namespace vix::middleware::parsers
-```
-
-They parse request bodies and store typed values in request state.
-
-## json parser
-
-```cpp id="ijfbq0"
-struct JsonBody
-{
-  nlohmann::json value{};
-};
-
-struct JsonParserOptions
-{
-  bool require_content_type{true};
-  bool allow_empty{true};
-  std::size_t max_bytes{0};
-  bool store_in_state{true};
-};
-
-MiddlewareFn json(JsonParserOptions opt = {});
-```
-
-Behavior:
-
-```txt id="w970th"
-parses application/json
-stores JsonBody in request state
-can allow empty body as an empty object
-```
-
-Common errors:
-
-```txt id="kuzjcz"
-400 empty_body
-400 invalid_json
-413 payload_too_large
-415 unsupported_media_type
-```
-
-## form parser
-
-```cpp id="4c8rwk"
-struct FormBody
-{
-  std::unordered_map<std::string, std::string> fields{};
-};
-
-struct FormParserOptions
-{
-  bool require_content_type{true};
-  std::size_t max_bytes{0};
-  bool store_in_state{true};
-};
-
-MiddlewareFn form(FormParserOptions opt = {});
-```
-
-Behavior:
-
-```txt id="7ln85z"
-parses application/x-www-form-urlencoded
-decodes + as space
-decodes valid %XX sequences
-stores FormBody in request state
-```
-
-Common errors:
-
-```txt id="5ngl0y"
-413 payload_too_large
-415 unsupported_media_type
-```
-
-## multipart probe
-
-```cpp id="e7s0io"
-struct MultipartInfo
-{
-  std::string content_type{};
-  std::string boundary{};
-  std::size_t body_bytes{0};
-};
-
-struct MultipartOptions
-{
-  bool require_boundary{true};
-  std::size_t max_bytes{0};
-  bool store_in_state{true};
-};
-
-MiddlewareFn multipart(MultipartOptions opt = {});
-```
-
-Behavior:
-
-```txt id="hblksc"
-validates multipart/form-data
-extracts boundary
-stores MultipartInfo in request state
-does not parse or save parts
-```
-
-Common errors:
-
-```txt id="uoa6hj"
-400 missing_boundary
-413 payload_too_large
-415 unsupported_media_type
-```
-
-## multipart_save
-
-Multipart save support lives in:
-
-```cpp id="jkkuhn"
-#include <vix/middleware/parsers/multipart_save.hpp>
-```
-
-Common public types:
-
-```cpp id="mc1cyc"
-struct MultipartFile;
-struct MultipartForm;
-struct MultipartSaveOptions;
-
-MiddlewareFn multipart_save(MultipartSaveOptions opt = {});
-```
-
-Typical behavior:
-
-```txt id="1czjez"
-parses multipart/form-data
-stores text fields
-saves uploaded files to disk
-stores MultipartForm in request state
-```
-
-Common option categories:
-
-```txt id="zq8iyx"
-max_bytes
-max_files
-max_file_bytes
-upload_dir
-create_upload_dir
-keep_original_filename
-keep_extension
-store_in_state
-```
-
-## Performance namespace
-
-Performance middleware lives under:
-
-```cpp id="0iq8e1"
+```cpp
 namespace vix::middleware::performance
 ```
 
-It provides response compression, ETag support, and static response compression hooks.
+### Compression
 
-## compression
-
-Compression support lives in:
-
-```cpp id="58uay8"
-#include <vix/middleware/performance/compression.hpp>
+```cpp
+vix::middleware::performance::compression(...)
 ```
 
-Common public types and functions:
+Options:
 
-```cpp id="6nqih1"
-struct CompressionOptions;
-
-MiddlewareFn compression(CompressionOptions opt = {});
+```cpp
+struct CompressionOptions
+{
+  std::size_t min_size;
+  bool add_vary;
+  bool enabled;
+  int gzip_level;
+};
 ```
 
-Typical behavior:
+App usage:
 
-```txt id="wvvavi"
-checks Accept-Encoding
-skips non-compressible responses
-skips already encoded responses
-adds Vary: Accept-Encoding when configured
-applies gzip when build support is available
+```cpp
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::performance::compression({
+    .min_size = 1024,
+    .add_vary = true,
+    .enabled = true
+  })
+));
 ```
 
-Common headers:
+### ETag
 
-```txt id="03mp8d"
-Content-Encoding
-Vary
-X-Vix-Compression
+```cpp
+vix::middleware::performance::etag(...)
 ```
 
-Debug diagnostic headers are not a stable public protocol.
+Options:
 
-## etag
-
-```cpp id="myh7m7"
+```cpp
 struct EtagOptions
 {
-  bool weak{true};
-  bool add_cache_control_if_missing{false};
-  std::string cache_control{"public, max-age=0"};
-  std::size_t min_body_size{1};
+  bool weak;
+  bool add_cache_control_if_missing;
+  std::string cache_control;
+  std::size_t min_body_size;
+};
+```
+
+App usage:
+
+```cpp
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::performance::etag({
+    .weak = true,
+    .add_cache_control_if_missing = false,
+    .min_body_size = 1
+  })
+));
+```
+
+### Static response compression hook
+
+Static files are served by Core through:
+
+```cpp
+app.static_dir(...);
+```
+
+The middleware module can only enhance static responses through a hook:
+
+```cpp
+vix::App::set_static_response_hook(
+  vix::middleware::performance::compressed_static_response_hook()
+);
+```
+
+With options:
+
+```cpp
+vix::middleware::performance::CompressionOptions options{
+  .min_size = 1024,
+  .add_vary = true,
+  .enabled = true
 };
 
-MiddlewareFn etag(EtagOptions opt = {});
+vix::App::set_static_response_hook(
+  vix::middleware::performance::compressed_static_response_hook(options)
+);
 ```
 
-Behavior:
+## Observability
 
-```txt id="sc0bp4"
-applies to GET and HEAD
-generates an ETag from the response body
-can return 304 when If-None-Match matches
-can add Cache-Control when missing
-```
+Namespace:
 
-Common headers:
-
-```txt id="midl3m"
-ETag
-If-None-Match
-Cache-Control
-```
-
-## static compression
-
-```cpp id="pbioyh"
-std::string static_accept_encoding(const vix::http::Request &req);
-
-bool static_response_can_compress(
-  const vix::http::Request &req,
-  const vix::http::ResponseWrapper &res,
-  std::size_t minSize);
-
-void compress_static_response(
-  const vix::http::Request &req,
-  vix::http::ResponseWrapper &res,
-  const CompressionOptions &opt);
-
-vix::App::StaticResponseHook compressed_static_response_hook(
-  CompressionOptions opt = {});
-```
-
-Use the registration helper for normal applications:
-
-```cpp id="cq2cfv"
-vix::middleware::register_static_dir();
-```
-
-Static serving itself remains a Core feature through:
-
-```cpp id="yq7ha6"
-app.static_dir("public", "/");
-```
-
-## Observability namespace
-
-Observability lives under:
-
-```cpp id="ycmahk"
+```cpp
 namespace vix::middleware::observability
 ```
 
-It provides tracing, metrics, and debug tracing.
+### Tracing
 
-## tracing
+```cpp
+vix::middleware::observability::tracing_hooks(...)
+vix::middleware::observability::tracing_mw(...)
+```
 
-```cpp id="07hesc"
-struct TraceContext
-{
-  std::string trace_id{};
-  std::string span_id{};
-  std::string parent_span_id{};
-};
+State type:
 
+```cpp
+vix::middleware::observability::TraceContext
+```
+
+Options:
+
+```cpp
 struct TracingOptions
 {
-  std::string trace_header{"x-trace-id"};
-  std::string span_header{"x-span-id"};
-  std::string parent_span_header{"x-parent-span-id"};
+  std::string trace_header;
+  std::string span_header;
+  std::string parent_span_header;
 
-  bool accept_incoming_trace{true};
-  bool accept_incoming_span{true};
+  bool accept_incoming_trace;
+  bool accept_incoming_span;
+  bool emit_response_headers;
+  bool include_parent_in_response;
 
-  bool emit_response_headers{true};
-  bool include_parent_in_response{false};
-
-  std::function<void(vix::middleware::Context &, TraceContext &)> enrich{};
+  std::function<void(
+    vix::middleware::Context &,
+    TraceContext &
+  )> enrich;
 };
-
-Hooks tracing_hooks(TracingOptions opt = {});
-MiddlewareFn tracing_mw(TracingOptions opt = {});
 ```
 
-Behavior:
+App usage:
 
-```txt id="x2jjal"
-accepts valid incoming trace ids
-generates trace id when missing
-generates a new span id
-stores TraceContext in request state
-emits trace headers when configured
+```cpp
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::observability::tracing_mw()
+));
 ```
 
-Common headers:
+Read state:
 
-```txt id="cfo05e"
-x-trace-id
-x-span-id
-x-parent-span-id
+```cpp
+auto *trace =
+  req.try_state<vix::middleware::observability::TraceContext>();
 ```
 
-## metrics
+### Debug trace
 
-Metrics support lives in:
-
-```cpp id="8uepyd"
-#include <vix/middleware/observability/metrics.hpp>
+```cpp
+vix::middleware::observability::debug_trace_hooks(...)
+vix::middleware::observability::debug_trace_mw(...)
 ```
 
-Common public types and functions:
+Sink interface:
 
-```cpp id="a70dkw"
-class IMetricsSink;
-class InMemoryMetrics;
-struct MetricsOptions;
-
-Hooks metrics_hooks(
-  std::shared_ptr<IMetricsSink> sink,
-  MetricsOptions opt = {});
-
-MiddlewareFn metrics_mw(
-  std::shared_ptr<IMetricsSink> sink,
-  MetricsOptions opt = {});
-```
-
-Typical behavior:
-
-```txt id="ojn16y"
-increments request counters
-increments response counters
-records request duration observations
-can record error events through hooks
-```
-
-Common metric names use a configurable prefix, such as:
-
-```txt id="jz5yxy"
-vix_http_requests_total
-vix_http_responses_total
-vix_http_request_duration_ms
-```
-
-## debug_trace
-
-```cpp id="1g0fpu"
+```cpp
 class IDebugTraceSink
 {
 public:
   virtual ~IDebugTraceSink() = default;
   virtual void log(std::string_view line) = 0;
 };
-
-class InMemoryDebugTrace final : public IDebugTraceSink
-{
-public:
-  void log(std::string_view line) override;
-
-  std::vector<std::string> lines;
-};
-
-struct DebugTraceOptions
-{
-  bool include_method{true};
-  bool include_path{true};
-  bool include_status{true};
-  bool include_duration_ms{true};
-  bool include_trace_ids{true};
-
-  std::string prefix{"[vix.debug]"};
-};
-
-Hooks debug_trace_hooks(
-  std::shared_ptr<IDebugTraceSink> sink,
-  DebugTraceOptions opt = {});
-
-MiddlewareFn debug_trace_mw(
-  std::shared_ptr<IDebugTraceSink> sink,
-  DebugTraceOptions opt = {});
 ```
 
-Behavior:
+Built-in sink:
 
-```txt id="pgkavz"
-logs begin and end lines
-hook version also logs error lines
-uses a pluggable sink
-useful for tests and local debugging
-```
-
-## Observability utilities
-
-```cpp id="3oh46x"
-std::string safe_method(const vix::middleware::Request &req);
-std::string safe_path(const vix::middleware::Request &req);
-```
-
-`safe_method()` returns `"GET"` when the method is empty.
-
-`safe_path()` returns `"/"` when the path is empty.
-
-## HTTP cache middleware
-
-The low-level HTTP cache middleware lives under:
-
-```cpp id="bkqc0r"
-namespace vix::middleware
+```cpp
+vix::middleware::observability::InMemoryDebugTrace
 ```
 
 Options:
 
-```cpp id="0thxdj"
-struct HttpCacheOptions
+```cpp
+struct DebugTraceOptions
 {
-  std::vector<std::string> vary_headers{};
-  bool cache_200_only{true};
-  bool require_body{false};
-
-  bool allow_bypass{true};
-  std::string bypass_header{"x-vix-cache"};
-  std::string bypass_value{"bypass"};
-
-  std::function<vix::cache::CacheContext(Request &)> context_provider{};
+  bool include_method;
+  bool include_path;
+  bool include_status;
+  bool include_duration_ms;
+  bool include_trace_ids;
+  std::string prefix;
 };
 ```
 
-Function:
+App usage:
 
-```cpp id="qyh7gl"
-HttpMiddleware http_cache(
-  std::shared_ptr<vix::cache::Cache> cache,
-  HttpCacheOptions opt = {});
+```cpp
+auto sink =
+  std::make_shared<vix::middleware::observability::InMemoryDebugTrace>();
+
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::observability::debug_trace_mw(sink)
+));
 ```
 
-Behavior:
+### Metrics
 
-```txt id="do5ew6"
-only handles GET requests
-computes a deterministic cache key
-serves cached response on hit
-calls next on miss
-stores eligible responses after next
-supports bypass header
-uses vix::cache::CacheContext
+```cpp
+vix::middleware::observability::metrics_hooks(...)
 ```
 
-Common cache status header:
+Built-in sink:
 
-```txt id="gs0aor"
-x-vix-cache-status
+```cpp
+vix::middleware::observability::InMemoryMetrics
 ```
 
-Common values:
+Pipeline usage:
 
-```txt id="dr5u7e"
-hit
-miss
-bypass
+```cpp
+auto metrics =
+  std::make_shared<vix::middleware::observability::InMemoryMetrics>();
+
+vix::middleware::HttpPipeline pipeline;
+
+pipeline.set_hooks(
+  vix::middleware::observability::metrics_hooks(metrics)
+);
 ```
 
-Helpers:
+### Safe labels
 
-```cpp id="qkk98a"
-std::int64_t now_ms();
-
-std::string extract_query_raw_from_target(std::string_view target);
-
-std::unordered_map<std::string, std::string>
-request_headers_map(Request &req);
-
-std::unordered_map<std::string, std::string>
-response_headers_map(const vix::http::Response &res);
+```cpp
+vix::middleware::observability::safe_method(req)
+vix::middleware::observability::safe_path(req)
 ```
 
-## App integration namespace
+## Pipeline
 
-App helpers live under:
+Namespace:
 
-```cpp id="wb3sqs"
-namespace vix::middleware::app
+```cpp
+namespace vix::middleware
 ```
 
-They adapt middleware to `vix::App`.
+Type:
 
-## App adapters
-
-```cpp id="7zfevc"
-vix::App::Middleware adapt(vix::middleware::HttpMiddleware inner);
-
-vix::App::Middleware adapt_ctx(vix::middleware::MiddlewareFn inner);
+```cpp
+vix::middleware::HttpPipeline
 ```
 
-Use `adapt()` for `HttpMiddleware`.
+Main methods:
 
-Use `adapt_ctx()` for `MiddlewareFn`.
-
-## Conditional App middleware
-
-```cpp id="oc9v8q"
-template <class Pred>
-vix::App::Middleware when(Pred pred, vix::App::Middleware mw);
+```cpp
+pipeline.use(...)
+pipeline.run(...)
+pipeline.clear()
+pipeline.size()
+pipeline.services()
+pipeline.hooks()
+pipeline.set_hooks(...)
+pipeline.enable_dev_observability(...)
 ```
 
-`when()` runs the middleware only when the predicate returns `true`.
+Example:
 
-The predicate receives:
+```cpp
+vix::middleware::HttpPipeline pipeline;
 
-```cpp id="1rxkkd"
-const vix::http::Request &
-```
+pipeline.use(vix::middleware::basics::request_id());
+pipeline.use(vix::middleware::basics::timing());
 
-## App route protection helpers
-
-```cpp id="9sgce5"
-vix::App::Middleware protect_path(
-  std::string path,
-  vix::App::Middleware mw);
-
-vix::App::Middleware protect_prefix_mw(
-  std::string prefix,
-  vix::App::Middleware mw);
-
-void protect(
-  vix::App &app,
-  std::string exact_path,
-  vix::App::Middleware mw);
-
-void protect_prefix(
-  vix::App &app,
-  std::string prefix,
-  vix::App::Middleware mw);
-
-void install(
-  vix::App &app,
-  std::string prefix,
-  vix::App::Middleware mw);
-
-void install_exact(
-  vix::App &app,
-  std::string exact_path,
-  vix::App::Middleware mw);
-```
-
-Use exact path protection for one route.
-
-Use prefix protection for route groups or sections such as `/api` or `/admin`.
-
-## App middleware chain
-
-```cpp id="rbwt3f"
-vix::App::Middleware chain(std::vector<vix::App::Middleware> mws);
-
-vix::App::Middleware chain(
-  vix::App::Middleware a,
-  vix::App::Middleware b);
-
-vix::App::Middleware chain(
-  vix::App::Middleware a,
-  vix::App::Middleware b,
-  vix::App::Middleware c);
-```
-
-`chain()` runs the middleware functions in order and then calls the final `next()`.
-
-## App HTTP cache
-
-```cpp id="wq0hkl"
-using HttpCacheConfig = HttpCacheAppConfig;
-```
-
-Config:
-
-```cpp id="brs9im"
-struct HttpCacheAppConfig
+pipeline.run(req, res, [](auto &, auto &out)
 {
-  std::string prefix{"/api/"};
-  bool only_get{true};
-  int ttl_ms{30'000};
-
-  bool allow_bypass{true};
-  std::string bypass_header{"x-vix-cache"};
-  std::string bypass_value{"bypass"};
-
-  std::vector<std::string> vary_headers{};
-  std::shared_ptr<vix::cache::Cache> cache{};
-
-  bool add_debug_header{false};
-  std::string debug_header{"x-vix-cache-status"};
-};
+  out.status(200).text("OK");
+});
 ```
 
-Functions:
-
-```cpp id="uyd6xr"
-std::shared_ptr<vix::cache::Cache>
-make_default_cache(const HttpCacheAppConfig &cfg);
-
-vix::App::Middleware http_cache_mw(HttpCacheAppConfig cfg = {});
-
-void install_http_cache(vix::App &app, HttpCacheAppConfig cfg = {});
-
-vix::App::Middleware http_cache(HttpCacheConfig cfg = {});
-
-void use_http_cache(vix::App &app, HttpCacheConfig cfg = {});
-```
-
-`http_cache()` returns an App middleware.
-
-`use_http_cache()` installs the middleware using `cfg.prefix`.
-
-## Utils namespace
-
-Utilities live under:
-
-```cpp id="uxc9jf"
-namespace vix::middleware::utils
-```
-
-These are small helpers used by middleware internals and custom middleware.
-
-## Clock utility
-
-```cpp id="9mwyvn"
-struct Clock final
-{
-  using Steady = std::chrono::steady_clock;
-  using System = std::chrono::system_clock;
-
-  static std::int64_t now_ms_steady();
-  static std::int64_t now_ms_epoch();
-
-  static std::int64_t to_ms(Steady::duration d);
-  static std::int64_t to_us(Steady::duration d);
-};
-```
-
-Use steady time for elapsed durations.
-
-Use epoch time for persisted timestamps and logs.
-
-## Header utilities
-
-```cpp id="lipis6"
-std::string to_lower(std::string s);
-
-bool iequals(std::string_view a, std::string_view b);
-
-std::string trim_copy(std::string_view s);
-
-std::vector<std::string> split_csv(std::string_view s);
-
-std::string join_csv(const std::vector<std::string> &a);
-
-void normalize_keys_in_place(
-  std::unordered_map<std::string, std::string> &h);
-
-std::string first_token(std::string_view v);
-```
-
-These helpers are ASCII-oriented and mainly intended for HTTP headers.
-
-## JsonWriter
-
-```cpp id="j64yxe"
-std::string json_escape(std::string_view s);
-
-class JsonWriter final
-{
-public:
-  JsonWriter();
-
-  std::string str() const;
-
-  void begin_obj();
-  void end_obj();
-
-  void begin_arr();
-  void end_arr();
-
-  void key(std::string_view k);
-
-  void string(std::string_view v);
-  void number(std::int64_t v);
-  void boolean(bool v);
-  void null();
-
-  void object_of(
-    const std::unordered_map<std::string, std::string> &m);
-};
-```
-
-`JsonWriter` is a small JSON string builder for middleware-produced payloads.
-
-For general JSON work, use the `vix::json` module.
-
-## KeyBuilder
-
-```cpp id="e2rwsm"
-class KeyBuilder final
-{
-public:
-  KeyBuilder();
-
-  KeyBuilder &add(std::string_view part);
-  KeyBuilder &add_kv(std::string_view k, std::string_view v);
-
-  KeyBuilder &add_headers_sorted(
-    std::unordered_map<std::string, std::string> headers,
-    const std::vector<std::string> &vary);
-
-  std::string str() const;
-};
-```
-
-`KeyBuilder` builds deterministic string keys from ordered parts and selected headers.
-
-## TokenBucket
-
-```cpp id="o63pgf"
-class TokenBucket final
-{
-public:
-  TokenBucket();
-  TokenBucket(double capacity, double refill_per_sec);
-
-  bool try_consume(double n);
-  double tokens() const;
-  std::int64_t retry_after_ms(double need = 1.0);
-};
-```
-
-`TokenBucket` is thread-safe and used by `rate_limit()`.
-
-## Common middleware order
-
-There is no single correct global order, but these patterns are useful.
-
-Public API:
-
-```txt id="kxfxux"
-recovery
-request_id
-timing
-headers
-cors
-rate_limit
-body_limit
-parser
-handler
-```
-
-Authenticated API:
-
-```txt id="ipywc3"
-recovery
-request_id
-timing
-cors
-rate_limit
-body_limit
-json
-jwt
-rbac_context
-require_perm
-handler
-```
-
-Cacheable public GET API:
-
-```txt id="o9rk77"
-recovery
-request_id
-cors
-rate_limit
-http_cache
-handler
-etag
-compression
-```
-
-Upload route:
-
-```txt id="1e83fk"
-recovery
-request_id
-rate_limit
-authentication
-body_limit
-multipart_save
-handler
-```
-
-The important rule is that middleware requiring state must run after the middleware that creates that state.
-
-## Common normalized errors
-
-Many middleware functions stop the request by calling `ctx.send_error(...)`.
-
-Common errors include:
-
-```txt id="eb654z"
-400 empty_body
-400 invalid_json
-400 missing_boundary
-
-401 missing_api_key
-401 invalid_token
-401 missing_auth
-401 missing_authz
-
-403 invalid_api_key
-403 forbidden
-403 cors_forbidden
-403 csrf_failed
-403 ip_denied
-403 ip_not_allowed
-
-411 length_required
-
-413 payload_too_large
-
-415 unsupported_media_type
-
-429 rate_limited
-
-500 internal_server_error
-500 session_misconfigured
-```
-
-The response body follows the normalized middleware error format.
-
-## Public model summary
-
-The middleware module has three main layers.
-
-```txt id="p489ng"
-Core middleware types
-  Request, Response, Context, Next, MiddlewareFn, HttpMiddleware
-
-Feature middleware
-  basics, security, auth, parsers, performance, observability, http_cache
-
-App integration
-  adapters and helpers that install middleware into vix::App
-```
+Use `HttpPipeline` for tests and custom integrations.
 
 Use `vix::App` for normal applications.
 
-Use `HttpPipeline` for custom stacks, tests, and low-level control.
+## Utilities
 
-Use `vix::middleware::app` helpers when connecting middleware to Core.
+Namespace:
 
-## Next steps
+```cpp
+namespace vix::middleware::utils
+```
 
-Continue with the focused pages when you need more detail:
+Common utilities:
 
-- [Core Concepts](./concepts)
-- [Basics](./basics)
-- [Security](./security)
-- [Authentication](./authentication)
-- [Parsers](./parsers)
-- [Performance](./performance)
-- [Observability](./observability)
-- [HTTP Cache](./http-cache)
-- [App Integration](./app-integration)
+```cpp
+vix::middleware::utils::Clock
+vix::middleware::utils::TokenBucket
+vix::middleware::utils::JsonWriter
+vix::middleware::utils::KeyBuilder
+
+vix::middleware::utils::to_lower(...)
+vix::middleware::utils::iequals(...)
+vix::middleware::utils::trim_copy(...)
+vix::middleware::utils::split_csv(...)
+vix::middleware::utils::join_csv(...)
+vix::middleware::utils::first_token(...)
+vix::middleware::utils::normalize_keys_in_place(...)
+```
+
+Most users do not need these directly.
+
+They are mainly used by middleware implementations.
+
+## Common state types
+
+| Middleware         | State type                                     |
+| ------------------ | ---------------------------------------------- |
+| `request_id()`     | `vix::middleware::basics::RequestId`           |
+| `timing()`         | `vix::middleware::basics::Timing`              |
+| `api_key()`        | `vix::middleware::auth::ApiKey`                |
+| `jwt()`            | `vix::middleware::auth::JwtClaims`             |
+| `rbac_context()`   | `vix::middleware::auth::Authz`                 |
+| `session()`        | `vix::middleware::auth::Session`               |
+| `json()`           | `vix::middleware::parsers::JsonBody`           |
+| `form()`           | `vix::middleware::parsers::FormBody`           |
+| `multipart()`      | `vix::middleware::parsers::MultipartInfo`      |
+| `multipart_save()` | `vix::middleware::parsers::MultipartForm`      |
+| `tracing_mw()`     | `vix::middleware::observability::TraceContext` |
+
+Read required state:
+
+```cpp
+auto &body = req.state<vix::middleware::parsers::JsonBody>();
+```
+
+Read optional state:
+
+```cpp
+auto *trace = req.try_state<vix::middleware::observability::TraceContext>();
+```
+
+## Common status codes
+
+| Status | Typical code             | Source               |
+| ------ | ------------------------ | -------------------- |
+| `400`  | `empty_body`             | JSON parser          |
+| `400`  | `invalid_json`           | JSON parser          |
+| `400`  | `missing_boundary`       | Multipart            |
+| `401`  | `missing_api_key`        | API key              |
+| `401`  | `missing_auth`           | JWT or RBAC          |
+| `401`  | `missing_authz`          | RBAC                 |
+| `403`  | `invalid_api_key`        | API key              |
+| `403`  | `forbidden`              | RBAC                 |
+| `403`  | `csrf_failed`            | CSRF                 |
+| `403`  | `cors_forbidden`         | CORS                 |
+| `403`  | `ip_denied`              | IP filter            |
+| `403`  | `ip_not_allowed`         | IP filter            |
+| `411`  | `length_required`        | Body limit           |
+| `413`  | `payload_too_large`      | Body limit or parser |
+| `415`  | `unsupported_media_type` | Parser               |
+| `429`  | `rate_limited`           | Rate limit           |
+| `500`  | `internal_server_error`  | Recovery             |
+
+## Recommended backend stack
+
+A practical starting stack:
+
+```cpp
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::recovery_dev());
+  app.use("/api", middleware::app::request_id_dev());
+  app.use("/api", middleware::app::timing_dev());
+
+  app.use("/api", middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::cors_dev({"https://example.com"}));
+  app.use("/api", middleware::app::rate_limit_dev());
+
+  app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
+
+  app.use("/api/users", middleware::app::json_strict_dev(4096));
+  app.use("/api/admin", middleware::app::api_key_dev("secret"));
+
+  app.get("/api/health", [](Request &, Response &res)
+  {
+    res.json({
+      "ok", true
+    });
+  });
+
+  app.post("/api/users", [](Request &req, Response &res)
+  {
+    auto &body = req.state<middleware::parsers::JsonBody>();
+
+    res.status(201).json({
+      "ok", true,
+      "body", body.value.dump()
+    });
+  });
+
+  app.get("/api/admin/status", [](Request &, Response &res)
+  {
+    res.json({
+      "ok", true,
+      "admin", true
+    });
+  });
+
+  app.run(8080);
+}
+```
+
+## Static files note
+
+Static file serving is not a middleware feature.
+
+Use Core:
+
+```cpp
+app.static_dir(...);
+```
+
+Use middleware only for optional static response enhancement:
+
+```cpp
+vix::App::set_static_response_hook(
+  vix::middleware::performance::compressed_static_response_hook()
+);
+```
+
+Remember:
+
+```txt
+Core serves static files.
+Middleware enhances HTTP behavior.
+```

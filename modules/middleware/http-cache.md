@@ -1,806 +1,797 @@
 # HTTP Cache
 
-The HTTP cache middleware connects `vix::cache` to Vix HTTP requests.
+The HTTP cache middleware stores and replays dynamic `GET` responses.
 
-It is designed for caching `GET` responses. It can serve a stored response on cache hit, call the handler on cache miss, and store successful responses for later reuse.
+It is useful when a route is expensive but returns the same response for the same request key during a short time window.
 
-For most application code, include:
+Examples:
 
-```cpp id="lzua5m"
+```txt id="xj2w3h"
+GET /api/users
+GET /api/products?page=1
+GET /api/categories
+GET /api/public-feed
+GET /api/search?q=phone
+```
+
+The HTTP cache middleware is different from static file caching.
+
+```txt id="d0hv7h"
+app.static_dir(...)
+  serves public files and can add Cache-Control headers
+
+middleware::app::http_cache(...)
+  caches dynamic GET responses produced by route handlers
+```
+
+This page is about dynamic route responses.
+
+## What it does
+
+The HTTP cache middleware sits before your route handler.
+
+On a cache miss:
+
+```txt id="wl7vn9"
+request
+  -> HTTP cache middleware
+  -> route handler runs
+  -> response is stored
+  -> response is sent
+```
+
+On a cache hit:
+
+```txt id="u0ppe9"
+request
+  -> HTTP cache middleware
+  -> cached response is replayed
+  -> route handler is not called
+```
+
+That is the main value.
+
+Expensive handlers can be skipped when the response is already cached.
+
+## Basic example
+
+```cpp id="z4pmfr"
 #include <vix.hpp>
 #include <vix/middleware.hpp>
-#include <vix/cache.hpp>
-```
 
-The HTTP cache middleware lives under:
-
-```cpp id="c27g6i"
-namespace vix::middleware
-```
-
-The App integration helpers live under:
-
-```cpp id="nd2b15"
-namespace vix::middleware::app
-```
-
-## What HTTP cache provides
-
-The HTTP cache middleware provides:
-
-```txt id="qc0nyx"
-http_cache()
-  low-level HTTP middleware for caching GET responses
-
-app::http_cache()
-  App middleware wrapper for normal Vix applications
-
-app::use_http_cache()
-  helper that installs HTTP cache on an App prefix
-```
-
-The cache engine itself is provided by the `vix::cache` module.
-
-```txt id="t674xa"
-vix::cache
-  stores entries, applies cache policy, handles stale reuse
-
-vix::middleware::http_cache
-  connects the cache engine to HTTP requests and responses
-```
-
-This separation is important. The middleware does not own cache storage. It only decides how HTTP requests and responses are mapped to cache operations.
-
-## Basic idea
-
-For a `GET` request, the middleware computes a cache key from:
-
-```txt id="m1nbq9"
-method
-path
-query string
-selected request headers
-```
-
-Then it asks the cache for an entry.
-
-```txt id="3l9nia"
-GET request
-  -> compute key
-  -> cache lookup
-  -> hit: send cached response
-  -> miss: call handler, then store response
-```
-
-On a cache hit, the handler is not called.
-
-On a cache miss, the handler runs normally.
-
-## Use HTTP cache with App
-
-```cpp id="xu92lj"
-#include <memory>
-
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-#include <vix/cache.hpp>
+using namespace vix;
 
 int main()
 {
-  vix::App app;
+  App app;
 
-  auto store = std::make_shared<vix::cache::MemoryStore>();
-
-  vix::cache::CachePolicy policy;
-  policy.ttl_ms = 30'000;
-
-  auto cache =
-    std::make_shared<vix::cache::Cache>(policy, store);
-
-  app.use("/api", vix::middleware::app::http_cache({
-    .cache = cache
+  app.use("/api", middleware::app::http_cache({
+    .ttl_ms = 30'000,
+    .allow_bypass = true,
+    .bypass_header = "x-vix-cache",
+    .bypass_value = "bypass"
   }));
 
-  app.get("/api/status", [](vix::Request &req, vix::Response &res)
+  app.get("/api/users", [](Request &, Response &res)
   {
-    (void)req;
-
     res.json({
-      "status", "ok"
+      "ok", true,
+      "source", "origin"
     });
   });
 
-  app.run(8080);
+  app.get("/", [](Request &, Response &res)
+  {
+    res.text("home route is not cached");
+  });
 
-  return 0;
+  app.run(8080);
 }
 ```
 
-The first request to `/api/status` calls the handler.
+Run:
 
-A later request with the same cache key can be served from cache.
-
-## Cache status header
-
-The middleware writes a cache status header:
-
-```txt id="z7xj7h"
-x-vix-cache-status
+```bash id="vh59z3"
+vix run http_cache_demo.cpp
 ```
-
-Common values are:
-
-```txt id="g4xajs"
-hit
-  response came from cache
-
-miss
-  handler ran and the response may be stored
-
-bypass
-  request asked to skip cache
-```
-
-This is useful when testing whether the cache is active.
-
-## Example request flow
 
 First request:
 
-```bash id="z4grio"
-curl -i http://127.0.0.1:8080/api/status
+```bash id="bez8am"
+curl -i http://127.0.0.1:8080/api/users
 ```
 
-Response shape:
+Expected cache status:
 
-```txt id="fyd9fw"
-HTTP/1.1 200 OK
+```txt id="w8ufqi"
 x-vix-cache-status: miss
 ```
 
 Second request:
 
-```bash id="q14f71"
-curl -i http://127.0.0.1:8080/api/status
+```bash id="v2zmd8"
+curl -i http://127.0.0.1:8080/api/users
 ```
 
-Response shape:
+Expected cache status:
 
-```txt id="ynqygr"
-HTTP/1.1 200 OK
+```txt id="jqy5kx"
 x-vix-cache-status: hit
 ```
 
-The exact body is the body stored from the previous successful response.
+Bypass the cache:
 
-## Cache only applies to GET
-
-The middleware only caches `GET` requests.
-
-Requests such as `POST`, `PUT`, `PATCH`, and `DELETE` pass through without cache lookup.
-
-This is intentional. HTTP cache middleware is meant for read responses.
-
-State-changing requests should usually be handled by application logic, not by response replay.
-
-## Cache key
-
-The middleware uses `vix::cache::CacheKey::fromRequest(...)`.
-
-The key is deterministic.
-
-It includes:
-
-```txt id="pmg1dy"
-HTTP method
-request path
-normalized query string
-optional vary headers
-```
-
-Query strings are normalized so parameter order does not change the logical key.
-
-For example, these should map to the same normalized query form:
-
-```txt id="yde5rb"
-/api/users?b=2&a=1
-/api/users?a=1&b=2
-```
-
-This avoids duplicate entries for the same logical request.
-
-## Vary headers
-
-Some responses depend on request headers.
-
-For example:
-
-```txt id="y0q16h"
-Accept
-Accept-Language
-Authorization
-X-Tenant
-```
-
-If a header changes the response, include it in `vary_headers`.
-
-```cpp id="vhibwm"
-vix::middleware::app::HttpCacheConfig cfg;
-
-cfg.vary_headers = {
-  "Accept"
-};
-
-app.use("/api", vix::middleware::app::http_cache(cfg));
-```
-
-When `vary_headers` is set, selected request headers become part of the cache key.
-
-Use this carefully. Adding too many headers can fragment the cache and reduce hit rate.
-
-## Bypass cache
-
-The middleware can allow a request to bypass the cache.
-
-By default, the bypass header is:
-
-```txt id="fuplkr"
-x-vix-cache: bypass
-```
-
-Request:
-
-```bash id="xqkmyh"
+```bash id="t4d8ff"
 curl -i \
-  http://127.0.0.1:8080/api/status \
+  http://127.0.0.1:8080/api/users \
   -H "x-vix-cache: bypass"
 ```
 
-When bypass is accepted, the middleware calls the handler and sets:
+Expected cache status:
 
-```txt id="mi6u6q"
+```txt id="lg8tu8"
 x-vix-cache-status: bypass
 ```
 
-The bypass feature is useful for debugging, manual refreshes, and admin tooling.
+## Use it only for safe GET routes
 
-## Configure App HTTP cache
+The HTTP cache middleware is designed for `GET` responses.
 
-Use `HttpCacheAppConfig` when installing cache on `vix::App`.
+Do not use it for routes that mutate state.
 
-```cpp id="egbug7"
-vix::middleware::app::HttpCacheConfig cfg;
+Good candidates:
 
-cfg.prefix = "/api/";
-cfg.ttl_ms = 30'000;
-cfg.only_get = true;
-cfg.allow_bypass = true;
-cfg.bypass_header = "x-vix-cache";
-cfg.bypass_value = "bypass";
-cfg.vary_headers = {"Accept"};
-
-app.use("/api", vix::middleware::app::http_cache(cfg));
+```txt id="c0qr6h"
+GET /api/products
+GET /api/categories
+GET /api/posts
+GET /api/public-profile
+GET /api/search
 ```
 
-Main options:
+Bad candidates:
 
-```txt id="h24qsk"
-prefix
-  prefix used by install_http_cache()
-
-only_get
-  wrap the middleware so only GET requests are cached
-
-ttl_ms
-  default TTL used when a default cache is created
-
-allow_bypass
-  allow requests to skip cache with a header
-
-bypass_header
-  header used for bypass
-
-bypass_value
-  value required for bypass
-
-vary_headers
-  request headers included in the cache key
-
-cache
-  custom shared vix::cache::Cache instance
+```txt id="ibf58d"
+POST /api/orders
+PUT /api/products/1
+PATCH /api/profile
+DELETE /api/items/1
+GET routes that depend on hidden user/session state
 ```
 
-If `cache` is not provided, the App helper can create a default in-memory cache.
+A cache hit skips the route handler.
 
-For production applications, prefer creating the cache explicitly so the policy and store are clear.
+That is excellent for safe public data.
 
-## Install cache on a prefix
+It is dangerous if the handler must always run.
 
-`use_http_cache()` installs HTTP cache using the prefix from the config.
+## Cache key
 
-```cpp id="3hk5t2"
-vix::middleware::app::HttpCacheConfig cfg;
+The middleware builds a cache key from request data.
 
-cfg.prefix = "/api/";
-cfg.ttl_ms = 30'000;
+The key can include:
 
-vix::middleware::app::use_http_cache(app, cfg);
+```txt id="ifhtxw"
+HTTP method
+path
+query string
+selected headers
 ```
 
-This is equivalent to installing the middleware on a route prefix.
+This means different query strings can produce different cached responses.
 
-Use prefixes to avoid caching routes that should not be cached.
+Example:
 
-## Low-level http_cache()
-
-The low-level middleware takes a shared cache instance and `HttpCacheOptions`.
-
-```cpp id="v0kr2b"
-auto mw = vix::middleware::http_cache(cache);
+```txt id="t0g8kb"
+/api/products?page=1
+/api/products?page=2
 ```
 
-This returns:
+These should not share the same cached response.
 
-```cpp id="kf81si"
-vix::middleware::HttpMiddleware
+Header-based variants can also be supported with `vary_headers`.
+
+## Vary headers
+
+Use `vary_headers` when a response changes depending on request headers.
+
+Example:
+
+```cpp id="i78j7f"
+app.use("/api", middleware::app::http_cache({
+  .ttl_ms = 30'000,
+  .allow_bypass = true,
+  .bypass_header = "x-vix-cache",
+  .bypass_value = "bypass",
+  .vary_headers = {"accept-language"}
+}));
 ```
 
-It uses the legacy HTTP middleware signature:
+Route:
 
-```cpp id="ra8k6c"
-Request &
-Response &
-Next
+```cpp id="xx1xuk"
+app.get("/api/users", [](Request &req, Response &res)
+{
+  const std::string lang =
+    req.has_header("accept-language")
+      ? req.header("accept-language")
+      : "none";
+
+  res.json({
+    "ok", true,
+    "source", "origin",
+    "accept_language", lang
+  });
+});
 ```
 
-Use the low-level middleware for tests, custom pipelines, or custom integration layers.
+Request in French:
 
-## Configure low-level HTTP cache
-
-```cpp id="l5cjnd"
-vix::middleware::HttpCacheOptions opt;
-
-opt.vary_headers = {"Accept"};
-opt.cache_200_only = true;
-opt.require_body = false;
-opt.allow_bypass = true;
-opt.bypass_header = "x-vix-cache";
-opt.bypass_value = "bypass";
-
-auto mw = vix::middleware::http_cache(cache, opt);
+```bash id="va3qpz"
+curl -i \
+  http://127.0.0.1:8080/api/users \
+  -H "Accept-Language: fr"
 ```
 
-Main options:
+Request in English:
 
-```txt id="s4l4d3"
-vary_headers
-  request headers included in the cache key
-
-cache_200_only
-  only store responses with status 200
-
-require_body
-  only store responses with a non-empty body
-
-allow_bypass
-  allow bypass header
-
-bypass_header
-  header used for bypass
-
-bypass_value
-  value required for bypass
-
-context_provider
-  custom function that returns a CacheContext for the request
+```bash id="xb9mh9"
+curl -i \
+  http://127.0.0.1:8080/api/users \
+  -H "Accept-Language: en"
 ```
 
-## Cache policy
+These can produce separate cache entries.
 
-The middleware relies on `vix::cache::CachePolicy` to decide whether an entry is usable.
+Use `vary_headers` when the route response depends on headers such as:
 
-A policy contains:
+```txt id="us4if5"
+accept-language
+accept
+x-tenant-id
+x-currency
+```
 
-```txt id="ai86jt"
-ttl_ms
-  time while an entry is fresh
+Do not vary on headers that do not affect the response.
 
-stale_if_error_ms
-  maximum age for reuse after a network error
+Unnecessary vary headers reduce cache reuse.
 
-stale_if_offline_ms
-  maximum age for reuse while offline
+## Bypass header
 
-allow_stale_if_error
-  allow stale reuse on network error
+The bypass header lets a client force the origin handler to run.
 
-allow_stale_if_offline
-  allow stale reuse while offline
+Default-style configuration:
+
+```cpp id="toqtyh"
+app.use("/api", middleware::app::http_cache({
+  .ttl_ms = 30'000,
+  .allow_bypass = true,
+  .bypass_header = "x-vix-cache",
+  .bypass_value = "bypass"
+}));
+```
+
+Bypass request:
+
+```bash id="s1vx4v"
+curl -i \
+  http://127.0.0.1:8080/api/users \
+  -H "x-vix-cache: bypass"
+```
+
+This is useful for:
+
+```txt id="x3admb"
+debugging
+manual refresh
+admin tools
+checking origin response
+```
+
+Disable bypass if clients should never be able to skip cache.
+
+```cpp id="unvjoc"
+app.use("/api", middleware::app::http_cache({
+  .ttl_ms = 30'000,
+  .allow_bypass = false
+}));
+```
+
+## Cache status header
+
+The middleware can write a cache status header.
+
+Common values are:
+
+```txt id="lprnzd"
+miss
+hit
+bypass
 ```
 
 Example:
 
-```cpp id="l0lyp8"
-vix::cache::CachePolicy policy;
-
-policy.ttl_ms = 30'000;
-policy.allow_stale_if_error = true;
-policy.stale_if_error_ms = 5 * 60'000;
-policy.allow_stale_if_offline = true;
-policy.stale_if_offline_ms = 10 * 60'000;
+```txt id="ip0q5b"
+x-vix-cache-status: miss
 ```
 
-The middleware does not duplicate this logic. It passes the request context to the cache engine and lets the policy decide.
+A `miss` means the handler ran and the response may have been stored.
 
-## Cache context
+A `hit` means the response came from cache and the handler was skipped.
 
-`CacheContext` describes runtime conditions for cache decisions.
+A `bypass` means the request asked to skip cache.
 
-Common contexts are:
+Use this header during development and diagnostics.
 
-```cpp id="pomjlv"
-vix::cache::CacheContext::Online();
-vix::cache::CacheContext::Offline();
-vix::cache::CacheContext::NetworkError();
+## TTL
+
+`ttl_ms` controls how long a cached response can be reused.
+
+```cpp id="jhhuz2"
+app.use("/api", middleware::app::http_cache({
+  .ttl_ms = 30'000
+}));
 ```
 
-By default, the HTTP cache middleware uses:
+This stores responses for about 30 seconds.
 
-```cpp id="sxg7tr"
-vix::cache::CacheContext::Online()
-```
+Use short TTLs for data that changes often.
 
-You can provide a custom context provider.
+Use longer TTLs for public data that changes rarely.
 
-```cpp id="yxdhmm"
-vix::middleware::HttpCacheOptions opt;
+Examples:
 
-opt.context_provider =
-  [](vix::middleware::Request &req)
+| Data               | Suggested TTL                     |
+| ------------------ | --------------------------------- |
+| Health metadata    | Very short or no cache            |
+| Public categories  | Longer                            |
+| Product lists      | Short to medium                   |
+| Search results     | Short                             |
+| User-specific data | Avoid caching unless keyed safely |
+
+The cache does not replace database correctness.
+
+It only reduces repeated handler work for safe responses.
+
+## Custom cache instance
+
+You can inject a custom cache instance.
+
+```cpp id="xv9vyp"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  auto cache = middleware::app::make_default_cache({
+    .ttl_ms = 30'000
+  });
+
+  app.use("/api", middleware::app::http_cache_mw({
+    .prefix = "/api",
+    .only_get = true,
+    .ttl_ms = 30'000,
+    .allow_bypass = true,
+    .bypass_header = "x-vix-cache",
+    .bypass_value = "bypass",
+    .vary_headers = {},
+    .cache = cache,
+    .add_debug_header = true,
+    .debug_header = "x-vix-cache-status"
+  }));
+
+  app.get("/api/slow", [](Request &, Response &res)
   {
-    (void)req;
+    res.text("slow response from origin");
+  });
 
-    return vix::cache::CacheContext::Online();
-  };
-
-auto mw = vix::middleware::http_cache(cache, opt);
+  app.run(8080);
+}
 ```
 
-This is useful when an application has network state, offline mode, or a gateway layer that can report network errors.
+Use a custom cache when:
 
-## Stores
-
-The `vix::cache` module provides different cache stores.
-
-Common stores include:
-
-```txt id="w8q4h4"
-MemoryStore
-  simple in-memory cache
-
-LruMemoryStore
-  in-memory cache with max entry eviction
-
-FileStore
-  file-backed cache store
+```txt id="o3zi8d"
+several middleware instances should share one cache
+you want to control the cache policy explicitly
+you want to inject a different store later
 ```
 
-The middleware works with the `Cache` facade, so it does not need to know which store is used.
+## Slow route example
 
-## MemoryStore
+This example makes cache behavior visible.
 
-`MemoryStore` is useful for local development, tests, and simple process-local caches.
+```cpp id="n8cfxu"
+#include <chrono>
+#include <thread>
 
-```cpp id="cq3d5d"
-auto store =
-  std::make_shared<vix::cache::MemoryStore>();
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::http_cache({
+    .ttl_ms = 30'000,
+    .allow_bypass = true,
+    .bypass_header = "x-vix-cache",
+    .bypass_value = "bypass"
+  }));
+
+  app.get("/api/slow", [](Request &, Response &res)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
+    res.text("slow response from origin");
+  });
+
+  app.run(8080);
+}
 ```
 
-It stores entries in memory and does not persist them across process restarts.
+First request:
 
-## LruMemoryStore
-
-`LruMemoryStore` is useful when you want a maximum number of cached entries.
-
-```cpp id="uk3mby"
-auto store =
-  std::make_shared<vix::cache::LruMemoryStore>(
-    vix::cache::LruMemoryStore::Config{
-      .max_entries = 1024
-    }
-  );
+```bash id="vuz32h"
+time curl -i http://127.0.0.1:8080/api/slow
 ```
 
-It evicts least recently used entries when the cache grows beyond the configured limit.
+Second request:
 
-## FileStore
-
-`FileStore` persists cache entries to a JSON file.
-
-```cpp id="lqthlb"
-auto store =
-  std::make_shared<vix::cache::FileStore>(
-    vix::cache::FileStore::Config{
-      .file_path = ".vix/cache_http.json",
-      .pretty_json = false
-    }
-  );
+```bash id="l9yh47"
+time curl -i http://127.0.0.1:8080/api/slow
 ```
 
-This is useful for durable local cache behavior, offline-first scenarios, and local reuse after restart.
+The second request should avoid the artificial delay if it is served from cache.
 
-For high-write workloads, consider whether a file-backed JSON store is the right backend for your application.
+Bypass:
 
-## Cached response contents
-
-A cache entry stores:
-
-```txt id="it2skd"
-status
-body
-headers
-created_at_ms
+```bash id="snkvjh"
+time curl -i \
+  http://127.0.0.1:8080/api/slow \
+  -H "x-vix-cache: bypass"
 ```
 
-When a cached response is served, the middleware restores the status, headers, and body.
+The bypassed request should run the handler again.
 
-The middleware skips `content-length` from cached headers because the final body and response writer should control the correct length.
+## Configuration options
 
-## Header normalization
+App-level HTTP cache configuration:
 
-`Cache::put()` normalizes response header names through `HeaderUtil`.
-
-This avoids cache inconsistencies caused by header casing differences.
-
-For example:
-
-```txt id="bgut5h"
-Content-Type
-content-type
-CONTENT-TYPE
+```cpp id="bhdzdc"
+middleware::app::HttpCacheConfig{
+  .prefix = "/api/",
+  .only_get = true,
+  .ttl_ms = 30'000,
+  .allow_bypass = true,
+  .bypass_header = "x-vix-cache",
+  .bypass_value = "bypass",
+  .vary_headers = {},
+  .cache = nullptr,
+  .add_debug_header = false,
+  .debug_header = "x-vix-cache-status"
+}
 ```
 
-should not produce different logical cache metadata just because the casing changed.
+Main options:
 
-## What gets stored
+| Option             | Purpose                                 |
+| ------------------ | --------------------------------------- |
+| `prefix`           | Prefix used by install helpers          |
+| `only_get`         | Apply cache only to GET requests        |
+| `ttl_ms`           | Cache lifetime in milliseconds          |
+| `allow_bypass`     | Allow bypass header                     |
+| `bypass_header`    | Header used to request bypass           |
+| `bypass_value`     | Header value that triggers bypass       |
+| `vary_headers`     | Headers included in the cache key       |
+| `cache`            | Custom cache instance                   |
+| `add_debug_header` | Add cache status header for diagnostics |
+| `debug_header`     | Name of cache status header             |
 
-By default, the middleware stores successful `200` responses.
+For most applications, start with:
 
-```cpp id="jjs2m0"
-opt.cache_200_only = true;
+```cpp id="fehyvg"
+app.use("/api", middleware::app::http_cache({
+  .ttl_ms = 30'000
+}));
 ```
 
-If `require_body` is enabled, empty responses are not stored.
+Then add bypass and vary headers as needed.
 
-```cpp id="g5e75z"
-opt.require_body = true;
+## Lower-level HTTP cache middleware
+
+The lower-level middleware is:
+
+```cpp id="ek1r4w"
+vix::middleware::http_cache(...)
 ```
 
-This keeps accidental caching of empty or non-success responses under control.
+It returns:
 
-## What should not be cached
-
-Do not cache responses blindly.
-
-Avoid caching routes that return:
-
-```txt id="c6rfx7"
-private user data
-per-user dashboards
-admin pages
-state-changing results
-highly dynamic data
-responses based on Authorization unless the key varies correctly
-responses with secrets or tokens
+```cpp id="sq85zg"
+vix::middleware::HttpMiddleware
 ```
 
-If a response depends on the user, tenant, language, or authorization state, the cache key must include that difference or the route should not be cached.
+The App helper adapts it for `vix::App`.
 
-## Cache and authentication
+Use the lower-level API when building custom integrations.
 
-Be careful when combining HTTP cache with authenticated routes.
+Normal applications should use:
 
-This is risky:
-
-```txt id="v9pkhs"
-http_cache
-  -> jwt
-  -> handler returns user-specific data
+```cpp id="vteycj"
+middleware::app::http_cache(...)
 ```
 
-because the cache may serve the first user's response to another request if the cache key does not include user-specific data.
+or:
 
-A safer approach is to avoid caching private routes, or include a trusted user or tenant key in the cache key through `vary_headers` or a custom cache strategy.
-
-For most applications, keep HTTP cache on public `GET` routes first.
-
-## Cache and CORS
-
-CORS can add response headers that vary by origin.
-
-If the response depends on the `Origin` header, include it in `vary_headers` or keep cache away from those routes.
-
-```cpp id="mazppc"
-cfg.vary_headers = {
-  "Origin"
-};
+```cpp id="qo555n"
+middleware::app::http_cache_mw(...)
 ```
 
-This prevents one origin's CORS response from being reused for another origin when the response differs.
+## Cache and status codes
 
-## Cache and compression
+By default, the middleware should cache successful `200` responses.
 
-HTTP cache, ETag, and compression can work together, but order matters.
+Avoid caching error responses unless you explicitly want that behavior.
 
-Each one modifies or reuses responses differently:
+A useful rule:
 
-```txt id="vxxeru"
-http_cache
-  may return a stored response without calling the handler
-
-etag
-  computes or validates a response tag
-
-compression
-  may change the body encoding
+```txt id="vgf7to"
+cache 200 OK
+avoid caching 401, 403, 404, 422, 500
 ```
 
-Start simple. Cache stable public `GET` responses first. Add ETag or compression when you know the desired response semantics.
+This prevents temporary failures from being replayed longer than intended.
 
-## Cache and static files
+## Cache and response bodies
+
+Some responses should not be cached.
+
+Avoid caching:
+
+```txt id="sugmyu"
+empty responses when the body matters
+streaming responses
+user-specific private responses
+responses with volatile data
+responses depending on cookies or sessions
+```
+
+Good cached responses are usually:
+
+```txt id="wehpda"
+public
+safe
+repeatable
+not tied to one user session
+valid for a short TTL
+```
+
+## Cache and authenticated routes
+
+Be careful caching authenticated routes.
+
+If a response depends on the authenticated user, the cache key must include something that separates users.
+
+Examples:
+
+```txt id="hhyme8"
+Authorization
+x-user-id
+x-tenant-id
+```
+
+But caching by `Authorization` can create many cache entries and may be undesirable.
+
+The safest starting rule is:
+
+```txt id="x3g0j6"
+cache public GET routes first
+avoid private user-specific routes until the cache key is designed carefully
+```
+
+Good first targets:
+
+```txt id="s2tizw"
+public categories
+public product lists
+public blog posts
+public docs metadata
+```
+
+Risky first targets:
+
+```txt id="mcwqvx"
+current user profile
+admin dashboard
+cart
+orders
+notifications
+private messages
+```
+
+## HTTP cache vs ETag
+
+HTTP cache middleware stores the response on the server side and can skip the handler on cache hits.
+
+ETag helps the client revalidate a response.
+
+```txt id="k6rzja"
+HTTP cache
+  server-side response reuse
+  handler can be skipped
+
+ETag
+  client-side validation
+  client may receive 304 Not Modified
+```
+
+They can be used together, but they solve different problems.
+
+Use HTTP cache when the server should avoid repeated handler work.
+
+Use ETag when clients should avoid downloading the same body again.
+
+## HTTP cache vs static files
 
 Static files are served by Core through:
 
-```cpp id="uy3q6h"
-app.static_dir("public", "/");
+```cpp id="mx0cnq"
+app.static_dir(...)
 ```
 
-The HTTP cache middleware is mainly for dynamic HTTP handlers and API responses.
+Static files can receive `Cache-Control` headers from Core configuration.
 
-For static files, prefer Core static file support and the performance static compression hook when needed.
+HTTP cache middleware is for dynamic route responses:
 
-Do not document static file serving as an HTTP cache feature.
-
-## Pruning expired entries
-
-The cache engine can prune expired entries.
-
-```cpp id="dxigh4"
-const std::int64_t now = vix::middleware::now_ms();
-
-std::size_t removed = cache->prune(now);
+```cpp id="avab1r"
+app.get("/api/users", [](Request &, Response &res)
+{
+  res.json({
+    "ok", true
+  });
+});
 ```
 
-Pruning removes entries older than the maximum age allowed by the policy.
+Keep this separation:
 
-`prune()` is implemented for supported stores such as `LruMemoryStore` and `FileStore`.
+```txt id="hmx3t1"
+Core static files
+  public files, index.html, SPA fallback, Cache-Control
 
-For `MemoryStore`, pruning may depend on store support.
-
-## Periodic pruning
-
-The middleware module also has `PeriodicTask`, which can run a job at intervals through an executor.
-
-That can be used to schedule cache pruning in applications that need it.
-
-```txt id="evyofm"
-PeriodicTask
-  -> every N seconds
-  -> executor runs cache->prune(now)
+HTTP cache middleware
+  dynamic GET route responses
 ```
 
-Keep this as an application decision. The HTTP cache middleware does not automatically decide your pruning schedule.
+Do not document static file serving as HTTP cache middleware.
 
-## Low-level smoke test shape
+## Complete example
 
-The cache can be tested without starting a server.
+```cpp id="d6hx80"
+#include <chrono>
+#include <thread>
 
-```cpp id="jb5btr"
-auto store = std::make_shared<vix::cache::MemoryStore>();
+#include <vix.hpp>
+#include <vix/middleware.hpp>
 
-vix::cache::CachePolicy policy;
-policy.ttl_ms = 60'000;
+using namespace vix;
 
-auto cache =
-  std::make_shared<vix::cache::Cache>(policy, store);
+int main()
+{
+  App app;
 
-auto mw = vix::middleware::http_cache(cache);
+  app.use("/api", middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::rate_limit_dev());
+
+  app.use("/api", middleware::app::http_cache({
+    .ttl_ms = 30'000,
+    .allow_bypass = true,
+    .bypass_header = "x-vix-cache",
+    .bypass_value = "bypass",
+    .vary_headers = {"accept-language"}
+  }));
+
+  app.get("/api/users", [](Request &req, Response &res)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+
+    const std::string lang =
+      req.has_header("accept-language")
+        ? req.header("accept-language")
+        : "none";
+
+    res.json({
+      "ok", true,
+      "source", "origin",
+      "accept_language", lang
+    });
+  });
+
+  app.get("/", [](Request &, Response &res)
+  {
+    res.text("public home, not cached by /api middleware");
+  });
+
+  app.run(8080);
+}
 ```
 
-Then pass a request, response, and `next()` function to the middleware.
+Run:
 
-This is the same model used by the middleware tests.
-
-## Common order
-
-For public API caching, a simple order can be:
-
-```txt id="ik6a75"
-recovery
-request_id
-cors
-rate_limit
-http_cache
-handler
-etag
-compression
+```bash id="klc4z9"
+vix run http_cache_complete.cpp
 ```
 
-This is not a universal rule.
+First request:
 
-Important considerations:
-
-```txt id="degx4i"
-CORS may need to handle preflight before cache.
-
-Rate limiting may need to run before cache to limit all requests.
-
-HTTP cache should run before the handler so hits can skip handler work.
-
-ETag and compression need the final response body.
+```bash id="hpxpq4"
+curl -i http://127.0.0.1:8080/api/users
 ```
 
-Choose the order based on what each route returns.
+Second request:
 
-## Development and production
-
-Development examples can use a simple in-memory cache.
-
-```cpp id="l5296d"
-auto store = std::make_shared<vix::cache::MemoryStore>();
+```bash id="xf4woa"
+curl -i http://127.0.0.1:8080/api/users
 ```
 
-Production applications should choose explicit cache policy and storage.
+Different language:
 
-Important production decisions include:
-
-```txt id="txh7lv"
-which routes are cacheable
-how long entries stay fresh
-whether stale entries can be used
-which headers affect the cache key
-whether cache should survive restart
-how pruning is scheduled
-how cache interacts with auth and CORS
+```bash id="pb44yx"
+curl -i \
+  http://127.0.0.1:8080/api/users \
+  -H "Accept-Language: fr"
 ```
 
-The middleware provides the HTTP integration. The application owns the cache policy.
+Bypass:
 
-## What this module does not do
+```bash id="taw9kv"
+curl -i \
+  http://127.0.0.1:8080/api/users \
+  -H "x-vix-cache: bypass"
+```
 
-The HTTP cache middleware does not replace a CDN.
+Expected behavior:
 
-It does not decide which business data is safe to cache.
+```txt id="p78t56"
+first request
+  cache miss, handler runs
 
-It does not make private responses safe automatically.
+second same request
+  cache hit, handler skipped
 
-It does not serve static files.
+different Accept-Language
+  different cache key
 
-It does not validate ETags.
-
-It does not compress responses.
-
-It does not implement storage itself.
-
-It connects HTTP `GET` responses to `vix::cache`.
+bypass
+  handler runs again
+```
 
 ## Summary
 
-`vix::cache` owns cache entries, policy, context, and storage.
+Use HTTP cache middleware for dynamic `GET` routes that are safe to replay for a short time.
 
-`vix::middleware::http_cache()` connects that cache engine to HTTP requests.
+Good starting point:
 
-On hit, the middleware sends the cached response and skips the handler.
+```cpp id="fwcq48"
+app.use("/api", middleware::app::http_cache({
+  .ttl_ms = 30'000,
+  .allow_bypass = true,
+  .bypass_header = "x-vix-cache",
+  .bypass_value = "bypass"
+}));
+```
 
-On miss, it calls the handler and stores eligible responses.
+Remember:
 
-Use it first for stable public `GET` routes. Add vary headers, explicit policy, and durable stores only when the route needs them.
-
-## Next steps
-
-Continue with:
-
-- [App Integration](./app-integration)
-- [Performance](./performance)
-- [Security](./security)
-- [API Reference](./api-reference)
+```txt id="vpn2wd"
+cache public GET routes first
+use vary_headers when headers change the response
+avoid private user-specific routes until the cache key is designed carefully
+static files belong to Core, not HTTP cache middleware
+```

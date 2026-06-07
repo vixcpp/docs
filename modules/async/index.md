@@ -250,28 +250,28 @@ value = 42
 
 The async module also includes networking APIs.
 
-| API | Purpose |
-|---|---|
-| `dns_resolver` | Resolve hostnames asynchronously. |
-| `tcp_stream` | Connect, read, and write TCP streams. |
-| `tcp_listener` | Listen and accept TCP connections. |
-| `udp_socket` | Bind, send, and receive UDP datagrams. |
+| API            | Purpose                                |
+| -------------- | -------------------------------------- |
+| `dns_resolver` | Resolve hostnames asynchronously.      |
+| `tcp_stream`   | Connect, read, and write TCP streams.  |
+| `tcp_listener` | Listen and accept TCP connections.     |
+| `udp_socket`   | Bind, send, and receive UDP datagrams. |
 
 The network backend is attached to `io_context` and is created lazily when networking is used.
 
 ## Core components
 
-| Component | Purpose |
-|---|---|
-| `io_context` | Owns the scheduler and async services. |
-| `scheduler` | Runs callbacks and resumes coroutines. |
-| `task<T>` | Coroutine task that produces a value. |
-| `task<void>` | Coroutine task with no returned value. |
-| `timer` | Runs callbacks later or sleeps a coroutine. |
-| `cancel_source` | Requests cancellation. |
-| `cancel_token` | Observes cancellation. |
-| `thread_pool` | Runs work outside the scheduler thread. |
-| `signal_set` | Waits for system signals. |
+| Component       | Purpose                                     |
+| --------------- | ------------------------------------------- |
+| `io_context`    | Owns the scheduler and async services.      |
+| `scheduler`     | Runs callbacks and resumes coroutines.      |
+| `task<T>`       | Coroutine task that produces a value.       |
+| `task<void>`    | Coroutine task with no returned value.      |
+| `timer`         | Runs callbacks later or sleeps a coroutine. |
+| `cancel_source` | Requests cancellation.                      |
+| `cancel_token`  | Observes cancellation.                      |
+| `thread_pool`   | Runs work outside the scheduler thread.     |
+| `signal_set`    | Waits for system signals.                   |
 
 ## Typical flow
 
@@ -419,20 +419,20 @@ Use one `io_context` as the owner of async services. Use `task<T>` for coroutine
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context and scheduler loop. |
-| [Tasks](/modules/async/tasks) | Learn `task<T>` and `task<void>`. |
-| [Spawn](/modules/async/spawn) | Learn how to start detached tasks. |
-| [Timers](/modules/async/timers) | Learn delays and timer callbacks. |
-| [Cancellation](/modules/async/cancellation) | Learn `cancel_source` and `cancel_token`. |
-| [Thread pool](/modules/async/thread-pool) | Learn background work. |
-| [when_all / when_any](/modules/async/when) | Learn task composition. |
-| [Signals](/modules/async/signals) | Learn async signal handling. |
-| [TCP](/modules/async/tcp) | Learn TCP streams and listeners. |
-| [UDP](/modules/async/udp) | Learn UDP sockets. |
-| [DNS](/modules/async/dns) | Learn async DNS resolution. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                                       |
+| --------------------------------------------- | --------------------------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context and scheduler loop. |
+| [Tasks](/modules/async/tasks)                 | Learn `task<T>` and `task<void>`.             |
+| [Spawn](/modules/async/spawn)                 | Learn how to start detached tasks.            |
+| [Timers](/modules/async/timers)               | Learn delays and timer callbacks.             |
+| [Cancellation](/modules/async/cancellation)   | Learn `cancel_source` and `cancel_token`.     |
+| [Thread pool](/modules/async/thread-pool)     | Learn background work.                        |
+| [when_all / when_any](/modules/async/when)    | Learn task composition.                       |
+| [Signals](/modules/async/signals)             | Learn async signal handling.                  |
+| [TCP](/modules/async/tcp)                     | Learn TCP streams and listeners.              |
+| [UDP](/modules/async/udp)                     | Learn UDP sockets.                            |
+| [DNS](/modules/async/dns)                     | Learn async DNS resolution.                   |
+| [API Reference](/modules/async/api-reference) | See the public API surface.                   |
 
 ## Next step
 

@@ -2,54 +2,80 @@
 
 This page explains the model behind `vix::middleware`.
 
-The quick start shows how to install middleware on `vix::App`. This page explains what happens behind that API: how middleware runs, what `next()` means, how a request can be stopped early, how typed request state works, how services are injected, and when to use the lower-level `HttpPipeline`.
+The quick start shows how to install middleware on `vix::App`.
 
-The goal is to make the behavior predictable. Middleware is simple when the flow is clear.
+This page explains what happens behind that API:
 
-## What a middleware is
+```txt id="mhksmt"
+how middleware runs
+what next() means
+how a request can be stopped early
+how middleware can modify a response
+how typed request state works
+how lower-level middleware integrates with vix::App
+when to use HttpPipeline
+why middleware order matters
+```
 
-A middleware is a function that runs around an HTTP handler.
+The goal is to make middleware predictable.
 
-It receives the current request, the current response, and a continuation function called `next`.
+Once the flow is clear, the module becomes simple to reason about.
 
-```cpp
+## The simplest definition
+
+A middleware is code that runs around a route handler.
+
+It can:
+
+```txt id="jnylx3"
+inspect the request
+modify the response
+store data on the request
+call the next middleware
+stop the request early
+```
+
+A normal `vix::App` middleware has this shape:
+
+```cpp id="ixrsk1"
 app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
 {
+  (void)req;
   (void)res;
-
-  vix::print("request", req.method(), req.path());
 
   next();
 });
 ```
 
+The important part is `next`.
+
 Calling `next()` means:
 
-```txt
+```txt id="dg4jyy"
 continue to the next middleware or route handler
 ```
 
 Not calling `next()` means:
 
-```txt
+```txt id="o7s8tf"
 stop the request here
 ```
 
-This is the central rule of the middleware model.
+This is the central rule.
 
-## The request flow
+## Request flow
 
 When several middleware functions are installed, they run in order.
 
-```cpp
+```cpp id="fouh5t"
 app.use(middleware_a);
 app.use(middleware_b);
 app.use(middleware_c);
 ```
 
-The flow is:
+The request flow is:
 
-```txt
+```txt id="csfbx7"
 request
   -> middleware_a
   -> middleware_b
@@ -58,36 +84,34 @@ request
   -> response
 ```
 
-If each middleware calls `next()`, the request eventually reaches the route handler.
+If every middleware calls `next()`, the request eventually reaches the route handler.
 
-A middleware can also run code after `next()` returns.
+If one middleware does not call `next()`, the chain stops.
 
-```cpp
-app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
-{
-  (void)req;
-
-  next();
-
-  res.header("X-Example", "done");
-});
+```txt id="01e015"
+request
+  -> middleware_a
+  -> middleware_b
+       stops here
+  -> response
 ```
 
-This middleware lets the handler run first, then modifies the response.
+The route handler is not called.
 
-This pattern is used by middleware such as timing, logging, security headers, compression, and ETag.
+This is how rate limits, API key checks, JWT checks, body limits, CORS preflight, CSRF, IP filtering, and cache hits work.
 
-## Before and after behavior
+## Before middleware
 
-Middleware can do work before `next()`:
+Some middleware runs before the handler and decides whether the request can continue.
 
-```cpp
-app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
+```cpp id="q3o0n4"
+app.use("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next next)
 {
-  if (req.header("x-api-key").empty())
+  if (req.header("x-api-key") != "secret")
   {
     res.status(401).json({
-      "error", "missing api key"
+      "ok", false,
+      "error", "unauthorized"
     });
     return;
   }
@@ -96,9 +120,17 @@ app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
 });
 ```
 
-It can also do work after `next()`:
+If the header is missing or invalid, the middleware sends a response and returns.
 
-```cpp
+The handler is skipped.
+
+This pattern is called short-circuiting.
+
+## After middleware
+
+Some middleware calls `next()` first, then modifies the response after the handler has run.
+
+```cpp id="wosleo"
 app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
 {
   (void)req;
@@ -109,36 +141,115 @@ app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
 });
 ```
 
-And it can do both:
+This pattern is useful when the middleware needs to see the final response.
 
-```cpp
+Examples:
+
+```txt id="bbiccu"
+security headers
+timing
+logging
+compression
+ETag
+metrics
+```
+
+These middleware functions usually need the handler to produce a response first.
+
+## Before and after middleware
+
+A middleware can also do work before and after `next()`.
+
+```cpp id="fv1zcv"
 app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
 {
-  vix::print("begin", req.path());
+  const auto path = req.path();
 
   next();
 
-  vix::print("end", res.res.status());
+  res.header("X-Handled-Path", path);
 });
 ```
 
-This explains why order matters. A middleware that does work after `next()` is wrapping everything that runs after it.
+The middleware reads the request before the handler, then updates the response after the handler.
+
+This is the wrapping model.
+
+```txt id="itlleb"
+middleware begins
+  -> next middleware
+    -> route handler
+  <- response returns
+middleware ends
+```
+
+## Why order matters
+
+Middleware order controls behavior.
+
+This order is good:
+
+```cpp id="m0v02i"
+app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
+app.use("/api/users", middleware::app::json_strict_dev(4096));
+```
+
+The body limit runs before the JSON parser.
+
+That means oversized bodies are rejected before parsing.
+
+This order is usually worse:
+
+```cpp id="bwqyh0"
+app.use("/api/users", middleware::app::json_strict_dev(4096));
+app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
+```
+
+The parser can run before the global body limit.
+
+A practical order is:
+
+```txt id="i6eilc"
+recovery
+request id
+timing
+security headers
+CORS
+rate limit
+body limit
+authentication
+parser
+handler
+compression
+ETag
+logging
+metrics
+```
+
+The exact order depends on the application.
+
+The principle is stable:
+
+```txt id="5kcad5"
+reject bad requests early
+parse only after size rules
+authenticate before protected handlers
+modify responses after handlers
+observe the whole request flow
+```
 
 ## Short-circuiting
 
 Short-circuiting means a middleware sends a response and does not call `next()`.
 
-```cpp
-app.use("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next next)
+```cpp id="hbe40u"
+app.use("/api", [](vix::Request &req, vix::Response &res, vix::App::Next next)
 {
-  (void)req;
-
-  const bool allowed = false;
-
-  if (!allowed)
+  if (req.method() == "POST" && req.body().size() > 1024)
   {
-    res.status(403).json({
-      "error", "forbidden"
+    res.status(413).json({
+      "ok", false,
+      "error", "payload_too_large"
     });
     return;
   }
@@ -147,11 +258,9 @@ app.use("/admin", [](vix::Request &req, vix::Response &res, vix::App::Next next)
 });
 ```
 
-In this case, the route handler is never called.
-
 Short-circuiting is normal for:
 
-```txt
+```txt id="rr8bhx"
 CORS preflight
 body limit
 rate limit
@@ -161,6 +270,7 @@ RBAC authorization
 CSRF protection
 IP filtering
 HTTP cache hits
+parser errors
 ```
 
 A middleware should short-circuit only when it has enough information to produce the response itself.
@@ -169,7 +279,7 @@ A middleware should short-circuit only when it has enough information to produce
 
 Core already supports middleware through `vix::App`.
 
-```cpp
+```cpp id="jec8vr"
 app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
 {
   (void)req;
@@ -181,7 +291,7 @@ app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
 
 The `vix::middleware` module provides reusable middleware implementations.
 
-```cpp
+```cpp id="bn5oau"
 app.use(vix::middleware::app::cors_dev());
 app.use(vix::middleware::app::security_headers_dev());
 app.use(vix::middleware::app::rate_limit_dev());
@@ -189,29 +299,35 @@ app.use(vix::middleware::app::rate_limit_dev());
 
 The difference is:
 
-```txt
+```txt id="wbmzh0"
 Core middleware
   custom function installed directly on vix::App
 
 vix::middleware
-  tested reusable middleware for common HTTP concerns
+  reusable middleware for common backend concerns
 ```
 
-Use Core middleware when you only need one small custom behavior.
+Use direct App middleware for one-off behavior.
 
-Use `vix::middleware` when you need a ready-made component such as CORS, rate limiting, request IDs, JSON parsing, sessions, JWT, or HTTP caching.
+Use `vix::middleware` when you need a reusable component such as CORS, rate limiting, request IDs, JSON parsing, sessions, JWT, HTTP cache, or compression.
 
 ## Context-based middleware
 
-Inside the middleware module, the main low-level type is `MiddlewareFn`.
+Inside the middleware module, the main lower-level type is:
 
-```cpp
+```cpp id="hi8l83"
+vix::middleware::MiddlewareFn
+```
+
+It has this shape:
+
+```cpp id="dig03e"
 using MiddlewareFn = std::function<void(Context &, Next)>;
 ```
 
 A context-based middleware receives a `Context`.
 
-```cpp
+```cpp id="pi8tw9"
 vix::middleware::MiddlewareFn mw =
   [](vix::middleware::Context &ctx, vix::middleware::Next next)
   {
@@ -221,9 +337,9 @@ vix::middleware::MiddlewareFn mw =
   };
 ```
 
-`Context` gives access to:
+`Context` gives middleware a consistent place to access:
 
-```txt
+```txt id="g8bpsk"
 request
 response
 services
@@ -231,35 +347,55 @@ typed state helpers
 error helpers
 ```
 
-The request and response are still the normal Vix HTTP objects. The context simply gives middleware a consistent place to access them.
+The request and response are still the normal Vix HTTP objects.
+
+The context just groups middleware-specific tools around them.
 
 ## Request and response access
 
-A context-based middleware reads the request with `ctx.req()`.
+A context-based middleware reads the request with:
 
-```cpp
-auto method = ctx.req().method();
-auto path = ctx.req().path();
-auto content_type = ctx.req().header("Content-Type");
+```cpp id="eoi3cq"
+ctx.req()
 ```
 
-It writes to the response with `ctx.res()`.
+Example:
 
-```cpp
+```cpp id="r7k9ls"
+const std::string method = ctx.req().method();
+const std::string path = ctx.req().path();
+const std::string content_type = ctx.req().header("Content-Type");
+```
+
+It writes to the response with:
+
+```cpp id="s7ljvq"
+ctx.res()
+```
+
+Example:
+
+```cpp id="l315h6"
 ctx.res().status(200);
 ctx.res().header("X-Example", "ok");
 ctx.res().text("OK");
 ```
 
-Most middleware either reads the request before `next()`, writes the response after `next()`, or does both.
+Most middleware either:
+
+```txt id="c6sjqb"
+reads the request before next()
+writes the response after next()
+does both
+```
 
 ## Typed request state
 
-Middleware often needs to attach data to the request.
+Middleware often needs to attach data to the current request.
 
-For example:
+Examples:
 
-```txt
+```txt id="vccs8l"
 request_id()
   stores RequestId
 
@@ -269,551 +405,553 @@ timing()
 json()
   stores JsonBody
 
+form()
+  stores FormBody
+
 jwt()
   stores JwtClaims
+
+api_key()
+  stores ApiKey
 
 rbac_context()
   stores Authz
 
 session()
   stores Session
-
-tracing()
-  stores TraceContext
 ```
 
-The handler can read that data from the request.
+A handler can read typed state:
 
-```cpp
-app.use(vix::middleware::app::json_dev());
-
+```cpp id="ibvw6z"
 app.post("/api/echo", [](vix::Request &req, vix::Response &res)
 {
   auto &body = req.state<vix::middleware::parsers::JsonBody>();
 
   res.json({
-    "received", body.value
+    "received", body.value.dump()
   });
 });
 ```
 
-Typed state avoids stringly-typed maps and manual casts. The value has a real C++ type.
+The type is the key.
+
+You do not need string keys.
+
+You ask for the state by type.
+
+## `state<T>()` and `try_state<T>()`
 
 Use `state<T>()` when the value must exist.
 
-```cpp
+```cpp id="5k92gn"
 auto &body = req.state<vix::middleware::parsers::JsonBody>();
+```
+
+This is appropriate when the route is protected by the middleware that creates the state.
+
+Example:
+
+```cpp id="xs065f"
+app.use("/api/users", vix::middleware::app::json_strict_dev());
+
+app.post("/api/users", [](vix::Request &req, vix::Response &res)
+{
+  auto &body = req.state<vix::middleware::parsers::JsonBody>();
+
+  res.json({
+    "ok", true,
+    "body", body.value.dump()
+  });
+});
 ```
 
 Use `try_state<T>()` when the value may be missing.
 
-```cpp
-if (auto *rid = req.try_state<vix::middleware::basics::RequestId>())
+```cpp id="6gh668"
+auto *session = req.try_state<vix::middleware::auth::Session>();
+
+if (!session)
 {
-  vix::print("request id", rid->value);
+  res.status(500).json({
+    "ok", false,
+    "error", "session_missing"
+  });
+  return;
 }
 ```
 
-The same pattern is available through `Context`.
+This is safer when middleware is optional, conditional, or installed only on some routes.
 
-```cpp
-if (auto *session = ctx.try_state<vix::middleware::auth::Session>())
-{
-  session->set("seen", "true");
-}
+## Why typed state matters
+
+Typed state keeps handlers clean.
+
+Without middleware, a handler may need to:
+
+```txt id="yney5f"
+read raw body
+check content type
+parse JSON
+handle parse errors
+validate auth headers
+decode token
+extract roles
+load session
 ```
 
-## State is request-scoped
+With middleware, reusable work happens before the handler.
 
-Request state belongs to one request.
+The handler reads the typed result.
 
-It is not global storage.
-
-It is not shared between users.
-
-It is not a database.
-
-It is useful for data produced while handling one request:
-
-```txt
-parsed JSON body
-authenticated user claims
-authorization context
-request id
-timing data
-trace identifiers
-session object loaded for this request
+```cpp id="35tfo9"
+auto &claims = req.state<vix::middleware::auth::JwtClaims>();
+auto &body = req.state<vix::middleware::parsers::JsonBody>();
 ```
 
-For data that must survive across requests, use a real store: session store, cache store, database, file, KV, or another application storage layer.
+This keeps application logic focused.
 
 ## Services
 
-Some middleware needs a service object.
+`Context` also gives access to a services container.
 
-A service is an application-provided dependency stored in the middleware services container.
-
-For example, the request logger middleware expects an implementation of `ILogger`.
-
-```cpp
-struct RequestLogger : vix::middleware::basics::ILogger
-{
-  void info(std::string_view msg) override
-  {
-    vix::log::info("{}", msg);
-  }
-
-  void warn(std::string_view msg) override
-  {
-    vix::log::warn("{}", msg);
-  }
-
-  void error(std::string_view msg) override
-  {
-    vix::log::error("{}", msg);
-  }
-};
+```cpp id="m7ku5f"
+ctx.services()
 ```
 
-This design keeps the middleware generic. The logger middleware knows when to log a request. The application decides where the log line goes.
+Services let middleware share objects without global variables.
 
-Services are also useful for:
+Examples:
 
-```txt
-recovery logging
+```txt id="425aij"
+loggers
+metrics sinks
+permission resolvers
 rate limiter state
-permission resolving
-custom session stores
-custom metrics sinks
+custom application services
 ```
 
-## Why services are not global variables
+A middleware can look up a service:
 
-A global variable is simple at first, but it becomes difficult to test and difficult to replace.
-
-Services make the dependency explicit.
-
-A middleware can ask for:
-
-```cpp
-ctx.services().get<MyService>();
+```cpp id="a69i41"
+auto resolver = ctx.services().get<MyService>();
 ```
 
-If the service exists, the middleware uses it.
+If the service exists, the middleware can use it.
 
-If it does not exist, the middleware can skip optional behavior, use a fallback, or return a configuration error depending on the middleware.
+If it does not, the middleware can fall back, skip optional behavior, or return an error depending on its design.
 
-This is why middleware such as logger and recovery can be tested with small in-memory implementations.
+Services are most useful in lower-level middleware and `HttpPipeline`.
 
-## Errors and normalized responses
+Normal `vix::App` applications often use presets first and only use services for custom integrations.
 
-The middleware module uses a normalized error shape for middleware-generated errors.
+## Normalized errors
 
-A middleware can create an `Error` and send it through `ctx.send_error(...)`.
+Middleware should return predictable errors.
 
-```cpp
-vix::middleware::Error e;
-e.status = 401;
-e.code = "unauthorized";
-e.message = "Missing token";
+The module exposes a normalized error model through:
 
-ctx.send_error(vix::middleware::normalize(std::move(e)));
+```cpp id="vso3gl"
+vix::middleware::Error
+vix::middleware::normalize(...)
+ctx.send_error(...)
 ```
 
-The response is JSON and contains a predictable error structure.
+Example:
 
-This is used by middleware such as:
+```cpp id="oa318l"
+vix::middleware::Error err;
 
-```txt
-body_limit
-api_key
-jwt
-rbac
-csrf
-cors
-rate_limit
-recovery
-parsers
-session
+err.status = 401;
+err.code = "unauthorized";
+err.message = "Missing token";
+err.details["hint"] = "Use Authorization header";
+
+ctx.send_error(vix::middleware::normalize(std::move(err)));
 ```
 
-The exact error code depends on the middleware. For example, a missing API key returns a different code from an invalid JSON body.
+A normalized error lets middleware produce consistent responses.
 
-## Recovery and exceptions
+Common middleware errors include:
 
-A route handler can throw.
+```txt id="z65eqs"
+400 invalid_json
+401 missing_api_key
+401 missing_auth
+403 forbidden
+403 csrf_failed
+411 length_required
+413 payload_too_large
+415 unsupported_media_type
+429 rate_limited
+500 internal_server_error
+```
 
-Without recovery middleware, an exception can escape the pipeline.
+## App integration
 
-`recovery()` catches downstream exceptions and turns them into a normalized `500` response.
+Most reusable middleware is context-based.
 
-```cpp
-app.use(vix::middleware::app::recovery_dev());
+To use it inside `vix::App`, adapt it:
 
-app.get("/boom", [](vix::Request &req, vix::Response &res)
+```cpp id="zz7ag5"
+app.use(vix::middleware::app::adapt_ctx(
+  vix::middleware::basics::request_id()
+));
+```
+
+This converts:
+
+```txt id="fxlz2x"
+MiddlewareFn
+  -> vix::App::Middleware
+```
+
+For legacy HTTP middleware, use `adapt()`.
+
+```cpp id="gqco55"
+app.use(vix::middleware::app::adapt(my_http_middleware));
+```
+
+For normal applications, prefer App presets:
+
+```cpp id="yxsp5a"
+app.use("/api", vix::middleware::app::cors_dev());
+app.use("/api", vix::middleware::app::rate_limit_dev());
+app.use("/api/users", vix::middleware::app::json_strict_dev());
+```
+
+Presets are already adapted for `vix::App`.
+
+## Prefix matching
+
+`vix::App` can install middleware globally:
+
+```cpp id="xkw6mi"
+app.use(middleware);
+```
+
+Or on a prefix:
+
+```cpp id="eemf4e"
+app.use("/api", middleware);
+```
+
+A prefix middleware applies to matching routes.
+
+```cpp id="reoup0"
+app.use("/api", middleware::app::rate_limit_dev());
+```
+
+This applies to:
+
+```txt id="6ct851"
+/api
+/api/users
+/api/admin/status
+```
+
+It does not apply to:
+
+```txt id="w1xik7"
+/admin
+/public
+```
+
+A more specific prefix limits the middleware to a smaller route group.
+
+```cpp id="cimrzs"
+app.use("/api/users", middleware::app::json_strict_dev());
+```
+
+This applies to:
+
+```txt id="pv8cdi"
+/api/users
+/api/users/123
+```
+
+It does not apply to:
+
+```txt id="0u5jvn"
+/api/health
+/api/admin/status
+```
+
+Use prefixes intentionally.
+
+Broad middleware should go on broad prefixes.
+
+Route-specific middleware should go on narrow prefixes.
+
+## Exact path protection
+
+Sometimes a middleware should apply to one exact route.
+
+Use:
+
+```cpp id="tis4d8"
+vix::middleware::app::protect(...)
+```
+
+Example:
+
+```cpp id="g7ymvx"
+vix::middleware::app::protect(
+  app,
+  "/admin",
+  vix::middleware::app::api_key_dev("secret")
+);
+```
+
+This protects:
+
+```txt id="v0d3yb"
+/admin
+```
+
+It does not protect:
+
+```txt id="7uzq8t"
+/admin/settings
+```
+
+For route groups, use prefix protection instead.
+
+```cpp id="1f16q9"
+vix::middleware::app::protect_prefix(
+  app,
+  "/admin",
+  vix::middleware::app::api_key_dev("secret")
+);
+```
+
+## Chaining middleware
+
+A chain combines several App middlewares into one.
+
+```cpp id="99ajg0"
+auto users_stack = vix::middleware::app::chain(
+  vix::middleware::app::body_limit_write_dev(4096),
+  vix::middleware::app::json_strict_dev(4096)
+);
+
+app.use("/api/users", std::move(users_stack));
+```
+
+The chain runs in order.
+
+```txt id="2dsgvg"
+body_limit_write_dev
+  -> json_strict_dev
+  -> handler
+```
+
+Use `chain()` when a route or route group has a clear middleware stack.
+
+## Conditional middleware
+
+Use `when()` when prefix matching is not enough.
+
+```cpp id="b6qwbh"
+auto only_post = vix::middleware::app::when(
+  [](const vix::Request &req)
+  {
+    return req.method() == "POST";
+  },
+  vix::middleware::app::body_limit_write_dev(1024)
+);
+
+app.use("/api", std::move(only_post));
+```
+
+If the predicate returns false, the middleware is skipped.
+
+Use `when()` for conditions such as:
+
+```txt id="r3595z"
+only POST requests
+only a specific content type
+only a specific header
+custom path matching
+custom tenant logic
+```
+
+## HttpPipeline
+
+Most applications should use `vix::App`.
+
+`HttpPipeline` exists for tests, examples, and lower-level integrations.
+
+```cpp id="i7vv6f"
+vix::middleware::HttpPipeline pipeline;
+
+pipeline.use(vix::middleware::security::csrf());
+pipeline.use(vix::middleware::parsers::json());
+
+pipeline.run(req, res, [](auto &req, auto &res)
 {
-  (void)req;
-  (void)res;
-
-  throw std::runtime_error("boom");
+  res.ok().text("OK");
 });
 ```
 
-In development, recovery can include the exception message.
+Use `HttpPipeline` when you want to run middleware without starting a server.
 
-In production, avoid leaking internal exception details to the client.
+It is useful for:
 
-## Hooks
+```txt id="kqay7c"
+unit tests
+middleware tests
+custom HTTP integration
+manual pipeline composition
+observability hooks
+```
 
-The lower-level pipeline supports hooks.
+It is not the default application path.
 
-Hooks run at important moments:
+The default path is still:
 
-```txt
+```txt id="esr7v0"
+vix::App
+  -> app.use(...)
+  -> route handler
+```
+
+## Pipeline hooks
+
+`HttpPipeline` supports hooks.
+
+Common hook points are:
+
+```txt id="qs8vok"
 on_begin
 on_end
 on_error
 ```
 
-They are used by observability features such as tracing, metrics, and debug traces.
-
-For example, tracing hooks can create a trace id when the request begins, then make sure the trace headers are still present when the response ends.
-
-Most application code does not need to call hooks directly. They are useful when building custom integrations or when using `HttpPipeline` directly.
-
-## Middleware and observability
-
-Observability in this module is split into three concerns.
-
-Tracing gives each request a trace id and span id.
-
-Metrics records counters and durations.
-
-Debug trace writes readable begin, end, and error lines for local inspection.
-
-These features can be installed as middleware or as hooks depending on the use case.
-
-```cpp
-vix::middleware::HttpPipeline pipeline;
-
-pipeline.enable_dev_observability();
-```
-
-This is useful for low-level pipeline work. For normal applications, prefer the app integration helpers where possible.
-
-## HttpPipeline
-
-`HttpPipeline` is the lower-level pipeline type.
-
-It stores middleware functions, services, and hooks.
-
-```cpp
-vix::middleware::HttpPipeline pipeline;
-
-pipeline.use(vix::middleware::basics::request_id());
-pipeline.use(vix::middleware::basics::timing());
-```
-
-It can run against a request and response without starting a server.
-
-```cpp
-pipeline.run(req, res, [](vix::middleware::Request &req,
-                          vix::middleware::Response &res)
-{
-  (void)req;
-
-  res.ok().text("OK");
-});
-```
-
-This is useful for tests, custom integrations, and advanced applications.
-
-Most users should start with `vix::App`.
-
-## Legacy HTTP middleware
-
-The module keeps a legacy HTTP middleware signature:
-
-```cpp
-using HttpMiddleware =
-  std::function<void(Request &, Response &, Next)>;
-```
-
-This is useful for middleware that works directly with request and response objects.
-
-The module can adapt between the legacy style and the context-based style.
-
-```cpp
-auto ctx_mw = vix::middleware::from_http_middleware(http_mw);
-```
-
-And the reverse:
-
-```cpp
-auto http_mw = vix::middleware::to_http_middleware(ctx_mw, services);
-```
-
-This keeps older middleware usable while allowing newer middleware to use `Context`.
-
-## App integration
-
-The `vix::middleware::app` namespace contains helpers for `vix::App`.
-
-It adapts context-based middleware to the app middleware model.
-
-```cpp
-app.use(vix::middleware::app::security_headers_dev());
-app.use(vix::middleware::app::cors_dev());
-app.use(vix::middleware::app::rate_limit_dev());
-```
-
-It also provides helpers for protecting exact paths or prefixes.
-
-```cpp
-vix::middleware::app::protect_prefix(
-  app,
-  "/admin",
-  vix::middleware::app::api_key_auth("secret")
-);
-```
-
-Use this namespace when writing normal Vix applications.
-
-## Middleware order
-
-Order is not decoration. It changes what happens.
-
-A middleware that short-circuits should usually run before expensive work.
-
-```txt
-rate_limit
-  -> body parser
-  -> handler
-```
-
-A middleware that depends on parsed data must run after the parser.
-
-```txt
-json parser
-  -> handler reads JsonBody
-```
-
-A middleware that depends on authentication must run after authentication.
-
-```txt
-jwt
-  -> rbac_context
-  -> require_role
-```
-
-A middleware that modifies the final response often wraps the handler.
-
-```txt
-security headers
-  -> handler
-  -> headers added
-```
-
-A good way to reason about order is to ask:
-
-```txt
-Does this middleware need to run before the handler?
-Does it need to wrap the handler?
-Does it need state created by another middleware?
-Can it stop the request early?
-```
-
-The answers determine where it belongs.
-
-## Common ordering examples
-
-For a JSON API, this is a reasonable starting point:
-
-```txt
-recovery
-request_id
-timing
-security_headers
-cors
-rate_limit
-body_limit
-json
-jwt
-rbac_context
-require_role / require_perm
-handler
-```
-
-This is not a universal application template. It is a model for thinking.
-
-CORS may need to run before authentication so browser preflight requests are answered correctly.
-
-Body limits should run before body parsers so large requests are rejected early.
-
-JWT must run before RBAC because RBAC needs JWT claims.
-
-Recovery should wrap middleware and handlers that may throw.
-
-## Relationship with Core
-
-Core owns the application model.
-
-```txt
-vix::App
-routes
-handlers
-Request
-Response
-static files
-server lifecycle
-```
-
-The middleware module adds reusable behavior around that model.
-
-```txt
-security
-parsing
-authentication
-authorization
-caching
-observability
-performance
-request metadata
-```
-
-This separation is important. Static files are mounted through Core with `app.static_dir(...)`. The middleware module can add an optional static compression hook, but it does not replace the static file API.
-
-## Relationship with JSON
-
-The JSON module is the general-purpose JSON API.
-
-It provides helpers for building, parsing, reading, and writing JSON values.
-
-The middleware JSON parser has a narrower job: it parses the HTTP request body and stores the result as `JsonBody`.
-
-After that, your handler can use normal JSON operations.
-
-```cpp
-auto &body = req.state<vix::middleware::parsers::JsonBody>();
-
-res.json({
-  "received", body.value
-});
-```
-
-The parser does not validate your business fields. It only decodes the HTTP body.
-
-## Relationship with Cache
-
-The cache module owns cache storage, cache entries, cache policy, and cache context.
-
-The middleware module provides `http_cache()`, which connects that cache engine to HTTP `GET` requests.
-
-```txt
-vix::cache
-  cache engine
-
-vix::middleware::http_cache
-  HTTP integration
-```
-
-This matters because the cache can use memory, LRU memory, file storage, or a custom store. The middleware does not need to know which store is used.
-
-## Relationship with Log
-
-`vix::log` is the application logging module.
-
-The middleware logger is request logging middleware.
-
-It produces a summary of a handled HTTP request: method, path, status, duration, request id, and optional client metadata.
-
-It does not replace `vix::log`. It can forward to `vix::log` through an `ILogger` implementation.
-
-## Relationship with Time
-
-The time module provides reusable time types such as duration, timestamp, system clock, and steady clock.
-
-The middleware module exposes simple time-related behavior:
-
-```txt
-request timing
-rate limit refill
-cache age
-metrics duration
-periodic tasks
-```
-
-Most middleware users do not need to use `vix::time` directly to install these features.
-
-## Development helpers and production configuration
-
-The app integration namespace includes development helpers such as:
-
-```cpp
-vix::middleware::app::cors_dev();
-vix::middleware::app::rate_limit_dev();
-vix::middleware::app::json_dev();
-```
-
-They are useful for examples, tests, prototypes, and local development.
-
-Production applications should configure middleware explicitly where the defaults matter.
+Hooks are useful for observability.
 
 Examples:
 
-```txt
-allowed CORS origins
-JWT secret and expected issuer
-body size limits
-rate limit capacity and refill rate
-session store and cookie security
-cache policy and storage backend
+```txt id="1q4jpm"
+tracing
+metrics
+debug trace
 ```
 
-The development helpers are a starting point, not a security policy.
+A pipeline can install hooks:
 
-## What this module is not
+```cpp id="hd4wlr"
+vix::middleware::HttpPipeline pipeline;
 
-`vix::middleware` is not an application framework on top of Vix.
+pipeline.set_hooks(
+  vix::middleware::observability::tracing_hooks()
+);
+```
 
-It does not own routing.
+Hooks are lower-level than normal App middleware.
 
-It does not own static files.
+Use them when you need pipeline-level control.
 
-It does not own databases.
+## Static files are outside the middleware chain
 
-It does not own the global logging system.
+Static files are served by `vix::App`.
 
-It does not decide the structure of your application.
+```cpp id="ffhc9g"
+app.static_dir("public", "/", "index.html");
+```
 
-It gives you reusable HTTP components that can be installed where they make sense.
+That is a Core feature.
+
+The middleware module can provide an optional static response hook, for example compression:
+
+```cpp id="pqk9ru"
+vix::App::set_static_response_hook(
+  vix::middleware::performance::compressed_static_response_hook()
+);
+```
+
+The distinction is important:
+
+```txt id="wz8dlo"
+app.use(...)
+  route middleware
+
+app.static_dir(...)
+  static file serving
+
+App::set_static_response_hook(...)
+  optional response enhancement for static files
+```
+
+Do not think of static files as middleware.
+
+Core serves them.
+
+Middleware can enhance the response after Core writes it.
+
+## A complete mental model
+
+For a dynamic API route:
+
+```txt id="vfcpq9"
+request
+  -> App prefix matching
+  -> middleware chain
+  -> route handler
+  -> after-next middleware work
+  -> response
+```
+
+For a blocked request:
+
+```txt id="tssoii"
+request
+  -> middleware chain
+  -> middleware sends error
+  -> response
+```
+
+For a cached GET response:
+
+```txt id="ha9k5s"
+request
+  -> HTTP cache middleware
+  -> cache hit
+  -> cached response
+```
+
+For a static file:
+
+```txt id="4iv6yf"
+request
+  -> Core static file resolution
+  -> file response
+  -> optional static response hook
+  -> response
+```
+
+This is the separation to remember:
+
+```txt id="52ndwl"
+Core owns the app and file serving.
+Middleware owns reusable HTTP behavior.
+App integration connects them.
+```
 
 ## Summary
 
-Middleware runs around HTTP handlers.
+The middleware model is built on a few simple ideas:
 
-`next()` continues the request.
+```txt id="3v3ajf"
+middleware wraps handlers
+next() continues the request
+not calling next() stops the request
+middleware order matters
+typed state carries parsed/authenticated data
+App presets are the normal user-facing API
+adapt_ctx() connects lower-level middleware to vix::App
+HttpPipeline is for tests and custom integrations
+static files belong to Core
+```
 
-Not calling `next()` stops the request.
-
-Typed request state lets middleware pass parsed or computed data to later middleware and handlers.
-
-Services let middleware use application-provided dependencies without hardcoding global behavior.
-
-`vix::App` is the normal entry point for applications.
-
-`HttpPipeline` is the lower-level entry point for tests and custom integrations.
-
-The rest of the module is built on these ideas.
-
-## Next steps
-
-Continue with:
-
-- [Basics](./basics)
-- [Security](./security)
-- [Authentication](./authentication)
-- [Parsers](./parsers)
-- [Performance](./performance)
-- [Observability](./observability)
-- [App Integration](./app-integration)
+Once these ideas are clear, the rest of the module is just a set of reusable backend components.

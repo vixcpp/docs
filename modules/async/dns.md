@@ -455,12 +455,12 @@ auto addresses = co_await resolver->async_resolve(
 
 ## DNS API summary
 
-| API | Purpose |
-|---|---|
-| `make_dns_resolver(ctx)` | Creates a DNS resolver. |
-| `dns_resolver` | Abstract async resolver interface. |
-| `resolved_address` | Represents one resolved IP and port. |
-| `async_resolve(host, port, token)` | Resolves a hostname asynchronously. |
+| API                                | Purpose                              |
+| ---------------------------------- | ------------------------------------ |
+| `make_dns_resolver(ctx)`           | Creates a DNS resolver.              |
+| `dns_resolver`                     | Abstract async resolver interface.   |
+| `resolved_address`                 | Represents one resolved IP and port. |
+| `async_resolve(host, port, token)` | Resolves a hostname asynchronously.  |
 
 ## Common workflows
 
@@ -615,15 +615,15 @@ Use DNS before TCP when you start with a hostname. Check whether the returned ad
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context. |
-| [Tasks](/modules/async/tasks) | Learn coroutine tasks. |
-| [Timers](/modules/async/timers) | Learn timeout-style flows. |
-| [Cancellation](/modules/async/cancellation) | Learn cancellation tokens. |
-| [TCP](/modules/async/tcp) | Learn TCP streams and listeners. |
-| [UDP](/modules/async/udp) | Learn UDP sockets. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                          |
+| --------------------------------------------- | -------------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context.       |
+| [Tasks](/modules/async/tasks)                 | Learn coroutine tasks.           |
+| [Timers](/modules/async/timers)               | Learn timeout-style flows.       |
+| [Cancellation](/modules/async/cancellation)   | Learn cancellation tokens.       |
+| [TCP](/modules/async/tcp)                     | Learn TCP streams and listeners. |
+| [UDP](/modules/async/udp)                     | Learn UDP sockets.               |
+| [API Reference](/modules/async/api-reference) | See the public API surface.      |
 
 ## Next step
 

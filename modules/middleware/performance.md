@@ -1,609 +1,812 @@
 # Performance
 
-The `performance` group contains middleware for response optimization.
+The `performance` group improves HTTP response efficiency.
 
-It provides response compression, ETag generation, and optional compression hooks for static file responses served by `vix::App`.
+It helps with:
 
-For most application code, include:
-
-```cpp id="t9xgqm"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
+```txt id="p4cyr3"
+compressing dynamic route responses
+adding ETags
+returning 304 Not Modified
+compressing eligible static file responses through a hook
 ```
 
-The performance middleware lives under:
+This page is about response performance around HTTP routes.
 
-```cpp id="3q5nrt"
-namespace vix::middleware::performance
+It does not replace routing, static file serving, or caching.
+
+Core still owns:
+
+```txt id="d4n4rv"
+routes
+handlers
+static files
+templates
+server lifecycle
 ```
 
-When using `vix::App`, prefer the helpers under:
-
-```cpp id="v58q0s"
-namespace vix::middleware::app
-```
+The middleware module adds reusable performance behavior around responses.
 
 ## What performance provides
 
 The performance group includes:
 
-```txt id="w8o42v"
-compression()
-  compresses eligible HTTP responses
+| Feature                  | Purpose                                                     |
+| ------------------------ | ----------------------------------------------------------- |
+| `compression()`          | Compress dynamic route responses when the client accepts it |
+| `etag()`                 | Generate ETags for GET and HEAD responses                   |
+| `static_compression.hpp` | Provide an optional static response compression hook        |
 
-etag()
-  adds ETag support for cache validation
+The main namespace is:
 
-static_compression()
-  provides a compression hook for static file responses
+```cpp id="ijk12q"
+namespace vix::middleware::performance
 ```
 
-These middleware functions do not change your routing model. They run around normal Vix handlers and responses.
+When using `vix::App`, use the App adapter when a direct App preset is not available:
 
-Core still owns routes, handlers, response objects, and static file serving. The performance middleware adds optional response optimization.
-
-## Basic setup
-
-A small application can use ETag and compression around API responses.
-
-```cpp id="ybc3mt"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::etag_dev());
-  app.use(vix::middleware::app::compression_dev());
-
-  app.get("/api/status", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.json({
-      "status", "ok",
-      "server", "Vix.cpp"
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
+```cpp id="fmzn1j"
+vix::middleware::app::adapt_ctx(...)
 ```
 
-The route handler remains normal. The middleware decides what can be optimized after the handler produces the response.
+## Performance vs HTTP cache
 
-## Response middleware
+Performance middleware and HTTP cache solve different problems.
 
-Most performance middleware calls `next()` first.
+```txt id="zeljxp"
+HTTP cache
+  stores dynamic GET responses server-side
+  can skip the handler on cache hit
 
-```txt id="p2zjs9"
-request
-  -> performance middleware
-  -> handler
-  -> response body exists
-  -> middleware modifies response
+compression
+  reduces response body size
+
+ETag
+  lets clients revalidate a response
+  can return 304 Not Modified
+
+static response hook
+  can compress files served by app.static_dir(...)
 ```
 
-This is necessary because middleware such as `etag()` and `compression()` need the final response body before they can work.
+Use them together when appropriate, but keep their roles separate.
 
-For example:
+## Recommended order
 
-```txt id="v6cbyz"
-etag()
-  needs the response body to compute the tag
+A practical route stack can look like this:
 
-compression()
-  needs the response body to compress it
+```cpp id="krgo6p"
+app.use("/api", middleware::app::security_headers_dev());
+app.use("/api", middleware::app::rate_limit_dev());
+
+app.use("/api", middleware::app::http_cache({
+  .ttl_ms = 30'000
+}));
+
+app.use("/api", middleware::app::adapt_ctx(
+  middleware::performance::etag()
+));
+
+app.use("/api", middleware::app::adapt_ctx(
+  middleware::performance::compression()
+));
 ```
 
-This is different from middleware such as `rate_limit()` or `api_key()`, which can decide before the handler runs.
+The idea is:
+
+```txt id="zcejrx"
+HTTP cache
+  may replay a response and skip the handler
+
+ETag
+  can validate the final body
+
+compression
+  can reduce the final response body
+```
+
+The exact order depends on how your application writes responses and how you want to combine cache validation and compression.
+
+Start simple.
+
+Add one performance feature at a time, test headers, then combine them.
 
 ## Compression
 
-`compression()` compresses eligible responses when the client accepts a supported encoding.
+`compression()` compresses dynamic route responses when the client sends an acceptable `Accept-Encoding` header.
 
-The client advertises supported encodings with:
+It is useful for:
 
-```txt id="2fgo8n"
-Accept-Encoding: gzip
+```txt id="t9yub7"
+large JSON responses
+HTML responses
+text responses
+API lists
+generated documents
 ```
 
-The middleware can then add:
+It should not be confused with static file compression.
 
-```txt id="tcq81k"
-Content-Encoding: gzip
-Vary: Accept-Encoding
+This middleware runs in the normal App middleware chain.
+
+```txt id="3nzjya"
+request
+  -> route middleware
+  -> handler writes response
+  -> compression middleware may compress response
+  -> response
 ```
 
-when compression is applied.
+## Dynamic compression example
 
-Compression is useful for text-based responses such as JSON, HTML, CSS, JavaScript, and plain text.
+```cpp id="tfr2sa"
+#include <string>
 
-It is usually not useful for already-compressed formats such as many images, archives, or media files.
-
-## Use compression with App
-
-```cpp id="edrbfl"
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
+using namespace vix;
+
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use(vix::middleware::app::compression_dev());
+  app.use(middleware::app::adapt_ctx(
+    middleware::performance::compression({
+      .min_size = 8,
+      .add_vary = true,
+      .enabled = true
+    })
+  ));
 
-  app.get("/api/data", [](vix::Request &req, vix::Response &res)
+  app.get("/", [](Request &, Response &res)
   {
-    (void)req;
+    res.text("Compression middleware installed. Try /large.");
+  });
 
-    res.json({
-      "message", "Hello from Vix",
-      "type", "compressed when eligible"
-    });
+  app.get("/large", [](Request &, Response &res)
+  {
+    res.status(200).text(std::string(2048, 'a'));
+  });
+
+  app.get("/small", [](Request &, Response &res)
+  {
+    res.status(200).text("small");
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-Request shape:
+Run:
 
-```bash id="kod475"
+```bash id="vl6g6e"
+vix run compression_demo.cpp
+```
+
+Request without compression:
+
+```bash id="snla4s"
+curl -i http://127.0.0.1:8080/large
+```
+
+Request with compression support:
+
+```bash id="hugj00"
+curl -i \
+  http://127.0.0.1:8080/large \
+  -H "Accept-Encoding: gzip"
+```
+
+Small response:
+
+```bash id="vfgyhu"
+curl -i \
+  http://127.0.0.1:8080/small \
+  -H "Accept-Encoding: gzip"
+```
+
+The small response may not be compressed because it is below `min_size`.
+
+## Compression options
+
+Main options:
+
+| Option       | Purpose                                            |
+| ------------ | -------------------------------------------------- |
+| `min_size`   | Minimum body size before compression is considered |
+| `add_vary`   | Add `Vary: Accept-Encoding`                        |
+| `enabled`    | Enable or disable compression                      |
+| `gzip_level` | Compression level when gzip support is available   |
+
+Example:
+
+```cpp id="qbjag7"
+vix::middleware::performance::CompressionOptions opt;
+
+opt.min_size = 1024;
+opt.add_vary = true;
+opt.enabled = true;
+
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::performance::compression(opt)
+));
+```
+
+Use a minimum size to avoid wasting CPU on tiny responses.
+
+A practical starting value is:
+
+```txt id="spqb4d"
+1024 bytes
+```
+
+## Vary header
+
+When compression depends on `Accept-Encoding`, the response should include:
+
+```txt id="ychs3w"
+Vary: Accept-Encoding
+```
+
+This tells caches that the response can differ depending on the request's `Accept-Encoding` header.
+
+Enable it with:
+
+```cpp id="k2s1jc"
+.add_vary = true
+```
+
+This is usually the correct default for compressed responses.
+
+## When not to compress
+
+Avoid compression for:
+
+```txt id="hi3161"
+very small responses
+already compressed data
+streaming responses
+CPU-sensitive endpoints under heavy load
+responses where latency matters more than bandwidth
+```
+
+Examples of already compressed data:
+
+```txt id="z49j3x"
+jpg
+png
+webp
+zip
+gz
+mp4
+```
+
+For static files, prefer pre-compressed assets at the deployment layer when possible.
+
+Use Vix static response compression when you want Vix itself to handle eligible static responses.
+
+## ETag
+
+`etag()` generates an entity tag for successful GET and HEAD responses.
+
+The ETag lets a client ask:
+
+```txt id="gk9n4a"
+Has this response changed since the last time I fetched it?
+```
+
+If the client sends `If-None-Match` and the tag matches, the middleware can return:
+
+```txt id="twk7tm"
+304 Not Modified
+```
+
+This avoids sending the body again.
+
+## ETag example
+
+```cpp id="fnkbh8"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use(middleware::app::adapt_ctx(
+    middleware::performance::etag({
+      .weak = true,
+      .add_cache_control_if_missing = false,
+      .min_body_size = 1
+    })
+  ));
+
+  app.get("/article", [](Request &, Response &res)
+  {
+    res.text("Hello from Vix");
+  });
+
+  app.run(8080);
+}
+```
+
+Run:
+
+```bash id="alnl37"
+vix run etag_demo.cpp
+```
+
+First request:
+
+```bash id="v7d8bo"
+curl -i http://127.0.0.1:8080/article
+```
+
+Look for:
+
+```txt id="rt9fix"
+ETag: ...
+```
+
+Then revalidate with that value:
+
+```bash id="tp1596"
+curl -i \
+  http://127.0.0.1:8080/article \
+  -H 'If-None-Match: <etag-value>'
+```
+
+If the ETag matches, expected status:
+
+```txt id="v5o15g"
+304 Not Modified
+```
+
+## ETag options
+
+Main options:
+
+| Option                         | Purpose                                         |
+| ------------------------------ | ----------------------------------------------- |
+| `weak`                         | Generate weak ETags such as `W/"..."`           |
+| `add_cache_control_if_missing` | Add a default `Cache-Control` header if missing |
+| `cache_control`                | Cache-Control value to add when enabled         |
+| `min_body_size`                | Minimum body size before adding an ETag         |
+
+Example:
+
+```cpp id="r9tc8x"
+vix::middleware::performance::EtagOptions opt;
+
+opt.weak = true;
+opt.add_cache_control_if_missing = true;
+opt.cache_control = "public, max-age=0";
+opt.min_body_size = 1;
+
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::performance::etag(opt)
+));
+```
+
+Use ETags when clients may repeatedly fetch the same response and can benefit from revalidation.
+
+## ETag vs HTTP cache
+
+ETag does not skip your route handler by itself in the same way server-side HTTP cache can.
+
+ETag helps the client avoid downloading the body when it already has the latest version.
+
+```txt id="hlnaeh"
+HTTP cache middleware
+  server stores response
+  cache hit can skip handler
+
+ETag middleware
+  response gets a validation tag
+  client can revalidate
+  server can return 304
+```
+
+They can complement each other.
+
+Use HTTP cache for server-side reuse.
+
+Use ETag for client-side revalidation.
+
+## Static response compression
+
+Static file serving belongs to `vix::App`.
+
+Use:
+
+```cpp id="kod1mt"
+app.static_dir(
+  "public",
+  "/",
+  "index.html",
+  true,
+  "public, max-age=3600",
+  true,
+  false
+);
+```
+
+Core handles:
+
+```txt id="fvxgy8"
+public directory
+mount path
+index file
+Cache-Control
+fallthrough
+SPA fallback
+file response
+```
+
+The middleware module can provide an optional hook after a static file response has been written.
+
+That hook can compress eligible static file responses.
+
+```cpp id="l37ol6"
+vix::App::set_static_response_hook(
+  vix::middleware::performance::compressed_static_response_hook()
+);
+```
+
+This is not route middleware.
+
+It is a static response hook.
+
+## Static compression with options
+
+Use the same compression options when you want dynamic and static responses to follow the same compression policy.
+
+```cpp id="8us72s"
+vix::middleware::performance::CompressionOptions compression_options{
+  .min_size = 1024,
+  .add_vary = true,
+  .enabled = true
+};
+
+app.use(vix::middleware::app::adapt_ctx(
+  vix::middleware::performance::compression(compression_options)
+));
+
+vix::App::set_static_response_hook(
+  vix::middleware::performance::compressed_static_response_hook(compression_options)
+);
+
+app.static_dir(
+  "public",
+  "/",
+  "index.html",
+  true,
+  "public, max-age=3600",
+  true,
+  false
+);
+```
+
+This does two different things:
+
+```txt id="gc083j"
+app.use(compression(...))
+  compresses dynamic route responses
+
+App::set_static_response_hook(...)
+  compresses eligible static file responses served by app.static_dir(...)
+```
+
+Keep those responsibilities separate.
+
+## Configuration-driven static compression
+
+Generated applications may wire static behavior from environment or config values.
+
+Example configuration:
+
+```dotenv id="jm73yh"
+PUBLIC_PATH=public
+PUBLIC_MOUNT=/
+PUBLIC_INDEX=index.html
+PUBLIC_CACHE_CONTROL=public, max-age=3600
+PUBLIC_SPA_FALLBACK=false
+PUBLIC_COMPRESSION=false
+PUBLIC_COMPRESSION_MIN_SIZE=1024
+```
+
+Bootstrap code can read those values and wire Core plus the optional middleware hook.
+
+```cpp id="p17sn9"
+const std::string publicPath = cfg.getString("public.path", "public");
+const std::string publicMount = cfg.getString("public.mount", "/");
+const std::string publicIndex = cfg.getString("public.index", "index.html");
+const std::string publicCacheControl =
+  cfg.getString("public.cache_control", "public, max-age=3600");
+
+const bool publicSpaFallback = cfg.getBool("public.spa_fallback", false);
+const bool publicCompression = cfg.getBool("public.compression", false);
+const int publicCompressionMinSize =
+  cfg.getInt("public.compression_min_size", 1024);
+
+if (publicCompression)
+{
+  const auto compressionOptions =
+    vix::middleware::performance::CompressionOptions{
+      .min_size = static_cast<std::size_t>(publicCompressionMinSize),
+      .add_vary = true,
+      .enabled = true
+    };
+
+  app.use(vix::middleware::app::adapt_ctx(
+    vix::middleware::performance::compression(compressionOptions)
+  ));
+
+  vix::App::set_static_response_hook(
+    vix::middleware::performance::compressed_static_response_hook(compressionOptions)
+  );
+}
+
+app.static_dir(
+  publicPath,
+  publicMount,
+  publicIndex,
+  true,
+  publicCacheControl,
+  true,
+  publicSpaFallback
+);
+```
+
+The model is:
+
+```txt id="y37sdk"
+Core reads static file configuration through app.static_dir(...)
+Middleware contributes compression only when enabled
+Bootstrap connects configuration to both
+```
+
+## Static files are not middleware
+
+Do not describe static file serving as a middleware feature.
+
+This is Core:
+
+```cpp id="eymwdn"
+app.static_dir(...)
+```
+
+This is middleware enhancement:
+
+```cpp id="qq5pge"
+vix::App::set_static_response_hook(
+  vix::middleware::performance::compressed_static_response_hook()
+);
+```
+
+This is route middleware:
+
+```cpp id="z9sft4"
+app.use(vix::middleware::app::adapt_ctx(
+  vix::middleware::performance::compression()
+));
+```
+
+The distinction matters:
+
+```txt id="jkog6j"
+app.static_dir(...)
+  serves files
+
+app.use(compression(...))
+  compresses dynamic route responses
+
+set_static_response_hook(...)
+  can compress static file responses after Core writes them
+```
+
+## Compression and ETag together
+
+Compression and ETag can both touch the response body or headers.
+
+When combining them, test the actual headers returned by your application.
+
+A simple starting point is:
+
+```cpp id="v8h4ka"
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::performance::etag()
+));
+
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::performance::compression()
+));
+```
+
+Then inspect:
+
+```bash id="gg1i7s"
 curl -i \
   http://127.0.0.1:8080/api/data \
   -H "Accept-Encoding: gzip"
 ```
 
-If the response is eligible and gzip support is available in the build, the middleware can compress the response.
+Check:
 
-## Compression eligibility
-
-Compression should only run when the response is worth compressing.
-
-The middleware checks conditions such as:
-
-```txt id="liif92"
-compression is enabled
-the response status can be compressed
-the response is not already encoded
-the body is large enough
-the client accepts a supported encoding
-the build has the required compression backend
+```txt id="c2qf3t"
+ETag
+Vary
+Content-Encoding
+status code
+body behavior
 ```
 
-This avoids wasting CPU on tiny responses or responses that should not be compressed.
+If your deployment already compresses responses at Nginx, CDN, or another proxy, avoid double compression.
 
-## Configure compression
+Use one compression layer deliberately.
 
-Use `CompressionOptions` when you need explicit behavior.
+## Complete dynamic performance example
 
-```cpp id="1j7bzt"
-vix::middleware::performance::CompressionOptions opt;
+```cpp id="ywa7r6"
+#include <string>
 
-opt.enabled = true;
-opt.min_size = 1024;
-opt.add_vary = true;
-opt.gzip_level = 6;
-
-auto mw = vix::middleware::performance::compression(opt);
-```
-
-Common options:
-
-```txt id="hgtubf"
-enabled
-  enable or disable response compression
-
-min_size
-  minimum body size before compression is attempted
-
-add_vary
-  add Vary: Accept-Encoding
-
-gzip_level
-  gzip compression level when gzip support is available
-```
-
-Choose `min_size` carefully. Compressing very small responses can cost more than it saves.
-
-## Compression and build support
-
-The middleware can only apply gzip compression when the build has gzip support enabled.
-
-When gzip support is not available, the middleware can still keep the response valid. In debug builds, it may expose diagnostic headers to show that compression was planned but not applied.
-
-This makes the behavior clear during development without breaking production responses.
-
-## ETag
-
-`etag()` adds an `ETag` header to eligible responses.
-
-An ETag is a response validator. The client can later send the ETag back with:
-
-```txt id="dj5rte"
-If-None-Match: <etag>
-```
-
-If the response has not changed, the middleware can return:
-
-```txt id="bhu5oc"
-304 Not Modified
-```
-
-with an empty body.
-
-This reduces bandwidth for clients that already have a valid copy of the response.
-
-## Use ETag with App
-
-```cpp id="2sx7tn"
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
+using namespace vix;
+
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use(vix::middleware::app::etag_dev());
+  app.use("/api", middleware::app::security_headers_dev());
 
-  app.get("/api/version", [](vix::Request &req, vix::Response &res)
+  app.use("/api", middleware::app::adapt_ctx(
+    middleware::performance::etag({
+      .weak = true,
+      .add_cache_control_if_missing = true,
+      .cache_control = "public, max-age=0",
+      .min_body_size = 1
+    })
+  ));
+
+  app.use("/api", middleware::app::adapt_ctx(
+    middleware::performance::compression({
+      .min_size = 1024,
+      .add_vary = true,
+      .enabled = true
+    })
+  ));
+
+  app.get("/api/data", [](Request &, Response &res)
   {
-    (void)req;
+    res.status(200).text(std::string(4096, 'x'));
+  });
 
+  app.run(8080);
+}
+```
+
+Run:
+
+```bash id="xslq1u"
+vix run performance_demo.cpp
+```
+
+Request normally:
+
+```bash id="m7nfv2"
+curl -i http://127.0.0.1:8080/api/data
+```
+
+Request with gzip support:
+
+```bash id="vvox0h"
+curl -i \
+  http://127.0.0.1:8080/api/data \
+  -H "Accept-Encoding: gzip"
+```
+
+Revalidate with ETag:
+
+```bash id="yxbn5w"
+curl -i \
+  http://127.0.0.1:8080/api/data \
+  -H 'If-None-Match: <etag-value>'
+```
+
+## Complete static compression example
+
+```cpp id="da3pg3"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  vix::middleware::performance::CompressionOptions options{
+    .min_size = 1024,
+    .add_vary = true,
+    .enabled = true
+  };
+
+  vix::App::set_static_response_hook(
+    vix::middleware::performance::compressed_static_response_hook(options)
+  );
+
+  app.static_dir(
+    "public",
+    "/",
+    "index.html",
+    true,
+    "public, max-age=3600",
+    true,
+    true
+  );
+
+  app.get("/api/health", [](Request &, Response &res)
+  {
     res.json({
-      "version", "1.0.0"
+      "ok", true
     });
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-First request:
+This example only enables static response compression.
 
-```bash id="2ypglv"
-curl -i http://127.0.0.1:8080/api/version
+It does not install dynamic route compression.
+
+To compress dynamic routes too, also add:
+
+```cpp id="cvd4ps"
+app.use(vix::middleware::app::adapt_ctx(
+  vix::middleware::performance::compression(options)
+));
 ```
-
-Response shape:
-
-```txt id="deigul"
-HTTP/1.1 200 OK
-ETag: W/"..."
-```
-
-Second request:
-
-```bash id="ruft6z"
-curl -i \
-  http://127.0.0.1:8080/api/version \
-  -H 'If-None-Match: W/"..."'
-```
-
-Response shape when the tag matches:
-
-```txt id="om32tw"
-HTTP/1.1 304 Not Modified
-ETag: W/"..."
-```
-
-## ETag behavior
-
-The middleware runs after the handler.
-
-It computes a tag from the response body and writes the `ETag` header.
-
-If the request contains `If-None-Match` and the value matches the computed tag, the middleware changes the response to `304` and clears the body.
-
-This is useful for stable responses such as:
-
-```txt id="go1kdu"
-configuration data
-version endpoints
-static JSON responses
-small metadata endpoints
-generated content that changes rarely
-```
-
-## Configure ETag
-
-Use `EtagOptions` when you need explicit behavior.
-
-```cpp id="4v5n3g"
-vix::middleware::performance::EtagOptions opt;
-
-opt.weak = true;
-opt.min_body_size = 1;
-opt.add_cache_control_if_missing = true;
-opt.cache_control = "public, max-age=0";
-
-auto mw = vix::middleware::performance::etag(opt);
-```
-
-Main options:
-
-```txt id="o6op9x"
-weak
-  generate weak ETags when true
-
-min_body_size
-  minimum response body size before an ETag is generated
-
-add_cache_control_if_missing
-  add Cache-Control when the response does not already have one
-
-cache_control
-  Cache-Control value to add when enabled
-```
-
-Weak ETags are a good default for many dynamic responses because they identify semantic equivalence without promising byte-for-byte identity in every situation.
-
-## Methods supported by ETag
-
-The ETag middleware applies to:
-
-```txt id="s8qd70"
-GET
-HEAD
-```
-
-It skips other methods.
-
-This is intentional. ETag validation is normally useful for cacheable read responses, not state-changing requests.
-
-## Compression and ETag order
-
-Compression and ETag both work on the response body.
-
-The order can matter because an ETag may describe either the original body or the encoded body depending on where it runs in the chain.
-
-A simple development setup can install ETag and compression together, but production applications should decide the desired behavior explicitly.
-
-A common approach is:
-
-```txt id="5kjv3w"
-handler produces body
-etag computes validator
-compression encodes final response
-```
-
-The exact setup depends on how you want clients and caches to validate responses.
-
-## Static file compression
-
-Core serves static files through `vix::App`.
-
-```cpp id="d7ryrm"
-app.static_dir("public", "/");
-```
-
-The middleware module does not replace `static_dir`.
-
-It provides an optional static response hook that can compress eligible static file responses after Core has produced them.
-
-This keeps the separation clean:
-
-```txt id="ji7qzq"
-Core
-  owns static file mounting and serving
-
-Middleware performance
-  provides optional compression for static responses
-```
-
-## Enable static compression hook
-
-```cpp id="wxi81c"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::middleware::register_static_dir();
-
-  vix::App app;
-
-  app.static_dir("public", "/");
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-The static directory is still configured with `app.static_dir(...)`.
-
-The middleware hook only adds compression behavior when the response is eligible.
-
-## Static compression behavior
-
-Static compression checks similar conditions to normal response compression.
-
-It skips responses such as:
-
-```txt id="3d5k4y"
-HEAD requests
-non-2xx responses
-responses that already have Content-Encoding
-responses smaller than the configured minimum size
-responses where the client does not accept gzip
-```
-
-When gzip is available and the client accepts it, the hook can set:
-
-```txt id="2hujc5"
-Content-Encoding: gzip
-Vary: Accept-Encoding
-```
-
-The hook is intentionally optional. Applications that do not need static compression can keep using `app.static_dir(...)` normally.
-
-## Configure static compression
-
-The static compression hook uses `CompressionOptions`.
-
-```cpp id="s63oe7"
-vix::App::set_static_response_hook(
-  vix::middleware::performance::compressed_static_response_hook({
-    .enabled = true,
-    .min_size = 1024,
-    .add_vary = true,
-    .gzip_level = 6
-  })
-);
-```
-
-This is lower-level than the default registration helper. Use it when you need explicit compression options.
-
-## Static files still belong to Core
-
-Do not document static file serving as a middleware feature.
-
-The correct user-facing model is:
-
-```cpp id="6cybqa"
-app.static_dir("public", "/");
-```
-
-The performance module can optimize the response after Core serves it.
-
-This matters because users should not think they need the middleware module just to serve files. They need Core for static files. They need middleware only for optional static response compression.
-
-## HTTP cache and performance
-
-HTTP caching is documented separately because it depends on the `vix::cache` module.
-
-Still, it is related to performance.
-
-A common response optimization stack can include:
-
-```txt id="qvlfoh"
-http_cache
-etag
-compression
-```
-
-Each one solves a different problem.
-
-```txt id="krr4cl"
-http_cache
-  avoids recomputing or refetching a response
-
-etag
-  lets clients validate whether their copy is still current
-
-compression
-  reduces response size over the network
-```
-
-Use them intentionally. Do not enable every optimization everywhere without knowing what the route returns.
-
-## Middleware order
-
-Performance middleware usually needs the final response body, so it often wraps the handler.
-
-A simple order can be:
-
-```txt id="2vdgjw"
-request middleware
-  -> handler
-  -> etag
-  -> compression
-  -> response
-```
-
-In code, wrapper order depends on how middleware calls `next()` and performs work after it returns.
-
-The important rule is:
-
-```txt id="5gcmt5"
-Middleware that needs the final body must run after the handler has written it.
-```
-
-For most application code, use the app helpers first. Move to explicit low-level configuration when response semantics matter.
-
-## Common response headers
-
-Performance middleware may add or modify headers such as:
-
-```txt id="del6hq"
-ETag
-If-None-Match
-Cache-Control
-Vary
-Content-Encoding
-Content-Length
-X-Vix-Compression
-X-Vix-Static-Compression
-```
-
-Debug-only diagnostic headers should not be treated as a public API.
-
-## Development and production
-
-Development helpers are useful for examples and local testing.
-
-```cpp id="gce0rz"
-app.use(vix::middleware::app::etag_dev());
-app.use(vix::middleware::app::compression_dev());
-```
-
-Production applications should configure performance behavior based on their traffic and response types.
-
-Important production decisions include:
-
-```txt id="ln5sgp"
-minimum compression size
-compression level
-which content types should be compressed
-whether ETags should be weak or strong
-whether Cache-Control should be added
-whether static responses should be compressed
-whether the build includes gzip support
-how ETag and compression order should behave
-```
-
-Performance middleware should improve the response path without making response semantics unclear.
-
-## What this module does not do
-
-The performance group does not replace a CDN.
-
-It does not replace HTTP cache policy design.
-
-It does not serve static files by itself.
-
-It does not decide which responses are safe to cache.
-
-It does not optimize database queries.
-
-It does not remove the need to measure performance.
-
-It provides HTTP response optimizations that can be applied where they make sense.
 
 ## Summary
 
-`compression()` compresses eligible responses when the client accepts a supported encoding.
+Use the performance group to reduce repeated transfer cost and improve HTTP response behavior.
 
-`etag()` generates response validators and can return `304 Not Modified` for matching requests.
+Use:
 
-`static_compression()` adds optional compression behavior to static file responses served by Core.
+```cpp id="jdlwif"
+compression()
+```
 
-Use these middleware functions after you understand the response produced by the route. Performance middleware is most useful when it is applied intentionally, not globally by habit.
+for dynamic route responses.
 
-## Next steps
+Use:
 
-Continue with:
+```cpp id="nuck43"
+etag()
+```
 
-- [Observability](./observability)
-- [HTTP Cache](./http-cache)
-- [App Integration](./app-integration)
-- [API Reference](./api-reference)
+for client revalidation.
+
+Use:
+
+```cpp id="va1doe"
+compressed_static_response_hook()
+```
+
+to enhance static file responses served by Core.
+
+Remember the separation:
+
+```txt id="e2yvdz"
+HTTP cache skips repeated dynamic handler work
+Compression reduces body size
+ETag enables client revalidation
+Core serves static files
+Middleware can enhance static responses
+```

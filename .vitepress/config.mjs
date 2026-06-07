@@ -452,6 +452,61 @@ const vixApp = {
   ],
 };
 
+const middleware = {
+  text: "Middleware",
+  collapsed: false,
+  items: [
+    {
+      text: "Overview",
+      link: "/modules/middleware/",
+    },
+    {
+      text: "Quick Start",
+      link: "/modules/middleware/quick-start",
+    },
+    {
+      text: "App Integration",
+      link: "/modules/middleware/app-integration",
+    },
+    {
+      text: "Core Concepts",
+      link: "/modules/middleware/concepts",
+    },
+    {
+      text: "Basics",
+      link: "/modules/middleware/basics",
+    },
+    {
+      text: "Security",
+      link: "/modules/middleware/security",
+    },
+    {
+      text: "Authentication",
+      link: "/modules/middleware/authentication",
+    },
+    {
+      text: "Parsers",
+      link: "/modules/middleware/parsers",
+    },
+    {
+      text: "HTTP Cache",
+      link: "/modules/middleware/http-cache",
+    },
+    {
+      text: "Performance",
+      link: "/modules/middleware/performance",
+    },
+    {
+      text: "Observability",
+      link: "/modules/middleware/observability",
+    },
+    {
+      text: "API Reference",
+      link: "/modules/middleware/api-reference",
+    },
+  ],
+};
+
 const cli = {
   text: "CLI",
   collapsed: true,
@@ -697,51 +752,142 @@ const cli = {
 
 const examples = {
   text: "Examples",
-  collapsed: true,
+  collapsed: false,
   items: [
     {
       text: "Overview",
       link: "/examples/",
     },
+
     {
-      text: "Hello HTTP",
-      link: "/examples/hello-http",
+      text: "Getting Started",
+      collapsed: false,
+      items: [
+        {
+          text: "Hello App",
+          link: "/examples/hello-app",
+        },
+        {
+          text: "JSON API",
+          link: "/examples/json-api",
+        },
+        {
+          text: "Production Bootstrap",
+          link: "/examples/production-bootstrap",
+        },
+      ],
     },
-    {
-      text: "JSON API",
-      link: "/examples/json-api",
-    },
+
     {
       text: "Middleware",
-      link: "/examples/middleware",
+      collapsed: false,
+      items: [
+        {
+          text: "Middleware API",
+          link: "/examples/middleware-api",
+        },
+        {
+          text: "HTTP Cache",
+          link: "/examples/http-cache",
+        },
+      ],
     },
+
+    {
+      text: "Request Parsing",
+      collapsed: true,
+      items: [
+        {
+          text: "Multipart Upload",
+          link: "/examples/multipart-upload",
+        },
+        {
+          text: "Form Parser",
+          link: "/examples/form-parser",
+        },
+      ],
+    },
+
+    {
+      text: "Sessions and Cookies",
+      collapsed: true,
+      items: [
+        {
+          text: "Cookies",
+          link: "/examples/cookies",
+        },
+        {
+          text: "Session Counter",
+          link: "/examples/session-counter",
+        },
+      ],
+    },
+
     {
       text: "Authentication",
-      link: "/examples/auth",
+      collapsed: true,
+      items: [
+        {
+          text: "API Key Auth",
+          link: "/examples/auth-api-key",
+        },
+        {
+          text: "JWT Auth",
+          link: "/examples/auth-jwt",
+        },
+        {
+          text: "RBAC",
+          link: "/examples/auth-rbac",
+        },
+      ],
     },
+
+    {
+      text: "Static Files",
+      collapsed: false,
+      items: [
+        {
+          text: "Static Site",
+          link: "/examples/static-site",
+        },
+      ],
+    },
+
+    {
+      text: "Realtime",
+      collapsed: false,
+      items: [
+        {
+          text: "WebSocket Chat",
+          link: "/examples/websocket-chat",
+        },
+      ],
+    },
+
     {
       text: "Database",
-      link: "/examples/database",
+      collapsed: false,
+      items: [
+        {
+          text: "SQLite API",
+          link: "/examples/sqlite-api",
+        },
+      ],
     },
+
     {
-      text: "WebSocket",
-      link: "/examples/websocket",
-    },
-    {
-      text: "Cache",
-      link: "/examples/cache",
-    },
-    {
-      text: "Sync",
-      link: "/examples/sync",
-    },
-    {
-      text: "P2P",
-      link: "/examples/p2p",
-    },
-    {
-      text: "Production App",
-      link: "/examples/production-app",
+      text: "Async",
+      collapsed: false,
+      items: [
+        {
+          text: "Background Task",
+          link: "/examples/background-task",
+        },
+        {
+          text: "Async App",
+          link: "/examples/async-app",
+        },
+      ],
     },
   ],
 };
@@ -962,60 +1108,6 @@ const modules = {
             {
               text: "API Reference",
               link: "/modules/core/api-reference",
-            },
-          ],
-        },
-        {
-          text: "Middleware",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/modules/middleware/",
-            },
-            {
-              text: "Quick Start",
-              link: "/modules/middleware/quick-start",
-            },
-            {
-              text: "Core Concepts",
-              link: "/modules/middleware/concepts",
-            },
-            {
-              text: "Basics",
-              link: "/modules/middleware/basics",
-            },
-            {
-              text: "Security",
-              link: "/modules/middleware/security",
-            },
-            {
-              text: "Authentication",
-              link: "/modules/middleware/authentication",
-            },
-            {
-              text: "Parsers",
-              link: "/modules/middleware/parsers",
-            },
-            {
-              text: "Performance",
-              link: "/modules/middleware/performance",
-            },
-            {
-              text: "Observability",
-              link: "/modules/middleware/observability",
-            },
-            {
-              text: "HTTP Cache",
-              link: "/modules/middleware/http-cache",
-            },
-            {
-              text: "App Integration",
-              link: "/modules/middleware/app-integration",
-            },
-            {
-              text: "API Reference",
-              link: "/modules/middleware/api-reference",
             },
           ],
         },
@@ -1428,6 +1520,7 @@ const sidebar = [
   vixBook,
   guides,
   vixApp,
+  middleware,
   cli,
   examples,
   apiReference,

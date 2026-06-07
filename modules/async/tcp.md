@@ -15,9 +15,9 @@ Use this page when you want to connect to a TCP server, read and write bytes, or
 
 The TCP API is built around two interfaces.
 
-| Type | Purpose |
-|---|---|
-| `tcp_stream` | Represents a connected TCP stream. |
+| Type           | Purpose                            |
+| -------------- | ---------------------------------- |
+| `tcp_stream`   | Represents a connected TCP stream. |
 | `tcp_listener` | Represents a listening TCP socket. |
 
 A TCP stream can connect to a remote endpoint, read bytes, write bytes, close the connection, and expose the native socket handle when supported.
@@ -633,18 +633,18 @@ stop context
 
 ## TCP API summary
 
-| API | Purpose |
-|---|---|
-| `make_tcp_stream(ctx)` | Creates a TCP stream. |
-| `make_tcp_listener(ctx)` | Creates a TCP listener. |
-| `async_connect(endpoint, token)` | Connects to a remote endpoint. |
-| `async_read(buffer, token)` | Reads bytes from a stream. |
-| `async_write(buffer, token)` | Writes bytes to a stream. |
-| `async_listen(endpoint, backlog)` | Starts listening on a local endpoint. |
-| `async_accept(token)` | Accepts one incoming connection. |
-| `close()` | Closes a stream or listener. |
-| `is_open()` | Checks open state. |
-| `native_handle()` | Returns native socket handle when supported. |
+| API                               | Purpose                                      |
+| --------------------------------- | -------------------------------------------- |
+| `make_tcp_stream(ctx)`            | Creates a TCP stream.                        |
+| `make_tcp_listener(ctx)`          | Creates a TCP listener.                      |
+| `async_connect(endpoint, token)`  | Connects to a remote endpoint.               |
+| `async_read(buffer, token)`       | Reads bytes from a stream.                   |
+| `async_write(buffer, token)`      | Writes bytes to a stream.                    |
+| `async_listen(endpoint, backlog)` | Starts listening on a local endpoint.        |
+| `async_accept(token)`             | Accepts one incoming connection.             |
+| `close()`                         | Closes a stream or listener.                 |
+| `is_open()`                       | Checks open state.                           |
+| `native_handle()`                 | Returns native socket handle when supported. |
 
 ## Common workflows
 
@@ -787,14 +787,14 @@ Use `tcp_stream` for outgoing client connections. Use `tcp_listener` for incomin
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context. |
-| [Tasks](/modules/async/tasks) | Learn coroutine tasks. |
-| [Timers](/modules/async/timers) | Learn timeout-style flows. |
-| [Cancellation](/modules/async/cancellation) | Learn cancellation tokens. |
-| [UDP](/modules/async/udp) | Learn UDP sockets. |
-| [DNS](/modules/async/dns) | Learn hostname resolution. |
+| Page                                          | Purpose                     |
+| --------------------------------------------- | --------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context.  |
+| [Tasks](/modules/async/tasks)                 | Learn coroutine tasks.      |
+| [Timers](/modules/async/timers)               | Learn timeout-style flows.  |
+| [Cancellation](/modules/async/cancellation)   | Learn cancellation tokens.  |
+| [UDP](/modules/async/udp)                     | Learn UDP sockets.          |
+| [DNS](/modules/async/dns)                     | Learn hostname resolution.  |
 | [API Reference](/modules/async/api-reference) | See the public API surface. |
 
 ## Next step

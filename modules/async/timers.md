@@ -21,10 +21,10 @@ ctx.timers()
 
 It provides two common APIs:
 
-| API | Purpose |
-|---|---|
-| `sleep_for(duration)` | Suspends a coroutine for a duration. |
-| `after(duration, callback)` | Runs a callback after a duration. |
+| API                         | Purpose                              |
+| --------------------------- | ------------------------------------ |
+| `sleep_for(duration)`       | Suspends a coroutine for a duration. |
+| `after(duration, callback)` | Runs a callback after a duration.    |
 
 Use `sleep_for` inside coroutine tasks. Use `after` for simple delayed callbacks.
 
@@ -171,10 +171,10 @@ callback fired
 
 ## sleep_for vs after
 
-| API | Use when |
-|---|---|
+| API         | Use when                                                   |
+| ----------- | ---------------------------------------------------------- |
 | `sleep_for` | You are inside a coroutine and want to `co_await` a delay. |
-| `after` | You want to schedule a callback for later. |
+| `after`     | You want to schedule a callback for later.                 |
 
 Coroutine style:
 
@@ -615,14 +615,14 @@ Use `sleep_for` inside coroutine tasks. Use `after` for simple delayed callbacks
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context and scheduler loop. |
-| [Tasks](/modules/async/tasks) | Learn coroutine tasks. |
-| [Spawn](/modules/async/spawn) | Learn how to start tasks. |
-| [Cancellation](/modules/async/cancellation) | Learn cancellation tokens. |
-| [Thread pool](/modules/async/thread-pool) | Learn background execution. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                                       |
+| --------------------------------------------- | --------------------------------------------- |
+| [io_context](/modules/async/io-context)       | Learn the runtime context and scheduler loop. |
+| [Tasks](/modules/async/tasks)                 | Learn coroutine tasks.                        |
+| [Spawn](/modules/async/spawn)                 | Learn how to start tasks.                     |
+| [Cancellation](/modules/async/cancellation)   | Learn cancellation tokens.                    |
+| [Thread pool](/modules/async/thread-pool)     | Learn background execution.                   |
+| [API Reference](/modules/async/api-reference) | See the public API surface.                   |
 
 ## Next step
 

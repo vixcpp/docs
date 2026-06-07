@@ -1,25 +1,32 @@
 # Security
 
-The `security` group contains middleware for common HTTP protection.
+The `security` group protects HTTP routes before and after handlers run.
 
-It helps with browser access control, unsafe request protection, response hardening, IP filtering, and request rate limiting.
+It covers browser security, cross-origin access, CSRF protection, IP filtering, and rate limiting.
 
-For most application code, include:
+Authentication answers:
 
-```cpp id="tq2b8m"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
+```txt id="g4ohrd"
+Who is making the request?
+```
+
+Security answers:
+
+```txt id="e8v9df"
+Should this HTTP request be allowed to reach this route?
+Should this response include safer browser headers?
+Should this client be slowed down or blocked?
 ```
 
 The security middleware lives under:
 
-```cpp id="fxnc75"
+```cpp id="ckqqih"
 namespace vix::middleware::security
 ```
 
-When using `vix::App`, prefer the helpers under:
+When using `vix::App`, prefer the App helpers:
 
-```cpp id="k8bj8m"
+```cpp id="rq8xoj"
 namespace vix::middleware::app
 ```
 
@@ -27,326 +34,184 @@ namespace vix::middleware::app
 
 The security group includes:
 
-```txt id="r4rjlq"
-cors()
-  handles CORS preflight and CORS response headers
+| Middleware     | Purpose                                                 |
+| -------------- | ------------------------------------------------------- |
+| `headers()`    | Add browser security headers to responses               |
+| `cors()`       | Control cross-origin browser access                     |
+| `csrf()`       | Protect unsafe methods with a cookie/header token check |
+| `ip_filter()`  | Allow or deny requests based on client IP headers       |
+| `rate_limit()` | Limit request frequency per client key                  |
 
-csrf()
-  validates double-submit CSRF tokens
+For normal `vix::App` applications, use the App presets:
 
-headers()
-  adds common browser security headers
-
-ip_filter()
-  allows or denies requests based on client IP
-
-rate_limit()
-  limits requests per client key using a token bucket
+```cpp id="bss38n"
+middleware::app::security_headers_dev()
+middleware::app::cors_dev(...)
+middleware::app::csrf_dev(...)
+middleware::app::ip_filter_dev(...)
+middleware::app::ip_filter_allow_deny_dev(...)
+middleware::app::rate_limit_dev(...)
+middleware::app::rate_limit_custom_dev(...)
 ```
 
-These middleware functions do not replace application-specific security decisions. They provide reusable HTTP-level protection around handlers.
+## Basic security setup
 
-## Basic setup
+A small API can start with:
 
-A small API can start with security headers, CORS, and rate limiting.
-
-```cpp id="7pc81c"
+```cpp id="y97irp"
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::security_headers_dev());
-  app.use(vix::middleware::app::cors_dev());
-  app.use("/api", vix::middleware::app::rate_limit_dev());
-
-  app.get("/api/status", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.json({
-      "status", "ok"
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-This example is intentionally small. In production, configure the middleware explicitly for the origins, limits, headers, and deployment model you use.
-
-## CORS
-
-`cors()` handles Cross-Origin Resource Sharing.
-
-It is mainly useful when a browser frontend calls your Vix backend from another origin.
-
-The middleware handles two cases:
-
-```txt id="t2as9l"
-preflight requests
-  OPTIONS request with Access-Control-Request-Method
-
-normal requests
-  regular request with an Origin header
-```
-
-For preflight requests, CORS can answer before the route handler runs.
-
-For normal requests, CORS usually calls the handler first, then adds CORS headers to the response.
-
-## Use CORS with App
-
-```cpp id="h5e6ce"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
+using namespace vix;
 
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use(vix::middleware::app::cors_dev());
+  app.use("/api", middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::cors_dev({"https://example.com"}));
+  app.use("/api", middleware::app::rate_limit_dev());
 
-  app.get("/api/status", [](vix::Request &req, vix::Response &res)
+  app.get("/api/health", [](Request &, Response &res)
   {
-    (void)req;
-
-    res.json({
-      "status", "ok"
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-This is useful for development.
-
-For production, prefer explicit origins.
-
-## Configure CORS
-
-Use `CorsOptions` when you need control over origins, methods, headers, credentials, and preflight caching.
-
-```cpp id="erhxln"
-vix::middleware::security::CorsOptions opt;
-
-opt.allowed_origins = {
-  "https://example.com"
-};
-
-opt.allow_any_origin = false;
-opt.allow_credentials = true;
-opt.allow_methods = {"GET", "POST", "OPTIONS"};
-opt.allow_headers = {"Content-Type", "Authorization"};
-
-auto mw = vix::middleware::security::cors(opt);
-```
-
-Main options:
-
-```txt id="q2gz94"
-allowed_origins
-  exact origins that may access the application
-
-allow_any_origin
-  allow any origin when no explicit origin list is provided
-
-allow_credentials
-  send Access-Control-Allow-Credentials: true
-
-allow_methods
-  methods allowed for preflight responses
-
-allow_headers
-  headers allowed for preflight responses
-
-expose_headers
-  response headers exposed to the browser
-
-max_age_seconds
-  preflight cache duration
-
-vary_origin
-  append Vary: Origin when needed
-```
-
-If credentials are enabled, the middleware does not return `*` as the allowed origin. It returns the request origin when that origin is allowed.
-
-## CORS preflight
-
-A preflight request looks like this:
-
-```txt id="yyb04c"
-OPTIONS /api/users
-Origin: https://example.com
-Access-Control-Request-Method: POST
-```
-
-If the origin is allowed, the middleware can return:
-
-```txt id="l0ydc9"
-204 No Content
-Access-Control-Allow-Origin: https://example.com
-Access-Control-Allow-Methods: GET, POST, OPTIONS
-Access-Control-Allow-Headers: Content-Type, Authorization
-Access-Control-Max-Age: 600
-```
-
-The route handler is not called for a handled preflight request.
-
-If the origin is not allowed, the middleware returns a normalized `403` error.
-
-## CSRF
-
-`csrf()` protects unsafe requests using the double-submit cookie pattern.
-
-For unsafe methods, the client must send the same token in two places:
-
-```txt id="vaxc2o"
-cookie
-  csrf_token=...
-
-header
-  x-csrf-token: ...
-```
-
-If either value is missing, or if the values do not match, the request is rejected.
-
-By default, CSRF protects:
-
-```txt id="ktias0"
-POST
-PUT
-PATCH
-DELETE
-```
-
-`GET` is not protected by default.
-
-## Use CSRF
-
-```cpp id="q55922"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::csrf_dev());
-
-  app.post("/profile", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
     res.json({
       "ok", true
     });
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-Request shape:
+This gives `/api` a basic HTTP security layer:
 
-```bash id="sfrjx8"
-curl -i \
-  -X POST http://127.0.0.1:8080/profile \
-  -H "Cookie: csrf_token=abc" \
-  -H "x-csrf-token: abc" \
-  -d 'name=Ada'
+```txt id="uqehxe"
+security headers
+  make browser responses safer
+
+CORS
+  controls which browser origins can call the API
+
+rate limit
+  slows down abusive clients
 ```
 
-If the tokens do not match, the middleware returns:
+## Recommended order
 
-```txt id="x4u42x"
-403 csrf_failed
+A practical order is:
+
+```cpp id="thndml"
+app.use("/api", middleware::app::security_headers_dev());
+app.use("/api", middleware::app::cors_dev({"https://example.com"}));
+app.use("/api", middleware::app::rate_limit_dev());
+app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
+app.use("/api/private", middleware::app::api_key_dev("secret"));
+app.use("/api/forms", middleware::app::csrf_dev());
 ```
 
-## Configure CSRF
+The idea is:
 
-Use `CsrfOptions` for custom cookie and header names.
+```txt id="p6cqbm"
+security headers
+  can be added to most responses
 
-```cpp id="jbcowa"
-vix::middleware::security::CsrfOptions opt;
+CORS
+  must handle browser preflight requests early
 
-opt.cookie_name = "csrf_token";
-opt.header_name = "x-csrf-token";
-opt.protect_get = false;
+rate limit
+  should reject abusive clients before expensive work
 
-auto mw = vix::middleware::security::csrf(opt);
+body limit
+  should reject large bodies before parsers
+
+authentication
+  should protect private routes
+
+CSRF
+  should protect unsafe browser form/session routes
 ```
 
-Main options:
+The exact order depends on the application.
 
-```txt id="kpjzpr"
-cookie_name
-  cookie that contains the CSRF token
+The principle is stable:
 
-header_name
-  request header that must contain the same token
-
-protect_get
-  require CSRF tokens for GET requests too
+```txt id="ibn5e9"
+reject invalid requests early
+keep route handlers focused
+add response hardening consistently
 ```
-
-The middleware assumes the application already sets the CSRF cookie. It verifies the token pair during unsafe requests.
 
 ## Security headers
 
-`headers()` adds common browser security headers after the handler has run.
+`headers()` adds HTTP response headers that improve browser security.
 
-This middleware does not authenticate users and does not validate request input. It hardens browser behavior for the response.
+The App preset is:
 
-## Use security headers with App
+```cpp id="tw5tt3"
+app.use("/api", middleware::app::security_headers_dev());
+```
 
-```cpp id="yjmhx1"
+Example:
+
+```cpp id="t9x58t"
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
+using namespace vix;
+
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use(vix::middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::security_headers_dev());
 
-  app.get("/", [](vix::Request &req, vix::Response &res)
+  app.get("/api/ping", [](Request &, Response &res)
   {
-    (void)req;
+    res.json({
+      "ok", true,
+      "message", "headers applied"
+    });
+  });
 
-    res.text("home");
+  app.get("/", [](Request &, Response &res)
+  {
+    res.text("public route");
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-Response headers can include:
+Test:
 
-```txt id="qlbo3k"
+```bash id="xoj8o0"
+curl -i http://127.0.0.1:8080/api/ping
+```
+
+Typical headers can include:
+
+```txt id="k93yvi"
 X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
 Referrer-Policy: no-referrer
-Permissions-Policy: geolocation=(), microphone=(), camera=()
+Permissions-Policy: ...
+```
+
+Security headers usually run after the handler because they modify the final response.
+
+```txt id="c8yfu8"
+request
+  -> security headers middleware
+  -> handler
+  -> add headers
+  -> response
 ```
 
 ## Configure security headers
 
-Use `SecurityHeadersOptions` when you need to choose specific headers.
+Use the lower-level middleware when you need explicit options.
 
-```cpp id="k4iqef"
+```cpp id="oivwrb"
 vix::middleware::security::SecurityHeadersOptions opt;
 
 opt.x_content_type_options = true;
@@ -356,201 +221,639 @@ opt.permissions_policy = true;
 opt.hsts = false;
 opt.content_security_policy = "default-src 'self'";
 
-auto mw = vix::middleware::security::headers(opt);
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::security::headers(opt)
+));
 ```
 
 Main options:
 
-```txt id="mayvl2"
-x_content_type_options
-  add X-Content-Type-Options: nosniff
+| Option                    | Purpose                               |
+| ------------------------- | ------------------------------------- |
+| `x_content_type_options`  | Add `X-Content-Type-Options: nosniff` |
+| `x_frame_options`         | Add `X-Frame-Options: DENY`           |
+| `referrer_policy`         | Add `Referrer-Policy`                 |
+| `permissions_policy`      | Add `Permissions-Policy`              |
+| `hsts`                    | Add `Strict-Transport-Security`       |
+| `content_security_policy` | Add a custom CSP value                |
 
-x_frame_options
-  add X-Frame-Options: DENY
+Only enable HSTS when the application is served through HTTPS.
 
-x_xss_protection
-  add legacy X-XSS-Protection header
+If Nginx or another proxy terminates TLS, make sure the deployment is truly HTTPS-only before enabling HSTS.
 
-referrer_policy
-  add Referrer-Policy
+## CORS
 
-permissions_policy
-  add Permissions-Policy
+CORS controls which browser origins can call your API.
 
-hsts
-  add Strict-Transport-Security
+It matters when a frontend is served from a different origin than the backend.
 
-content_security_policy
-  add Content-Security-Policy when not empty
+Example:
+
+```txt id="z0acwq"
+frontend
+  https://example.com
+
+backend
+  http://127.0.0.1:8080
 ```
 
-Enable HSTS only when the application is served exclusively over HTTPS.
+Install CORS on your API prefix:
 
-## Content Security Policy
-
-The middleware can add a CSP header when `content_security_policy` is not empty.
-
-```cpp id="6cy3a6"
-vix::middleware::security::SecurityHeadersOptions opt;
-
-opt.content_security_policy = "default-src 'self'; object-src 'none'";
-
-auto mw = vix::middleware::security::headers(opt);
+```cpp id="uo8054"
+app.use("/api", middleware::app::cors_dev({"https://example.com"}));
 ```
 
-CSP rules depend on the application. A backend API, a static website, and a dashboard may need different policies.
+Example:
 
-The middleware sets the header. The application author decides the correct policy.
-
-## IP filter
-
-`ip_filter()` allows or denies requests based on the client IP.
-
-The middleware extracts the IP from a configured header. By default, it uses:
-
-```txt id="ywh8mz"
-x-forwarded-for
-```
-
-It can also use fallback headers such as:
-
-```txt id="o56gje"
-x-real-ip
-```
-
-Deny rules are evaluated before allow rules.
-
-## Use IP filtering
-
-```cpp id="48t7xh"
+```cpp id="oaiu0c"
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
-int main()
-{
-  vix::App app;
-
-  vix::middleware::security::IpFilterOptions opt;
-  opt.deny = {"1.2.3.4"};
-
-  app.use(vix::middleware::app::adapt_ctx(
-    vix::middleware::security::ip_filter(opt)
-  ));
-
-  app.get("/", [](vix::Request &req, vix::Response &res)
-  {
-    (void)req;
-
-    res.text("OK");
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-A denied IP receives:
-
-```txt id="m5bdrp"
-403 ip_denied
-```
-
-If an allow list is configured and the extracted IP is not in it, the middleware returns:
-
-```txt id="xan7qt"
-403 ip_not_allowed
-```
-
-## Configure IP filtering
-
-```cpp id="5ysctb"
-vix::middleware::security::IpFilterOptions opt;
-
-opt.allow = {"10.0.0.5"};
-opt.deny = {"1.2.3.4"};
-opt.header_name = "x-forwarded-for";
-opt.use_remote_addr_fallback = true;
-
-auto mw = vix::middleware::security::ip_filter(opt);
-```
-
-Main options:
-
-```txt id="wkoh2w"
-allow
-  if non-empty, only these IPs are accepted
-
-deny
-  IPs that are always rejected
-
-header_name
-  header used to extract the client IP
-
-use_remote_addr_fallback
-  check fallback headers when the main header is missing
-```
-
-When your application runs behind a proxy, only trust IP headers that are written by your own infrastructure.
-
-## Rate limit
-
-`rate_limit()` limits how many requests a client key can make.
-
-It uses a token bucket:
-
-```txt id="n0qtk9"
-capacity
-  maximum burst size
-
-refill_per_sec
-  how many tokens are added per second
-```
-
-Each request consumes one token. If no token is available, the middleware returns `429 Too Many Requests`.
-
-## Use rate limiting with App
-
-```cpp id="oj7gww"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
+using namespace vix;
 
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use("/api", vix::middleware::app::rate_limit_dev());
+  app.use("/api", middleware::app::cors_dev({"https://example.com"}));
 
-  app.get("/api/status", [](vix::Request &req, vix::Response &res)
+  app.get("/api", [](Request &, Response &res)
   {
-    (void)req;
-
     res.json({
-      "status", "ok"
+      "ok", true
     });
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-A rate-limited response can include:
+Test:
 
-```txt id="sm1zdj"
-429 Too Many Requests
-Retry-After: 3
-X-RateLimit-Limit: 60
-X-RateLimit-Remaining: 0
-X-RateLimit-Reset: 3
+```bash id="blzhmn"
+curl -i \
+  http://127.0.0.1:8080/api \
+  -H "Origin: https://example.com"
 ```
 
-## Configure rate limiting
+Expected response headers include:
 
-Use `RateLimitOptions` for explicit limits.
+```txt id="tjxuzo"
+Access-Control-Allow-Origin: https://example.com
+Vary: Origin
+```
 
-```cpp id="v1psxy"
+## CORS preflight
+
+Browsers send preflight requests for some cross-origin requests.
+
+A preflight request uses:
+
+```txt id="a51jts"
+OPTIONS
+Origin
+Access-Control-Request-Method
+Access-Control-Request-Headers
+```
+
+Example:
+
+```bash id="aahdai"
+curl -i \
+  -X OPTIONS http://127.0.0.1:8080/api/update \
+  -H "Origin: https://example.com" \
+  -H "Access-Control-Request-Method: POST" \
+  -H "Access-Control-Request-Headers: Content-Type, X-CSRF-Token"
+```
+
+Allowed origins should receive a successful preflight response.
+
+Blocked origins should receive an error.
+
+```bash id="sqc83x"
+curl -i \
+  -X OPTIONS http://127.0.0.1:8080/api/update \
+  -H "Origin: https://evil.com" \
+  -H "Access-Control-Request-Method: POST"
+```
+
+Expected blocked status:
+
+```txt id="t5qfgd"
+403 Forbidden
+```
+
+Common error code:
+
+```txt id="dj23ix"
+cors_forbidden
+```
+
+## Explicit OPTIONS routes
+
+For browser APIs, it is often useful to define explicit `OPTIONS` routes for endpoints that need preflight.
+
+```cpp id="jorsyr"
+app.options("/api/update", [](Request &, Response &res)
+{
+  res.status(204).send();
+});
+```
+
+With CORS installed on `/api`, the CORS middleware can handle the preflight behavior.
+
+Example:
+
+```cpp id="myx07w"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::cors_dev({"https://example.com"}));
+
+  app.options("/api/update", [](Request &, Response &res)
+  {
+    res.status(204).send();
+  });
+
+  app.post("/api/update", [](Request &, Response &res)
+  {
+    res.json({
+      "ok", true
+    });
+  });
+
+  app.run(8080);
+}
+```
+
+Use explicit `OPTIONS` routes when you want predictable browser preflight behavior.
+
+## Configure CORS
+
+Use the lower-level middleware when you need explicit options.
+
+```cpp id="p6g8sq"
+vix::middleware::security::CorsOptions opt;
+
+opt.allowed_origins = {"https://example.com"};
+opt.allow_any_origin = false;
+opt.allow_credentials = true;
+opt.allow_methods = {"GET", "POST", "OPTIONS"};
+opt.allow_headers = {"Content-Type", "Authorization", "X-CSRF-Token"};
+opt.expose_headers = {"X-Request-Id"};
+opt.max_age_seconds = 600;
+opt.vary_origin = true;
+
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::security::cors(opt)
+));
+```
+
+Main options:
+
+| Option              | Purpose                                |
+| ------------------- | -------------------------------------- |
+| `allowed_origins`   | List of accepted origins               |
+| `allow_any_origin`  | Allow any origin when configured       |
+| `allow_credentials` | Add `Access-Control-Allow-Credentials` |
+| `allow_methods`     | Methods accepted during preflight      |
+| `allow_headers`     | Headers accepted during preflight      |
+| `expose_headers`    | Response headers visible to browsers   |
+| `max_age_seconds`   | Browser preflight cache duration       |
+| `vary_origin`       | Add `Vary: Origin`                     |
+
+If credentials are enabled, avoid using `*` as the final `Access-Control-Allow-Origin` value.
+
+## CSRF
+
+`csrf()` protects unsafe HTTP methods using the double-submit cookie pattern.
+
+The client must send the same token in:
+
+```txt id="g2kaj6"
+a cookie
+a request header
+```
+
+Default names are usually:
+
+```txt id="w7rxnm"
+cookie: csrf_token
+header: x-csrf-token
+```
+
+CSRF is most useful for browser-based applications that use cookies or sessions.
+
+Example:
+
+```cpp id="qwg2aj"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::csrf_dev());
+
+  app.get("/api/csrf", [](Request &, Response &res)
+  {
+    res.header("Set-Cookie", "csrf_token=abc; Path=/; SameSite=Lax");
+
+    res.json({
+      "csrf_token", "abc"
+    });
+  });
+
+  app.post("/api/update", [](Request &, Response &res)
+  {
+    res.json({
+      "ok", true,
+      "message", "CSRF passed"
+    });
+  });
+
+  app.run(8080);
+}
+```
+
+Get the cookie:
+
+```bash id="l0kgr6"
+curl -i \
+  -c cookies.txt \
+  http://127.0.0.1:8080/api/csrf
+```
+
+Fail without the header:
+
+```bash id="vj5c3l"
+curl -i \
+  -b cookies.txt \
+  -X POST http://127.0.0.1:8080/api/update \
+  -d "x=1"
+```
+
+Expected status:
+
+```txt id="zux3lg"
+403 Forbidden
+```
+
+Pass with matching cookie and header:
+
+```bash id="jcznw4"
+curl -i \
+  -b cookies.txt \
+  -X POST http://127.0.0.1:8080/api/update \
+  -H "x-csrf-token: abc" \
+  -d "x=1"
+```
+
+Expected status:
+
+```txt id="u42mc6"
+200 OK
+```
+
+Common error code:
+
+```txt id="wgh118"
+csrf_failed
+```
+
+## CSRF with CORS
+
+When CORS and CSRF are used together, install CORS before CSRF.
+
+```cpp id="onaxcn"
+app.use("/api", middleware::app::cors_dev({"https://example.com"}));
+app.use("/api", middleware::app::csrf_dev("csrf_token", "x-csrf-token", false));
+```
+
+CORS must be able to handle preflight requests.
+
+CSRF should protect unsafe methods such as:
+
+```txt id="pp60pt"
+POST
+PUT
+PATCH
+DELETE
+```
+
+Example:
+
+```cpp id="wt7zq8"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::cors_dev({"https://example.com"}));
+  app.use("/api", middleware::app::csrf_dev("csrf_token", "x-csrf-token", false));
+
+  app.options("/api/update", [](Request &, Response &res)
+  {
+    res.status(204).send();
+  });
+
+  app.get("/api/csrf", [](Request &, Response &res)
+  {
+    res.header("Set-Cookie", "csrf_token=abc; Path=/; SameSite=Lax");
+
+    res.json({
+      "csrf_token", "abc"
+    });
+  });
+
+  app.post("/api/update", [](Request &, Response &res)
+  {
+    res.json({
+      "ok", true
+    });
+  });
+
+  app.run(8080);
+}
+```
+
+For cross-site cookies in browsers, production deployments may need cookie attributes such as:
+
+```txt id="utjrst"
+SameSite=None
+Secure
+```
+
+Use those only when serving through HTTPS.
+
+## Configure CSRF
+
+Use the lower-level middleware when you need explicit options.
+
+```cpp id="se6h67"
+vix::middleware::security::CsrfOptions opt;
+
+opt.cookie_name = "csrf_token";
+opt.header_name = "x-csrf-token";
+opt.protect_get = false;
+
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::security::csrf(opt)
+));
+```
+
+Main options:
+
+| Option        | Purpose                                   |
+| ------------- | ----------------------------------------- |
+| `cookie_name` | Cookie that contains the CSRF token       |
+| `header_name` | Header expected to contain the CSRF token |
+| `protect_get` | Require CSRF on GET when set to true      |
+
+Usually keep `protect_get` false.
+
+GET routes should normally be safe and side-effect free.
+
+## IP filter
+
+`ip_filter()` allows or denies requests based on a client IP extracted from headers.
+
+Common headers are:
+
+```txt id="n7p3cs"
+x-forwarded-for
+x-real-ip
+```
+
+This is useful behind reverse proxies, internal APIs, admin endpoints, and private dashboards.
+
+Example:
+
+```cpp id="jowp2v"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::ip_filter_allow_deny_dev(
+    "x-forwarded-for",
+    {"10.0.0.1", "127.0.0.1"},
+    {"9.9.9.9"},
+    true
+  ));
+
+  app.get("/", [](Request &, Response &res)
+  {
+    res.text("public route");
+  });
+
+  app.get("/api/hello", [](Request &req, Response &res)
+  {
+    res.json({
+      "ok", true,
+      "x_forwarded_for", req.header("x-forwarded-for")
+    });
+  });
+
+  app.run(8080);
+}
+```
+
+Allowed IP:
+
+```bash id="t25jer"
+curl -i \
+  http://127.0.0.1:8080/api/hello \
+  -H "X-Forwarded-For: 10.0.0.1"
+```
+
+Blocked by allow list:
+
+```bash id="zhx0hu"
+curl -i \
+  http://127.0.0.1:8080/api/hello \
+  -H "X-Forwarded-For: 1.2.3.4"
+```
+
+Explicitly denied:
+
+```bash id="gbxb7o"
+curl -i \
+  http://127.0.0.1:8080/api/hello \
+  -H "X-Forwarded-For: 9.9.9.9"
+```
+
+Expected blocked status:
+
+```txt id="n4i4rc"
+403 Forbidden
+```
+
+Common error codes:
+
+```txt id="p8uw64"
+ip_denied
+ip_not_allowed
+```
+
+## Configure IP filter
+
+Use the lower-level middleware when you need explicit control.
+
+```cpp id="ci3lei"
+vix::middleware::security::IpFilterOptions opt;
+
+opt.header_name = "x-forwarded-for";
+opt.allow = {"10.0.0.1", "127.0.0.1"};
+opt.deny = {"9.9.9.9"};
+opt.use_remote_addr_fallback = true;
+
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::security::ip_filter(opt)
+));
+```
+
+Main options:
+
+| Option                     | Purpose                                    |
+| -------------------------- | ------------------------------------------ |
+| `allow`                    | If non-empty, only listed IPs are allowed  |
+| `deny`                     | Denied IPs are rejected before allow rules |
+| `header_name`              | Header used to extract the client IP       |
+| `use_remote_addr_fallback` | Try fallback headers such as `x-real-ip`   |
+
+Deny rules win before allow rules.
+
+## Be careful with proxy headers
+
+Headers such as `X-Forwarded-For` can be spoofed if clients connect directly to your server.
+
+Use IP filtering with proxy headers only when:
+
+```txt id="p4h7o0"
+your app is behind a trusted proxy
+the proxy overwrites client-provided forwarding headers
+direct public access to the app port is blocked
+```
+
+If your app is exposed directly to the internet, do not blindly trust `X-Forwarded-For`.
+
+## Rate limiting
+
+`rate_limit()` limits how often a client can call a route.
+
+It uses a token bucket model.
+
+A client key is usually derived from a header such as:
+
+```txt id="wz0vaa"
+x-forwarded-for
+x-real-ip
+```
+
+The App preset is:
+
+```cpp id="ovltek"
+app.use("/api", middleware::app::rate_limit_dev());
+```
+
+For demos, use a small capacity and no refill:
+
+```cpp id="a22t05"
+app.use("/api", middleware::app::rate_limit_custom_dev(
+  5.0,
+  0.0
+));
+```
+
+Example:
+
+```cpp id="u72la4"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::rate_limit_custom_dev(
+    5.0,
+    0.0
+  ));
+
+  app.get("/", [](Request &, Response &res)
+  {
+    res.text("public route");
+  });
+
+  app.get("/api/ping", [](Request &req, Response &res)
+  {
+    res.json({
+      "ok", true,
+      "msg", "pong",
+      "xff", req.header("x-forwarded-for")
+    });
+  });
+
+  app.run(8080);
+}
+```
+
+Test:
+
+```bash id="t6zmxk"
+for i in $(seq 1 6); do
+  echo "---- $i"
+  curl -i http://127.0.0.1:8080/api/ping
+done
+```
+
+The sixth request can return:
+
+```txt id="xjr2pc"
+429 Too Many Requests
+```
+
+Common error code:
+
+```txt id="o0yqrx"
+rate_limited
+```
+
+Common response headers:
+
+```txt id="dozxno"
+X-RateLimit-Limit
+X-RateLimit-Remaining
+Retry-After
+X-RateLimit-Reset
+```
+
+## Configure rate limit
+
+Use the lower-level middleware when you need exact behavior.
+
+```cpp id="tmxxki"
 vix::middleware::security::RateLimitOptions opt;
 
 opt.capacity = 60.0;
@@ -558,190 +861,251 @@ opt.refill_per_sec = 1.0;
 opt.add_headers = true;
 opt.key_header = "x-forwarded-for";
 
-auto mw = vix::middleware::security::rate_limit(opt);
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::security::rate_limit(opt)
+));
 ```
 
 Main options:
 
-```txt id="gvf66e"
-capacity
-  maximum number of tokens in the bucket
+| Option           | Purpose                                       |
+| ---------------- | --------------------------------------------- |
+| `capacity`       | Maximum burst size                            |
+| `refill_per_sec` | Tokens added per second                       |
+| `add_headers`    | Add rate limit headers                        |
+| `key_header`     | Header used to derive the default client key  |
+| `key_fn`         | Custom function used to derive the client key |
 
-refill_per_sec
-  number of tokens added per second
+Use `key_fn` when the key should come from something else, such as a tenant id, authenticated subject, or custom header.
 
-add_headers
-  add rate limit headers to responses
-
-key_header
-  header used to derive the client key
-
-key_fn
-  custom function used to derive the client key
-```
-
-Use `key_fn` when the client key should come from authentication, tenant id, API key, or another application-specific source.
-
-## Custom rate limit key
-
-```cpp id="0rin71"
+```cpp id="ez0g8c"
 vix::middleware::security::RateLimitOptions opt;
 
+opt.capacity = 100.0;
+opt.refill_per_sec = 10.0;
 opt.key_fn = [](const vix::middleware::Request &req)
 {
-  std::string key = req.header("x-api-key");
+  const std::string tenant = req.header("x-tenant-id");
 
-  if (!key.empty())
-    return key;
-
-  return std::string("anonymous");
+  return tenant.empty() ? "anonymous" : tenant;
 };
 
-auto mw = vix::middleware::security::rate_limit(opt);
+app.use("/api", vix::middleware::app::adapt_ctx(
+  vix::middleware::security::rate_limit(opt)
+));
 ```
 
-This allows rate limiting by API key instead of IP header.
+## Combine CORS, IP filter, and rate limit
 
-## Shared rate limiter state
+A realistic API may combine multiple security layers.
 
-`rate_limit()` can use a `RateLimiterState` from services.
+```cpp id="ay25iz"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
 
-This is useful when the same limiter state should be shared across several pipelines or middleware instances.
+using namespace vix;
 
-```cpp id="2574vb"
-auto state =
-  std::make_shared<vix::middleware::security::RateLimiterState>();
+int main()
+{
+  App app;
 
-vix::middleware::HttpPipeline pipeline;
+  app.use("/api", middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::cors_dev({"http://localhost:5173"}));
 
-pipeline.services().provide<
-  vix::middleware::security::RateLimiterState
->(state);
+  app.use("/api", middleware::app::ip_filter_allow_deny_dev(
+    "x-forwarded-for",
+    {},
+    {"1.2.3.4"},
+    true
+  ));
 
-pipeline.use(vix::middleware::security::rate_limit());
+  app.use("/api", middleware::app::rate_limit_custom_dev(
+    5.0,
+    0.0,
+    "x-forwarded-for"
+  ));
+
+  app.options("/api/ping", [](Request &, Response &res)
+  {
+    res.status(204).send();
+  });
+
+  app.get("/api/ping", [](Request &req, Response &res)
+  {
+    res.json({
+      "ok", true,
+      "ip", req.header("x-forwarded-for")
+    });
+  });
+
+  app.run(8080);
+}
 ```
 
-If no service is provided, the middleware uses a fallback global state.
+Test allowed origin:
 
-## Middleware order
-
-Security middleware should be placed based on what it protects.
-
-A reasonable starting point for an API is:
-
-```txt id="lzlnwd"
-recovery
-request_id
-security_headers
-cors
-rate_limit
-body_limit
-parsers
-authentication
-authorization
-handler
+```bash id="rh56g3"
+curl -i \
+  http://127.0.0.1:8080/api/ping \
+  -H "Origin: http://localhost:5173" \
+  -H "X-Forwarded-For: 9.9.9.9"
 ```
 
-CORS often needs to run before authentication because browser preflight requests should not require application authentication.
+Test denied IP:
 
-Rate limiting should run before expensive parsing or handler work.
-
-Body limits should run before JSON, form, or multipart parsers.
-
-CSRF usually runs before state-changing handlers.
-
-Security headers usually wrap the response and can run before the handler because they add headers after `next()` returns.
-
-## Common status codes
-
-Security middleware can stop the request and return normalized errors.
-
-Common responses include:
-
-```txt id="awq4js"
-204
-  CORS preflight accepted
-
-403 cors_forbidden
-  CORS origin not allowed
-
-403 csrf_failed
-  CSRF token missing or invalid
-
-403 ip_denied
-  client IP is denied
-
-403 ip_not_allowed
-  client IP is not in allow list
-
-429 rate_limited
-  too many requests
+```bash id="wodd96"
+curl -i \
+  http://127.0.0.1:8080/api/ping \
+  -H "Origin: http://localhost:5173" \
+  -H "X-Forwarded-For: 1.2.3.4"
 ```
 
-Security headers usually do not stop the request.
+Test rate limit:
 
-## Development and production
-
-Development helpers are useful for examples and local development.
-
-```cpp id="g6e3t7"
-app.use(vix::middleware::app::cors_dev());
-app.use(vix::middleware::app::security_headers_dev());
-app.use(vix::middleware::app::rate_limit_dev());
+```bash id="j2agq2"
+for i in $(seq 1 6); do
+  echo "---- $i"
+  curl -i \
+    http://127.0.0.1:8080/api/ping \
+    -H "Origin: http://localhost:5173" \
+    -H "X-Forwarded-For: 9.9.9.9"
+done
 ```
 
-Production applications should configure security middleware explicitly.
+This composition keeps route handlers simple.
 
-Important production decisions include:
+The security layer decides whether the request should reach the route.
 
-```txt id="n9j64e"
-which origins are allowed
-whether credentials are allowed
-which headers are exposed
-which methods are accepted
-whether HSTS is enabled
-which CSP policy is correct
-how rate limit keys are derived
-which proxy headers are trusted
-which CSRF token strategy is used
+## Complete security example
+
+```cpp id="acvb94"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::cors_dev({"https://example.com"}));
+  app.use("/api", middleware::app::rate_limit_custom_dev(10.0, 1.0));
+  app.use("/api/forms", middleware::app::csrf_dev("csrf_token", "x-csrf-token", false));
+
+  app.options("/api/forms/update", [](Request &, Response &res)
+  {
+    res.status(204).send();
+  });
+
+  app.get("/api/health", [](Request &, Response &res)
+  {
+    res.json({
+      "ok", true
+    });
+  });
+
+  app.get("/api/forms/csrf", [](Request &, Response &res)
+  {
+    res.header("Set-Cookie", "csrf_token=abc; Path=/; SameSite=Lax");
+
+    res.json({
+      "csrf_token", "abc"
+    });
+  });
+
+  app.post("/api/forms/update", [](Request &, Response &res)
+  {
+    res.json({
+      "ok", true,
+      "message", "updated"
+    });
+  });
+
+  app.run(8080);
+}
 ```
 
-The middleware gives the HTTP mechanism. The application still owns the security policy.
+This gives the API:
 
-## What this module does not decide
+```txt id="e6y604"
+security headers
+CORS
+rate limiting
+CSRF on form routes
+explicit preflight route
+```
 
-The security group does not decide who your users are.
+Authentication can be added on top for private routes.
 
-It does not decide which roles can access which resources.
+## Security vs authentication
 
-It does not validate business rules.
+Do not put everything in one category.
 
-It does not replace TLS.
+Security middleware protects the HTTP surface.
 
-It does not replace database authorization checks.
+```txt id="pg6q6m"
+CORS
+CSRF
+security headers
+IP filter
+rate limit
+```
 
-It provides HTTP-level protections that should be combined with authentication, authorization, validation, and deployment security.
+Authentication middleware identifies the caller.
+
+```txt id="jmvmc3"
+API key
+JWT
+RBAC
+sessions
+permissions
+```
+
+They work together.
+
+Example:
+
+```cpp id="ey9zgn"
+app.use("/api", middleware::app::security_headers_dev());
+app.use("/api", middleware::app::cors_dev());
+app.use("/api", middleware::app::rate_limit_dev());
+
+app.use("/api/admin", middleware::app::api_key_dev("secret"));
+```
+
+The security layer protects the HTTP surface.
+
+The authentication layer protects private actions.
 
 ## Summary
 
-`cors()` controls browser cross-origin access.
+Use the security group to protect routes before handlers do application work.
 
-`csrf()` checks double-submit CSRF tokens for unsafe methods.
+A good starting stack is:
 
-`headers()` adds browser security headers.
+```cpp id="awnvrm"
+app.use("/api", middleware::app::security_headers_dev());
+app.use("/api", middleware::app::cors_dev({"https://example.com"}));
+app.use("/api", middleware::app::rate_limit_dev());
+```
 
-`ip_filter()` allows or denies requests by client IP.
+Add more specific protections when needed:
 
-`rate_limit()` limits request volume per client key.
+```cpp id="s0xyb1"
+app.use("/api/forms", middleware::app::csrf_dev());
+app.use("/api/internal", middleware::app::ip_filter_allow_deny_dev(
+  "x-forwarded-for",
+  {"10.0.0.1"},
+  {},
+  true
+));
+```
 
-These middleware functions are useful early in the pipeline because they can reject invalid or risky requests before the handler does expensive work.
+Remember the model:
 
-## Next steps
-
-Continue with:
-
-- [Authentication](./authentication)
-- [Parsers](./parsers)
-- [Performance](./performance)
-- [HTTP Cache](./http-cache)
-- [App Integration](./app-integration)
+```txt id="yyagja"
+security middleware decides whether the request should reach the route
+security headers make responses safer
+authentication is documented separately
+```

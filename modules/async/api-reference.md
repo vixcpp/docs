@@ -27,23 +27,23 @@ vix::async::net
 
 ## Main components
 
-| Component | Purpose |
-|---|---|
-| `io_context` | Central async runtime context. |
-| `scheduler` | Runs callbacks and resumes coroutines. |
-| `task<T>` | Coroutine task producing a value. |
-| `task<void>` | Coroutine task with no returned value. |
-| `cancel_source` | Owns cancellation state. |
-| `cancel_token` | Observes cancellation state. |
-| `timer` | Delayed callbacks and coroutine sleeps. |
-| `thread_pool` | Background worker pool for CPU or blocking work. |
-| `signal_set` | Async signal watching. |
-| `when_all` | Waits for multiple tasks to complete. |
-| `when_any` | Waits for the first task to complete. |
-| `dns_resolver` | Async hostname resolution. |
-| `tcp_stream` | Connected TCP stream. |
-| `tcp_listener` | TCP server listener. |
-| `udp_socket` | UDP datagram socket. |
+| Component       | Purpose                                          |
+| --------------- | ------------------------------------------------ |
+| `io_context`    | Central async runtime context.                   |
+| `scheduler`     | Runs callbacks and resumes coroutines.           |
+| `task<T>`       | Coroutine task producing a value.                |
+| `task<void>`    | Coroutine task with no returned value.           |
+| `cancel_source` | Owns cancellation state.                         |
+| `cancel_token`  | Observes cancellation state.                     |
+| `timer`         | Delayed callbacks and coroutine sleeps.          |
+| `thread_pool`   | Background worker pool for CPU or blocking work. |
+| `signal_set`    | Async signal watching.                           |
+| `when_all`      | Waits for multiple tasks to complete.            |
+| `when_any`      | Waits for the first task to complete.            |
+| `dns_resolver`  | Async hostname resolution.                       |
+| `tcp_stream`    | Connected TCP stream.                            |
+| `tcp_listener`  | TCP server listener.                             |
+| `udp_socket`    | UDP datagram socket.                             |
 
 ## io_context
 
@@ -607,10 +607,10 @@ auto result = co_await vix::async::core::when_any(
 
 The result contains:
 
-| Field | Purpose |
-|---|---|
-| `result.first` | Index of the first completed task. |
-| `result.second` | Tuple of optional result slots. |
+| Field           | Purpose                            |
+| --------------- | ---------------------------------- |
+| `result.first`  | Index of the first completed task. |
+| `result.second` | Tuple of optional result slots.    |
 
 Example:
 
@@ -721,10 +721,10 @@ DNS APIs live in `vix::async::net`.
 
 Represents one resolved endpoint.
 
-| Field | Purpose |
-|---|---|
-| `ip` | IP address as text. |
-| `port` | Port number. |
+| Field  | Purpose             |
+| ------ | ------------------- |
+| `ip`   | IP address as text. |
+| `port` | Port number.        |
 
 ### make_dns_resolver
 
@@ -768,23 +768,23 @@ vix::async::net::tcp_endpoint endpoint{
 };
 ```
 
-| Field | Purpose |
-|---|---|
+| Field  | Purpose                 |
+| ------ | ----------------------- |
 | `host` | Hostname or IP address. |
-| `port` | TCP port. |
+| `port` | TCP port.               |
 
 ### tcp_stream
 
 Represents a connected TCP stream.
 
-| Method | Purpose |
-|---|---|
-| `async_connect(endpoint, token)` | Connects to a remote endpoint. |
-| `async_read(buffer, token)` | Reads bytes. |
-| `async_write(buffer, token)` | Writes bytes. |
-| `close()` | Closes the stream. |
-| `is_open()` | Checks open state. |
-| `native_handle()` | Returns native socket handle when supported. |
+| Method                           | Purpose                                      |
+| -------------------------------- | -------------------------------------------- |
+| `async_connect(endpoint, token)` | Connects to a remote endpoint.               |
+| `async_read(buffer, token)`      | Reads bytes.                                 |
+| `async_write(buffer, token)`     | Writes bytes.                                |
+| `close()`                        | Closes the stream.                           |
+| `is_open()`                      | Checks open state.                           |
+| `native_handle()`                | Returns native socket handle when supported. |
 
 ### make_tcp_stream
 
@@ -837,12 +837,12 @@ const std::size_t bytes = co_await stream->async_write(
 
 Represents a listening TCP socket.
 
-| Method | Purpose |
-|---|---|
-| `async_listen(endpoint, backlog)` | Starts listening. |
-| `async_accept(token)` | Accepts one connection. |
-| `close()` | Closes the listener. |
-| `is_open()` | Checks open state. |
+| Method                            | Purpose                 |
+| --------------------------------- | ----------------------- |
+| `async_listen(endpoint, backlog)` | Starts listening.       |
+| `async_accept(token)`             | Accepts one connection. |
+| `close()`                         | Closes the listener.    |
+| `is_open()`                       | Checks open state.      |
 
 ### make_tcp_listener
 
@@ -886,31 +886,31 @@ vix::async::net::udp_endpoint endpoint{
 };
 ```
 
-| Field | Purpose |
-|---|---|
+| Field  | Purpose                 |
+| ------ | ----------------------- |
 | `host` | Hostname or IP address. |
-| `port` | UDP port. |
+| `port` | UDP port.               |
 
 ### udp_datagram
 
 Describes a received datagram.
 
-| Field | Purpose |
-|---|---|
-| `from` | Sender endpoint. |
+| Field   | Purpose                   |
+| ------- | ------------------------- |
+| `from`  | Sender endpoint.          |
 | `bytes` | Number of received bytes. |
 
 ### udp_socket
 
 Represents a UDP socket.
 
-| Method | Purpose |
-|---|---|
-| `async_bind(endpoint)` | Binds to a local endpoint. |
-| `async_send_to(buffer, endpoint, token)` | Sends one datagram. |
-| `async_recv_from(buffer, token)` | Receives one datagram. |
-| `close()` | Closes the socket. |
-| `is_open()` | Checks open state. |
+| Method                                   | Purpose                    |
+| ---------------------------------------- | -------------------------- |
+| `async_bind(endpoint)`                   | Binds to a local endpoint. |
+| `async_send_to(buffer, endpoint, token)` | Sends one datagram.        |
+| `async_recv_from(buffer, token)`         | Receives one datagram.     |
+| `close()`                                | Closes the socket.         |
+| `is_open()`                              | Checks open state.         |
 
 ### make_udp_socket
 
@@ -961,19 +961,19 @@ const auto datagram = co_await socket->async_recv_from(
 
 Async core errors use `vix::async::core::errc`.
 
-| Error | Meaning |
-|---|---|
-| `ok` | No error. |
-| `invalid_argument` | Invalid argument. |
-| `not_ready` | Operation cannot complete yet. |
-| `timeout` | Operation timed out. |
-| `canceled` | Operation was canceled. |
-| `closed` | Resource was closed. |
-| `overflow` | Capacity or numeric overflow. |
-| `stopped` | Runtime or scheduler was stopped. |
-| `queue_full` | Internal task queue is full. |
-| `rejected` | Task submission was rejected. |
-| `not_supported` | Operation is not supported on this platform. |
+| Error              | Meaning                                      |
+| ------------------ | -------------------------------------------- |
+| `ok`               | No error.                                    |
+| `invalid_argument` | Invalid argument.                            |
+| `not_ready`        | Operation cannot complete yet.               |
+| `timeout`          | Operation timed out.                         |
+| `canceled`         | Operation was canceled.                      |
+| `closed`           | Resource was closed.                         |
+| `overflow`         | Capacity or numeric overflow.                |
+| `stopped`          | Runtime or scheduler was stopped.            |
+| `queue_full`       | Internal task queue is full.                 |
+| `rejected`         | Task submission was rejected.                |
+| `not_supported`    | Operation is not supported on this platform. |
 
 ### make_error_code
 
@@ -987,31 +987,31 @@ std::error_code ec =
 
 ## Operation table
 
-| Goal | API |
-|---|---|
-| Create runtime | `vix::async::core::io_context ctx` |
-| Post callback | `ctx.post(...)` |
-| Run scheduler | `ctx.run()` |
-| Stop scheduler | `ctx.stop()` |
-| Start task | `std::move(task).start(ctx.get_scheduler())` |
-| Sleep coroutine | `ctx.timers().sleep_for(duration)` |
-| Delayed callback | `ctx.timers().after(duration, fn)` |
-| Create cancellation source | `cancel_source source` |
-| Get cancellation token | `source.token()` |
-| Request cancellation | `source.request_cancel()` |
-| Offload work | `ctx.cpu_pool().submit(fn)` |
-| Wait all tasks | `when_all(ctx.get_scheduler(), ...)` |
-| Wait first task | `when_any(ctx.get_scheduler(), ...)` |
-| Wait signal | `ctx.signals().async_wait()` |
-| Resolve DNS | `resolver->async_resolve(host, port)` |
-| Connect TCP | `stream->async_connect(endpoint)` |
-| Read TCP | `stream->async_read(buffer)` |
-| Write TCP | `stream->async_write(buffer)` |
-| Listen TCP | `listener->async_listen(endpoint)` |
-| Accept TCP | `listener->async_accept()` |
-| Bind UDP | `socket->async_bind(endpoint)` |
-| Send UDP | `socket->async_send_to(buffer, endpoint)` |
-| Receive UDP | `socket->async_recv_from(buffer)` |
+| Goal                       | API                                          |
+| -------------------------- | -------------------------------------------- |
+| Create runtime             | `vix::async::core::io_context ctx`           |
+| Post callback              | `ctx.post(...)`                              |
+| Run scheduler              | `ctx.run()`                                  |
+| Stop scheduler             | `ctx.stop()`                                 |
+| Start task                 | `std::move(task).start(ctx.get_scheduler())` |
+| Sleep coroutine            | `ctx.timers().sleep_for(duration)`           |
+| Delayed callback           | `ctx.timers().after(duration, fn)`           |
+| Create cancellation source | `cancel_source source`                       |
+| Get cancellation token     | `source.token()`                             |
+| Request cancellation       | `source.request_cancel()`                    |
+| Offload work               | `ctx.cpu_pool().submit(fn)`                  |
+| Wait all tasks             | `when_all(ctx.get_scheduler(), ...)`         |
+| Wait first task            | `when_any(ctx.get_scheduler(), ...)`         |
+| Wait signal                | `ctx.signals().async_wait()`                 |
+| Resolve DNS                | `resolver->async_resolve(host, port)`        |
+| Connect TCP                | `stream->async_connect(endpoint)`            |
+| Read TCP                   | `stream->async_read(buffer)`                 |
+| Write TCP                  | `stream->async_write(buffer)`                |
+| Listen TCP                 | `listener->async_listen(endpoint)`           |
+| Accept TCP                 | `listener->async_accept()`                   |
+| Bind UDP                   | `socket->async_bind(endpoint)`               |
+| Send UDP                   | `socket->async_send_to(buffer, endpoint)`    |
+| Receive UDP                | `socket->async_recv_from(buffer)`            |
 
 ## Complete minimal runtime example
 
@@ -1254,17 +1254,17 @@ std::move(t).start(ctx.get_scheduler());
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [Overview](/modules/async/) | Start with the async overview. |
-| [io_context](/modules/async/io-context) | Learn the runtime context. |
-| [Tasks](/modules/async/tasks) | Learn coroutine tasks. |
-| [Spawn](/modules/async/spawn) | Learn how to start tasks. |
-| [Timers](/modules/async/timers) | Learn timer sleeps and callbacks. |
-| [Cancellation](/modules/async/cancellation) | Learn cooperative cancellation. |
-| [Thread pool](/modules/async/thread-pool) | Learn background work. |
-| [when_all / when_any](/modules/async/when) | Learn task composition. |
-| [Signals](/modules/async/signals) | Learn signal handling. |
-| [TCP](/modules/async/tcp) | Learn TCP streams and listeners. |
-| [UDP](/modules/async/udp) | Learn UDP sockets. |
-| [DNS](/modules/async/dns) | Learn DNS resolution. |
+| Page                                        | Purpose                           |
+| ------------------------------------------- | --------------------------------- |
+| [Overview](/modules/async/)                 | Start with the async overview.    |
+| [io_context](/modules/async/io-context)     | Learn the runtime context.        |
+| [Tasks](/modules/async/tasks)               | Learn coroutine tasks.            |
+| [Spawn](/modules/async/spawn)               | Learn how to start tasks.         |
+| [Timers](/modules/async/timers)             | Learn timer sleeps and callbacks. |
+| [Cancellation](/modules/async/cancellation) | Learn cooperative cancellation.   |
+| [Thread pool](/modules/async/thread-pool)   | Learn background work.            |
+| [when_all / when_any](/modules/async/when)  | Learn task composition.           |
+| [Signals](/modules/async/signals)           | Learn signal handling.            |
+| [TCP](/modules/async/tcp)                   | Learn TCP streams and listeners.  |
+| [UDP](/modules/async/udp)                   | Learn UDP sockets.                |
+| [DNS](/modules/async/dns)                   | Learn DNS resolution.             |

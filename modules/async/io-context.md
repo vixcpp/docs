@@ -242,13 +242,13 @@ after run = no
 
 `io_context` lazily creates services when they are first used.
 
-| Service | API | Purpose |
-|---|---|---|
-| Scheduler | `get_scheduler()` | Runs callbacks and resumes coroutines. |
-| CPU pool | `cpu_pool()` | Runs blocking or CPU-heavy work. |
-| Timers | `timers()` | Runs delayed callbacks and coroutine sleeps. |
-| Signals | `signals()` | Watches system signals. |
-| Network | `net()` | Provides the async networking backend. |
+| Service   | API               | Purpose                                      |
+| --------- | ----------------- | -------------------------------------------- |
+| Scheduler | `get_scheduler()` | Runs callbacks and resumes coroutines.       |
+| CPU pool  | `cpu_pool()`      | Runs blocking or CPU-heavy work.             |
+| Timers    | `timers()`        | Runs delayed callbacks and coroutine sleeps. |
+| Signals   | `signals()`       | Watches system signals.                      |
+| Network   | `net()`           | Provides the async networking backend.       |
 
 ### Timers service
 
@@ -580,15 +580,15 @@ Create one `io_context` for the async runtime. Start the main async task before 
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [Tasks](/modules/async/tasks) | Learn `task<T>` and `task<void>`. |
-| [Spawn](/modules/async/spawn) | Learn how to start async work. |
-| [Timers](/modules/async/timers) | Learn delayed work and sleeps. |
-| [Cancellation](/modules/async/cancellation) | Learn cancellation tokens. |
-| [Thread pool](/modules/async/thread-pool) | Learn background execution. |
-| [Signals](/modules/async/signals) | Learn signal handling. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                           |
+| --------------------------------------------- | --------------------------------- |
+| [Tasks](/modules/async/tasks)                 | Learn `task<T>` and `task<void>`. |
+| [Spawn](/modules/async/spawn)                 | Learn how to start async work.    |
+| [Timers](/modules/async/timers)               | Learn delayed work and sleeps.    |
+| [Cancellation](/modules/async/cancellation)   | Learn cancellation tokens.        |
+| [Thread pool](/modules/async/thread-pool)     | Learn background execution.       |
+| [Signals](/modules/async/signals)             | Learn signal handling.            |
+| [API Reference](/modules/async/api-reference) | See the public API surface.       |
 
 ## Next step
 

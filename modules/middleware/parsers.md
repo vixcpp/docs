@@ -1,844 +1,839 @@
 # Parsers
 
-The `parsers` group contains middleware for reading HTTP request bodies.
+The `parsers` group turns raw HTTP request bodies into typed data your handlers can use safely.
 
-It provides small parsers for common body formats: JSON, URL-encoded forms, multipart metadata, and multipart file uploads.
+A backend should not parse the same input manually in every route.
 
-For most application code, include:
+The parser middleware handles reusable request-body work:
 
-```cpp id="o4dlml"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
+```txt id="b55qwp"
+check Content-Type
+check body size
+parse the body
+store typed request state
+stop invalid requests before the handler
 ```
+
+Then the route handler reads typed state and focuses on application logic.
 
 The parser middleware lives under:
 
-```cpp id="ivpm3s"
+```cpp id="un2oq4"
 namespace vix::middleware::parsers
 ```
 
-When using `vix::App`, prefer the helpers under:
+When using `vix::App`, prefer the App helpers:
 
-```cpp id="j74q6o"
+```cpp id="hq1d1e"
 namespace vix::middleware::app
 ```
 
 ## What parsers provides
 
-The parsers group includes:
+The parser group includes:
 
-```txt id="ze65op"
-json()
-  parses application/json request bodies
+| Middleware         | Purpose                                           |
+| ------------------ | ------------------------------------------------- |
+| `json()`           | Parse `application/json` bodies                   |
+| `form()`           | Parse `application/x-www-form-urlencoded` bodies  |
+| `multipart()`      | Validate multipart metadata and boundary          |
+| `multipart_save()` | Parse multipart form-data and save uploaded files |
 
-form()
-  parses application/x-www-form-urlencoded request bodies
+For normal `vix::App` applications, use the App presets:
 
-multipart()
-  validates multipart/form-data metadata and extracts boundary information
-
-multipart_save()
-  parses multipart/form-data, stores fields, and saves uploaded files
+```cpp id="zmpqfx"
+middleware::app::json_dev(...)
+middleware::app::json_strict_dev(...)
+middleware::app::form_dev(...)
+middleware::app::multipart_dev(...)
+middleware::app::multipart_save_dev(...)
 ```
 
-The parsers decode request bodies and store typed values in request state.
+## Why parsers matter
 
-They do not validate your application fields. Validation remains part of the handler or validation layer.
+Without parser middleware, every route must do this manually:
 
-## Basic idea
-
-A parser middleware usually runs before the handler.
-
-```txt id="vr1gyl"
-request
-  -> body_limit
-  -> parser
-  -> handler reads parsed state
+```txt id="eylg2x"
+read raw body
+check Content-Type
+handle empty body
+enforce max size
+parse JSON or form data
+handle parse errors
+return consistent error responses
 ```
 
-The parser reads the raw request body, checks the content type when required, parses the body, then stores a typed value in request state.
+With parser middleware, this reusable work happens before the handler.
 
-A handler can then read that value:
+```cpp id="fxea15"
+app.use("/api/users", middleware::app::json_strict_dev(4096));
 
-```cpp id="yai276"
-auto &body = req.state<vix::middleware::parsers::JsonBody>();
-```
-
-Use `state<T>()` when the parser is expected to have run.
-
-Use `try_state<T>()` when the value may be missing.
-
-## Use body limits before parsers
-
-Parsers work on request bodies. It is usually better to reject oversized requests before parsing them.
-
-```cpp id="pxqjpr"
-app.use(vix::middleware::app::body_limit_dev());
-app.use(vix::middleware::app::json_dev());
-```
-
-The body limit middleware can stop large requests early with `413 Payload Too Large`.
-
-The parser then only receives bodies that passed the size policy.
-
-## JSON parser
-
-`json()` parses an `application/json` request body.
-
-It stores the parsed value in request state as:
-
-```cpp id="pae1w2"
-vix::middleware::parsers::JsonBody
-```
-
-`JsonBody` contains:
-
-```cpp id="dbu0m3"
-nlohmann::json value;
-```
-
-Because Vix JSON uses `nlohmann::json` underneath, normal JSON operations work on the parsed value.
-
-## Use JSON parser with App
-
-```cpp id="mo6ngu"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::body_limit_dev());
-  app.use(vix::middleware::app::json_dev());
-
-  app.post("/api/echo", [](vix::Request &req, vix::Response &res)
-  {
-    auto &body = req.state<vix::middleware::parsers::JsonBody>();
-
-    res.json({
-      "received", body.value
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-Request:
-
-```bash id="t4bgvu"
-curl -i \
-  -X POST http://127.0.0.1:8080/api/echo \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Ada"}'
-```
-
-Response shape:
-
-```json id="qj0c25"
-{
-  "received": {
-    "name": "Ada"
-  }
-}
-```
-
-## Read JSON fields
-
-The parser only parses the body. Your handler still decides which fields are needed.
-
-```cpp id="ozi6kw"
 app.post("/api/users", [](vix::Request &req, vix::Response &res)
 {
   auto &body = req.state<vix::middleware::parsers::JsonBody>();
 
-  const std::string name =
-    body.value.value("name", "");
-
-  if (name.empty())
-  {
-    res.status(422).json({
-      "error", "Missing required field",
-      "field", "name"
-    });
-    return;
-  }
-
-  res.status(201).json({
-    "ok", true,
-    "name", name
-  });
-});
-```
-
-For richer JSON work, use the `vix::json` module helpers in your handler.
-
-The middleware parser decodes the HTTP body. The JSON module gives you general-purpose JSON helpers.
-
-## JsonParserOptions
-
-Use `JsonParserOptions` when you need explicit behavior.
-
-```cpp id="hwxjxe"
-vix::middleware::parsers::JsonParserOptions opt;
-
-opt.require_content_type = true;
-opt.allow_empty = true;
-opt.max_bytes = 1024 * 1024;
-opt.store_in_state = true;
-
-auto mw = vix::middleware::parsers::json(opt);
-```
-
-Main options:
-
-```txt id="qfb9ue"
-require_content_type
-  require Content-Type to start with application/json
-
-allow_empty
-  allow an empty body and store an empty object
-
-max_bytes
-  maximum body size for this parser, 0 means no parser-specific limit
-
-store_in_state
-  store JsonBody in request state
-```
-
-Use `body_limit()` for a global body size policy. Use `max_bytes` when the JSON parser itself needs its own limit.
-
-## JSON parser errors
-
-The JSON parser can stop the request and return a normalized error.
-
-Common responses include:
-
-```txt id="jgoxhc"
-400 empty_body
-  body is empty while allow_empty is false
-
-400 invalid_json
-  body could not be parsed as JSON
-
-413 payload_too_large
-  body exceeds max_bytes
-
-415 unsupported_media_type
-  Content-Type is not application/json
-```
-
-If parsing fails, the route handler is not called.
-
-## Form parser
-
-`form()` parses `application/x-www-form-urlencoded` request bodies.
-
-It stores the parsed fields in request state as:
-
-```cpp id="jmelwc"
-vix::middleware::parsers::FormBody
-```
-
-`FormBody` contains:
-
-```cpp id="mr447w"
-std::unordered_map<std::string, std::string> fields;
-```
-
-The parser decodes common URL-encoded form behavior:
-
-```txt id="qcsxty"
-+ becomes space
-%XX is decoded when valid
-key=value pairs are split by &
-```
-
-## Use form parser with App
-
-```cpp id="wt2dmd"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
-{
-  vix::App app;
-
-  app.use(vix::middleware::app::body_limit_dev());
-  app.use(vix::middleware::app::form_dev());
-
-  app.post("/contact", [](vix::Request &req, vix::Response &res)
-  {
-    auto &form = req.state<vix::middleware::parsers::FormBody>();
-
-    res.json({
-      "name", form.fields["name"]
-    });
-  });
-
-  app.run(8080);
-
-  return 0;
-}
-```
-
-Request:
-
-```bash id="9wb3nt"
-curl -i \
-  -X POST http://127.0.0.1:8080/contact \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d 'name=Ada+Lovelace'
-```
-
-Response shape:
-
-```json id="89q6oa"
-{
-  "name": "Ada Lovelace"
-}
-```
-
-## Read form fields safely
-
-A form field may be missing.
-
-Use normal map lookup when you need to check presence.
-
-```cpp id="6wm3yp"
-app.post("/contact", [](vix::Request &req, vix::Response &res)
-{
-  auto &form = req.state<vix::middleware::parsers::FormBody>();
-
-  auto it = form.fields.find("email");
-
-  if (it == form.fields.end() || it->second.empty())
-  {
-    res.status(422).json({
-      "error", "Missing required field",
-      "field", "email"
-    });
-    return;
-  }
-
   res.json({
-    "email", it->second
+    "ok", true,
+    "received", body.value.dump()
   });
 });
 ```
 
-This keeps parsing separate from validation.
-
-## FormParserOptions
-
-Use `FormParserOptions` when you need explicit behavior.
-
-```cpp id="we6v4s"
-vix::middleware::parsers::FormParserOptions opt;
-
-opt.require_content_type = true;
-opt.max_bytes = 1024 * 64;
-opt.store_in_state = true;
-
-auto mw = vix::middleware::parsers::form(opt);
-```
-
-Main options:
-
-```txt id="jsbr9s"
-require_content_type
-  require Content-Type to start with application/x-www-form-urlencoded
-
-max_bytes
-  maximum body size for this parser, 0 means no parser-specific limit
-
-store_in_state
-  store FormBody in request state
-```
-
-## Form parser errors
-
-The form parser can return:
-
-```txt id="5yqooc"
-413 payload_too_large
-  body exceeds max_bytes
-
-415 unsupported_media_type
-  Content-Type is not application/x-www-form-urlencoded
-```
+The handler can assume that the body was already parsed.
 
 If parsing fails, the handler is not called.
 
-## Multipart probe
+## Recommended order
 
-`multipart()` validates multipart metadata.
+Parser middleware should usually run after security and body size checks.
 
-It does not parse every part and it does not save uploaded files. It checks that the request is `multipart/form-data`, extracts the boundary, records the body size, and stores this information in request state.
+```cpp id="nqg8r2"
+app.use("/api", middleware::app::security_headers_dev());
+app.use("/api", middleware::app::cors_dev());
+app.use("/api", middleware::app::rate_limit_dev());
+app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
 
-It stores:
-
-```cpp id="yxnwvg"
-vix::middleware::parsers::MultipartInfo
+app.use("/api/users", middleware::app::json_strict_dev(4096));
 ```
 
-`MultipartInfo` contains:
+The order matters.
 
-```txt id="m58ou3"
-content_type
-boundary
-body_bytes
+```txt id="ium1xx"
+rate limit
+  rejects abusive clients
+
+body limit
+  rejects oversized bodies
+
+parser
+  parses only valid-sized bodies
+
+handler
+  uses typed state
 ```
 
-Use this middleware when you only need to verify that a request is multipart and inspect its boundary information.
+Avoid parsing large or invalid requests before they have passed basic limits.
 
-## Use multipart metadata parser
+## JSON parser
 
-```cpp id="zvms96"
+`json()` parses JSON request bodies and stores:
+
+```cpp id="c9oox8"
+vix::middleware::parsers::JsonBody
+```
+
+Use JSON parsing for API routes.
+
+The most common App preset is:
+
+```cpp id="yzyqfe"
+app.use("/api/users", middleware::app::json_strict_dev(4096));
+```
+
+`json_strict_dev()` is useful when a route requires:
+
+```txt id="rwvibc"
+Content-Type: application/json
+non-empty body
+valid JSON
+body size under the configured limit
+```
+
+## JSON example
+
+```cpp id="dsks8g"
 #include <vix.hpp>
 #include <vix/middleware.hpp>
 
+using namespace vix;
+
 int main()
 {
-  vix::App app;
+  App app;
 
-  app.use(vix::middleware::app::body_limit_dev());
-  app.use(vix::middleware::app::multipart_dev());
+  app.use("/api/users", middleware::app::json_strict_dev(4096));
 
-  app.post("/upload-info", [](vix::Request &req, vix::Response &res)
+  app.post("/api/users", [](Request &req, Response &res)
   {
-    auto &info = req.state<vix::middleware::parsers::MultipartInfo>();
+    auto &body = req.state<middleware::parsers::JsonBody>();
 
-    res.json({
-      "boundary", info.boundary,
-      "body_bytes", info.body_bytes
+    const std::string name = body.value.value("name", "");
+    const std::string email = body.value.value("email", "");
+
+    if (name.empty())
+    {
+      res.status(422).json({
+        "ok", false,
+        "error", "Missing name"
+      });
+      return;
+    }
+
+    if (email.empty())
+    {
+      res.status(422).json({
+        "ok", false,
+        "error", "Missing email"
+      });
+      return;
+    }
+
+    res.status(201).json({
+      "ok", true,
+      "user", {
+        "name", name,
+        "email", email
+      }
     });
   });
 
   app.run(8080);
-
-  return 0;
 }
 ```
 
-This example shows the metadata flow. It does not save files.
+Run:
 
-## MultipartOptions
+```bash id="srjzug"
+vix run json_parser_demo.cpp
+```
 
-Use `MultipartOptions` when you need explicit behavior.
+Send valid JSON:
 
-```cpp id="mtqpar"
+```bash id="x7aprg"
+curl -i \
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Ada","email":"ada@example.com"}'
+```
+
+Expected status:
+
+```txt id="mqgtax"
+201 Created
+```
+
+Send invalid JSON:
+
+```bash id="cz84h3"
+curl -i \
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":}'
+```
+
+Expected status:
+
+```txt id="eslnh8"
+400 Bad Request
+```
+
+Send wrong content type:
+
+```bash id="cipwji"
+curl -i \
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: text/plain" \
+  -d '{"name":"Ada"}'
+```
+
+Expected status:
+
+```txt id="skt5xw"
+415 Unsupported Media Type
+```
+
+Send empty body:
+
+```bash id="fmb8gi"
+curl -i \
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: application/json" \
+  -d ''
+```
+
+Expected status with strict JSON:
+
+```txt id="qedcsm"
+400 Bad Request
+```
+
+## Strict JSON vs relaxed JSON
+
+Use strict JSON when the route requires a body.
+
+```cpp id="xvw9o7"
+app.use("/api/users", middleware::app::json_strict_dev(4096));
+```
+
+Use relaxed JSON when an empty body is acceptable.
+
+```cpp id="iq3aui"
+app.use("/api/search", middleware::app::json_dev(
+  4096,
+  true,
+  true
+));
+```
+
+The practical rule is:
+
+| Route type             | Parser                 |
+| ---------------------- | ---------------------- |
+| `POST /api/users`      | `json_strict_dev(...)` |
+| `PUT /api/users/:id`   | `json_strict_dev(...)` |
+| `PATCH /api/users/:id` | `json_strict_dev(...)` |
+| Optional filter body   | `json_dev(...)`        |
+| Health or GET route    | No JSON parser         |
+
+Do not install JSON parsing globally unless every route under that prefix expects JSON.
+
+Prefer route-specific parser prefixes.
+
+## JSON options
+
+Use lower-level options for exact behavior.
+
+```cpp id="zl5zu0"
+vix::middleware::parsers::JsonParserOptions opt;
+
+opt.require_content_type = true;
+opt.allow_empty = false;
+opt.max_bytes = 4096;
+opt.store_in_state = true;
+
+app.use("/api/json", vix::middleware::app::adapt_ctx(
+  vix::middleware::parsers::json(opt)
+));
+```
+
+Main options:
+
+| Option                 | Purpose                                  |
+| ---------------------- | ---------------------------------------- |
+| `require_content_type` | Require `Content-Type: application/json` |
+| `allow_empty`          | Allow empty body and store `{}`          |
+| `max_bytes`            | Maximum body size for the parser         |
+| `store_in_state`       | Store `JsonBody` in request state        |
+
+Common JSON errors:
+
+| Status | Code                     | Meaning                          |
+| ------ | ------------------------ | -------------------------------- |
+| `400`  | `empty_body`             | Body is required but empty       |
+| `400`  | `invalid_json`           | Body could not be parsed as JSON |
+| `413`  | `payload_too_large`      | Body exceeds parser limit        |
+| `415`  | `unsupported_media_type` | Content type is not JSON         |
+
+## Form parser
+
+`form()` parses:
+
+```txt id="lyrq52"
+application/x-www-form-urlencoded
+```
+
+It stores:
+
+```cpp id="jykn7g"
+vix::middleware::parsers::FormBody
+```
+
+Use it for classic HTML forms and simple form posts.
+
+## Form example
+
+```cpp id="qyfcli"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/form", middleware::app::form_dev(1024));
+
+  app.get("/", [](Request &, Response &res)
+  {
+    res.text("POST /form with application/x-www-form-urlencoded");
+  });
+
+  app.post("/form", [](Request &req, Response &res)
+  {
+    auto &form = req.state<middleware::parsers::FormBody>();
+
+    const auto name = form.fields.find("name");
+
+    if (name == form.fields.end() || name->second.empty())
+    {
+      res.status(422).json({
+        "ok", false,
+        "error", "Missing name"
+      });
+      return;
+    }
+
+    res.json({
+      "ok", true,
+      "name", name->second
+    });
+  });
+
+  app.run(8080);
+}
+```
+
+Test:
+
+```bash id="z9dcjw"
+curl -i \
+  -X POST http://127.0.0.1:8080/form \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data "name=Ada&city=Kampala"
+```
+
+Expected status:
+
+```txt id="qm2wqz"
+200 OK
+```
+
+Wrong content type:
+
+```bash id="gh6qps"
+curl -i \
+  -X POST http://127.0.0.1:8080/form \
+  -H "Content-Type: text/plain" \
+  --data "name=Ada"
+```
+
+Expected status:
+
+```txt id="glfa84"
+415 Unsupported Media Type
+```
+
+## Form options
+
+Use lower-level options when needed.
+
+```cpp id="iy74p7"
+vix::middleware::parsers::FormParserOptions opt;
+
+opt.require_content_type = true;
+opt.max_bytes = 1024;
+opt.store_in_state = true;
+
+app.use("/form", vix::middleware::app::adapt_ctx(
+  vix::middleware::parsers::form(opt)
+));
+```
+
+Main options:
+
+| Option                 | Purpose                               |
+| ---------------------- | ------------------------------------- |
+| `require_content_type` | Require URL-encoded form content type |
+| `max_bytes`            | Maximum body size                     |
+| `store_in_state`       | Store `FormBody` in request state     |
+
+Common form errors:
+
+| Status | Code                     | Meaning                              |
+| ------ | ------------------------ | ------------------------------------ |
+| `413`  | `payload_too_large`      | Body exceeds parser limit            |
+| `415`  | `unsupported_media_type` | Content type is not URL-encoded form |
+
+## Multipart parser
+
+`multipart()` validates multipart request metadata.
+
+It checks:
+
+```txt id="ju21fz"
+Content-Type starts with multipart/form-data
+boundary exists when required
+body size does not exceed the configured limit
+```
+
+It stores:
+
+```cpp id="r243gq"
+vix::middleware::parsers::MultipartInfo
+```
+
+This parser is useful when you only need to validate multipart metadata.
+
+For real file uploads, use `multipart_save()` through the App helper.
+
+## Multipart save
+
+`multipart_save()` handles multipart form-data and saves uploaded files.
+
+The App preset is usually:
+
+```cpp id="e8dfsy"
+app.use("/upload", middleware::app::multipart_save_dev("uploads"));
+```
+
+It stores a parsed multipart form in request state.
+
+```cpp id="lxbtpw"
+vix::middleware::parsers::MultipartForm
+```
+
+A handler can then read the parsed form and return a response.
+
+## Multipart upload example
+
+```cpp id="vxd1rf"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
+
+using namespace vix;
+
+int main()
+{
+  App app;
+
+  app.use("/upload", middleware::app::multipart_save_dev("uploads"));
+
+  app.get("/", [](Request &, Response &res)
+  {
+    res.text("POST /upload with multipart/form-data");
+  });
+
+  app.post("/upload", [](Request &req, Response &res)
+  {
+    auto &form = req.state<middleware::parsers::MultipartForm>();
+
+    res.json(middleware::app::multipart_json(form));
+  });
+
+  app.run(8080);
+}
+```
+
+Run:
+
+```bash id="lo56rf"
+vix run multipart_upload_demo.cpp
+```
+
+Upload fields:
+
+```bash id="dswgpw"
+curl -i \
+  -X POST http://127.0.0.1:8080/upload \
+  -F "title=Profile" \
+  -F "description=Avatar upload"
+```
+
+Upload a file:
+
+```bash id="gqyn7f"
+curl -i \
+  -X POST http://127.0.0.1:8080/upload \
+  -F "title=Avatar" \
+  -F "file=@./avatar.png"
+```
+
+The middleware saves uploaded files into:
+
+```txt id="kzscus"
+uploads/
+```
+
+The handler receives the parsed multipart state.
+
+## Multipart with CORS
+
+If a browser frontend uploads files from another origin, install CORS before multipart parsing.
+
+```cpp id="n0ge4a"
+app.use("/upload", middleware::app::cors_dev({"http://localhost:5173"}));
+app.use("/upload", middleware::app::multipart_save_dev("uploads"));
+
+app.options("/upload", [](Request &, Response &res)
+{
+  res.status(204).send();
+});
+```
+
+The CORS middleware must be able to answer preflight requests before upload parsing runs.
+
+## Multipart options
+
+Use lower-level options when you only need metadata validation.
+
+```cpp id="p0pzcc"
 vix::middleware::parsers::MultipartOptions opt;
 
 opt.require_boundary = true;
 opt.max_bytes = 1024 * 1024;
 opt.store_in_state = true;
 
-auto mw = vix::middleware::parsers::multipart(opt);
+app.use("/multipart", vix::middleware::app::adapt_ctx(
+  vix::middleware::parsers::multipart(opt)
+));
 ```
 
 Main options:
 
-```txt id="24p9kp"
-require_boundary
-  reject multipart/form-data without a boundary
+| Option             | Purpose                                |
+| ------------------ | -------------------------------------- |
+| `require_boundary` | Require the multipart boundary         |
+| `max_bytes`        | Maximum body size                      |
+| `store_in_state`   | Store `MultipartInfo` in request state |
 
-max_bytes
-  maximum body size for this parser, 0 means no parser-specific limit
+Common multipart errors:
 
-store_in_state
-  store MultipartInfo in request state
+| Status | Code                     | Meaning                                 |
+| ------ | ------------------------ | --------------------------------------- |
+| `400`  | `missing_boundary`       | Multipart boundary is missing           |
+| `413`  | `payload_too_large`      | Body exceeds parser limit               |
+| `415`  | `unsupported_media_type` | Content type is not multipart form-data |
+
+## Choosing the right parser
+
+Use this rule:
+
+| Request body             | Middleware                |
+| ------------------------ | ------------------------- |
+| JSON API body            | `json_strict_dev(...)`    |
+| Optional JSON body       | `json_dev(...)`           |
+| HTML form post           | `form_dev(...)`           |
+| Multipart metadata check | `multipart(...)`          |
+| File uploads             | `multipart_save_dev(...)` |
+
+Install parsers only where the route expects that body format.
+
+Good:
+
+```cpp id="l92w49"
+app.use("/api/users", middleware::app::json_strict_dev(4096));
+app.use("/upload", middleware::app::multipart_save_dev("uploads"));
 ```
 
-## Multipart metadata errors
+Avoid:
 
-The multipart metadata parser can return:
-
-```txt id="hmaoj4"
-400 missing_boundary
-  multipart/form-data boundary is missing
-
-413 payload_too_large
-  body exceeds max_bytes
-
-415 unsupported_media_type
-  Content-Type is not multipart/form-data
+```cpp id="yly77p"
+app.use("/", middleware::app::json_strict_dev(4096));
 ```
 
-If the request is invalid, the handler is not called.
+A global strict parser can reject routes that do not have request bodies.
 
-## Multipart file upload
+## Parsers and typed state
 
-`multipart_save()` parses multipart form data, stores text fields, saves uploaded files, and exposes the result in request state.
+Every parser stores a typed object.
 
-It stores:
+| Parser             | State type      |
+| ------------------ | --------------- |
+| `json()`           | `JsonBody`      |
+| `form()`           | `FormBody`      |
+| `multipart()`      | `MultipartInfo` |
+| `multipart_save()` | `MultipartForm` |
 
-```cpp id="l3868o"
-vix::middleware::parsers::MultipartForm
+Read state in the handler:
+
+```cpp id="qu9r8d"
+auto &body = req.state<vix::middleware::parsers::JsonBody>();
 ```
 
-A multipart form can contain:
+Use `state<T>()` when the parser must exist.
 
-```txt id="td09z7"
-fields
-  text fields from the form
+Use `try_state<T>()` when the parser may be optional.
 
-files
-  uploaded files saved to disk
-```
+```cpp id="bnmr6m"
+auto *body = req.try_state<vix::middleware::parsers::JsonBody>();
 
-Use `multipart_save()` when the application needs to accept uploaded files.
-
-## Use multipart_save
-
-```cpp id="2tj9c2"
-#include <vix.hpp>
-#include <vix/middleware.hpp>
-
-int main()
+if (!body)
 {
-  vix::App app;
-
-  app.use(vix::middleware::app::multipart_save_dev("uploads"));
-
-  app.post("/upload", [](vix::Request &req, vix::Response &res)
-  {
-    auto &form = req.state<vix::middleware::parsers::MultipartForm>();
-
-    res.json({
-      "fields", form.fields.size(),
-      "files", form.files.size()
-    });
+  res.status(500).json({
+    "ok", false,
+    "error", "json_state_missing"
   });
-
-  app.run(8080);
-
-  return 0;
+  return;
 }
 ```
 
-Request shape:
+## Parsers and validation
 
-```bash id="0utb3x"
-curl -i \
-  -X POST http://127.0.0.1:8080/upload \
-  -F 'title=hello' \
-  -F 'file=@hello.txt'
+Parsers are not full business validators.
+
+A parser answers:
+
+```txt id="e1rvbb"
+Is the body syntactically valid?
+Can it be decoded?
+Can the result be stored?
 ```
 
-Response shape:
+Application validation answers:
 
-```json id="5ce4m2"
-{
-  "fields": 1,
-  "files": 1
-}
+```txt id="k889ub"
+Is this field required?
+Is this email valid?
+Is this quantity positive?
+Is this product available?
 ```
 
-## Read uploaded file metadata
+Example:
 
-A saved file entry contains information such as the field name, original filename, content type, size, and saved path.
-
-```cpp id="qwqx2v"
-app.post("/upload", [](vix::Request &req, vix::Response &res)
+```cpp id="iays10"
+app.post("/api/orders", [](vix::Request &req, vix::Response &res)
 {
-  auto &form = req.state<vix::middleware::parsers::MultipartForm>();
+  auto &body = req.state<vix::middleware::parsers::JsonBody>();
 
-  if (form.files.empty())
+  const int quantity = body.value.value("quantity", 0);
+
+  if (quantity <= 0)
   {
-    res.status(400).json({
-      "error", "No file uploaded"
+    res.status(422).json({
+      "ok", false,
+      "error", "Quantity must be positive"
     });
     return;
   }
 
-  const auto &file = form.files.front();
-
-  res.json({
-    "field", file.field_name,
-    "filename", file.filename,
-    "content_type", file.content_type,
-    "bytes", file.bytes,
-    "saved_path", file.saved_path
+  res.status(201).json({
+    "ok", true
   });
 });
 ```
 
-This is still only metadata. The application decides what to do with the saved file.
+The parser validates the body format.
 
-## Configure multipart_save
+The handler validates application rules.
 
-Use `MultipartSaveOptions` when you need explicit upload behavior.
+## Parsers and body limits
 
-```cpp id="hbr1bj"
-vix::middleware::parsers::MultipartSaveOptions opt;
+Use body limits before parsers.
 
-opt.max_bytes = 10 * 1024 * 1024;
-opt.max_files = 4;
-opt.max_file_bytes = 5 * 1024 * 1024;
-opt.upload_dir = "uploads";
-opt.create_upload_dir = true;
-opt.keep_original_filename = false;
-opt.keep_extension = true;
-opt.store_in_state = true;
-
-auto mw = vix::middleware::parsers::multipart_save(opt);
+```cpp id="s06cax"
+app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
+app.use("/api/users", middleware::app::json_strict_dev(4096));
 ```
 
-Common options:
+This avoids doing parser work on oversized requests.
 
-```txt id="9lvrc1"
-max_bytes
-  maximum total request body size
+A parser can still have its own `max_bytes`.
 
-max_files
-  maximum number of files accepted
+The body limit protects the broader route group.
 
-max_file_bytes
-  maximum size for one uploaded file
+The parser limit protects the specific body format.
 
-upload_dir
-  directory where uploaded files are saved
+## Complete example
 
-create_upload_dir
-  create the upload directory when missing
+This example combines JSON, form data, and multipart upload routes.
 
-keep_original_filename
-  preserve the original filename when saving
+```cpp id="lbkuwz"
+#include <vix.hpp>
+#include <vix/middleware.hpp>
 
-keep_extension
-  preserve the file extension when generating saved names
+using namespace vix;
 
-store_in_state
-  store MultipartForm in request state
+int main()
+{
+  App app;
+
+  app.use("/api", middleware::app::security_headers_dev());
+  app.use("/api", middleware::app::rate_limit_dev());
+  app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
+
+  app.use("/api/users", middleware::app::json_strict_dev(4096));
+  app.use("/form", middleware::app::form_dev(4096));
+  app.use("/upload", middleware::app::multipart_save_dev("uploads"));
+
+  app.post("/api/users", [](Request &req, Response &res)
+  {
+    auto &body = req.state<middleware::parsers::JsonBody>();
+
+    res.status(201).json({
+      "ok", true,
+      "json", body.value.dump()
+    });
+  });
+
+  app.post("/form", [](Request &req, Response &res)
+  {
+    auto &form = req.state<middleware::parsers::FormBody>();
+
+    res.json({
+      "ok", true,
+      "fields_count", static_cast<long long>(form.fields.size())
+    });
+  });
+
+  app.post("/upload", [](Request &req, Response &res)
+  {
+    auto &form = req.state<middleware::parsers::MultipartForm>();
+
+    res.json(middleware::app::multipart_json(form));
+  });
+
+  app.run(8080);
+}
 ```
 
-Keep original filenames only when that is safe for your application. Generated names are usually safer for public uploads.
+Test JSON:
 
-## File upload responsibilities
-
-`multipart_save()` parses and saves files. It does not decide your file policy.
-
-Your application should still decide:
-
-```txt id="erx079"
-which file types are allowed
-which file size is acceptable
-where files should be stored long-term
-whether files should be scanned
-whether the filename should be trusted
-who is allowed to upload
-when temporary files should be deleted
+```bash id="dzeg8h"
+curl -i \
+  -X POST http://127.0.0.1:8080/api/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Ada"}'
 ```
 
-The middleware handles the HTTP multipart mechanics. The application owns the upload policy.
+Test form:
 
-## Parser order
-
-A practical order for body parsing is:
-
-```txt id="uo1jlc"
-body_limit
-  -> parser
-  -> authentication or handler
+```bash id="b8mzcm"
+curl -i \
+  -X POST http://127.0.0.1:8080/form \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  --data "name=Ada&city=Kampala"
 ```
 
-For authenticated uploads, the order can depend on your policy.
+Test multipart:
 
-If you want to reject unauthenticated requests before reading the body:
-
-```txt id="fpm8we"
-authentication
-  -> body_limit
-  -> multipart_save
-  -> handler
+```bash id="v9xy26"
+curl -i \
+  -X POST http://127.0.0.1:8080/upload \
+  -F "title=Avatar" \
+  -F "file=@./avatar.png"
 ```
-
-If you want to reject oversized requests before any auth work:
-
-```txt id="jkmeuv"
-body_limit
-  -> authentication
-  -> multipart_save
-  -> handler
-```
-
-Both are valid depending on the application. The important rule is to make the order intentional.
-
-## Do not install incompatible parsers globally
-
-A route that receives JSON should not be forced through the form parser.
-
-A route that receives multipart uploads should not be forced through the JSON parser.
-
-Use prefixes or route-specific installation when different areas of the application accept different body types.
-
-```cpp id="2u8ky2"
-app.use("/api/json", vix::middleware::app::json_dev());
-app.use("/upload", vix::middleware::app::multipart_save_dev("uploads"));
-```
-
-This keeps parser behavior predictable.
-
-## Content-Type matters
-
-By default, the parsers check `Content-Type`.
-
-```txt id="47j1y7"
-json()
-  expects application/json
-
-form()
-  expects application/x-www-form-urlencoded
-
-multipart()
-  expects multipart/form-data
-
-multipart_save()
-  expects multipart/form-data
-```
-
-This is usually what you want.
-
-If a parser returns `415 unsupported_media_type`, check the request `Content-Type` header.
-
-## Empty bodies
-
-The JSON parser can allow an empty body.
-
-When `allow_empty` is true, it can store an empty JSON object.
-
-```cpp id="cppbya"
-vix::middleware::parsers::JsonParserOptions opt;
-
-opt.allow_empty = true;
-```
-
-If `allow_empty` is false, an empty body returns:
-
-```txt id="p1g1wl"
-400 empty_body
-```
-
-Form and multipart requests usually need a meaningful body.
-
-## App helpers and low-level middleware
-
-The app helpers are convenient for normal applications:
-
-```cpp id="nhs97m"
-app.use(vix::middleware::app::json_dev());
-app.use(vix::middleware::app::form_dev());
-app.use(vix::middleware::app::multipart_dev());
-app.use(vix::middleware::app::multipart_save_dev("uploads"));
-```
-
-The low-level functions are useful when you need custom options:
-
-```cpp id="kkhm99"
-auto mw = vix::middleware::parsers::json({
-  .max_bytes = 1024 * 1024
-});
-```
-
-When a low-level parser returns a `MiddlewareFn`, adapt it for `vix::App` if needed:
-
-```cpp id="e7dxfg"
-app.use(vix::middleware::app::adapt_ctx(
-  vix::middleware::parsers::json({
-    .max_bytes = 1024 * 1024
-  })
-));
-```
-
-## Common parser errors
-
-Parsers can stop the request and return normalized errors.
-
-Common responses include:
-
-```txt id="gtvxe2"
-400 empty_body
-  JSON body is required
-
-400 invalid_json
-  JSON parsing failed
-
-400 missing_boundary
-  multipart boundary is missing
-
-413 payload_too_large
-  request body exceeds parser limit
-
-415 unsupported_media_type
-  Content-Type does not match the parser
-```
-
-The route handler is not called when a parser returns an error.
-
-## Development and production
-
-Development helpers are useful for local examples.
-
-```cpp id="omlc7c"
-app.use(vix::middleware::app::json_dev());
-app.use(vix::middleware::app::form_dev());
-app.use(vix::middleware::app::multipart_save_dev("uploads"));
-```
-
-Production applications should configure parser limits explicitly.
-
-Important production decisions include:
-
-```txt id="tcz7m0"
-maximum body size
-maximum upload size
-maximum number of files
-upload directory
-filename policy
-whether content type is required
-whether empty JSON bodies are allowed
-```
-
-The parser decodes the request. The application still owns validation and data policy.
-
-## What this module does not do
-
-The parsers group does not validate business fields.
-
-It does not sanitize uploaded content.
-
-It does not scan files.
-
-It does not store uploads in a database.
-
-It does not decide which users can upload.
-
-It does not replace the JSON module.
-
-It gives handlers a clean parsed representation of the request body.
 
 ## Summary
 
-`json()` parses JSON bodies and stores `JsonBody`.
+Use parser middleware to keep handlers focused.
 
-`form()` parses URL-encoded forms and stores `FormBody`.
+A parser should:
 
-`multipart()` validates multipart metadata and stores `MultipartInfo`.
+```txt id="uk9rwa"
+check the request body format
+reject invalid input early
+store typed request state
+let the handler work with parsed data
+```
 
-`multipart_save()` parses multipart form data, saves files, and stores `MultipartForm`.
+A good default pattern is:
 
-Use body limits before parsers, install parsers only where they apply, and keep validation in your application layer.
+```cpp id="adpg91"
+app.use("/api", middleware::app::body_limit_write_dev(1024 * 1024));
+app.use("/api/users", middleware::app::json_strict_dev(4096));
+```
 
-## Next steps
+Then inside the handler:
 
-Continue with:
+```cpp id="qlfi3k"
+auto &body = req.state<middleware::parsers::JsonBody>();
+```
 
-- [Performance](./performance)
-- [Authentication](./authentication)
-- [Security](./security)
-- [App Integration](./app-integration)
-- [API Reference](./api-reference)
+Remember:
+
+```txt id="bi59xt"
+body limit before parser
+parser before handler
+business validation inside the handler or validation layer
+```

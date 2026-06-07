@@ -623,15 +623,15 @@ Use signals for graceful shutdown. Register only the signals your app needs. Kee
 
 ## Related pages
 
-| Page | Purpose |
-|---|---|
-| [io_context](/modules/async/io-context) | Learn the runtime context. |
-| [Tasks](/modules/async/tasks) | Learn coroutine tasks. |
-| [Spawn](/modules/async/spawn) | Learn how to start async work. |
-| [Timers](/modules/async/timers) | Learn timers and sleeps. |
-| [Cancellation](/modules/async/cancellation) | Learn cancellation tokens. |
-| [Thread pool](/modules/async/thread-pool) | Learn background execution. |
-| [API Reference](/modules/async/api-reference) | See the public API surface. |
+| Page                                          | Purpose                        |
+| --------------------------------------------- | ------------------------------ |
+| [io_context](/modules/async/io-context)       | Learn the runtime context.     |
+| [Tasks](/modules/async/tasks)                 | Learn coroutine tasks.         |
+| [Spawn](/modules/async/spawn)                 | Learn how to start async work. |
+| [Timers](/modules/async/timers)               | Learn timers and sleeps.       |
+| [Cancellation](/modules/async/cancellation)   | Learn cancellation tokens.     |
+| [Thread pool](/modules/async/thread-pool)     | Learn background execution.    |
+| [API Reference](/modules/async/api-reference) | See the public API surface.    |
 
 ## Next step
 
