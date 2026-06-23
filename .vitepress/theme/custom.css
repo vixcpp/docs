@@ -1,78 +1,68 @@
 /* ============================================================
-   Vix.cpp Documentation — docs.rs-inspired system theme
-   ------------------------------------------------------------
-   Dense, sober, near-terminal. Built to make a LARGE surface
-   (30+ modules) easy to scan and navigate.
+   Vix.cpp Documentation — professional theme
+   Inspired by Mojo / docs.rs: clean sans-serif typography,
+   line-free sidebar, generous reading rhythm.
 
-   IMPORTANT — syntax highlighting:
-   Sections 7 and 8 KEEP the Shiki neutralization + all cb-*
-   token rules (coloring is produced at runtime by highlighter.js
-   / CodeBlock.vue). Do not remove them or code goes monochrome.
+   SYNTAX HIGHLIGHTING (sections 7-8): KEEPS the Shiki
+   neutralization + all cb-* token rules. Coloring is produced
+   at runtime by highlighter.js / CodeBlock.vue. Do not remove.
 
-   HEADER MODEL:
-   The custom header (.vix-nav in Layout.vue) is FIXED. Its total
-   height lives in --vix-header-h. Sidebar, content and aside are
-   all offset by that variable so nothing slides under the header.
+   HEADER: the custom header (.vix-nav) is FIXED; its height is
+   --vix-header-h. Sidebar/content/aside are offset by it.
    ============================================================ */
 
 /* ════════════════════════════════════════════════
-   0. DESIGN TOKENS
+   0. TOKENS
    ════════════════════════════════════════════════ */
 :root {
   --vix-radius: 6px;
   --vix-radius-s: 4px;
   --vix-transition: 0.12s ease;
 
-  /* Layout — tuned for a wide docs surface */
-  --vix-sidebar-w: 268px;
-  --vix-aside-w: 232px;
-  --vix-content-max: 760px;
+  --vix-sidebar-w: 272px;
+  --vix-aside-w: 240px;
+  --vix-content-max: 720px;
 
-  /* Header geometry fallback (Layout.vue overrides these) */
   --vix-banner-h: 40px;
   --vix-bar-h: 58px;
   --vix-header-h: 98px;
 
-  /* Code block surface */
   --cb-bg: #0d1117;
   --cb-bg-head: #161b22;
   --cb-border: rgba(255, 255, 255, 0.1);
-  --cb-shadow: none;
 
-  /* Accent — docs.rs amber */
   --vix-accent: #d8b76a;
   --vix-accent-d: #e6cd8c;
   --vix-accent-s: rgba(216, 183, 106, 0.1);
   --vix-accent-b: rgba(216, 183, 106, 0.28);
+
+  /* For Layout.vue footer alignment */
+  --vix-doc-sidebar-width: var(--vix-sidebar-w);
 }
 
-/* ── Dark (default) ── */
 html.dark {
-  --vp-c-bg: #16191d;
-  --vp-c-bg-soft: #1b1f24;
-  --vp-c-bg-alt: #20242a;
-  --vp-c-divider: rgba(255, 255, 255, 0.08);
-  --vp-c-gutter: rgba(255, 255, 255, 0.05);
-  --vp-c-text-1: rgba(255, 255, 255, 0.88);
-  --vp-c-text-2: rgba(255, 255, 255, 0.56);
-  --vp-c-text-3: rgba(255, 255, 255, 0.36);
+  --vp-c-bg: #131619;
+  --vp-c-bg-soft: #1a1e22;
+  --vp-c-bg-alt: #20252a;
+  --vp-c-divider: rgba(255, 255, 255, 0.07);
+  --vp-c-text-1: rgba(255, 255, 255, 0.92);
+  --vp-c-text-2: rgba(255, 255, 255, 0.62);
+  --vp-c-text-3: rgba(255, 255, 255, 0.4);
   --vp-c-brand-1: var(--vix-accent);
   --vp-c-brand-2: var(--vix-accent-d);
   --vp-c-brand-3: #a8893f;
-  --vix-link: #5cb3ff;
-  --vix-link-hover: #8fcbff;
+  --vix-link: #6bb8ff;
+  --vix-link-hover: #98ceff;
 }
 
-/* ── Light ── */
 html:not(.dark) {
   --vp-c-bg: #ffffff;
   --vp-c-bg-soft: #f6f7f8;
-  --vp-c-bg-alt: #eef0f2;
-  --vp-c-divider: rgba(0, 0, 0, 0.09);
-  --vp-c-gutter: rgba(0, 0, 0, 0.05);
-  --vp-c-text-1: #1f2328;
-  --vp-c-text-2: #57606a;
-  --vp-c-text-3: #8c959f;
+  --vp-c-bg-alt: #eceef0;
+  --vp-c-divider: rgba(0, 0, 0, 0.08);
+  --vp-c-text-1: #1a1f24;
+  --vp-c-text-2: #515a64;
+  --vp-c-text-3: #8a929b;
   --vp-c-brand-1: #9a6700;
   --vp-c-brand-2: #845800;
   --vp-c-brand-3: #6f4a00;
@@ -80,26 +70,29 @@ html:not(.dark) {
   --vix-link-hover: #0a5cc7;
   --vix-accent: #9a6700;
   --vix-accent-d: #845800;
-  --vix-accent-s: rgba(154, 103, 0, 0.08);
-  --vix-accent-b: rgba(154, 103, 0, 0.25);
+  --vix-accent-s: rgba(154, 103, 0, 0.07);
+  --vix-accent-b: rgba(154, 103, 0, 0.22);
 }
 
-/* Fonts */
+/* Fonts — professional sans-serif everywhere, mono only for code */
 :root {
   --vp-font-family-base:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
   --vp-font-family-mono:
     "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     monospace;
 }
 
 /* ════════════════════════════════════════════════
-   1. APP / LAYOUT SHELL
+   1. SHELL
    ════════════════════════════════════════════════ */
 html,
 body {
   overflow-x: hidden;
+}
+body {
+  font-family: var(--vp-font-family-base);
 }
 html.dark,
 html:not(.dark) {
@@ -115,8 +108,6 @@ html:not(.dark) {
 .VPContent {
   flex: 1 0 auto;
 }
-
-/* Hide VitePress default chrome (replaced by Layout.vue) */
 .VPNav {
   display: none !important;
 }
@@ -125,7 +116,7 @@ html:not(.dark) {
 }
 
 /* ════════════════════════════════════════════════
-   2. HEADER OFFSET — push the whole app below the fixed header
+   2. HEADER OFFSET
    ════════════════════════════════════════════════ */
 @media (min-width: 960px) {
   .VPContent {
@@ -133,14 +124,13 @@ html:not(.dark) {
   }
 }
 @media (max-width: 959px) {
-  /* On mobile the header scrolls away; only a small offset. */
   .VPContent {
     padding-top: 0 !important;
   }
 }
 
 /* ════════════════════════════════════════════════
-   3. SIDEBAR — fixed under header, proper inner padding
+   3. SIDEBAR — line-free, indentation + weight only (Mojo)
    ════════════════════════════════════════════════ */
 .VPSidebar,
 .VPSidebar .curtain,
@@ -150,9 +140,6 @@ html:not(.dark) {
 }
 
 @media (min-width: 960px) {
-  /* VPSidebar is the single scroll container. The inner padding here
-     is what gives items breathing room AND keeps the scrollbar (which
-     belongs to this element) hugging the right edge. */
   .VPSidebar {
     width: var(--vix-sidebar-w) !important;
     top: var(--vix-header-h) !important;
@@ -161,12 +148,11 @@ html:not(.dark) {
     transform: none !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding: 16px 4px 40px 22px !important;
+    padding: 18px 6px 40px 24px !important;
   }
   .VPSidebar .curtain {
     display: none !important;
   }
-  /* Inner wrappers must NOT scroll or pad — VPSidebar owns both. */
   .VPSidebar .content {
     height: auto !important;
     padding: 0 !important;
@@ -182,105 +168,106 @@ html:not(.dark) {
   }
 }
 
-/* Group label — uppercase micro caption */
-.VPSidebarGroup {
-  margin-top: 16px !important;
+/* Remove ALL group separators / borders (Mojo: no horizontal lines) */
+.VPSidebarGroup,
+.VPSidebarGroup + .VPSidebarGroup,
+.VPSidebar .group,
+.VPSidebarItem,
+.VPSidebarItem .items {
   border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+}
+
+/* Group / section spacing */
+.VPSidebarGroup {
+  margin-top: 14px !important;
   padding-top: 0 !important;
 }
 .VPSidebarGroup:first-child {
   margin-top: 2px !important;
 }
 .VPSidebarGroup + .VPSidebarGroup {
-  margin-top: 18px !important;
+  margin-top: 16px !important;
 }
+
+/* Top-level section title (e.g. "Get Started", "Modules") */
 .VPSidebarGroup .title,
 .VPSidebar .group > .title {
-  margin-bottom: 4px !important;
-  padding: 0 2px !important;
-  font-family: var(--vp-font-family-mono);
-  font-size: 10.5px !important;
+  margin-bottom: 2px !important;
+  padding: 4px 8px !important;
+  font-size: 13.5px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.07em !important;
-  text-transform: uppercase !important;
-  color: var(--vp-c-text-3) !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  color: var(--vp-c-text-1) !important;
 }
 
-/* Nested tree — thin guide line, tight indents */
+/* Nested items — pure indentation, no guide lines */
 .VPSidebarItem .items {
-  margin-left: 8px !important;
-  padding-left: 10px !important;
-  border-left: 1px solid var(--vp-c-gutter) !important;
+  margin-left: 0 !important;
+  padding-left: 12px !important;
 }
 .VPSidebarItem .items .VPSidebarItem .items {
-  margin-left: 7px !important;
-  padding-left: 9px !important;
+  padding-left: 12px !important;
 }
 
-/* Rows — consistent vertical rhythm */
+/* Collapsible sub-headers (e.g. "Core Runtime", "Structs") */
 .VPSidebarItem.collapsible > .item {
   border-radius: var(--vix-radius-s);
 }
 .VPSidebarItem.collapsible > .item:hover {
-  background: var(--vix-accent-s);
+  background: var(--vp-c-bg-soft);
 }
+
+/* Row text */
 .VPSidebarItem .item > .text,
 .VPSidebarItem .link > .text {
-  padding: 4px 0 4px 6px !important;
-  line-height: 18px !important;
-  font-size: 13px !important;
+  padding: 6px 8px !important;
+  line-height: 1.4 !important;
+  font-size: 13.5px !important;
+  font-weight: 450 !important;
   color: var(--vp-c-text-2) !important;
   transition: color var(--vix-transition);
 }
 
-/* Level-0 headers stronger */
+/* Section-level (level-0) sub-headers a touch stronger */
 .VPSidebarItem.level-0 > .item > .text,
 .VPSidebarItem.level-0 > .item > .link > .text {
   font-weight: 600 !important;
   color: var(--vp-c-text-1) !important;
-  font-size: 13px !important;
 }
 
-/* Deep leaves quieter */
-.VPSidebarItem.level-2 .link .text,
-.VPSidebarItem.level-3 .link .text,
-.VPSidebarItem.level-4 .link .text {
-  font-size: 12.5px !important;
-  color: var(--vp-c-text-2) !important;
-}
-
+/* Hover / active — pill background, no lines */
 .VPSidebarItem .link {
   border-radius: var(--vix-radius-s) !important;
 }
 .VPSidebarItem .link:hover {
-  background: var(--vix-accent-s) !important;
+  background: var(--vp-c-bg-soft) !important;
 }
 .VPSidebarItem .link:hover .text {
   color: var(--vp-c-text-1) !important;
 }
-
-/* Active item */
 .VPSidebarItem.is-active > .item {
-  background: var(--vix-accent-s);
+  background: var(--vp-c-bg-soft);
   border-radius: var(--vix-radius-s);
 }
 .VPSidebarItem.is-active > .item .link .text,
 .VPSidebarItem.is-active > .item > .text {
-  color: var(--vix-accent) !important;
-  font-weight: 650 !important;
+  color: var(--vp-c-text-1) !important;
+  font-weight: 600 !important;
 }
 
 /* Carets */
 .VPSidebarItem .caret {
-  margin-right: 0 !important;
-  width: 18px !important;
+  width: 20px !important;
   color: var(--vp-c-text-3) !important;
 }
 .VPSidebarItem .caret-icon {
   transition: transform var(--vix-transition);
 }
 
-/* Kill bullets / indicators */
+/* Kill bullets / leftover indicators */
 .VPSidebarItem .link::before,
 .VPSidebarItem .indicator,
 .VPSidebarItem .item::before,
@@ -289,7 +276,7 @@ html:not(.dark) {
   display: none !important;
 }
 
-/* Sidebar scrollbar — thin, on the VPSidebar scroll container */
+/* Scrollbar on the VPSidebar container */
 .VPSidebar {
   scrollbar-width: thin;
   scrollbar-color: var(--vp-c-divider) transparent;
@@ -309,7 +296,7 @@ html:not(.dark) {
 }
 
 /* ════════════════════════════════════════════════
-   4. DOC CONTENT — reduced top space, balanced padding
+   4. DOC CONTENT LAYOUT
    ════════════════════════════════════════════════ */
 @media (min-width: 960px) {
   .VPDoc {
@@ -318,10 +305,8 @@ html:not(.dark) {
   .VPDoc .container {
     padding: 0 !important;
   }
-  /* The real horizontal padding lives on .content so the grid
-     (content | aside) keeps correct gutters on both sides. */
   .VPDoc .content {
-    padding: 20px 40px 72px !important;
+    padding: 28px 48px 80px !important;
   }
   .VPDoc .content-container,
   .VPDoc .vp-doc {
@@ -334,60 +319,84 @@ html:not(.dark) {
 }
 
 /* ════════════════════════════════════════════════
-   5. TYPOGRAPHY — dense technical
+   5. TYPOGRAPHY — Mojo-style, aerated, NOT markdown-ish
    ════════════════════════════════════════════════ */
+.vp-doc {
+  font-family: var(--vp-font-family-base);
+}
+
 .vp-doc h1 {
-  font-family: var(--vp-font-family-mono);
-  font-size: clamp(1.55rem, 2.4vw, 1.9rem);
-  font-weight: 700;
-  line-height: 1.12;
-  letter-spacing: -0.025em;
-  margin: 0 0 16px !important;
+  font-size: clamp(2rem, 3.4vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 0 0 24px !important;
   color: var(--vp-c-text-1);
 }
+
 .vp-doc h2 {
-  font-size: 1.3rem !important;
-  font-weight: 650 !important;
-  line-height: 1.25 !important;
-  letter-spacing: -0.015em !important;
-  border-top: 1px solid var(--vp-c-divider) !important;
-  margin-top: 2.1rem !important;
-  padding-top: 1.4rem !important;
+  font-size: 1.6rem !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em !important;
+  border-top: 0 !important;
+  margin-top: 3rem !important;
+  padding-top: 0 !important;
+  color: var(--vp-c-text-1) !important;
 }
+
 .vp-doc h3 {
-  font-size: 1.06rem !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.015em !important;
+  margin-top: 2rem !important;
+  margin-bottom: 0.6rem !important;
+  color: var(--vp-c-text-1) !important;
+}
+
+.vp-doc h4 {
+  font-size: 1.05rem !important;
   font-weight: 650 !important;
-  letter-spacing: -0.01em !important;
   margin-top: 1.5rem !important;
   margin-bottom: 0.5rem !important;
 }
-.vp-doc h4 {
-  font-size: 0.96rem !important;
-  font-weight: 650 !important;
-  margin-top: 1.2rem !important;
-  margin-bottom: 0.4rem !important;
-}
+
 .vp-doc h2 + p,
 .vp-doc h3 + p,
 .vp-doc h4 + p {
-  margin-top: 0 !important;
+  margin-top: 0.5rem !important;
 }
+
+/* Body — generous line-height, comfortable size (Mojo reads ~17px/1.7) */
 .vp-doc p,
 .vp-doc li {
-  font-size: 15px !important;
-  line-height: 1.66 !important;
+  font-size: 16.5px !important;
+  line-height: 1.72 !important;
   color: var(--vp-c-text-1) !important;
+  letter-spacing: -0.003em;
 }
 .vp-doc p {
-  margin: 0.72rem 0 !important;
+  margin: 1.1rem 0 !important;
 }
+
 .vp-doc ul,
 .vp-doc ol {
-  margin: 10px 0 16px !important;
-  padding-left: 1.25rem !important;
+  margin: 1rem 0 1.4rem !important;
+  padding-left: 1.4rem !important;
 }
-.vp-doc li + li {
-  margin-top: 3px !important;
+.vp-doc li {
+  margin: 0.4rem 0 !important;
+}
+.vp-doc li > ul,
+.vp-doc li > ol {
+  margin: 0.4rem 0 0.6rem !important;
+}
+
+/* Strong / emphasis with proper weight */
+.vp-doc strong {
+  font-weight: 700;
+  color: var(--vp-c-text-1);
 }
 
 /* Heading anchor */
@@ -401,27 +410,26 @@ html:not(.dark) {
   text-decoration: none;
 }
 
-/* Inline code */
+/* Inline code — subtle chip, mono */
 .vp-doc :not(pre) > code {
   font-family: var(--vp-font-family-mono);
-  font-size: 0.85em !important;
+  font-size: 0.86em !important;
   font-weight: 500 !important;
-  padding: 1px 5px !important;
-  border-radius: 3px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
   background: var(--vp-c-bg-soft) !important;
   border: 1px solid var(--vp-c-divider) !important;
   color: var(--vp-c-text-1) !important;
-  letter-spacing: -0.01em;
 }
 html.dark .vp-doc :not(pre) > code {
-  color: #e5e7eb !important;
+  color: #e8eaed !important;
 }
 html:not(.dark) .vp-doc :not(pre) > code {
-  color: #1f2937 !important;
+  color: #1a1f24 !important;
 }
 
 /* ════════════════════════════════════════════════
-   6. CODE BLOCKS — surface (colors come from JS highlighter)
+   6. CODE BLOCKS — surface only (colors from JS highlighter)
    ════════════════════════════════════════════════ */
 .vp-doc div[class*="language-"],
 .vp-doc [class*="language-"] {
@@ -429,7 +437,7 @@ html:not(.dark) .vp-doc :not(pre) > code {
   border: 1px solid var(--cb-border) !important;
   border-radius: var(--vix-radius) !important;
   box-shadow: none !important;
-  margin: 16px 0 22px !important;
+  margin: 20px 0 24px !important;
   position: relative;
   overflow: hidden;
   transition: border-color var(--vix-transition);
@@ -442,10 +450,10 @@ html:not(.dark) .vp-doc :not(pre) > code {
 .vp-doc [class*="language-"] pre {
   background: transparent !important;
   margin: 0 !important;
-  padding: 14px 16px !important;
+  padding: 16px 18px !important;
   font-family: var(--vp-font-family-mono) !important;
-  font-size: 0.86rem !important;
-  line-height: 1.65 !important;
+  font-size: 0.88rem !important;
+  line-height: 1.7 !important;
   color: #e6edf3 !important;
   overflow-x: auto;
 }
@@ -463,8 +471,8 @@ html:not(.dark) .vp-doc :not(pre) > code {
 .vp-doc div[class*="language-"] > .lang,
 .vp-doc [class*="language-"] > .lang {
   position: absolute;
-  top: 9px;
-  right: 46px;
+  top: 10px;
+  right: 48px;
   font-family: var(--vp-font-family-mono);
   font-size: 10px;
   font-weight: 600;
@@ -478,8 +486,8 @@ html:not(.dark) .vp-doc :not(pre) > code {
 /* Copy button */
 .vp-doc [class*="language-"] > button.copy {
   position: absolute !important;
-  top: 7px !important;
-  right: 7px !important;
+  top: 8px !important;
+  right: 8px !important;
   width: 30px !important;
   height: 30px !important;
   border-radius: var(--vix-radius-s) !important;
@@ -514,18 +522,18 @@ html:not(.dark) .vp-doc :not(pre) > code {
 /* Line numbers */
 .vp-doc div[class*="language-"].line-numbers-mode .line-numbers-wrapper,
 .vp-doc [class*="language-"].line-numbers-mode .line-numbers-wrapper {
-  padding: 14px 0 !important;
+  padding: 16px 0 !important;
   border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
   font-family: var(--vp-font-family-mono) !important;
-  font-size: 0.86rem !important;
-  line-height: 1.65 !important;
+  font-size: 0.88rem !important;
+  line-height: 1.7 !important;
   color: rgba(255, 255, 255, 0.25) !important;
   background: transparent !important;
 }
 .vp-doc div[class*="language-"].line-numbers-mode pre,
 .vp-doc [class*="language-"].line-numbers-mode pre {
-  padding-top: 14px !important;
-  padding-bottom: 14px !important;
+  padding-top: 16px !important;
+  padding-bottom: 16px !important;
 }
 
 /* Code scrollbar */
@@ -554,7 +562,7 @@ html:not(.dark) .vp-doc :not(pre) > code {
 }
 
 /* ════════════════════════════════════════════════
-   7. NEUTRALIZE SHIKI INLINE STYLES — DO NOT REMOVE
+   7. NEUTRALIZE SHIKI — DO NOT REMOVE
    ════════════════════════════════════════════════ */
 .vp-doc div[class*="language-"] code span[style],
 .vp-doc [class*="language-"] code span[style] {
@@ -566,9 +574,8 @@ html:not(.dark) .vp-doc :not(pre) > code {
 }
 
 /* ════════════════════════════════════════════════
-   8. SYNTAX TOKENS — Vix palette — DO NOT REMOVE
+   8. SYNTAX TOKENS — DO NOT REMOVE
    ════════════════════════════════════════════════ */
-/* C++ */
 .vp-doc .cb-dir,
 .cb .cb-dir,
 code span.cb-dir {
@@ -689,7 +696,6 @@ code span.cb-url {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-/* Shell */
 .vp-doc .cb-sh-prompt,
 .cb .cb-sh-prompt,
 code span.cb-sh-prompt {
@@ -736,7 +742,6 @@ code span.cb-sh-comment {
   color: #6a9955 !important;
   font-style: normal !important;
 }
-/* Plain text fallback */
 .vp-doc .language-text code,
 .vp-doc .language-plain code,
 .vp-doc .language-plaintext code,
@@ -750,35 +755,33 @@ code span.cb-sh-comment {
    ════════════════════════════════════════════════ */
 .vp-doc table {
   display: table !important;
-  width: auto !important;
-  min-width: 320px;
-  max-width: 100%;
+  width: 100% !important;
   border-collapse: collapse !important;
-  margin: 16px 0 24px !important;
-  font-size: 13.5px !important;
+  margin: 20px 0 28px !important;
+  font-size: 14.5px !important;
   overflow-x: auto;
 }
 .vp-doc th {
-  padding: 8px 12px !important;
+  padding: 10px 14px !important;
   border: 1px solid var(--vp-c-divider) !important;
   background: var(--vp-c-bg-soft) !important;
   font-weight: 650 !important;
-  font-size: 12.5px !important;
+  font-size: 13.5px !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
   text-align: left !important;
   color: var(--vp-c-text-1) !important;
 }
 .vp-doc td {
-  padding: 8px 12px !important;
+  padding: 10px 14px !important;
   border: 1px solid var(--vp-c-divider) !important;
-  font-size: 13px !important;
-  line-height: 1.5 !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
   vertical-align: top;
   color: var(--vp-c-text-1) !important;
 }
 .vp-doc tr:hover td {
-  background: var(--vix-accent-s) !important;
+  background: var(--vp-c-bg-soft) !important;
 }
 
 /* ════════════════════════════════════════════════
@@ -786,26 +789,31 @@ code span.cb-sh-comment {
    ════════════════════════════════════════════════ */
 .vp-doc blockquote {
   border-left: 3px solid var(--vix-accent);
-  padding: 10px 16px;
-  margin: 16px 0;
+  padding: 12px 18px;
+  margin: 20px 0;
   background: var(--vix-accent-s);
   border-radius: 0 var(--vix-radius-s) var(--vix-radius-s) 0;
-  font-size: 14px;
-  line-height: 1.65;
+  font-size: 15.5px;
+  line-height: 1.7;
 }
 .vp-doc blockquote > p {
   margin: 0 !important;
 }
 .vp-doc .custom-block {
-  border-radius: var(--vix-radius-s);
+  border-radius: var(--vix-radius);
   border: 1px solid var(--vp-c-divider);
-  padding: 12px 16px;
-  margin: 18px 0;
-  font-size: 14px;
+  padding: 14px 18px;
+  margin: 22px 0;
+  font-size: 15px;
+  line-height: 1.65;
 }
 .vp-doc .custom-block.tip {
   border-color: var(--vix-accent-b);
   background: var(--vix-accent-s);
+}
+.vp-doc .custom-block.info {
+  border-color: rgba(96, 165, 250, 0.3);
+  background: rgba(96, 165, 250, 0.07);
 }
 .vp-doc .custom-block.warning {
   border-color: rgba(234, 179, 8, 0.35);
@@ -817,10 +825,8 @@ code span.cb-sh-comment {
 }
 .vp-doc .custom-block-title {
   font-weight: 700;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 4px;
+  font-size: 13px;
+  margin-bottom: 6px;
 }
 
 /* ════════════════════════════════════════════════
@@ -828,6 +834,7 @@ code span.cb-sh-comment {
    ════════════════════════════════════════════════ */
 .vp-doc a {
   color: var(--vix-link);
+  font-weight: 500;
   text-decoration: none;
   text-underline-offset: 2px;
   transition: color var(--vix-transition);
@@ -837,26 +844,25 @@ code span.cb-sh-comment {
   text-decoration: underline;
 }
 ::selection {
-  background: rgba(216, 183, 106, 0.22);
+  background: rgba(216, 183, 106, 0.24);
 }
 
 /* ════════════════════════════════════════════════
-   12. ASIDE / OUTLINE ("On this page") — no wall-sticking
+   12. ASIDE / OUTLINE ("On this page")
    ════════════════════════════════════════════════ */
 @media (min-width: 1280px) {
   .VPDoc.has-sidebar.has-aside .container {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) var(--vix-aside-w) !important;
-    column-gap: 44px !important;
+    column-gap: 48px !important;
     align-items: start !important;
-    padding-right: 28px !important; /* keeps aside off the right wall */
+    padding-right: 32px !important;
   }
   .VPDoc.has-sidebar.has-aside .content {
     min-width: 0 !important;
     width: 100% !important;
     max-width: none !important;
-    /* content keeps its own left padding; right gutter handled by grid gap */
-    padding: 20px 0 72px 40px !important;
+    padding: 28px 0 80px 48px !important;
   }
   .VPDoc.has-sidebar.has-aside .content-container,
   .VPDoc.has-sidebar.has-aside .vp-doc {
@@ -869,39 +875,35 @@ code span.cb-sh-comment {
     max-width: var(--vix-aside-w) !important;
     padding-left: 0 !important;
   }
-  .VPDocAside {
-    padding-top: 4px !important;
-  }
 }
 
-/* Aside sits below the fixed header */
 @media (min-width: 960px) {
   .VPDocAside {
     position: sticky !important;
-    top: calc(var(--vix-header-h) + 20px) !important;
-    max-height: calc(100vh - var(--vix-header-h) - 40px) !important;
+    top: calc(var(--vix-header-h) + 24px) !important;
+    max-height: calc(100vh - var(--vix-header-h) - 48px) !important;
     overflow-y: auto !important;
+    padding-top: 6px !important;
   }
 }
 
 .VPDocAsideOutline .content {
   border-left: 1px solid var(--vp-c-divider) !important;
-  padding-left: 14px !important;
+  padding-left: 16px !important;
 }
 .VPDocAside .outline-title {
-  font-family: var(--vp-font-family-mono);
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--vp-c-text-3) !important;
-  margin-bottom: 6px !important;
+  margin-bottom: 8px !important;
 }
 .VPDocAside .outline-link {
-  font-size: 12px !important;
+  font-size: 13px !important;
   font-weight: 450 !important;
   line-height: 1.5 !important;
-  padding: 3px 0 !important;
+  padding: 4px 0 !important;
   color: var(--vp-c-text-2) !important;
   transition: color var(--vix-transition);
 }
@@ -914,17 +916,21 @@ code span.cb-sh-comment {
 }
 
 /* ════════════════════════════════════════════════
-   13. PREV / NEXT NAV
+   13. PREV / NEXT
    ════════════════════════════════════════════════ */
 .VPDocFooter,
 .VPDocFooter .prev-next,
 .VPDocFooter .edit-info {
   border-top: 0 !important;
 }
+.VPDocFooter {
+  margin-top: 32px !important;
+}
 .VPDocFooter .pager-link {
   border: 1px solid var(--vp-c-divider) !important;
   border-radius: var(--vix-radius) !important;
   background: var(--vp-c-bg-soft);
+  padding: 12px 16px !important;
   transition:
     border-color var(--vix-transition),
     transform var(--vix-transition);
@@ -934,17 +940,17 @@ code span.cb-sh-comment {
   transform: translateY(-1px);
 }
 .VPDocFooter .pager-link .desc {
-  font-size: 11px !important;
+  font-size: 11.5px !important;
   color: var(--vp-c-text-3) !important;
 }
 .VPDocFooter .pager-link .title {
-  font-size: 13.5px !important;
+  font-size: 14.5px !important;
   font-weight: 600 !important;
   color: var(--vp-c-text-1) !important;
 }
 
 /* ════════════════════════════════════════════════
-   14. SEARCH
+   14. SEARCH MODAL
    ════════════════════════════════════════════════ */
 .VPLocalSearchBox {
   z-index: 20000 !important;
@@ -958,7 +964,7 @@ code span.cb-sh-comment {
   background: var(--vp-c-bg) !important;
   border: 1px solid var(--vp-c-divider) !important;
   border-radius: var(--vix-radius) !important;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42) !important;
 }
 .VPLocalSearchBox input {
   color: var(--vp-c-text-1) !important;
@@ -979,10 +985,9 @@ code span.cb-sh-comment {
 .vix-breadcrumb {
   display: flex;
   align-items: center;
-  gap: 7px;
-  margin-bottom: 20px;
-  font-family: var(--vp-font-family-mono);
-  font-size: 12px;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 13px;
   line-height: 1.4;
   color: var(--vp-c-text-2);
 }
@@ -1005,71 +1010,105 @@ code span.cb-sh-comment {
 }
 .vix-breadcrumb-current {
   color: var(--vp-c-text-1);
+  font-weight: 500;
 }
 .vix-breadcrumb-separator {
   color: var(--vp-c-text-3);
 }
 
 /* ════════════════════════════════════════════════
-   16. MISC
+   16. MOBILE — single nav via VitePress .VPLocalNav
+   It already contains a WORKING menu burger (opens the full
+   sidebar) + the "On this page" dropdown. We just style it.
    ════════════════════════════════════════════════ */
-.VPLocalNav {
-  background: var(--vp-c-bg) !important;
-}
-
-/* ════════════════════════════════════════════════
-   17. RESPONSIVE
-   ════════════════════════════════════════════════ */
-@media (min-width: 1440px) {
-  :root {
-    --vix-sidebar-w: 286px;
-    --vix-aside-w: 244px;
-    --vix-content-max: 796px;
-  }
-}
-@media (min-width: 1800px) {
-  :root {
-    --vix-content-max: 836px;
-    --vix-aside-w: 256px;
-  }
-  .VPDoc.has-sidebar.has-aside .container {
-    column-gap: 56px !important;
-  }
-}
-
-/* Laptop without aside column */
-@media (max-width: 1279px) and (min-width: 960px) {
-  .VPDoc .content {
-    padding: 20px 36px 72px !important;
-  }
-  .VPDoc .vp-doc {
-    max-width: 100% !important;
-  }
-}
-
-/* Mobile */
 @media (max-width: 959px) {
+  /* Fixed bar under the (scrolling) header. Clean single border. */
   .VPLocalNav {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 50 !important;
+    height: 50px !important;
     background: var(--vp-c-bg) !important;
     border-top: 0 !important;
     border-bottom: 1px solid var(--vp-c-divider) !important;
     box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
   }
-  .VPLocalNav .menu,
-  .VPLocalNav .outline {
-    font-size: 13px !important;
+  .VPLocalNav .container {
+    height: 50px !important;
+    align-items: center !important;
+  }
+
+  /* The menu button (burger) — this is the one that WORKS. Style it. */
+  .VPLocalNav .menu {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    height: 50px !important;
+    padding: 0 16px !important;
+    font-size: 13.5px !important;
     font-weight: 600 !important;
     color: var(--vp-c-text-1) !important;
   }
+  .VPLocalNav .menu .menu-icon {
+    width: 16px !important;
+    height: 16px !important;
+    color: var(--vp-c-text-1) !important;
+  }
+  .VPLocalNav .menu:hover {
+    color: var(--vix-accent) !important;
+  }
 
+  /* "On this page" dropdown — clean, right-aligned */
+  .VPLocalNavOutlineDropdown {
+    padding: 0 16px !important;
+  }
+  .VPLocalNavOutlineDropdown button {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: var(--vp-c-text-1) !important;
+  }
+  .VPLocalNavOutlineDropdown .icon {
+    color: var(--vp-c-text-2) !important;
+  }
+  /* Dropdown panel */
+  .VPLocalNavOutlineDropdown .items {
+    background: var(--vp-c-bg) !important;
+    border: 1px solid var(--vp-c-divider) !important;
+    border-radius: var(--vix-radius) !important;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32) !important;
+    padding: 6px !important;
+  }
+  .VPLocalNavOutlineDropdown .outline-link {
+    font-size: 13.5px !important;
+    padding: 6px 10px !important;
+    border-radius: var(--vix-radius-s) !important;
+    color: var(--vp-c-text-2) !important;
+  }
+  .VPLocalNavOutlineDropdown .outline-link:hover {
+    color: var(--vp-c-text-1) !important;
+    background: var(--vp-c-bg-soft) !important;
+  }
+
+  /* Push content below the fixed local nav */
+  .VPContent {
+    padding-top: 10px !important;
+  }
+
+  /* Sidebar = slide-in drawer (opened by the local nav burger) */
   .VPSidebar {
-    width: min(86vw, 320px) !important;
-    z-index: 100 !important;
+    top: 0 !important;
+    width: min(86vw, 340px) !important;
+    height: 100vh !important;
+    z-index: 9000 !important;
     background: var(--vp-c-bg) !important;
     border-right: 1px solid var(--vp-c-divider) !important;
+    padding: 16px 15px 32px 20px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding: 14px 8px 32px 18px !important;
   }
   .VPSidebar .content {
     padding: 0 !important;
@@ -1079,6 +1118,7 @@ code span.cb-sh-comment {
     padding: 0 !important;
   }
 
+  /* Doc spacing */
   .VPDoc {
     padding: 0 !important;
   }
@@ -1086,65 +1126,97 @@ code span.cb-sh-comment {
     padding: 0 !important;
   }
   .VPDoc .content {
-    padding: 16px 16px 0 !important;
+    padding: 20px 18px 40px !important;
   }
   .VPDoc .vp-doc {
     max-width: 100% !important;
   }
   .vp-doc h1 {
-    font-size: 1.5rem;
+    font-size: 1.85rem;
   }
   .vp-doc h2 {
-    font-size: 1.15rem !important;
-    padding-top: 1.2rem !important;
-    margin-top: 1.8rem !important;
+    font-size: 1.4rem !important;
+    margin-top: 2.2rem !important;
   }
   .vp-doc h3 {
-    font-size: 1rem !important;
+    font-size: 1.15rem !important;
+  }
+  .vp-doc p,
+  .vp-doc li {
+    font-size: 16px !important;
   }
 }
 
 @media (max-width: 640px) {
   .VPDoc .content {
-    padding: 14px 12px 0 !important;
+    padding: 18px 16px 32px !important;
   }
   .vp-doc h1 {
-    font-size: 1.35rem;
+    font-size: 1.6rem;
   }
   .vp-doc p,
   .vp-doc li {
-    font-size: 14.5px !important;
+    font-size: 15.5px !important;
+    line-height: 1.68 !important;
   }
   .vp-doc div[class*="language-"] pre,
   .vp-doc [class*="language-"] pre {
-    font-size: 0.8rem !important;
-    padding: 12px 14px !important;
+    font-size: 0.82rem !important;
+    padding: 14px 14px !important;
   }
   .vp-doc div[class*="language-"].line-numbers-mode pre {
-    padding-top: 12px !important;
-    padding-bottom: 12px !important;
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
   }
   .vp-doc table {
-    font-size: 12.5px !important;
+    font-size: 13px !important;
   }
   .vp-doc th,
   .vp-doc td {
-    padding: 7px 10px !important;
+    padding: 8px 11px !important;
   }
 }
 
 @media (max-width: 400px) {
   .VPDoc .content {
-    padding: 12px 10px 0 !important;
+    padding: 16px 13px 28px !important;
   }
   .vp-doc h1 {
-    font-size: 1.25rem;
+    font-size: 1.45rem;
   }
   .vix-breadcrumb {
     overflow-x: auto;
     white-space: nowrap;
     padding-bottom: 4px;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
+  }
+}
+
+/* ════════════════════════════════════════════════
+   17. RESPONSIVE TOKENS
+   ════════════════════════════════════════════════ */
+@media (min-width: 1440px) {
+  :root {
+    --vix-sidebar-w: 286px;
+    --vix-aside-w: 252px;
+    --vix-content-max: 752px;
+  }
+}
+@media (min-width: 1800px) {
+  :root {
+    --vix-content-max: 800px;
+    --vix-aside-w: 264px;
+  }
+  .VPDoc.has-sidebar.has-aside .container {
+    column-gap: 60px !important;
+  }
+}
+@media (max-width: 1279px) and (min-width: 960px) {
+  .VPDoc .content {
+    padding: 28px 40px 80px !important;
+  }
+  .VPDoc .vp-doc {
+    max-width: 100% !important;
   }
 }
 
@@ -1164,4 +1236,25 @@ code span.cb-sh-comment {
     animation: none !important;
     scroll-behavior: auto !important;
   }
+}
+@media (max-width: 959px) {
+  .VPSidebarItem.collapsible > .item {
+    padding-right: 10px !important;
+  }
+}
+@media (max-width: 959px) {
+  .VPLocalNav .container {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .VPLocalNavOutlineDropdown {
+    margin-left: auto !important;
+    padding: 0 16px !important;
+  }
+}
+.VPSidebarItem.collapsible > .item {
+  padding-right: 10px !important;
 }

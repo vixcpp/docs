@@ -1,4 +1,5 @@
 import { defineConfig } from "vitepress";
+import { vixDark, vixLight } from "./theme/vix-shiki-theme.mjs";
 
 const nav = [
   {
@@ -1543,8 +1544,11 @@ export default defineConfig({
   markdown: {
     html: true,
     lineNumbers: true,
+    theme: {
+      light: vixLight,
+      dark: vixDark,
+    },
   },
-
   head: [
     ["link", { rel: "icon", href: "/assets/pwa/favicon.ico" }],
     [
@@ -1632,27 +1636,20 @@ gtag("event", "ads_conversion_Pr_sentation_1", {});
     optimizeDeps: {
       include: ["mark.js", "minisearch"],
     },
-
     ssr: {
       noExternal: ["mark.js"],
     },
-
     build: {
+      // smaller, cacheable chunks
+      cssCodeSplit: true,
+      chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (!id.includes("node_modules")) {
-              return;
-            }
-
-            if (id.includes("minisearch")) {
-              return "minisearch";
-            }
-
-            if (id.includes("mark.js")) {
-              return "markjs";
-            }
-
+            if (!id.includes("node_modules")) return;
+            if (id.includes("minisearch")) return "search";
+            if (id.includes("mark.js")) return "search";
+            if (id.includes("shiki")) return; // shiki is build-only now
             return "vendor";
           },
         },

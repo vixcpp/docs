@@ -11,8 +11,10 @@ import { highlight, normalizeLang } from "./highlighter";
 export default {
   ...DefaultTheme,
   Layout,
+
   enhanceApp(ctx) {
     DefaultTheme.enhanceApp?.(ctx);
+
     const { app, router } = ctx;
 
     app.component("DocsHomeHero", DocsHomeHero);
@@ -30,8 +32,70 @@ export default {
       window.history.scrollRestoration = "manual";
     }
 
-    window.addEventListener("load", () => {
-      window.scrollTo(0, 0);
+    window.addEventListener(
+      "load",
+      () => {
+        window.scrollTo(0, 0);
+      },
+      { once: true },
+    );
+
+    // ──────────────────────────────────────────────
+    // Route prefetch on hover/focus
+    // Helps VitePress navigation feel instant on internal pages.
+    // Avoids heavy/static files like PDF, images, archives, etc.
+    // ──────────────────────────────────────────────
+    const prefetchedRoutes = new Set();
+
+    const shouldPrefetchRoute = (href) => {
+      if (!href) return false;
+      if (!href.startsWith("/")) return false;
+      if (href.startsWith("//")) return false;
+      if (href.includes("#")) return false;
+      if (prefetchedRoutes.has(href)) return false;
+
+      // Avoid prefetching heavy/static files.
+      if (
+        /\.(pdf|zip|tar|gz|png|jpg|jpeg|webp|gif|svg|ico|mp4|webm|woff2?)$/i.test(
+          href,
+        )
+      ) {
+        return false;
+      }
+
+      return true;
+    };
+
+    const prefetchRoute = (href) => {
+      if (!shouldPrefetchRoute(href)) return;
+
+      prefetchedRoutes.add(href);
+
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = href;
+      link.as = "document";
+
+      document.head.appendChild(link);
+    };
+
+    const handlePrefetchIntent = (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+
+      const anchor = target.closest("a[href^='/']");
+      if (!anchor) return;
+
+      const href = anchor.getAttribute("href");
+      prefetchRoute(href);
+    };
+
+    document.addEventListener("mouseover", handlePrefetchIntent, {
+      passive: true,
+    });
+
+    document.addEventListener("focusin", handlePrefetchIntent, {
+      passive: true,
     });
 
     // ──────────────────────────────────────────────
@@ -42,14 +106,15 @@ export default {
       if (!header) return;
 
       const height = Math.ceil(header.getBoundingClientRect().height);
+
       document.documentElement.style.setProperty(
         "--vix-header-height",
         `${height}px`,
       );
     };
 
-    window.addEventListener("load", syncVixHeaderHeight);
-    window.addEventListener("resize", syncVixHeaderHeight);
+    window.addEventListener("load", syncVixHeaderHeight, { once: true });
+    window.addEventListener("resize", syncVixHeaderHeight, { passive: true });
 
     window.requestAnimationFrame(() => {
       syncVixHeaderHeight();
@@ -77,57 +142,71 @@ export default {
       blocks.forEach((codeEl) => {
         if (codeEl.dataset.vixHighlighted === "1") return;
 
-        // Find parent container and detect language
         const container = codeEl.closest('[class*="language-"]');
         if (!container) return;
 
-        // Extract language from class like "language-cpp" / "language-shell"
         const cls = container.className.match(/language-([\w+-]+)/);
         const rawLang = cls ? cls[1] : "text";
         const lang = normalizeLang(rawLang);
 
-        // Recover raw text (textContent strips Shiki's spans, preserves whitespace)
         const raw = codeEl.textContent || "";
 
         codeEl.innerHTML = highlight(raw, lang);
-
         codeEl.dataset.vixHighlighted = "1";
+
         container.classList.add("vix-styled");
       });
     };
 
-    // Run on initial mount
-    const runHighlight = () => {
-      // Wait one frame so VitePress finishes rendering the page
+    let highlightQueued = false;
+
+    const queueHighlight = () => {
+      if (highlightQueued) return;
+
+      highlightQueued = true;
+
       window.requestAnimationFrame(() => {
+        highlightQueued = false;
+
         applyHighlight();
-        // Second pass to catch line-numbers wrappers that mount slightly later
+
+        // Second pass for blocks that mount slightly later.
         setTimeout(applyHighlight, 50);
       });
     };
 
-    runHighlight();
+    queueHighlight();
 
-    // Re-run on every route change
+    // Re-run on every route change.
     if (router && typeof router.onAfterRouteChange === "function") {
-      const prev = router.onAfterRouteChange;
+      const previousAfterRouteChange = router.onAfterRouteChange;
+
       router.onAfterRouteChange = (to) => {
-        prev?.(to);
-        runHighlight();
+        previousAfterRouteChange?.(to);
+        queueHighlight();
+        syncVixHeaderHeight();
       };
     } else if (router) {
-      router.onAfterRouteChanged = () => runHighlight();
+      router.onAfterRouteChanged = () => {
+        queueHighlight();
+        syncVixHeaderHeight();
+      };
     }
 
-    // Safety net: re-run on DOM mutations within doc area
-    const target = document.body;
-    const observer = new MutationObserver(() => {
-      // Throttle: only run if there are unhighlighted blocks
+    // Safety net: re-run only when unhighlighted code blocks appear.
+    const docObserver = new MutationObserver(() => {
       const pending = document.querySelector(
         '.vp-doc [class*="language-"] code:not([data-vix-highlighted])',
       );
-      if (pending) applyHighlight();
+
+      if (pending) {
+        queueHighlight();
+      }
     });
-    observer.observe(target, { childList: true, subtree: true });
+
+    docObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
   },
 };
