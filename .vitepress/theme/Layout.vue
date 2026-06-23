@@ -9,6 +9,7 @@ const route = useRoute();
 
 const showBanner = ref(true);
 const isDark = ref(true);
+const drawerOpen = ref(false);
 
 const navLinks = [
   { text: "Guides", href: "/guides/build-rest-api" },
@@ -42,28 +43,16 @@ const socials = [
 
 const normalizePath = (path) => {
   if (!path) return "/";
-
   const clean = path.split("#")[0].split("?")[0];
-
-  if (clean.length > 1 && clean.endsWith("/")) {
-    return clean.slice(0, -1);
-  }
-
+  if (clean.length > 1 && clean.endsWith("/")) return clean.slice(0, -1);
   return clean;
 };
 
 const isActiveLink = (href) => {
-  if (!href || href.startsWith("http")) {
-    return false;
-  }
-
+  if (!href || href.startsWith("http")) return false;
   const currentPath = normalizePath(route.path);
   const targetPath = normalizePath(href);
-
-  if (targetPath === "/") {
-    return currentPath === "/";
-  }
-
+  if (targetPath === "/") return currentPath === "/";
   return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
 };
 
@@ -71,26 +60,19 @@ const openSearch = () => {
   const searchButton = document.querySelector(
     ".DocSearch-Button, .VPNavBarSearchButton, .VPLocalSearchBox button",
   );
-
-  if (searchButton instanceof HTMLElement) {
-    searchButton.click();
-  }
+  if (searchButton instanceof HTMLElement) searchButton.click();
 };
 
 const applyTheme = (dark) => {
   isDark.value = dark;
-
   document.documentElement.classList.toggle("dark", dark);
   localStorage.setItem("vitepress-theme-appearance", dark ? "dark" : "light");
 };
 
-const toggleTheme = () => {
-  applyTheme(!isDark.value);
-};
+const toggleTheme = () => applyTheme(!isDark.value);
 
-const syncHeaderState = async () => {
+const syncBannerState = async () => {
   await nextTick();
-
   document.body.classList.toggle("vix-banner-visible", showBanner.value);
   document.body.classList.toggle("vix-banner-hidden", !showBanner.value);
 };
@@ -99,31 +81,54 @@ const closeBanner = () => {
   showBanner.value = false;
 };
 
-watch(showBanner, () => {
-  syncHeaderState();
+const openDrawer = () => {
+  drawerOpen.value = true;
+};
+const closeDrawer = () => {
+  drawerOpen.value = false;
+};
+
+// Lock body scroll while the mobile drawer is open
+const lockScroll = (lock) => {
+  document.documentElement.classList.toggle("vix-drawer-locked", lock);
+};
+
+const onKeydown = (e) => {
+  if (e.key === "Escape" && drawerOpen.value) closeDrawer();
+};
+
+watch(showBanner, syncBannerState);
+
+watch(drawerOpen, (open) => {
+  lockScroll(open);
 });
+
+// Close the drawer whenever navigation happens
+watch(
+  () => route.path,
+  () => closeDrawer(),
+);
 
 onMounted(() => {
   const savedTheme = localStorage.getItem("vitepress-theme-appearance");
+  if (savedTheme === "dark") applyTheme(true);
+  else if (savedTheme === "light") applyTheme(false);
+  else isDark.value = document.documentElement.classList.contains("dark");
 
-  if (savedTheme === "dark") {
-    applyTheme(true);
-  } else if (savedTheme === "light") {
-    applyTheme(false);
-  } else {
-    isDark.value = document.documentElement.classList.contains("dark");
-  }
-
-  syncHeaderState();
+  syncBannerState();
+  window.addEventListener("keydown", onKeydown);
 });
 
 onBeforeUnmount(() => {
   document.body.classList.remove("vix-banner-visible", "vix-banner-hidden");
+  lockScroll(false);
+  window.removeEventListener("keydown", onKeydown);
 });
 </script>
 
 <template>
-  <header class="vix-nav">
+  <header class="vix-nav" :class="{ 'vix-nav--no-banner': !showBanner }">
+    <!-- Announcement banner -->
     <div v-if="showBanner" class="vix-nav__banner">
       <span class="vix-nav__banner-mark" aria-hidden="true">
         <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -136,11 +141,10 @@ onBeforeUnmount(() => {
               y2="30"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" stop-color="#d4fcd4" />
-              <stop offset="55%" stop-color="#4ade80" />
-              <stop offset="100%" stop-color="#22c55e" />
+              <stop offset="0%" stop-color="#f4e3b8" />
+              <stop offset="55%" stop-color="#e6cd8c" />
+              <stop offset="100%" stop-color="#d8b76a" />
             </linearGradient>
-
             <linearGradient
               id="vix-banner-right"
               x1="31"
@@ -149,11 +153,10 @@ onBeforeUnmount(() => {
               y2="30"
               gradientUnits="userSpaceOnUse"
             >
-              <stop offset="0%" stop-color="#22c55e" />
-              <stop offset="100%" stop-color="#15803d" />
+              <stop offset="0%" stop-color="#d8b76a" />
+              <stop offset="100%" stop-color="#a8893f" />
             </linearGradient>
           </defs>
-
           <polygon points="5,6 12,6 18,28 14,28" fill="url(#vix-banner-left)" />
           <polygon
             points="31,6 24,6 18,28 22,28"
@@ -164,7 +167,7 @@ onBeforeUnmount(() => {
             y1="16"
             x2="13.5"
             y2="29"
-            stroke="#bbf7d0"
+            stroke="#f4e3b8"
             stroke-width="1.1"
             stroke-linecap="round"
             opacity="0.7"
@@ -172,7 +175,7 @@ onBeforeUnmount(() => {
         </svg>
       </span>
 
-      <span>Vix.cpp v2.6.0 is here</span>
+      <span class="vix-nav__banner-text">Vix.cpp v2.6.0 is here</span>
       <a
         href="https://blog.vixcpp.com/"
         target="_blank"
@@ -192,8 +195,24 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
+    <!-- Main bar -->
     <div class="vix-nav__bar">
       <div class="vix-nav__inner">
+        <!-- Burger (mobile only) -->
+        <button
+          class="vix-nav__burger"
+          type="button"
+          aria-label="Open navigation menu"
+          :aria-expanded="drawerOpen"
+          @click="openDrawer"
+        >
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3 6h18" />
+            <path d="M3 12h18" />
+            <path d="M3 18h18" />
+          </svg>
+        </button>
+
         <a class="vix-nav__brand" href="/" aria-label="Vix.cpp Documentation">
           <span class="vix-nav__brand-name">Vix.cpp</span>
           <span class="vix-nav__slash">/</span>
@@ -215,7 +234,7 @@ onBeforeUnmount(() => {
 
         <div class="vix-nav__right">
           <button
-            class="vix-nav__theme"
+            class="vix-nav__icon-btn"
             type="button"
             :aria-label="
               isDark ? 'Switch to light theme' : 'Switch to dark theme'
@@ -238,7 +257,6 @@ onBeforeUnmount(() => {
               <path d="m20.48 3.52-1.41 1.41" />
               <circle cx="12" cy="12" r="4" />
             </svg>
-
             <svg v-else viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.8 6.8 0 0 0 9.8 9.8Z" />
             </svg>
@@ -247,7 +265,7 @@ onBeforeUnmount(() => {
           <a
             v-for="item in socials"
             :key="item.label"
-            class="vix-nav__icon"
+            class="vix-nav__icon-btn vix-nav__icon-btn--social"
             :href="item.href"
             target="_blank"
             rel="noreferrer"
@@ -271,14 +289,99 @@ onBeforeUnmount(() => {
               <circle cx="11" cy="11" r="7" />
               <path d="m16 16 4 4" />
             </svg>
-
-            <span>Search Docs</span>
+            <span>Search</span>
             <kbd>Ctrl K</kbd>
+          </button>
+
+          <!-- Compact search trigger for mobile -->
+          <button
+            class="vix-nav__search-mobile"
+            type="button"
+            aria-label="Search"
+            @click="openSearch"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m16 16 4 4" />
+            </svg>
           </button>
         </div>
       </div>
     </div>
   </header>
+
+  <!-- Mobile drawer -->
+  <Transition name="vix-drawer">
+    <div
+      v-if="drawerOpen"
+      class="vix-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Navigation"
+    >
+      <div class="vix-drawer__backdrop" @click="closeDrawer"></div>
+      <aside class="vix-drawer__panel">
+        <div class="vix-drawer__head">
+          <span class="vix-drawer__title">Navigation</span>
+          <button
+            class="vix-drawer__close"
+            type="button"
+            aria-label="Close menu"
+            @click="closeDrawer"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+
+        <nav class="vix-drawer__nav" aria-label="Site sections">
+          <a
+            v-for="link in navLinks"
+            :key="link.text"
+            :class="[
+              'vix-drawer__link',
+              { 'is-active': isActiveLink(link.href) },
+            ]"
+            :href="link.href"
+            :target="link.href.startsWith('http') ? '_blank' : undefined"
+            :rel="link.href.startsWith('http') ? 'noreferrer' : undefined"
+            @click="closeDrawer"
+          >
+            {{ link.text }}
+            <svg
+              v-if="link.href.startsWith('http')"
+              class="vix-drawer__ext"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path d="M7 17 17 7M9 7h8v8" />
+            </svg>
+          </a>
+        </nav>
+
+        <div class="vix-drawer__foot">
+          <a
+            v-for="item in socials"
+            :key="item.label"
+            class="vix-nav__icon-btn vix-nav__icon-btn--social"
+            :href="item.href"
+            target="_blank"
+            rel="noreferrer"
+            :aria-label="item.label"
+          >
+            <svg
+              class="vix-nav__social-svg"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              v-html="item.icon"
+            ></svg>
+          </a>
+        </div>
+      </aside>
+    </div>
+  </Transition>
 
   <Layout>
     <template #doc-before>
@@ -290,11 +393,10 @@ onBeforeUnmount(() => {
         <div class="vix-footer-inner">
           <div class="vix-footer-brand">
             <span class="vix-footer-name">Vix.cpp</span>
-            <span class="vix-footer-desc">
-              Modern C++ runtime and developer toolkit.
-            </span>
+            <span class="vix-footer-desc"
+              >Modern C++ runtime and developer toolkit.</span
+            >
           </div>
-
           <nav class="vix-footer-nav" aria-label="Footer navigation">
             <a
               v-for="link in footerLinks"
@@ -308,7 +410,6 @@ onBeforeUnmount(() => {
             </a>
           </nav>
         </div>
-
         <div class="vix-footer-meta">
           <span>MIT License</span>
           <span>Copyright © 2026 Vix.cpp</span>
@@ -320,258 +421,254 @@ onBeforeUnmount(() => {
 </template>
 
 <style>
+/* ============================================================
+   Header geometry — single source of truth
+   These drive both the sticky header AND custom.css offsets.
+   ============================================================ */
 :root {
-  --vix-doc-sidebar-width: 300px;
+  --vix-banner-h: 40px;
+  --vix-bar-h: 58px;
+  --vix-header-h: calc(var(--vix-banner-h) + var(--vix-bar-h)); /* 98px */
+}
+body.vix-banner-hidden {
+  --vix-header-h: var(--vix-bar-h);
 }
 
-@media (min-width: 1440px) {
-  :root {
-    --vix-doc-sidebar-width: 320px;
-  }
-}
-
+/* Hide VitePress default nav + footer (replaced by ours) */
 .VPNav {
   display: none !important;
 }
-
 .VPFooter {
   display: none !important;
 }
 
-.VPContent {
-  padding-top: 0 !important;
+/* Lock page scroll behind the drawer */
+html.vix-drawer-locked,
+html.vix-drawer-locked body {
+  overflow: hidden !important;
 }
 
 /* ============================================================
-   Vix.cpp custom docs header
-   Same background as docs, fully responsive
+   HEADER — sticky on desktop, scrolls on mobile
    ============================================================ */
-
 .vix-nav {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 10000;
+  z-index: 100;
   width: 100%;
   color: var(--vp-c-text-1);
-  background: var(--vp-c-bg) !important;
+  background: var(--vp-c-bg);
   border-bottom: 1px solid var(--vp-c-divider);
 }
 
+/* Banner */
 .vix-nav__banner {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 8px 56px;
-  color: var(--vp-c-text-1);
-  background: var(--vp-c-bg) !important;
+  gap: 7px;
+  height: var(--vix-banner-h);
+  padding: 0 56px;
+  background: var(--vp-c-bg);
   border-bottom: 1px solid var(--vp-c-divider);
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.2;
-  text-align: center;
 }
-
+.vix-nav__banner-mark {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.vix-nav__banner-mark svg {
+  width: 20px;
+  height: 20px;
+}
+.vix-nav__banner-text {
+  color: var(--vp-c-text-1);
+}
 .vix-nav__banner a {
-  color: #4ade80;
-  font-weight: 760;
+  color: var(--vix-accent, #d8b76a);
+  font-weight: 700;
   text-decoration: underline;
+  text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;
   white-space: nowrap;
 }
-
-.vix-nav__banner-mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 21px;
-  height: 21px;
-  margin-right: 3px;
-  flex-shrink: 0;
+.vix-nav__banner a:hover {
+  color: var(--vix-accent-d, #e6cd8c);
 }
-
-.vix-nav__banner-mark svg {
-  display: block;
-  width: 21px;
-  height: 21px;
-}
-
 .vix-nav__banner-close {
   position: absolute;
   top: 50%;
-  right: 16px;
+  right: 14px;
+  transform: translateY(-50%);
   display: grid;
   place-items: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
+  width: 28px;
+  height: 28px;
   color: var(--vp-c-text-2);
   background: transparent;
   border: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  transform: translateY(-50%);
 }
-
 .vix-nav__banner-close:hover {
   color: var(--vp-c-text-1);
   background: var(--vp-c-bg-soft);
 }
-
 .vix-nav__banner-close span {
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1;
 }
 
+/* Bar */
 .vix-nav__bar {
-  height: 60px;
-  background: var(--vp-c-bg) !important;
+  height: var(--vix-bar-h);
+  background: var(--vp-c-bg);
 }
-
 .vix-nav__inner {
-  display: grid;
-  grid-template-columns: minmax(0, auto) minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: 26px;
+  gap: 22px;
   height: 100%;
-  width: 100%;
-  margin: 0 auto;
   padding: 0 18px;
-  background: var(--vp-c-bg) !important;
 }
 
+/* Burger — hidden on desktop */
+.vix-nav__burger {
+  display: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: var(--vp-c-text-1);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.vix-nav__burger svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.vix-nav__burger:hover {
+  background: var(--vp-c-bg-soft);
+}
+
+/* Brand */
 .vix-nav__brand {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  min-width: 0;
+  gap: 8px;
   color: var(--vp-c-text-1);
   text-decoration: none;
   white-space: nowrap;
+  flex-shrink: 0;
 }
-
 .vix-nav__brand:hover {
-  color: var(--vp-c-text-1);
   text-decoration: none;
 }
-
 .vix-nav__brand-name {
-  font-size: 17px;
-  font-weight: 760;
-  letter-spacing: -0.035em;
-}
-
-.vix-nav__slash {
-  color: var(--vp-c-text-2);
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.vix-nav__docs {
-  color: var(--vp-c-text-1);
-  font-size: 17px;
-  font-weight: 720;
+  font-family: var(--vp-font-family-mono, ui-monospace, monospace);
+  font-size: 16px;
+  font-weight: 700;
   letter-spacing: -0.03em;
 }
+.vix-nav__slash {
+  color: var(--vp-c-text-3);
+  font-size: 17px;
+  font-weight: 400;
+}
+.vix-nav__docs {
+  font-family: var(--vp-font-family-mono, ui-monospace, monospace);
+  color: var(--vp-c-text-2);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
 
+/* Links — pushed left, near the brand (docs.rs feel) */
 .vix-nav__links {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 18px;
+  gap: 4px;
+  flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
 }
-
 .vix-nav__link {
+  position: relative;
   display: inline-flex;
   align-items: center;
+  height: 30px;
+  padding: 0 10px;
   color: var(--vp-c-text-2);
-  font-size: 13.5px;
-  font-weight: 620;
+  font-size: 13px;
+  font-weight: 550;
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
+  border-radius: 6px;
   transition:
-    color 0.14s ease,
-    background-color 0.14s ease;
+    color 0.12s ease,
+    background-color 0.12s ease;
 }
-
 .vix-nav__link:hover {
   color: var(--vp-c-text-1);
+  background: var(--vp-c-bg-soft);
   text-decoration: none;
 }
-
 .vix-nav__link.is-active {
-  color: var(--vp-c-text-1) !important;
-  font-weight: 760 !important;
+  color: var(--vp-c-text-1);
+  font-weight: 650;
 }
-
 .vix-nav__link.is-active::after {
   content: "";
-  display: block;
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -10px;
+  left: 10px;
+  right: 10px;
+  bottom: -1px;
   height: 2px;
   border-radius: 999px;
-  background: #22c55e;
+  background: var(--vix-accent, #d8b76a);
 }
 
-.vix-nav__link {
-  position: relative;
-}
-
-.vix-nav__link.is-active {
-  color: var(--vp-c-text-1) !important;
-  font-weight: 760 !important;
-}
-
+/* Right cluster */
 .vix-nav__right {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  min-width: 0;
+  gap: 7px;
+  flex-shrink: 0;
 }
-
-.vix-nav__theme,
-.vix-nav__icon {
+.vix-nav__icon-btn {
   display: grid;
   place-items: center;
   width: 32px;
   height: 32px;
-  color: var(--vp-c-text-1) !important;
+  color: var(--vp-c-text-1);
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   text-decoration: none;
-  opacity: 1 !important;
   flex-shrink: 0;
   transition:
-    background 0.14s ease,
-    border-color 0.14s ease,
-    transform 0.14s ease;
+    background 0.12s ease,
+    border-color 0.12s ease;
 }
-
-.vix-nav__theme {
-  border-radius: 999px;
-}
-
-.vix-nav__theme:hover,
-.vix-nav__icon:hover {
+.vix-nav__icon-btn:hover {
   background: var(--vp-c-bg-alt);
-  border-color: var(--vp-c-text-2);
-  transform: translateY(-1px);
+  border-color: var(--vp-c-text-3);
 }
-
-.vix-nav__theme svg {
+.vix-nav__icon-btn svg {
   width: 15px;
   height: 15px;
   stroke: currentColor;
@@ -579,269 +676,244 @@ onBeforeUnmount(() => {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-
 .vix-nav__social-svg {
-  display: block;
-  width: 17px;
-  height: 17px;
-  color: currentColor !important;
+  width: 16px;
+  height: 16px;
   fill: currentColor !important;
+  stroke: none !important;
 }
-
 .vix-nav__social-svg path {
   fill: currentColor !important;
 }
 
+/* Search (desktop) */
 .vix-nav__search {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  height: 36px;
-  padding: 0 12px;
+  gap: 8px;
+  height: 32px;
+  padding: 0 11px;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+.vix-nav__search:hover {
+  background: var(--vp-c-bg-alt);
+  border-color: var(--vp-c-text-3);
+}
+.vix-nav__search svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.vix-nav__search span {
+  font-size: 12.5px;
+  font-weight: 550;
+}
+.vix-nav__search kbd {
+  padding: 1px 5px;
+  color: var(--vp-c-text-3);
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-family: var(--vp-font-family-mono, ui-monospace, monospace);
+}
+
+/* Compact mobile search — hidden on desktop */
+.vix-nav__search-mobile {
+  display: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
   color: var(--vp-c-text-1);
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   flex-shrink: 0;
 }
-
-.vix-nav__search:hover {
-  background: var(--vp-c-bg-alt);
-  border-color: var(--vp-c-text-2);
-}
-
-.vix-nav__search svg {
-  width: 17px;
-  height: 17px;
+.vix-nav__search-mobile svg {
+  width: 15px;
+  height: 15px;
   stroke: currentColor;
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.vix-nav__search span {
-  font-size: 13px;
-  font-weight: 650;
-  white-space: nowrap;
+/* ============================================================
+   MOBILE DRAWER
+   ============================================================ */
+.vix-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
 }
-
-.vix-nav__search kbd {
+.vix-drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+.vix-drawer__panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(82vw, 320px);
+  display: flex;
+  flex-direction: column;
+  background: var(--vp-c-bg);
+  border-right: 1px solid var(--vp-c-divider);
+  box-shadow: 4px 0 28px rgba(0, 0, 0, 0.35);
+}
+.vix-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--vix-bar-h);
+  padding: 0 14px 0 18px;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+.vix-drawer__title {
+  font-family: var(--vp-font-family-mono, ui-monospace, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--vp-c-text-3);
+}
+.vix-drawer__close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
   color: var(--vp-c-text-2);
   background: transparent;
   border: 0;
-  font-size: 12px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  border-radius: 6px;
+  cursor: pointer;
 }
-.vix-nav__banner a {
-  color: #4ade80 !important;
-  font-weight: 760;
-  text-decoration: underline !important;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 4px;
-  white-space: nowrap;
+.vix-drawer__close:hover {
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg-soft);
 }
-
-.vix-nav__banner a:hover {
-  color: #86efac !important;
-  text-decoration: underline !important;
+.vix-drawer__close svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
 }
-/* Medium screens */
-@media (max-width: 1180px) {
-  .vix-nav__inner {
-    gap: 18px;
-  }
-
-  .vix-nav__links {
-    gap: 14px;
-  }
-
-  .vix-nav__link {
-    font-size: 13px;
-  }
-
-  .vix-nav__search span {
-    display: none;
-  }
+.vix-drawer__nav {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 12px;
+  overflow-y: auto;
 }
-
-/* Tablet */
-@media (max-width: 980px) {
-  .vix-nav__bar {
-    height: auto;
-    min-height: 58px;
-  }
-
-  .vix-nav__inner {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px 14px;
-    padding: 12px 14px;
-  }
-
-  .vix-nav__brand {
-    order: 1;
-    flex: 1 1 auto;
-  }
-
-  .vix-nav__right {
-    order: 2;
-    flex: 0 0 auto;
-  }
-
-  .vix-nav__links {
-    order: 3;
-    flex: 1 1 100%;
-    width: 100%;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 4px 0 2px;
-    scrollbar-width: none;
-  }
-
-  .vix-nav__links::-webkit-scrollbar {
-    display: none;
-  }
-
-  .vix-nav__link {
-    padding: 8px 10px;
-    background: var(--vp-c-bg-soft);
-    border: 1px solid var(--vp-c-divider);
-    border-radius: 999px;
-    font-size: 12.5px;
-    flex-shrink: 0;
-  }
-
-  .vix-nav__search {
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    justify-content: center;
-  }
-
-  .vix-nav__search kbd {
-    display: none;
-  }
+.vix-drawer__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+  font-weight: 550;
+  text-decoration: none;
+  border-radius: 6px;
+  transition:
+    color 0.12s ease,
+    background-color 0.12s ease;
+}
+.vix-drawer__link:hover {
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg-soft);
+  text-decoration: none;
+}
+.vix-drawer__link.is-active {
+  color: var(--vix-accent, #d8b76a);
+  background: var(--vix-accent-s, rgba(216, 183, 106, 0.1));
+  font-weight: 650;
+}
+.vix-drawer__ext {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.6;
+}
+.vix-drawer__foot {
+  display: flex;
+  gap: 8px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--vp-c-divider);
 }
 
-/* Mobile */
-@media (max-width: 640px) {
-  .vix-nav__banner {
-    justify-content: flex-start;
-    min-height: 38px;
-    padding: 8px 44px 8px 12px;
-    font-size: 11.5px;
-    text-align: left;
-  }
-
-  .vix-nav__banner-mark {
-    width: 19px;
-    height: 19px;
-  }
-
-  .vix-nav__banner-mark svg {
-    width: 19px;
-    height: 19px;
-  }
-
-  .vix-nav__banner-close {
-    right: 10px;
-    width: 28px;
-    height: 28px;
-  }
-
-  .vix-nav__inner {
-    padding: 10px 12px;
-  }
-
-  .vix-nav__brand-name {
-    font-size: 15.5px;
-    font-weight: 780;
-  }
-
-  .vix-nav__slash,
-  .vix-nav__docs {
-    display: none;
-  }
-
-  .vix-nav__theme,
-  .vix-nav__icon,
-  .vix-nav__search {
-    width: 30px;
-    height: 30px;
-  }
-
-  .vix-nav__right {
-    gap: 6px;
-  }
+/* Drawer transition */
+.vix-drawer-enter-active .vix-drawer__panel,
+.vix-drawer-leave-active .vix-drawer__panel {
+  transition: transform 0.22s ease;
+}
+.vix-drawer-enter-active .vix-drawer__backdrop,
+.vix-drawer-leave-active .vix-drawer__backdrop {
+  transition: opacity 0.22s ease;
+}
+.vix-drawer-enter-from .vix-drawer__panel,
+.vix-drawer-leave-to .vix-drawer__panel {
+  transform: translateX(-100%);
+}
+.vix-drawer-enter-from .vix-drawer__backdrop,
+.vix-drawer-leave-to .vix-drawer__backdrop {
+  opacity: 0;
 }
 
-/* Small mobile */
-@media (max-width: 420px) {
-  .vix-nav__banner {
-    gap: 4px;
-    font-size: 11px;
-  }
-
-  .vix-nav__banner a {
-    max-width: 96px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .vix-nav__inner {
-    gap: 8px;
-  }
-
-  .vix-nav__link {
-    padding: 7px 9px;
-    font-size: 12px;
-  }
-}
 /* ============================================================
-   Vix.cpp docs footer
+   FOOTER
    ============================================================ */
-
 .vix-footer {
-  position: relative;
   flex-shrink: 0;
   border-top: 1px solid var(--vp-c-divider);
   background: var(--vp-c-bg);
 }
-
 .vix-footer-inner {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 18px 32px 14px;
   display: grid;
   grid-template-columns: minmax(220px, auto) 1fr;
   align-items: center;
   gap: 24px;
+  padding: 18px 32px 14px;
 }
-
 .vix-footer-brand {
   min-width: 0;
 }
-
 .vix-footer-name {
   display: block;
+  font-family: var(--vp-font-family-mono, ui-monospace, monospace);
   font-size: 13px;
-  line-height: 1.3;
-  font-weight: 760;
+  font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--vp-c-text-1);
 }
-
 .vix-footer-desc {
   display: block;
   margin-top: 3px;
   font-size: 12px;
   line-height: 1.45;
-  font-weight: 500;
   color: var(--vp-c-text-2);
 }
-
 .vix-footer-nav {
   display: flex;
   align-items: center;
@@ -849,187 +921,156 @@ onBeforeUnmount(() => {
   gap: 18px;
   flex-wrap: wrap;
 }
-
 .vix-footer-link {
   font-size: 12px;
-  line-height: 1.4;
-  font-weight: 600;
+  font-weight: 550;
   color: var(--vp-c-text-2);
   text-decoration: none;
   transition: color 0.12s ease;
 }
-
 .vix-footer-link:hover {
   color: var(--vp-c-text-1);
-  text-decoration: none;
 }
-
 .vix-footer-meta {
-  position: relative;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 10px 32px 16px;
-  border-top: 1px solid var(--vp-c-divider);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 18px;
   flex-wrap: wrap;
+  padding: 10px 32px 16px;
+  border-top: 1px solid var(--vp-c-divider);
   font-size: 11.5px;
-  line-height: 1.45;
-  font-weight: 500;
-  color: var(--vp-c-text-2);
+  color: var(--vp-c-text-3);
 }
 
-.vix-footer-meta::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: calc(-1 * var(--vix-doc-sidebar-width, 300px));
-  right: 0;
-  height: 1px;
-  background: var(--vp-c-divider);
-}
-
+/* On desktop the footer aligns to the doc column (past the sidebar) */
 @media (min-width: 960px) {
   .vix-footer {
-    margin-left: 0 !important;
-    padding-left: var(--vix-doc-sidebar-width, 300px);
-    border-left: 0 !important;
-  }
-
-  .vix-footer-inner,
-  .vix-footer-meta {
-    max-width: none;
-    margin-left: 0;
-    margin-right: 0;
+    padding-left: var(--vix-doc-sidebar-width, 272px);
   }
 }
-
 @media (min-width: 1440px) {
   .vix-footer {
-    padding-left: var(--vix-doc-sidebar-width, 320px);
-  }
-
-  .vix-footer-meta::before {
-    left: calc(-1 * var(--vix-doc-sidebar-width, 320px));
+    padding-left: var(--vix-doc-sidebar-width, 290px);
   }
 }
 
+/* ============================================================
+   RESPONSIVE — header
+   ============================================================ */
+
+/* Hide kbd hint earlier */
 @media (max-width: 1180px) {
-  .vix-nav__inner {
-    gap: 24px;
-  }
-
-  .vix-nav__links {
-    gap: 18px;
-  }
-
-  .vix-nav__link {
-    font-size: 14px;
-  }
-
-  .vix-nav__search span {
+  .vix-nav__search kbd {
     display: none;
   }
+  .vix-nav__links {
+    gap: 2px;
+  }
 }
 
+/* Tablet & below: switch to burger + drawer, hide inline links */
 @media (max-width: 959px) {
-  .vix-nav__banner {
-    height: 40px;
-    justify-content: flex-start;
-    padding: 0 48px 0 16px;
-    font-size: 12px;
+  .vix-nav__burger {
+    display: grid;
   }
-
-  .vix-nav__bar {
-    height: 58px;
+  .vix-nav__links {
+    display: none;
   }
-
-  .vix-nav__inner {
-    grid-template-columns: auto 1fr auto;
-    gap: 16px;
-    padding: 0 16px;
-  }
-
-  .vix-nav__brand-name {
-    font-size: 16px;
-    font-weight: 750;
-  }
-
-  .vix-nav__slash,
-  .vix-nav__docs,
-  .vix-nav__links,
   .vix-nav__search {
     display: none;
   }
-
-  .vix-nav__right {
-    gap: 8px;
+  .vix-nav__search-mobile {
+    display: grid;
   }
-
-  .vix-nav__theme,
-  .vix-nav__icon {
-    width: 30px;
-    height: 30px;
+  .vix-nav__inner {
+    gap: 12px;
+    padding: 0 14px;
   }
-
-  .vix-footer {
-    margin-left: 0 !important;
-    padding-left: 0 !important;
-    border-left: 0;
+  .vix-nav__brand {
+    flex: 1 1 auto;
   }
-
-  .vix-footer-meta::before {
-    left: 0;
+  /* On mobile the header is NOT sticky (it scrolls away);
+     the VitePress local nav handles fixed access to the sidebar. */
+  .vix-nav {
+    position: relative;
   }
 }
 
+@media (max-width: 640px) {
+  .vix-nav__banner {
+    justify-content: flex-start;
+    padding: 0 42px 0 12px;
+    font-size: 12px;
+  }
+  .vix-nav__banner-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .vix-nav__brand-name {
+    font-size: 15px;
+  }
+  .vix-nav__slash,
+  .vix-nav__docs {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .vix-nav__banner a {
+    max-width: 92px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .vix-nav__right {
+    gap: 5px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — footer
+   ============================================================ */
+@media (max-width: 959px) {
+  .vix-footer {
+    padding-left: 0 !important;
+  }
+}
 @media (max-width: 760px) {
   .vix-footer-inner {
     grid-template-columns: 1fr;
     gap: 14px;
     padding: 16px 18px 12px;
   }
-
   .vix-footer-nav {
     justify-content: flex-start;
     gap: 14px;
   }
-
   .vix-footer-meta {
     padding: 10px 18px 14px;
     gap: 10px;
   }
 }
-
-@media (max-width: 520px) {
-  .vix-nav__banner {
-    gap: 4px;
-    padding: 0 42px 0 12px;
-    font-size: 11.5px;
-  }
-
-  .vix-nav__banner a {
-    display: inline-flex;
-    color: #ffffff;
-    font-weight: 750;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    white-space: nowrap;
-  }
-}
-
 @media (max-width: 460px) {
   .vix-footer-nav {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
   }
-
   .vix-footer-meta {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .vix-drawer-enter-active .vix-drawer__panel,
+  .vix-drawer-leave-active .vix-drawer__panel,
+  .vix-drawer-enter-active .vix-drawer__backdrop,
+  .vix-drawer-leave-active .vix-drawer__backdrop {
+    transition: none !important;
   }
 }
 </style>

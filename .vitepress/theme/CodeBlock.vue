@@ -82,12 +82,7 @@
 
 <script setup>
 import { computed, ref, watch } from "vue";
-import {
-  highlightCpp,
-  highlightShell,
-  highlightText,
-  normalizeLang,
-} from "./highlighter";
+import { highlight, normalizeLang } from "./highlighter";
 
 const props = defineProps({
   title: { type: String, default: "" },
@@ -155,21 +150,32 @@ function guessLang(tabKey) {
   if (props.lang) return props.lang;
   if (tabKey === "run" || tabKey === "out") return "shell";
   const s = (props.code || "").trim();
+  // C++
   if (s.includes("#include") || s.includes("int main") || s.includes("std::"))
     return "cpp";
+  // Shell
   if (s.startsWith("~$") || s.includes(" vix ") || s.startsWith("$ "))
     return "shell";
+  // HTML / Vue
+  if (
+    /^\s*<(template|div|span|section|html|!DOCTYPE|script|style)\b/i.test(s) ||
+    /<\/[a-z]+>/.test(s)
+  )
+    return "html";
+  // CSS
+  if (/[.#&][\w-]+\s*\{/.test(s) || /^\s*@(media|import|keyframes)/m.test(s))
+    return "css";
+  // JSON
+  if (/^\s*[{\[]/.test(s) && /["}\]]\s*$/.test(s) && /":/.test(s))
+    return "json";
+  // JS / TS
+  if (/\b(const|let|function|import|export|=>)\b/.test(s)) return "js";
   return "cpp";
 }
 
-const activeHtml = computed(() => {
-  const text = activeText.value || "";
-  const lang = normalizeLang(activeLang.value);
-
-  if (lang === "shell") return highlightShell(text);
-  if (lang === "cpp") return highlightCpp(text);
-  return highlightText(text);
-});
+const activeHtml = computed(() =>
+  highlight(activeText.value || "", normalizeLang(activeLang.value)),
+);
 
 async function copy(text) {
   try {

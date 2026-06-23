@@ -6,7 +6,7 @@ import DocsHomeHero from "./DocsHomeHero.vue";
 import CodeTabs from "./CodeTabs.vue";
 import CodeBlock from "./CodeBlock.vue";
 
-import { highlightCpp, highlightShell, normalizeLang } from "./highlighter";
+import { highlight, normalizeLang } from "./highlighter";
 
 export default {
   ...DefaultTheme,
@@ -89,17 +89,7 @@ export default {
         // Recover raw text (textContent strips Shiki's spans, preserves whitespace)
         const raw = codeEl.textContent || "";
 
-        if (lang === "cpp") {
-          codeEl.innerHTML = highlightCpp(raw);
-        } else if (lang === "shell") {
-          codeEl.innerHTML = highlightShell(raw);
-        } else {
-          // text/plain/unknown: keep as escaped text
-          codeEl.innerHTML = raw
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
-        }
+        codeEl.innerHTML = highlight(raw, lang);
 
         codeEl.dataset.vixHighlighted = "1";
         container.classList.add("vix-styled");
