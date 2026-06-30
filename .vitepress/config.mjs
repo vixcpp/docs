@@ -47,6 +47,49 @@ const gettingStarted = {
   ],
 };
 
+const sdkProfiles = {
+  text: "SDK Profiles",
+  collapsed: false,
+  items: [
+    {
+      text: "Overview",
+      link: "/sdks/",
+    },
+    {
+      text: "Default SDK",
+      link: "/sdks/default",
+    },
+    {
+      text: "Web SDK",
+      link: "/sdks/web",
+    },
+    {
+      text: "Data SDK",
+      link: "/sdks/data",
+    },
+    {
+      text: "Desktop SDK",
+      link: "/sdks/desktop",
+    },
+    {
+      text: "P2P SDK",
+      link: "/sdks/p2p",
+    },
+    {
+      text: "Game SDK",
+      link: "/sdks/game",
+    },
+    {
+      text: "Agent SDK",
+      link: "/sdks/agent",
+    },
+    {
+      text: "Full SDK",
+      link: "/sdks/all",
+    },
+  ],
+};
+
 const projectTemplates = {
   text: "Project Templates",
   collapsed: true,
@@ -1381,6 +1424,60 @@ const modules = {
       ],
     },
     {
+      text: "UI",
+      collapsed: false,
+      items: [
+        {
+          text: "Overview",
+          link: "/modules/ui/",
+        },
+        {
+          text: "Views",
+          link: "/modules/ui/views",
+        },
+        {
+          text: "HTML",
+          link: "/modules/ui/html",
+        },
+        {
+          text: "HTML Response",
+          link: "/modules/ui/html-response",
+        },
+        {
+          text: "Assets",
+          link: "/modules/ui/assets",
+        },
+        {
+          text: "Forms",
+          link: "/modules/ui/forms",
+        },
+        {
+          text: "Live UI",
+          link: "/modules/ui/live",
+        },
+        {
+          text: "PWA",
+          link: "/modules/ui/pwa",
+        },
+        {
+          text: "App Shell",
+          link: "/modules/ui/app-shell",
+        },
+        {
+          text: "Examples",
+          link: "/modules/ui/examples",
+        },
+        {
+          text: "Tests",
+          link: "/modules/ui/tests",
+        },
+        {
+          text: "Benchmarks",
+          link: "/modules/ui/benchmarks",
+        },
+      ],
+    },
+    {
       text: "Data and Reliability",
       collapsed: true,
       items: [
@@ -1517,6 +1614,7 @@ const internals = {
 
 const sidebar = [
   gettingStarted,
+  sdkProfiles,
   projectTemplates,
   vixBook,
   guides,
