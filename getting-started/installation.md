@@ -1,26 +1,20 @@
 # Installation
 
 This page shows how to install Vix.cpp and verify that it works on your machine.
-For Getting Started and real C++ application development, install the full SDK.
-Starting with **Vix.cpp v2.6.0**, the recommended installation is the full SDK installation.
 
-The full SDK includes:
+Starting with **Vix.cpp v2.7.0**, the installation flow is split into two steps:
 
-- the `vix` CLI
-- the main `vix.hpp` header
-- Vix module headers
-- Vix static libraries
-- CMake package files
-- the `vix::vix` target for CMake projects
+1. install the `vix` CLI;
+2. install the SDK profile required by the kind of application you are building.
 
-This means you can install Vix once, then build real Vix applications without manually copying headers, linking modules, or rebuilding Vix yourself.
+This keeps the first installation small and avoids forcing optional runtime dependencies on every user.
 
-## Recommended install
+## Install the CLI
 
 Linux and macOS:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | sh
+curl -fsSL https://vixcpp.com/install.sh | bash
 ```
 
 Windows PowerShell:
@@ -29,7 +23,7 @@ Windows PowerShell:
 irm https://vixcpp.com/install.ps1 | iex
 ```
 
-After installation, restart your terminal.
+After installation, restart your terminal if `vix` is not immediately available.
 
 Then verify the CLI:
 
@@ -37,42 +31,115 @@ Then verify the CLI:
 vix --version
 ```
 
-Expected output shape:
+You can also check whether a newer CLI release is available:
 
-```txt
-Vix.cpp CLI
-version : v2.6.1
-author  : Gaspard Kirira
-source  : https://github.com/vixcpp/vix
+```bash
+vix upgrade --check
 ```
 
-The exact version may be newer depending on the latest release.
+## Install a SDK profile
 
-## What the full SDK installs
+The CLI is the bootstrap. SDK profiles provide the native development layer used by Vix.cpp projects.
 
-The full SDK installs the command-line tool and the development files needed by C++ projects.
+List available SDK profiles:
 
-It installs files like:
-
-```txt
-~/.local/bin/vix
-~/.local/include/vix.hpp
-~/.local/include/vix/...
-~/.local/lib/libvix_*.a
-~/.local/lib/cmake/Vix/VixConfig.cmake
-~/.local/lib/cmake/Vix/VixTargets.cmake
+```bash
+vix upgrade --sdk list
 ```
 
-For CMake projects, the expected usage is:
+Inspect a profile before installing it:
 
-```cmake
-find_package(Vix CONFIG REQUIRED)
-
-add_executable(app main.cpp)
-target_link_libraries(app PRIVATE vix::vix)
+```bash
+vix upgrade --sdk info web
 ```
 
-The `vix::vix` target is the main SDK target. It is designed to provide the complete Vix development foundation.
+Install a profile:
+
+```bash
+vix upgrade --sdk web
+```
+
+The profile information shows:
+
+- the modules included in the profile;
+- the system dependencies required by the profile;
+- notes about what the profile is intended for;
+- the exact install command.
+
+## Common SDK profiles
+
+| Profile   | Use it for                                                                       |
+| --------- | -------------------------------------------------------------------------------- |
+| `default` | Normal Vix.cpp projects and local development                                    |
+| `web`     | HTTP apps, APIs, WebSocket, middleware, validation, crypto, WebRPC, and requests |
+| `data`    | Database, ORM, key-value storage, key-value workflows, and cache modules         |
+| `desktop` | Desktop apps using the Vix UI desktop shell                                      |
+| `p2p`     | Peer-to-peer networking and local-first systems                                  |
+| `game`    | Game-oriented and realtime application workflows                                 |
+| `agent`   | Local agent tooling and controlled automation workflows                          |
+| `all`     | Full SDK profile for advanced development and release validation                 |
+
+The `all` profile is a complete SDK profile. It is not required for most projects.
+
+For a normal web backend or API, use:
+
+```bash
+vix upgrade --sdk web
+```
+
+For database or ORM workflows, use:
+
+```bash
+vix upgrade --sdk data
+```
+
+For desktop UI apps, use:
+
+```bash
+vix upgrade --sdk desktop
+```
+
+## Install more than one SDK profile
+
+You can install multiple profiles in one command:
+
+```bash
+vix upgrade --sdk web data desktop
+```
+
+Comma-separated profiles are also accepted:
+
+```bash
+vix upgrade --sdk web,data,desktop
+```
+
+This is useful when one machine is used for different kinds of Vix projects.
+
+## Install a specific version
+
+Install a specific CLI release:
+
+```bash
+vix upgrade v2.7.0
+```
+
+Or:
+
+```bash
+vix upgrade --version v2.7.0
+```
+
+Install a specific SDK profile version:
+
+```bash
+vix upgrade --sdk web --version v2.7.0
+```
+
+Install multiple profiles for a specific version:
+
+```bash
+vix upgrade --sdk web data --version v2.7.0
+```
 
 ## Verify the CLI
 
@@ -90,16 +157,22 @@ vix: command not found
 
 your shell cannot find the Vix binary.
 
+On Linux and macOS, the default install location is usually:
+
+```txt
+$HOME/.local/bin/vix
+```
+
 Add `~/.local/bin` to your `PATH`.
 
-### Bash
+Bash:
 
 ```bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 ```
 
-### Zsh
+Zsh:
 
 ```bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
@@ -112,51 +185,31 @@ Then check again:
 vix --version
 ```
 
-## Verify the SDK
+## Verify a SDK profile
 
-Check that the main SDK header exists:
-
-```bash
-find ~/.local/include -name vix.hpp 2>/dev/null
-```
-
-Expected output shape:
-
-```txt
-/home/your-user/.local/include/vix.hpp
-```
-
-Check that the Vix CMake package exists:
+After installing a SDK profile, check the SDK state with:
 
 ```bash
-find ~/.local/lib/cmake -name VixConfig.cmake 2>/dev/null
+vix upgrade --sdk list
 ```
 
-Expected output shape:
-
-```txt
-/home/your-user/.local/lib/cmake/Vix/VixConfig.cmake
-```
-
-Check that Vix static libraries are installed:
+Inspect the installed profile:
 
 ```bash
-find ~/.local/lib -name "libvix_*.a" 2>/dev/null
+vix upgrade --sdk info web
 ```
 
-For example, if you use WebSocket features, this file should exist:
+You can also inspect your environment:
 
 ```bash
-find ~/.local/lib -name "libvix_websocket.a" 2>/dev/null
+vix doctor
 ```
 
-Expected output shape:
+And print Vix paths and environment information:
 
-```txt
-/home/your-user/.local/lib/libvix_websocket.a
+```bash
+vix info
 ```
-
-If these files exist, the SDK is installed.
 
 ## Verify with a simple C++ file
 
@@ -193,9 +246,40 @@ Expected output:
 Hello from Vix.cpp
 ```
 
-If this works, your CLI and SDK are ready.
+If this works, your CLI and SDK profile are ready for normal Vix.cpp development.
+
+## Verify with a Vix project
+
+Create a new project:
+
+```bash
+vix new api
+cd api
+```
+
+Build it:
+
+```bash
+vix build
+```
+
+Run it:
+
+```bash
+vix run
+```
+
+For development mode:
+
+```bash
+vix dev
+```
+
+If the application starts, your installation is working.
 
 ## Verify with a CMake project
+
+Vix.cpp can also work with normal CMake projects.
 
 Create a temporary CMake project:
 
@@ -249,167 +333,60 @@ Expected output:
 Hello from Vix CMake
 ```
 
-## Verify with a Vix project
-
-Create a project:
-
-```bash
-vix new api
-cd api
-```
-
-Build it:
-
-```bash
-vix build
-```
-
-Run it:
-
-```bash
-vix run
-```
-
-If the application starts, your installation is correct.
-
 ## Updating Vix
 
-There are two update paths.
-
-### Update the CLI
-
-`vix upgrade` updates the installed Vix CLI binary:
+Update the CLI:
 
 ```bash
 vix upgrade
 ```
 
-This updates the command-line tool only.
-
-It does not reinstall the full SDK.
-
-That means `vix upgrade` does not replace:
-
-- installed headers
-- static libraries
-- CMake package files
-- module libraries such as `libvix_websocket.a`
-
-Use `vix upgrade` when you only need the latest `vix` command.
-
-### Update the full SDK
-
-If you build C++ applications with Vix, update the full SDK with:
+Check before upgrading:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+vix upgrade --check
 ```
 
-To install or update a specific SDK version:
+Preview without changing files:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
+vix upgrade --dry-run
 ```
 
-Use the SDK update command when your project depends on:
-
-```cpp
-#include <vix.hpp>
-```
-
-or:
-
-```cmake
-find_package(Vix CONFIG REQUIRED)
-
-add_executable(app main.cpp)
-target_link_libraries(app PRIVATE vix::vix)
-```
-
-## CLI update vs SDK update
-
-| Command                                                                                  | Updates                                          | Use when                          |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------- |
-| `vix upgrade`                                                                            | CLI binary only                                  | You want the latest `vix` command |
-| `curl -fsSL https://vixcpp.com/install.sh \| VIX_INSTALL_KIND=sdk sh`                    | CLI, headers, libraries, and CMake package files | You build Vix C++ applications    |
-| `curl -fsSL https://vixcpp.com/install.sh \| VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh` | Full SDK for a specific version                  | You need a known SDK version      |
-
-For application development, use the SDK installation or SDK update command.
-
-## SDK mode vs CLI-only mode
-
-Vix has two installation modes.
-
-| Mode          | What it installs                                 | Use when                            |
-| ------------- | ------------------------------------------------ | ----------------------------------- |
-| SDK mode      | CLI, headers, libraries, and CMake package files | You want to build Vix applications  |
-| CLI-only mode | Only the `vix` binary                            | You only need the command-line tool |
-
-For Getting Started, use **SDK mode**.
-
-Do not use CLI-only mode if you want to compile code that includes:
-
-```cpp
-#include <vix.hpp>
-```
-
-Do not use CLI-only mode if you want to build projects that use:
-
-```cmake
-find_package(Vix CONFIG REQUIRED)
-```
-
-## CLI-only install
-
-CLI-only mode installs only the command-line tool.
-
-Linux and macOS:
+Update or install a SDK profile:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=cli sh
+vix upgrade --sdk web
 ```
 
-This is not recommended for Getting Started.
-
-The next pages build real Vix applications, so you need the full SDK.
-
-## Install a specific version
-
-By default, the installer uses the latest release.
-
-To install a specific SDK version on Linux or macOS:
+Update or install a specific SDK profile version:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
+vix upgrade --sdk web --version v2.7.0
 ```
 
-To install only the CLI for a specific version:
+## CLI upgrade vs SDK upgrade
 
-```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=cli sh
-```
-
-On Windows PowerShell:
-
-```powershell
-$env:VIX_VERSION="v2.6.1"
-$env:VIX_INSTALL_KIND="sdk"
-irm https://vixcpp.com/install.ps1 | iex
-```
-
-For CLI-only mode on Windows PowerShell:
-
-```powershell
-$env:VIX_VERSION="v2.6.1"
-$env:VIX_INSTALL_KIND="cli"
-irm https://vixcpp.com/install.ps1 | iex
-```
+| Command                          | Updates                              | Use when                                       |
+| -------------------------------- | ------------------------------------ | ---------------------------------------------- |
+| `vix upgrade`                    | The `vix` CLI                        | You want the latest command-line tool          |
+| `vix upgrade --sdk web`          | The `web` SDK profile                | You build web services, APIs, or realtime apps |
+| `vix upgrade --sdk data`         | The `data` SDK profile               | You use database, ORM, KV, or cache modules    |
+| `vix upgrade --sdk desktop`      | The `desktop` SDK profile            | You use the Vix desktop shell                  |
+| `vix upgrade --sdk all`          | The full SDK profile                 | You need the full platform on one machine      |
+| `vix upgrade --sdk info profile` | Nothing; it only prints profile info | You want to inspect before installing          |
 
 ## Install build prerequisites
 
-Vix installs the SDK, but it still uses the normal C++ toolchain underneath.
+Vix.cpp still uses the native C++ toolchain underneath.
 
-You need a compiler, CMake, Ninja, and the system libraries used by the modules you want to build.
+You need a compiler, CMake, Ninja, and the system libraries required by the SDK profile you install.
+
+The recommended way to check profile-specific dependencies is:
+
+```bash
+vix upgrade --sdk info web
+```
 
 ### Ubuntu or Debian
 
@@ -418,172 +395,155 @@ Recommended base setup:
 ```bash
 sudo apt update
 sudo apt install -y \
-  build-essential cmake ninja-build pkg-config \
-  ca-certificates git curl unzip zip tar \
-  libssl-dev libsqlite3-dev zlib1g-dev libbrotli-dev \
-  nlohmann-json3-dev libspdlog-dev libfmt-dev
+  build-essential \
+  cmake \
+  ninja-build \
+  pkg-config \
+  ca-certificates \
+  git \
+  curl \
+  tar \
+  unzip \
+  zip \
+  nlohmann-json3-dev \
+  libssl-dev \
+  zlib1g-dev \
+  libsqlite3-dev \
+  libbrotli-dev \
+  libspdlog-dev \
+  libfmt-dev
 ```
 
-If you want to use database modules with MySQL:
+For MySQL database support:
 
 ```bash
 sudo apt install -y libmysqlcppconn-dev
 ```
 
-If you want to use the Vix game module with SDL/OpenGL:
+For desktop shell support on Linux, inspect the desktop profile first:
+
+```bash
+vix upgrade --sdk info desktop
+```
+
+Then install the system dependencies shown by that command.
+
+For game-oriented workflows with SDL/OpenGL:
 
 ```bash
 sudo apt install -y \
-  libsdl2-dev libsdl2-image-dev libgl1-mesa-dev
+  libsdl2-dev \
+  libsdl2-image-dev \
+  libgl1-mesa-dev
 ```
 
-If you want to use the Vix AI agent with a local model, install Ollama:
+### Arch Linux
+
+Install the base toolchain:
 
 ```bash
-curl -fsSL https://ollama.com/install.sh | sh
+sudo pacman -S --needed \
+  base-devel \
+  cmake \
+  ninja \
+  pkgconf \
+  git \
+  curl \
+  unzip \
+  zip \
+  tar \
+  openssl \
+  sqlite \
+  zlib \
+  brotli \
+  fmt \
+  spdlog \
+  nlohmann-json
 ```
 
-Then pull a small model for low-power machines:
+For MySQL database support, install the MySQL Connector/C++ package available for your system.
 
-```bash
-ollama pull llama3.2:1b
-```
-
-Or pull a small coding-oriented model:
-
-```bash
-ollama pull qwen2.5-coder:1.5b
-```
-
-For most laptops, start with:
-
-```bash
-ollama pull llama3.2:1b
-```
-
-It is smaller and easier to run than larger models.
+The base Vix CLI should not require MySQL to start. MySQL is only needed when using MySQL-related database workflows.
 
 ### macOS
 
 With Homebrew:
 
 ```bash
-brew install cmake ninja pkg-config openssl@3 spdlog fmt nlohmann-json brotli
+brew install cmake ninja pkg-config openssl@3 spdlog fmt nlohmann-json brotli sqlite
 ```
 
-For the game module:
+For game-oriented workflows:
 
 ```bash
 brew install sdl2 sdl2_image
-```
-
-For the AI agent with a local model:
-
-```bash
-brew install ollama
-```
-
-Start Ollama:
-
-```bash
-ollama serve
-```
-
-Then pull a small model:
-
-```bash
-ollama pull llama3.2:1b
-```
-
-Or a small coding-oriented model:
-
-```bash
-ollama pull qwen2.5-coder:1.5b
 ```
 
 ### Windows
 
 Install one C++ toolchain:
 
-- Visual Studio Build Tools with MSVC
-- Visual Studio with the Desktop development with C++ workload
-- clang-cl
+- Visual Studio Build Tools with MSVC;
+- Visual Studio with the Desktop development with C++ workload;
+- clang-cl.
 
 Install CMake and Ninja.
 
-For extra dependencies, use `vcpkg`.
+For extra dependencies, use `vcpkg` or the dependency manager recommended by your environment.
 
-If you want to use the AI agent with a local model, install Ollama for Windows from the official Ollama website, then run:
+## Desktop SDK
 
-```powershell
-ollama pull llama3.2:1b
-```
-
-Or:
-
-```powershell
-ollama pull qwen2.5-coder:1.5b
-```
-
-## Module-specific dependencies
-
-The full Vix SDK includes the Vix modules, but some modules rely on system libraries.
-
-| Module area      | System dependency        | When you need it                               |
-| ---------------- | ------------------------ | ---------------------------------------------- |
-| Core build       | compiler, CMake, Ninja   | Always                                         |
-| Crypto / TLS     | OpenSSL                  | When using crypto, TLS, HTTPS-related features |
-| SQLite           | SQLite3                  | When using SQLite database support             |
-| MySQL            | MySQL C++ Connector      | When using MySQL database support              |
-| HTTP compression | zlib, Brotli             | When using gzip or Brotli compression          |
-| Game             | SDL2, SDL2_image, OpenGL | When using the SDL/OpenGL game backend         |
-| Agent            | Ollama                   | Only when running local AI models              |
-
-Ollama is not required to install Vix.
-
-Ollama is only needed if you want to run local AI agent features such as:
+Install the desktop SDK before using desktop shell commands:
 
 ```bash
-vix agent ask
-vix agent analyze
-vix agent scan
+vix upgrade --sdk desktop
 ```
 
-## Recommended local AI model
-
-For low-power machines, use:
+Then run a Vix UI app in a desktop shell:
 
 ```bash
-ollama pull llama3.2:1b
+vix desktop run ui_dashboard.cpp --port 8080
 ```
 
-This is the best first model to recommend because it is small and easier to run.
-
-For coding-focused tests, use:
+On Linux, desktop shell support needs WebView system libraries. Check the required packages with:
 
 ```bash
-ollama pull qwen2.5-coder:1.5b
+vix upgrade --sdk info desktop
 ```
 
-Then you can test the agent:
+## Data SDK
+
+Install the data SDK when your project needs database, ORM, key-value, or cache modules:
 
 ```bash
-vix agent ask "Explain this project"
+vix upgrade --sdk data
 ```
 
-If the model is slow on first run, that is normal. Local models often need more time on the first request.
+This profile is useful for persistence-oriented applications.
 
-## Check your toolchain
+For SQLite workflows, install the SQLite development package for your system.
 
-Run:
+For MySQL workflows, install the MySQL Connector/C++ development package for your system.
+
+## Web SDK
+
+Install the web SDK when your project needs web application modules beyond the default setup:
 
 ```bash
-c++ --version
-cmake --version
-ninja --version
+vix upgrade --sdk web
 ```
 
-If one of these commands is missing, install the missing tool before continuing.
+Use it for:
+
+- APIs;
+- HTTP services;
+- realtime applications;
+- WebSocket;
+- middleware;
+- validation;
+- crypto;
+- WebRPC;
+- requests.
 
 ## Useful commands after installation
 
@@ -599,10 +559,28 @@ Inspect your environment:
 vix doctor
 ```
 
-Show Vix paths and cache information:
+Show Vix paths and environment information:
 
 ```bash
 vix info
+```
+
+List SDK profiles:
+
+```bash
+vix upgrade --sdk list
+```
+
+Inspect a SDK profile:
+
+```bash
+vix upgrade --sdk info web
+```
+
+Install a SDK profile:
+
+```bash
+vix upgrade --sdk web
 ```
 
 Update the CLI:
@@ -611,13 +589,19 @@ Update the CLI:
 vix upgrade
 ```
 
-Update the full SDK:
+Run a single C++ file:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+vix run main.cpp
 ```
 
-These commands are useful when you want to understand what Vix installed, which paths are used, and whether your environment is ready.
+Create a new project:
+
+```bash
+vix new app
+cd app
+vix dev
+```
 
 ## Common installation problems
 
@@ -630,12 +614,6 @@ Fix for Bash:
 ```bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
-```
-
-Then run:
-
-```bash
-vix --version
 ```
 
 Fix for Zsh:
@@ -653,41 +631,36 @@ vix --version
 
 ### `#include <vix.hpp>` not found
 
-The full SDK is not installed, or your project is not using the SDK path.
+The SDK profile needed by your project is not installed, or your project cannot find the SDK path.
 
-Check:
+Install the profile required by the project:
 
 ```bash
-find ~/.local/include -name vix.hpp 2>/dev/null
+vix upgrade --sdk web
 ```
 
-If nothing appears, reinstall the full SDK:
+Then try again:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+vix run main.cpp
 ```
 
-Then restart your terminal and check again:
+For CMake projects, pass the SDK prefix manually if needed:
 
 ```bash
-find ~/.local/include -name vix.hpp 2>/dev/null
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$HOME/.local"
+cmake --build build
 ```
 
 ### `find_package(Vix CONFIG REQUIRED)` fails
 
-Check that the CMake package exists:
+Install the SDK profile required by the project:
 
 ```bash
-find ~/.local/lib/cmake -name VixConfig.cmake 2>/dev/null
+vix upgrade --sdk web
 ```
 
-If nothing appears, reinstall the full SDK:
-
-```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
-```
-
-If it exists but CMake cannot find it, pass the SDK prefix manually:
+If CMake still cannot find Vix, pass the prefix:
 
 ```bash
 cmake -S . -B build -DCMAKE_PREFIX_PATH="$HOME/.local"
@@ -699,50 +672,25 @@ Then build:
 cmake --build build
 ```
 
-### `vix upgrade` worked, but my project still fails to link
+### `vix: error while loading shared libraries: libmysqlcppconn.so.7`
 
-`vix upgrade` updates the CLI binary only.
+This was a known packaging issue in older releases where the base CLI could require the MySQL Connector/C++ runtime at startup.
 
-It does not reinstall the SDK headers, libraries, or CMake package files.
+In Vix.cpp v2.7.0 and later, the base CLI should not require MySQL just to start. MySQL-related dependencies belong to database/MySQL workflows and SDK profiles.
 
-If your project fails with an error like:
-
-```txt
-undefined symbol: vix::websocket::LowLevelServer::run(...)
-```
-
-or:
-
-```txt
-undefined symbol: vix::websocket::Session::shutdown_now(...)
-```
-
-then your SDK libraries are missing or outdated.
-
-Check:
+Upgrade Vix:
 
 ```bash
-find ~/.local/lib -name "libvix_websocket.a" 2>/dev/null
+vix upgrade
 ```
 
-If nothing appears, reinstall the full SDK:
+Then check:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+vix --version
 ```
 
-For a specific version:
-
-```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
-```
-
-Then rebuild your project:
-
-```bash
-rm -rf build build-ninja
-vix build
-```
+If you are still on an older release and cannot upgrade immediately, install the MySQL Connector/C++ runtime package for your system as a temporary workaround.
 
 ### CMake or Ninja is missing
 
@@ -759,24 +707,23 @@ On Ubuntu or Debian:
 sudo apt install -y cmake ninja-build
 ```
 
+On macOS:
+
+```bash
+brew install cmake ninja
+```
+
 ### The project builds but cannot find system libraries
 
-Install the common development packages.
+Install the system packages required by the SDK profile you are using.
 
-Ubuntu or Debian:
-
-```bash
-sudo apt install -y \
-  build-essential cmake ninja-build pkg-config \
-  libssl-dev libsqlite3-dev zlib1g-dev libbrotli-dev \
-  nlohmann-json3-dev libspdlog-dev libfmt-dev
-```
-
-Then rebuild your project:
+Start by inspecting the profile:
 
 ```bash
-vix build
+vix upgrade --sdk info web
 ```
+
+Then install the listed dependencies for your operating system.
 
 ### The game module cannot find SDL2 or OpenGL
 
@@ -786,7 +733,9 @@ Ubuntu or Debian:
 
 ```bash
 sudo apt install -y \
-  libsdl2-dev libsdl2-image-dev libgl1-mesa-dev
+  libsdl2-dev \
+  libsdl2-image-dev \
+  libgl1-mesa-dev
 ```
 
 macOS:
@@ -801,138 +750,72 @@ Then rebuild:
 vix build
 ```
 
-### `vix agent` cannot use a local model
+## Clean reinstall
 
-Make sure Ollama is installed:
-
-```bash
-ollama --version
-```
-
-Make sure a model is installed:
-
-```bash
-ollama list
-```
-
-If no model is available, pull a small one:
-
-```bash
-ollama pull llama3.2:1b
-```
-
-Then try again:
-
-```bash
-vix agent ask "Explain this project"
-```
-
-### The first AI agent request is slow
-
-This is normal for local AI models.
-
-The first request can be slower because the model may need to start, load into memory, or initialize its runtime.
-
-For low-power machines, start with:
-
-```bash
-ollama pull llama3.2:1b
-```
-
-If you want a small coding-oriented model:
-
-```bash
-ollama pull qwen2.5-coder:1.5b
-```
-
-## Clean SDK reinstall
-
-If your system has an older or incomplete SDK installation, reinstall the SDK.
+If your system has an older or incomplete installation, reinstall the CLI and the SDK profile.
 
 Linux and macOS:
 
 ```bash
-rm -f "$HOME/.local/lib/libvix_"*.a
-rm -rf "$HOME/.local/lib/cmake/Vix"
-
-curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
+rm -f "$HOME/.local/bin/vix"
+curl -fsSL https://vixcpp.com/install.sh | bash
 ```
 
-For a specific version:
+Then reinstall the SDK profile you need:
 
 ```bash
-rm -f "$HOME/.local/lib/libvix_"*.a
-rm -rf "$HOME/.local/lib/cmake/Vix"
-
-curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
+vix upgrade --sdk web
 ```
 
-Then verify:
+For a different profile:
 
 ```bash
-vix --version
-find ~/.local/include -name vix.hpp 2>/dev/null
-find ~/.local/lib/cmake -name VixConfig.cmake 2>/dev/null
-find ~/.local/lib -name "libvix_websocket.a" 2>/dev/null
+vix upgrade --sdk data
+```
+
+or:
+
+```bash
+vix upgrade --sdk desktop
 ```
 
 ## What you should remember
 
-For real C++ development, install the full SDK:
+Install the CLI first:
 
 ```bash
-curl -fsSL https://vixcpp.com/install.sh | sh
+curl -fsSL https://vixcpp.com/install.sh | bash
 ```
 
-To update only the CLI:
-
-```bash
-vix upgrade
-```
-
-To update the full SDK:
-
-```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_INSTALL_KIND=sdk sh
-```
-
-To install a specific SDK version:
-
-```bash
-curl -fsSL https://vixcpp.com/install.sh | VIX_VERSION=v2.6.1 VIX_INSTALL_KIND=sdk sh
-```
-
-Verify the CLI:
+Check the CLI:
 
 ```bash
 vix --version
 ```
 
-Verify the SDK header:
+List SDK profiles:
 
 ```bash
-find ~/.local/include -name vix.hpp 2>/dev/null
+vix upgrade --sdk list
 ```
 
-Verify the CMake package:
+Inspect a profile:
 
 ```bash
-find ~/.local/lib/cmake -name VixConfig.cmake 2>/dev/null
+vix upgrade --sdk info web
 ```
 
-Verify the WebSocket module library:
+Install the profile you need:
 
 ```bash
-find ~/.local/lib -name "libvix_websocket.a" 2>/dev/null
+vix upgrade --sdk web
 ```
 
-Inspect the environment:
+Use `all` only when the machine really needs the full SDK:
 
 ```bash
-vix doctor
+vix upgrade --sdk all
 ```
-
-For Getting Started, SDK mode is the correct installation mode.
 
 ## Next step
 

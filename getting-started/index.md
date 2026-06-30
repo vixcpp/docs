@@ -2,9 +2,9 @@
 
 Vix.cpp is a modern C++ runtime and developer toolkit for building native applications with a clearer development workflow.
 
-It keeps the C++ model intact: real C++ source files, real compilers, real native binaries, and compatibility with the existing build ecosystem. What Vix.cpp adds is the operational layer around the project: commands, project structure, runtime modules, diagnostics, tests, formatting, packaging, and development workflows.
+It keeps the C++ model intact: real C++ source files, real compilers, real native binaries, and compatibility with the existing build ecosystem. What Vix.cpp adds is the application layer around the project: commands, project structure, runtime foundations, SDK profiles, registry workflow, diagnostics, tests, formatting, packaging, and development workflows.
 
-Current version: **v2.6.0**
+Current version: **v2.7.0**
 
 A single C++ file can be run directly:
 
@@ -21,7 +21,7 @@ vix build
 vix run
 ```
 
-Vix.cpp is not only an HTTP framework. It is a runtime foundation and developer toolkit for backend services, JSON APIs, WebSocket applications, CLI tools, AI agents, games, P2P systems, local-first systems, templates, fast builds, and production-oriented C++ projects.
+Vix.cpp is not only an HTTP framework. It is a runtime foundation and developer toolkit for native C++ applications. It can be used for backend services, JSON APIs, WebSocket applications, command-line tools, reusable libraries, template-based applications, P2P systems, local-first systems, data workflows, desktop shells, and production-oriented C++ projects.
 
 ## Offline PDF
 
@@ -32,7 +32,7 @@ You can download the complete Vix.cpp documentation as a PDF:
 
 ## What Vix.cpp is for
 
-C++ gives developers performance, control, portability, and access to a mature ecosystem. The challenge is often the workflow around the language.
+C++ gives developers performance, control, portability, mature compilers, and access to a large ecosystem. The challenge is often not the language itself, but the workflow around the application.
 
 A real C++ application usually needs more than source files:
 
@@ -45,7 +45,9 @@ A real C++ application usually needs more than source files:
 - logs
 - diagnostics
 - packaging
-- deployment preparation
+- SDK installation
+- release preparation
+- production preparation
 
 These pieces are often assembled manually with CMake files, shell scripts, CI configuration, package tools, formatting tools, and project-specific conventions.
 
@@ -75,6 +77,73 @@ Simple Vix project:
 
 This keeps Vix.cpp compatible with the C++ ecosystem while giving developers a cleaner command surface for daily work.
 
+## Installation model in v2.7.0
+
+Starting with **Vix.cpp v2.7.0**, installation is split into two steps.
+
+First, install the CLI:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | bash
+```
+
+On Windows PowerShell:
+
+```powershell
+irm https://vixcpp.com/install.ps1 | iex
+```
+
+Then install the SDK profile required by the kind of application you are building:
+
+```bash
+vix upgrade --sdk list
+vix upgrade --sdk info web
+vix upgrade --sdk web
+```
+
+This keeps the first installation small and avoids forcing optional runtime dependencies on every user.
+
+The CLI is the bootstrap. SDK profiles provide the native development layer used by Vix.cpp projects.
+
+## SDK profiles
+
+SDK profiles let Vix.cpp install by application domain.
+
+Different C++ applications do not need the same runtime surface. A small CLI tool, a web backend, a data-backed application, a desktop shell, a peer-to-peer system, a game-oriented project, and an agent workflow can have different requirements.
+
+Common profiles include:
+
+| Profile   | Use it for                                                                       |
+| --------- | -------------------------------------------------------------------------------- |
+| `default` | Normal Vix.cpp projects and local development                                    |
+| `web`     | HTTP apps, APIs, WebSocket, middleware, validation, crypto, WebRPC, and requests |
+| `data`    | Database, ORM, key-value storage, and cache workflows                            |
+| `desktop` | Desktop apps using the Vix UI desktop shell                                      |
+| `p2p`     | Peer-to-peer networking and local-first systems                                  |
+| `game`    | Game-oriented and realtime application workflows                                 |
+| `agent`   | Local agent tooling and controlled automation workflows                          |
+| `all`     | Full SDK profile for advanced development and release validation                 |
+
+For a normal web backend or API:
+
+```bash
+vix upgrade --sdk web
+```
+
+For database or ORM workflows:
+
+```bash
+vix upgrade --sdk data
+```
+
+For desktop UI apps:
+
+```bash
+vix upgrade --sdk desktop
+```
+
+Use `all` only when the machine really needs the full SDK.
+
 ## What you can build
 
 With Vix.cpp, you can build:
@@ -84,15 +153,15 @@ With Vix.cpp, you can build:
 - JSON APIs
 - WebSocket applications
 - command-line tools
-- C++ libraries
+- reusable C++ libraries
 - template-based web applications
-- AI agent applications
-- game-oriented projects
 - P2P systems
 - local-first and offline-first systems
+- database-backed applications
+- desktop shell applications
 - production services behind Nginx and systemd
 
-Different project types can use different modules, but the development workflow remains familiar.
+Different project types can use different SDK profiles and modules, but the development workflow remains familiar.
 
 ## Quick example
 
@@ -177,6 +246,14 @@ Format source files:
 vix fmt
 ```
 
+Install or inspect SDK profiles:
+
+```bash
+vix upgrade --sdk list
+vix upgrade --sdk info web
+vix upgrade --sdk web
+```
+
 ## Install
 
 Linux and macOS:
@@ -191,31 +268,29 @@ Windows PowerShell:
 irm https://vixcpp.com/install.ps1 | iex
 ```
 
+Then inspect and install a SDK profile:
+
+```bash
+vix upgrade --sdk list
+vix upgrade --sdk info web
+vix upgrade --sdk web
+```
+
 More installation options:
 
 https://vixcpp.com/install
 
-## Runtime modules
+## Runtime foundation
 
 Vix.cpp is designed as an application runtime layer, not only as a web server.
 
-It includes modules for application development, networking, storage, diagnostics, concurrency, and production-oriented workflows.
+It provides foundations for application workflow, HTTP applications, JSON APIs, WebSocket, validation, middleware, database access, caching, key-value storage, process management, threading, synchronization, UI tooling, diagnostics, local-first systems, and production-oriented workflows.
 
-```txt
-agent        async        cache        cli          conversion
-core         crypto       db           env          error
-fs           game         io           json         kv
-log          middleware   net          orm          os
-p2p          p2p_http     path         process      reply
-sync         template     tests        threadpool   time
-utils        validation   webrpc       websocket
-```
-
-These modules let Vix.cpp support different application shapes while keeping a common foundation.
+The detailed module reference belongs in the documentation. The important idea is that Vix.cpp is not a pile of unrelated modules. Its modules exist to support one direction: native C++ applications with a clearer workflow from development to production.
 
 A backend service may use HTTP, JSON, validation, middleware, logging, database access, and tests.
 
-A CLI tool may use filesystem utilities, formatted output, argument handling, packaging, and diagnostics.
+A CLI tool may use filesystem utilities, formatted output, process handling, packaging, and diagnostics.
 
 A local-first application may use storage, sync, caching, P2P, and reliability-oriented modules.
 
@@ -260,37 +335,46 @@ You only need basic C++ knowledge to begin:
 
 You do not need to be a CMake expert to start.
 
-Vix.cpp can create a project, build it, run it, test it, format it, and give you a clean development loop.
+Vix.cpp can create a project, build it, run it, test it, format it, check it, and give you a clean development loop.
 
-## Built with Vix.cpp
+## Projects around Vix.cpp
+
+### Rix
+
+Rix is the unified userland library layer for Vix.cpp.
+
+Vix provides the runtime, CLI, build workflow, registry integration, SDK profiles, and core foundations. Rix provides optional userland packages and a cleaner facade for application-level libraries.
+
+https://rix.vixcpp.com
+
+### Pico
+
+Pico is a real application built with Vix.cpp.
+
+It exists to keep the runtime honest by validating Vix.cpp inside a working application, where routing, middleware, persistence, diagnostics, runtime behavior, and developer workflow have to work together.
+
+https://pico.vixcpp.com
+
+### Cnerium
+
+Cnerium is a reliability-first backend layer for Vix.
+
+It belongs above the core runtime, where application reliability, backend structure, and production-oriented patterns can evolve without turning Vix itself into a large opinionated framework.
+
+https://github.com/softadastra/cnerium
 
 ### Kordex
 
-A JavaScript and TypeScript runtime layer built on Vix.cpp and Softadastra.
+Kordex is a JavaScript runtime for reliable local-first applications, built with Vix.cpp.
+
+It shows how Vix can be used as the native foundation for higher-level runtimes and local-first application platforms.
 
 https://github.com/softadastra/kordex
-
-### Softadastra
-
-A local-first and offline-first runtime foundation for reliable applications.
-
-https://github.com/softadastra/softadastra
-
-### PulseGrid
-
-Real-time service monitoring built with Vix.cpp.
-
-https://github.com/softadastra/PulseGrid
-
-### Vix Game
-
-A game-oriented project built on the Vix.cpp runtime foundation.
-
-https://github.com/vixcpp/vix-game
 
 ## Links
 
 - Website: https://vixcpp.com
+- Documentation: https://docs.vixcpp.com
 - Registry: https://registry.vixcpp.com
 - Engineering notes: https://blog.vixcpp.com
 - GitHub: https://github.com/vixcpp/vix

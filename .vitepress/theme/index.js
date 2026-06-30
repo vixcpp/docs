@@ -25,9 +25,6 @@ export default {
       return;
     }
 
-    // ──────────────────────────────────────────────
-    // Scroll handling
-    // ──────────────────────────────────────────────
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
@@ -40,67 +37,6 @@ export default {
       { once: true },
     );
 
-    // ──────────────────────────────────────────────
-    // Route prefetch on hover/focus
-    // Helps VitePress navigation feel instant on internal pages.
-    // Avoids heavy/static files like PDF, images, archives, etc.
-    // ──────────────────────────────────────────────
-    const prefetchedRoutes = new Set();
-
-    const shouldPrefetchRoute = (href) => {
-      if (!href) return false;
-      if (!href.startsWith("/")) return false;
-      if (href.startsWith("//")) return false;
-      if (href.includes("#")) return false;
-      if (prefetchedRoutes.has(href)) return false;
-
-      // Avoid prefetching heavy/static files.
-      if (
-        /\.(pdf|zip|tar|gz|png|jpg|jpeg|webp|gif|svg|ico|mp4|webm|woff2?)$/i.test(
-          href,
-        )
-      ) {
-        return false;
-      }
-
-      return true;
-    };
-
-    const prefetchRoute = (href) => {
-      if (!shouldPrefetchRoute(href)) return;
-
-      prefetchedRoutes.add(href);
-
-      const link = document.createElement("link");
-      link.rel = "prefetch";
-      link.href = href;
-      link.as = "document";
-
-      document.head.appendChild(link);
-    };
-
-    const handlePrefetchIntent = (event) => {
-      const target = event.target instanceof Element ? event.target : null;
-      if (!target) return;
-
-      const anchor = target.closest("a[href^='/']");
-      if (!anchor) return;
-
-      const href = anchor.getAttribute("href");
-      prefetchRoute(href);
-    };
-
-    document.addEventListener("mouseover", handlePrefetchIntent, {
-      passive: true,
-    });
-
-    document.addEventListener("focusin", handlePrefetchIntent, {
-      passive: true,
-    });
-
-    // ──────────────────────────────────────────────
-    // Custom header layout sync
-    // ──────────────────────────────────────────────
     const syncVixHeaderHeight = () => {
       const header = document.querySelector(".vix-nav");
       if (!header) return;
@@ -116,24 +52,6 @@ export default {
     window.addEventListener("load", syncVixHeaderHeight, { once: true });
     window.addEventListener("resize", syncVixHeaderHeight, { passive: true });
 
-    window.requestAnimationFrame(() => {
-      syncVixHeaderHeight();
-      setTimeout(syncVixHeaderHeight, 80);
-    });
-
-    const headerObserver = new MutationObserver(() => {
-      syncVixHeaderHeight();
-    });
-
-    headerObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
-
-    // ──────────────────────────────────────────────
-    // Custom syntax highlighter for VitePress fenced blocks
-    // Runs on every page mount + route change
-    // ──────────────────────────────────────────────
     const applyHighlight = () => {
       const blocks = document.querySelectorAll(
         '.vp-doc div[class*="language-"] code, .vp-doc [class*="language-"] code',
@@ -170,43 +88,31 @@ export default {
 
         applyHighlight();
 
-        // Second pass for blocks that mount slightly later.
-        setTimeout(applyHighlight, 50);
+        setTimeout(applyHighlight, 80);
+        setTimeout(applyHighlight, 200);
       });
     };
 
-    queueHighlight();
+    const refreshPage = () => {
+      syncVixHeaderHeight();
+      queueHighlight();
+    };
 
-    // Re-run on every route change.
-    if (router && typeof router.onAfterRouteChange === "function") {
-      const previousAfterRouteChange = router.onAfterRouteChange;
+    window.requestAnimationFrame(() => {
+      refreshPage();
+      setTimeout(refreshPage, 80);
+      setTimeout(refreshPage, 200);
+    });
 
-      router.onAfterRouteChange = (to) => {
-        previousAfterRouteChange?.(to);
-        queueHighlight();
-        syncVixHeaderHeight();
-      };
-    } else if (router) {
-      router.onAfterRouteChanged = () => {
-        queueHighlight();
-        syncVixHeaderHeight();
+    if (router) {
+      const previous = router.onAfterRouteChanged;
+
+      router.onAfterRouteChanged = (to) => {
+        previous?.(to);
+
+        setTimeout(refreshPage, 30);
+        setTimeout(refreshPage, 120);
       };
     }
-
-    // Safety net: re-run only when unhighlighted code blocks appear.
-    const docObserver = new MutationObserver(() => {
-      const pending = document.querySelector(
-        '.vp-doc [class*="language-"] code:not([data-vix-highlighted])',
-      );
-
-      if (pending) {
-        queueHighlight();
-      }
-    });
-
-    docObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
   },
 };

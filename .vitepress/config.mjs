@@ -47,48 +47,48 @@ const gettingStarted = {
   ],
 };
 
-const sdkProfiles = {
-  text: "SDK Profiles",
-  collapsed: false,
-  items: [
-    {
-      text: "Overview",
-      link: "/sdks/",
-    },
-    {
-      text: "Default SDK",
-      link: "/sdks/default",
-    },
-    {
-      text: "Web SDK",
-      link: "/sdks/web",
-    },
-    {
-      text: "Data SDK",
-      link: "/sdks/data",
-    },
-    {
-      text: "Desktop SDK",
-      link: "/sdks/desktop",
-    },
-    {
-      text: "P2P SDK",
-      link: "/sdks/p2p",
-    },
-    {
-      text: "Game SDK",
-      link: "/sdks/game",
-    },
-    {
-      text: "Agent SDK",
-      link: "/sdks/agent",
-    },
-    {
-      text: "Full SDK",
-      link: "/sdks/all",
-    },
-  ],
-};
+// const sdkProfiles = {
+//   text: "SDK Profiles",
+//   collapsed: false,
+//   items: [
+//     {
+//       text: "Overview",
+//       link: "/sdks/",
+//     },
+//     {
+//       text: "Default SDK",
+//       link: "/sdks/default",
+//     },
+//     {
+//       text: "Web SDK",
+//       link: "/sdks/web",
+//     },
+//     {
+//       text: "Data SDK",
+//       link: "/sdks/data",
+//     },
+//     {
+//       text: "Desktop SDK",
+//       link: "/sdks/desktop",
+//     },
+//     {
+//       text: "P2P SDK",
+//       link: "/sdks/p2p",
+//     },
+//     {
+//       text: "Game SDK",
+//       link: "/sdks/game",
+//     },
+//     {
+//       text: "Agent SDK",
+//       link: "/sdks/agent",
+//     },
+//     {
+//       text: "Full SDK",
+//       link: "/sdks/all",
+//     },
+//   ],
+// };
 
 const projectTemplates = {
   text: "Project Templates",
@@ -1471,10 +1471,6 @@ const modules = {
           text: "Tests",
           link: "/modules/ui/tests",
         },
-        {
-          text: "Benchmarks",
-          link: "/modules/ui/benchmarks",
-        },
       ],
     },
     {
@@ -1614,7 +1610,7 @@ const internals = {
 
 const sidebar = [
   gettingStarted,
-  sdkProfiles,
+  // sdkProfiles,
   projectTemplates,
   vixBook,
   guides,

@@ -1113,6 +1113,35 @@ export function highlightHtml(raw) {
     }
     // Tag
     if (ch === "<") {
+      // HTML declarations: <!DOCTYPE html>, <!---->, <![CDATA[...]]
+      // Without this, <!DOCTYPE html> can freeze the parser.
+      if (s.startsWith("<!", i)) {
+        let j = i + 2;
+
+        while (j < n && s[j] !== ">") {
+          j++;
+        }
+
+        const end = j < n ? j + 1 : n;
+        out += wrap("cb-dir", s.slice(i, end));
+        i = end;
+        continue;
+      }
+
+      // XML / processing instructions: <?xml ... ?>
+      if (s.startsWith("<?", i)) {
+        let j = i + 2;
+
+        while (j < n && !s.startsWith("?>", j)) {
+          j++;
+        }
+
+        const end = j < n ? j + 2 : n;
+        out += wrap("cb-dir", s.slice(i, end));
+        i = end;
+        continue;
+      }
+
       let j = i + 1;
       const isClose = s[j] === "/";
       if (isClose) j++;
@@ -1139,11 +1168,17 @@ export function highlightHtml(raw) {
         let a = j;
         while (a < n && /[a-zA-Z0-9_:@.\-#\[\]]/.test(s[a])) a++;
         const attr = s.slice(j, a);
-        if (attr) {
-          // Vue directive style vs normal
-          if (/^(v-|:|@|#)/.test(attr)) out += wrap("cb-fn", attr);
-          else out += wrap("cb-type", attr);
+
+        if (!attr) {
+          out += esc(c);
+          j++;
+          continue;
         }
+
+        // Vue directive style vs normal
+        if (/^(v-|:|@|#)/.test(attr)) out += wrap("cb-fn", attr);
+        else out += wrap("cb-type", attr);
+
         j = a;
         // = "value"
         if (s[j] === "=") {

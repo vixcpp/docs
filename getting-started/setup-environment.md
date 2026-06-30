@@ -1,82 +1,379 @@
 # Set Up Your Environment
 
-This page helps you verify that your local machine is ready to build and run Vix.cpp applications.
+Vix.cpp keeps the C++ toolchain visible. The `vix` CLI gives the project a cleaner workflow, and SDK profiles provide the Vix development layer, but the code is still compiled by a real C++ compiler and built as a native executable or library.
 
-At this point, Vix.cpp should already be installed. The goal here is not to repeat the installation process, but to confirm that the command-line tool, SDK, compiler, build tools, and runtime configuration are working together.
+Before writing your first Vix.cpp program, make sure your machine has the normal C++ development tools installed.
 
-A working Vix.cpp environment usually includes:
+## What you need
 
-- the `vix` CLI
-- the Vix.cpp SDK
-- a C++ compiler
+A working Vix.cpp environment needs:
+
+- a C++20 compiler
 - CMake
 - Ninja
-- the required system libraries for your platform
+- Git
+- curl or another download tool
+- the system libraries required by the SDK profile you use
 
-Once these pieces are available, you should be able to run a C++ file, start a small HTTP application, and inspect your setup with Vix commands.
+The base CLI install gives you the `vix` command. SDK profiles are installed separately through `vix upgrade --sdk`.
 
-## Check the Vix CLI
-
-Start by confirming that the `vix` command is available:
+Check your Vix installation:
 
 ```bash
 vix --version
 ```
 
-Expected output shape:
+List available SDK profiles:
 
-```txt
-Vix.cpp CLI
-version : 2.6.0
-author  : Gaspard Kirira
-source  : https://github.com/vixcpp/vix
+```bash
+vix upgrade --sdk list
 ```
 
-The exact version may be newer depending on the release you installed.
+Inspect the profile you want to use:
 
-If the command is not found, your shell may not have the Vix installation directory in `PATH`, or the installation may not have completed correctly.
+```bash
+vix upgrade --sdk info web
+```
 
-## Inspect the installation
+The `info` command is the best place to start because it shows the modules, system dependencies, and notes for that profile.
 
-Use:
+## Check your toolchain
+
+Run:
+
+```bash
+c++ --version
+cmake --version
+ninja --version
+git --version
+```
+
+If one of these commands is missing, install the missing tool before continuing.
+
+Vix.cpp does not replace the compiler, CMake, or Ninja. It uses the native toolchain underneath and gives the project a more consistent workflow around it.
+
+## Ubuntu or Debian
+
+Install the common development tools:
+
+```bash
+sudo apt update
+sudo apt install -y \
+  build-essential \
+  cmake \
+  ninja-build \
+  pkg-config \
+  ca-certificates \
+  git \
+  curl \
+  tar \
+  unzip \
+  zip
+```
+
+For the common Vix SDK profiles, install the usual development libraries:
+
+```bash
+sudo apt install -y \
+  nlohmann-json3-dev \
+  libssl-dev \
+  zlib1g-dev \
+  libsqlite3-dev \
+  libbrotli-dev \
+  libspdlog-dev \
+  libfmt-dev
+```
+
+For MySQL database workflows:
+
+```bash
+sudo apt install -y libmysqlcppconn-dev
+```
+
+For game-oriented workflows with SDL/OpenGL:
+
+```bash
+sudo apt install -y \
+  libsdl2-dev \
+  libsdl2-image-dev \
+  libgl1-mesa-dev
+```
+
+Before installing a profile, inspect it:
+
+```bash
+vix upgrade --sdk info web
+```
+
+Then install the profile:
+
+```bash
+vix upgrade --sdk web
+```
+
+## Arch Linux
+
+Install the base development tools:
+
+```bash
+sudo pacman -S --needed \
+  base-devel \
+  cmake \
+  ninja \
+  pkgconf \
+  git \
+  curl \
+  tar \
+  unzip \
+  zip
+```
+
+Install common development libraries:
+
+```bash
+sudo pacman -S --needed \
+  nlohmann-json \
+  openssl \
+  zlib \
+  sqlite \
+  brotli \
+  spdlog \
+  fmt
+```
+
+For MySQL database workflows, install the MySQL Connector/C++ package available for your system.
+
+The base Vix CLI should not require MySQL to start. MySQL is only needed when your project uses MySQL-related database features.
+
+Inspect the profile before installing it:
+
+```bash
+vix upgrade --sdk info web
+```
+
+Then install the profile:
+
+```bash
+vix upgrade --sdk web
+```
+
+## Fedora
+
+Install the base development tools:
+
+```bash
+sudo dnf install -y \
+  gcc \
+  gcc-c++ \
+  cmake \
+  ninja-build \
+  pkgconf-pkg-config \
+  git \
+  curl \
+  tar \
+  unzip \
+  zip
+```
+
+Install common development libraries:
+
+```bash
+sudo dnf install -y \
+  openssl-devel \
+  zlib-devel \
+  sqlite-devel \
+  brotli-devel \
+  spdlog-devel \
+  fmt-devel \
+  nlohmann-json-devel
+```
+
+Then inspect and install the SDK profile you need:
+
+```bash
+vix upgrade --sdk info web
+vix upgrade --sdk web
+```
+
+## macOS
+
+Install Xcode Command Line Tools:
+
+```bash
+xcode-select --install
+```
+
+With Homebrew, install the common tools:
+
+```bash
+brew install cmake ninja pkg-config git curl
+```
+
+Install common development libraries:
+
+```bash
+brew install openssl@3 sqlite brotli spdlog fmt nlohmann-json
+```
+
+For game-oriented workflows:
+
+```bash
+brew install sdl2 sdl2_image
+```
+
+Then inspect and install the SDK profile you need:
+
+```bash
+vix upgrade --sdk info web
+vix upgrade --sdk web
+```
+
+## Windows
+
+On Windows, install one C++ toolchain:
+
+- Visual Studio with the **Desktop development with C++** workload
+- Visual Studio Build Tools with MSVC
+- clang-cl with a compatible Windows build environment
+
+Also install:
+
+- CMake
+- Ninja
+- Git
+- PowerShell
+
+For additional native dependencies, use the package manager that fits your environment, such as `vcpkg`.
+
+Install Vix.cpp from PowerShell:
+
+```powershell
+irm https://vixcpp.com/install.ps1 | iex
+```
+
+Then restart your terminal and check:
+
+```powershell
+vix --version
+```
+
+Inspect and install a SDK profile:
+
+```powershell
+vix upgrade --sdk list
+vix upgrade --sdk info web
+vix upgrade --sdk web
+```
+
+## Install the SDK profile you need
+
+Vix.cpp v2.7.0 uses SDK profiles so your machine does not need to install every optional development layer by default.
+
+For web applications, APIs, middleware, WebSocket, validation, crypto, WebRPC, and requests:
+
+```bash
+vix upgrade --sdk web
+```
+
+For database, ORM, key-value storage, and cache workflows:
+
+```bash
+vix upgrade --sdk data
+```
+
+For desktop shell workflows:
+
+```bash
+vix upgrade --sdk desktop
+```
+
+For peer-to-peer and local-first systems:
+
+```bash
+vix upgrade --sdk p2p
+```
+
+For game-oriented workflows:
+
+```bash
+vix upgrade --sdk game
+```
+
+For local agent tooling:
+
+```bash
+vix upgrade --sdk agent
+```
+
+For full development and release validation machines:
+
+```bash
+vix upgrade --sdk all
+```
+
+Use `all` only when the machine really needs the full SDK surface.
+
+## Inspect before installing
+
+Before installing a SDK profile, inspect it:
+
+```bash
+vix upgrade --sdk info web
+```
+
+The output shows:
+
+- the profile name
+- the platform
+- the modules included in the profile
+- the system dependencies needed by the profile
+- notes about the intended use
+- the install command
+
+This avoids guessing system packages manually.
+
+## Verify the environment
+
+Check the Vix CLI:
+
+```bash
+vix --version
+```
+
+Check your toolchain:
+
+```bash
+c++ --version
+cmake --version
+ninja --version
+```
+
+Check Vix environment information:
 
 ```bash
 vix info
 ```
 
-This command shows useful information about the current Vix.cpp installation, such as paths, cache locations, and local environment details.
-
-You can also run:
+Run the Vix doctor command:
 
 ```bash
 vix doctor
 ```
 
-Use `vix doctor` when you want Vix.cpp to check whether the environment looks healthy.
-
-These commands are especially useful when a project behaves differently across machines.
-
-## Choose a working folder
-
-Use a clean folder for the first examples.
-
-Temporary workspace:
+For production-oriented checks, use the production doctor command when your project reaches that stage:
 
 ```bash
-mkdir -p /tmp/vix-env-check
-cd /tmp/vix-env-check
+vix doctor production
 ```
 
-Or use your normal projects directory:
+## Verify with a small C++ file
+
+Create a temporary folder:
 
 ```bash
-mkdir -p ~/projects/vix-examples
-cd ~/projects/vix-examples
+mkdir -p ~/tmp/vix-env-test
+cd ~/tmp/vix-env-test
 ```
-
-A clean folder makes it easier to understand which files are part of the example.
-
-## Create a small Vix application
 
 Create `main.cpp`:
 
@@ -84,309 +381,261 @@ Create `main.cpp`:
 cat > main.cpp <<'CPP'
 #include <vix.hpp>
 
-using namespace vix;
-
 int main()
 {
-  App app;
-
-  app.get("/", [](Request &, Response &res) {
-    res.json({
-      "message", "Hello from Vix.cpp",
-      "mode", "environment-check"
-    });
-  });
-
-  app.run();
-
+  vix::print("Hello from Vix.cpp");
   return 0;
 }
 CPP
 ```
 
-This is a normal C++ source file. It includes the main Vix.cpp header, creates an application, registers one route, and starts the server.
-
-The call to `app.run()` is intentional. The server configuration will come from the environment instead of being hardcoded in the source file.
-
-## Configure the application with `.env`
-
-Create a local `.env` file:
-
-```bash
-cat > .env <<'EOF'
-SERVER_PORT=8080
-VIX_LOG_LEVEL=info
-VIX_LOG_FORMAT=kv
-EOF
-```
-
-Your folder now contains:
-
-```txt
-main.cpp
-.env
-```
-
-The `.env` file keeps local configuration outside the source code.
-
-This matters because the same application code can run with different settings on different machines or in production.
-
-## Run the application
-
-Run the file:
+Run it:
 
 ```bash
 vix run main.cpp
 ```
 
-Expected output shape:
+Expected output:
 
 ```txt
-● Vix.cpp   READY   v2.6.0   run
-  › HTTP:    http://localhost:8080/
-  i Threads: 8/8
-  i Mode:    run
-  i Status:  ready
-  i Hint:    Ctrl+C to stop the server
+Hello from Vix.cpp
 ```
 
-This means Vix.cpp successfully prepared the build, compiled the program, linked it, and started the application.
+If this works, the CLI, SDK profile, compiler, and build workflow are ready for a basic Vix.cpp program.
 
-The first run may take longer than later runs because the build environment may need to be prepared.
+## Verify with a project
 
-## Test the server
-
-Open another terminal and run:
+Create a project:
 
 ```bash
-curl http://127.0.0.1:8080/
+vix new api
+cd api
 ```
 
-Expected response shape:
-
-```json
-{
-  "message": "Hello from Vix.cpp",
-  "mode": "environment-check"
-}
-```
-
-You can also open this URL in a browser:
-
-```txt
-http://localhost:8080/
-```
-
-If you receive the JSON response, your environment is ready to run a basic Vix.cpp application.
-
-## Stop the server
-
-Return to the terminal running the server and press:
-
-```txt
-Ctrl+C
-```
-
-Expected output shape:
-
-```txt
-Program interrupted by user (SIGINT).
-```
-
-The exact shutdown output may vary, but the important part is that the application stops cleanly.
-
-## Change the port
-
-To run the same application on another port, edit `.env`:
-
-```dotenv
-SERVER_PORT=3000
-VIX_LOG_LEVEL=info
-VIX_LOG_FORMAT=kv
-```
-
-Run it again:
+Build it:
 
 ```bash
-vix run main.cpp
+vix build
 ```
 
-Open:
-
-```txt
-http://localhost:3000/
-```
-
-The source code does not need to change.
-
-This is the recommended pattern for normal applications: keep environment-specific values outside the code.
-
-## Recommended editor setup
-
-You can use any editor that supports C++.
-
-Common options include:
-
-| Tool          | Recommendation                                           |
-| ------------- | -------------------------------------------------------- |
-| Editor        | VS Code, CLion, Vim, Neovim, or Zed                      |
-| Compiler      | GCC or Clang on Linux/macOS, MSVC or clang-cl on Windows |
-| Build system  | CMake                                                    |
-| Build backend | Ninja                                                    |
-| Terminal      | Bash, Zsh, PowerShell, or Windows Terminal               |
-
-For VS Code, useful extensions include:
-
-- C/C++
-- CMake Tools
-- clangd, optional
-
-For larger projects, make sure your editor can read `compile_commands.json` when available. This improves code navigation, diagnostics, completion, and refactoring support.
-
-## Recommended Git setup
-
-If you plan to create real projects, configure Git:
+Run it:
 
 ```bash
-git config --global user.name "Your Name"
-git config --global user.email "you@example.com"
+vix run
 ```
 
-Check the current Git configuration:
+Start development mode:
 
 ```bash
-git config --global --list
+vix dev
 ```
 
-This step is not required to run Vix.cpp, but it is useful before creating and committing projects.
+This confirms that your environment can create, build, run, and restart a Vix.cpp project through the normal workflow.
 
-## Environment variables
+## Common environment problems
 
-Vix.cpp applications should keep local configuration in environment variables when possible.
+### `vix: command not found`
 
-For local development, use `.env`:
+Your shell cannot find the Vix binary.
 
-```dotenv
-SERVER_PORT=8080
-VIX_LOG_LEVEL=info
-VIX_LOG_FORMAT=kv
+On Linux and macOS, add `~/.local/bin` to your `PATH`.
+
+Bash:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-For production, these values can come from a service manager, deployment platform, container runtime, CI system, or system environment.
+Zsh:
 
-The source code stays the same. Only the environment changes.
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
 
-This makes applications easier to move between local development, staging, and production.
-
-## Common issues
-
-### `vix` command not found
-
-If this fails:
+Then check again:
 
 ```bash
 vix --version
 ```
 
-Your shell cannot find the Vix executable.
+### `cmake: command not found`
 
-Check your installation, then open a new terminal and run the command again.
+Install CMake.
 
-On Unix-like systems, also check:
-
-```bash
-echo $PATH
-```
-
-The Vix installation directory must be available in `PATH`.
-
-### Port 8080 is already in use
-
-If another program already uses port `8080`, change the port in `.env`:
-
-```dotenv
-SERVER_PORT=3000
-```
-
-Then run again:
+Ubuntu or Debian:
 
 ```bash
-vix run main.cpp
+sudo apt install -y cmake
 ```
 
-On Linux/macOS, you can inspect the process using the port:
+Arch Linux:
 
 ```bash
-sudo lsof -i :8080
+sudo pacman -S --needed cmake
 ```
 
-### The app starts but `curl` cannot connect
-
-Make sure the server is still running.
-
-You should see output similar to:
-
-```txt
-Vix.cpp   READY
-```
-
-Then test again:
+macOS:
 
 ```bash
-curl http://127.0.0.1:8080/
+brew install cmake
 ```
 
-If you changed the port in `.env`, use that port instead.
+### `ninja: command not found`
 
-### The first run is slower
+Install Ninja.
 
-The first run may take longer because Vix.cpp may need to configure and build the application.
+Ubuntu or Debian:
 
-Later runs are usually faster because build metadata and intermediate outputs can be reused.
+```bash
+sudo apt install -y ninja-build
+```
 
-### The editor does not understand headers
+Arch Linux:
 
-If your editor cannot find `vix.hpp`, first confirm that the CLI can build the file:
+```bash
+sudo pacman -S --needed ninja
+```
+
+macOS:
+
+```bash
+brew install ninja
+```
+
+### `#include <vix.hpp>` not found
+
+The SDK profile needed by your project is not installed, or your project cannot find the SDK path.
+
+Install the profile you need:
+
+```bash
+vix upgrade --sdk web
+```
+
+Then try again:
 
 ```bash
 vix run main.cpp
 ```
 
-If the command works, the issue is probably editor configuration, not the installed SDK.
+For CMake projects, pass the SDK prefix manually if needed:
 
-For larger projects, configure the editor to use the generated build metadata, especially `compile_commands.json` when available.
+```bash
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$HOME/.local"
+cmake --build build
+```
 
-## What you should remember
+### `find_package(Vix CONFIG REQUIRED)` fails
 
-Check the CLI:
+Install the SDK profile required by your project:
+
+```bash
+vix upgrade --sdk web
+```
+
+Then configure with the local prefix:
+
+```bash
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$HOME/.local"
+```
+
+Build again:
+
+```bash
+cmake --build build
+```
+
+### Missing OpenSSL, SQLite, Brotli, fmt, or spdlog
+
+Install the system libraries required by the SDK profile.
+
+Start by inspecting the profile:
+
+```bash
+vix upgrade --sdk info web
+```
+
+Then install the listed packages for your operating system.
+
+### MySQL runtime error on older Vix releases
+
+Older Vix.cpp releases could fail at startup on systems without the MySQL Connector/C++ runtime installed.
+
+Upgrade the CLI:
+
+```bash
+vix upgrade
+```
+
+Then check:
 
 ```bash
 vix --version
 ```
 
-Inspect the environment:
+In Vix.cpp v2.7.0 and later, the base CLI should not require MySQL to start. MySQL dependencies belong to database/MySQL workflows and the SDK/profile layer.
+
+## Recommended local setup
+
+For most developers starting with Vix.cpp on Linux, this is enough:
 
 ```bash
-vix info
+sudo apt update
+sudo apt install -y \
+  build-essential \
+  cmake \
+  ninja-build \
+  pkg-config \
+  ca-certificates \
+  git \
+  curl \
+  tar \
+  unzip \
+  zip \
+  nlohmann-json3-dev \
+  libssl-dev \
+  zlib1g-dev \
+  libsqlite3-dev \
+  libbrotli-dev \
+  libspdlog-dev \
+  libfmt-dev
+```
+
+Then:
+
+```bash
+curl -fsSL https://vixcpp.com/install.sh | bash
+vix upgrade --sdk info web
+vix upgrade --sdk web
+vix --version
 vix doctor
 ```
 
-Run a local application:
+## What you should remember
+
+Vix.cpp uses the native C++ toolchain underneath.
+
+The CLI gives you the command workflow.
+
+SDK profiles give your project the native development layer it needs.
+
+Use this sequence when setting up a new machine:
 
 ```bash
-vix run main.cpp
+vix --version
+c++ --version
+cmake --version
+ninja --version
+vix upgrade --sdk list
+vix upgrade --sdk info web
+vix upgrade --sdk web
+vix doctor
 ```
-
-Keep configuration outside the code:
-
-```dotenv
-SERVER_PORT=8080
-```
-
-If the server prints a `READY` message and responds to `curl`, your environment is ready.
 
 ## Next step
 
-Run your first C++ file with Vix.cpp.
+Now run your first C++ file with Vix.cpp.
 
 Next: [Run Your First C++ File](/getting-started/run-your-first-file)

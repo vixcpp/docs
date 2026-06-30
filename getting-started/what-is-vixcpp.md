@@ -1,38 +1,18 @@
 # What is Vix.cpp?
 
-Vix.cpp is a modern C++ runtime and developer toolkit for building real applications with less friction around the development workflow.
+Vix.cpp is a modern C++ runtime and developer toolkit for building native applications with a clearer development workflow.
 
-It does not change the C++ language. It does not hide the native toolchain. It gives C++ projects a higher-level workflow for the tasks developers repeat every day: creating projects, running files, building targets, testing, formatting, managing dependencies, and preparing applications for production.
-
-In practice, Vix.cpp sits above the usual C++ tooling and provides a consistent command surface around it.
+A Vix.cpp project is still a C++ project. The source files are written in C++, the compiler is a C++ compiler, the build output is a native executable or library, and existing tools such as CMake, Ninja, system packages, and native libraries remain part of the model. Vix.cpp does not ask developers to leave the C++ ecosystem behind; it gives the work around a C++ application a more consistent shape.
 
 ```txt
 C++ source code
   -> Vix.cpp workflow
-  -> CMake/Ninja when needed
   -> native executable or library
 ```
 
-The goal is not to make C++ look like another language. The goal is to make the application workflow around C++ more direct.
+The project exists because many C++ applications do not fail because of the language itself. They become difficult earlier, around the workflow: creating the project, configuring the build, running the binary, adding dependencies, checking errors, formatting code, running tests, preparing packages, and repeating the same setup across machines or CI.
 
-## Why Vix.cpp exists
-
-C++ already gives developers performance, portability, control over memory, mature compilers, and access to a very large ecosystem. The difficult part is often not the language itself, but the amount of work required before a project feels like a usable application.
-
-A typical C++ project can require several separate decisions before the first feature is even useful:
-
-- how the project is structured
-- how it is configured
-- how it is built
-- how it is run
-- how tests are executed
-- how dependencies are added
-- how diagnostics are read
-- how the same workflow is repeated across machines or CI
-
-Experienced C++ developers know how to wire these pieces together, but the process is still repetitive. Newer developers often lose time before they reach the actual application logic.
-
-Vix.cpp exists to provide a standard application workflow around native C++ without removing the underlying tools that make C++ powerful.
+Vix.cpp focuses on that part.
 
 ## The basic idea
 
@@ -42,7 +22,7 @@ With Vix.cpp, a single C++ file can be run directly:
 vix run main.cpp
 ```
 
-A project can be created, built, and run through one command surface:
+A project can be created, built, and started through the same command surface:
 
 ```bash
 vix new api
@@ -57,103 +37,133 @@ During development, the same project can be started with:
 vix dev
 ```
 
-Tests and formatting use the same CLI:
+The important part is not only the commands themselves. The important part is that the project gets a repeatable workflow from the beginning. A developer should not have to rebuild the same development loop every time a C++ application starts to become real.
+
+## Why Vix.cpp exists
+
+C++ already gives developers performance, control, portability, mature compilers, native binaries, and a very large ecosystem. Those are not the problems Vix.cpp is trying to solve.
+
+The difficult part is often the distance between a C++ source file and a complete application.
+
+A real application usually needs a project structure, a build configuration, dependency handling, runtime commands, test commands, formatting, diagnostics, logs, packaging, installation paths, and production behavior. Experienced C++ developers know how to assemble those pieces, but the work is still repetitive. Newer developers often lose time before they reach the application logic.
+
+Vix.cpp exists to make that path more direct.
+
+It provides an application-oriented workflow around native C++ so that a project can move from experiment to application without losing the native model that makes C++ valuable.
+
+## What Vix.cpp adds
+
+Vix.cpp adds a layer around the application.
+
+It gives common C++ tasks a predictable command surface:
 
 ```bash
+vix run main.cpp
+vix new app
+vix build
+vix run
+vix dev
+vix check
 vix tests
 vix fmt
+vix pack
+vix upgrade
 ```
 
-The important part is consistency. The developer does not need to remember a different workflow for every stage of the project. Vix.cpp provides one entry point while still producing normal native C++ artifacts.
+It also provides runtime foundations for application development: HTTP applications, JSON APIs, WebSocket, middleware, validation, templates, database access, key-value storage, caching, process management, threading, synchronization, P2P systems, UI tooling, diagnostics, and production-oriented workflows.
 
-## What Vix.cpp provides
-
-Vix.cpp combines three layers.
-
-First, it provides a CLI for the development lifecycle. Commands such as `vix run`, `vix build`, `vix dev`, `vix tests`, `vix fmt`, and `vix check` give common C++ tasks a predictable interface.
-
-Second, it provides a runtime foundation for applications. Vix.cpp includes modules for HTTP servers, routing, JSON APIs, WebSocket applications, async execution, logging, validation, templates, key-value storage, synchronization, P2P systems, AI agents, and game-oriented projects.
-
-Third, it integrates with the native C++ build ecosystem. Vix.cpp can work with normal CMake projects, and for simpler projects it can use a `vix.app` manifest to generate an internal CMake project automatically.
-
-This means Vix.cpp is not limited to one project style. A small example, a backend service, a CLI tool, a library, and a larger CMake-based codebase can all use the same general workflow where it makes sense.
+The detailed module reference belongs in the module documentation. The main idea is simpler: Vix.cpp is not a collection of unrelated pieces. Its commands, runtime modules, SDK profiles, registry workflow, diagnostics, tests, and release process are meant to support one direction: building real native C++ applications with less workflow friction.
 
 ## Vix.cpp and CMake
 
-Vix.cpp does not replace CMake. It uses the existing C++ build ecosystem instead of pretending it does not exist.
+Vix.cpp works with the existing C++ build ecosystem instead of pretending it does not exist.
 
-For advanced projects, a normal `CMakeLists.txt` remains the right tool. Vix.cpp can detect it and use the CMake project directly.
+For projects that already have a `CMakeLists.txt`, Vix.cpp can use the existing CMake project. This is useful for projects that need custom targets, advanced build options, installed packages, or direct build control.
 
-For simpler projects, a `vix.app` file can describe the target, sources, include directories, compile options, libraries, packages, and output directory. Vix.cpp then generates the internal CMake project needed to build it.
+For simpler projects, Vix.cpp can use a `vix.app` manifest and generate the internal CMake project needed to build the application.
 
 ```txt
-Project with CMakeLists.txt
+Existing CMake project
   -> Vix uses the existing CMake project
 
-Project with vix.app
-  -> Vix generates an internal CMake project
-  -> Vix builds the target
+Simple Vix project
+  -> vix.app
+  -> generated CMake
+  -> native build output
 ```
 
-This approach keeps compatibility with the C++ ecosystem while removing unnecessary setup work for projects that do not need custom CMake logic.
+This gives small projects a faster start while keeping a path open for larger projects that need full CMake control.
 
-## Vix.cpp and native C++
+## Project models
 
-A Vix.cpp project is still a C++ project.
+Vix.cpp supports different ways a C++ project can begin.
 
-The source files are C++ files. The compiler is a C++ compiler. The result is a native executable or library. Vix.cpp does not turn C++ into a scripting language and does not require developers to abandon the tools they already use.
+A single file can be enough for an experiment:
 
-The difference is the workflow around the project.
+```bash
+vix run main.cpp
+```
 
-Instead of starting every project by manually deciding how to wire the build, commands, logs, tests, formatting, dependencies, and runtime behavior, Vix.cpp gives the project a standard operational layer from the beginning.
+A new application can start as a Vix project:
 
-## Application-first workflow
+```bash
+vix new app
+cd app
+vix dev
+```
 
-Vix.cpp is designed around the idea that a C++ project should quickly become an application that can be run, tested, checked, and shipped.
+An existing CMake project can still use Vix as a cleaner workflow layer:
 
-For example, a backend project is not only a set of `.cpp` files. It usually needs routes, configuration, logs, diagnostics, tests, development commands, and production behavior.
+```bash
+vix build
+vix run
+vix tests
+```
 
-A CLI tool is not only a `main()` function. It needs argument handling, output formatting, errors, packaging, and repeatable builds.
+This matters because C++ projects do not all have the same shape. Some begin as one file, some become CLI tools, some become backend services, some become reusable libraries, and some already exist as larger CMake codebases. Vix.cpp gives these project styles a common workflow where it makes sense.
 
-A library is not only headers and source files. It needs tests, examples, versioning, packaging, and dependency metadata.
+## SDK profiles
 
-Vix.cpp tries to bring these application concerns closer to the developer workflow without taking away the native C++ foundation.
+Starting with Vix.cpp v2.7.0, installation is split into two parts.
 
-## Common commands
+The installer bootstraps the CLI first. SDK profiles are then installed through the CLI depending on the kind of application being built.
 
-| Command            | Purpose                                        |
-| ------------------ | ---------------------------------------------- |
-| `vix run main.cpp` | Run a single C++ file.                         |
-| `vix new <name>`   | Create a new project.                          |
-| `vix build`        | Build the current project.                     |
-| `vix run`          | Build if needed, then run the current project. |
-| `vix dev`          | Start the project in development mode.         |
-| `vix tests`        | Run project tests.                             |
-| `vix fmt`          | Format source files.                           |
-| `vix check`        | Validate the project.                          |
-| `vix add`          | Add a dependency.                              |
-| `vix pack`         | Package a project artifact.                    |
+```bash
+vix upgrade --sdk list
+vix upgrade --sdk info web
+vix upgrade --sdk web
+```
 
-These commands are meant to cover the normal development loop without forcing every project to reinvent its own scripts.
+This keeps the first installation small and avoids forcing optional runtime dependencies on every user.
 
-## What you can build
+Different C++ applications do not need the same development layer. A small tool, a web backend, a data-backed service, a desktop shell, a P2P system, a game-oriented project, and an agent workflow can have different requirements.
 
-Vix.cpp can be used for several kinds of C++ applications:
+Common profiles include:
 
-- backend services
-- HTTP servers
-- JSON APIs
-- WebSocket applications
-- command-line tools
-- reusable C++ libraries
-- template-based web applications
-- AI agent applications
-- game-oriented projects
-- P2P systems
-- local-first and offline-first systems
-- production services
+| Profile   | Use it for                                                                       |
+| --------- | -------------------------------------------------------------------------------- |
+| `default` | Normal Vix.cpp projects and local development                                    |
+| `web`     | HTTP apps, APIs, WebSocket, middleware, validation, crypto, WebRPC, and requests |
+| `data`    | Database, ORM, key-value storage, and cache workflows                            |
+| `desktop` | Desktop apps using the Vix UI desktop shell                                      |
+| `p2p`     | Peer-to-peer networking and local-first systems                                  |
+| `game`    | Game-oriented and realtime application workflows                                 |
+| `agent`   | Local agent tooling and controlled automation workflows                          |
+| `all`     | Full SDK profile for advanced development and release validation                 |
 
-The same project can also evolve over time. A simple `vix.app` project can later move to a full `CMakeLists.txt` when it needs advanced build control.
+For most projects, the right profile is better than installing everything.
+
+## Vix.cpp compared to C++ web frameworks
+
+Developers sometimes compare Vix.cpp with Drogon, Crow, and other C++ web frameworks because Vix.cpp can build HTTP services.
+
+That comparison is understandable, but it is not the whole picture.
+
+Drogon and Crow are mainly web frameworks. They answer the question: how do I build a C++ web service or HTTP application?
+
+Vix.cpp answers a broader question: how do I create, run, build, test, package, upgrade, and maintain a native C++ application with a coherent workflow?
+
+That is why Vix.cpp includes web runtime pieces but is not defined only by routing or HTTP handlers. The project is organized around the full application workflow: CLI, project models, build integration, SDK profiles, registry workflow, diagnostics, tests, documentation, releases, and runtime foundations.
 
 ## Example: run one file
 
@@ -175,7 +185,7 @@ Run it:
 vix run main.cpp
 ```
 
-This is useful for experiments, small tools, examples, and learning.
+This is the fastest way to try Vix.cpp.
 
 ## Example: create a project
 
@@ -184,6 +194,12 @@ Create a project:
 ```bash
 vix new api
 cd api
+```
+
+Start development mode:
+
+```bash
+vix dev
 ```
 
 Build it:
@@ -198,69 +214,53 @@ Run it:
 vix run
 ```
 
-Use development mode while editing:
+Run checks and tests:
 
 ```bash
-vix dev
+vix check
+vix tests
 ```
 
-The project keeps a normal C++ structure, but the daily workflow is handled through the Vix CLI.
+The project remains native C++, but the daily workflow is handled through Vix.
 
-## How to think about Vix.cpp
+## What Vix.cpp is good for
+
+Vix.cpp is useful when the goal is not only to compile C++ code, but to build and maintain a real application.
+
+It can be used for backend services, HTTP APIs, WebSocket applications, command-line tools, reusable C++ libraries, database-backed applications, template-based applications, P2P systems, local-first systems, desktop shell workflows, and production-oriented services.
+
+A project can also evolve over time. A single-file experiment can become a project. A simple project can later move to a full CMake structure. A backend can add database support. A project can install a different SDK profile when it needs a larger runtime surface.
+
+## Design direction
+
+Vix.cpp v2.7.0 is an important foundation point for the project.
+
+After this release, the direction is not to keep adding modules just to make the project larger. The next phase is focused on improving what already exists: module quality, SDK profile workflow, registry workflow, diagnostics, tests, CI coverage, release quality, documentation, and real application validation.
+
+New features can still happen, but they should earn their place. A feature belongs in Vix.cpp when it improves the existing workflow, strengthens an existing module, or solves a practical problem for real C++ applications.
+
+The goal is a smaller surface with more depth, not a larger surface with less confidence.
+
+## The mental model
 
 A useful way to understand Vix.cpp is to separate the responsibilities.
 
-C++ is the language and native execution model.
-
-CMake and Ninja provide build system compatibility.
-
-Vix.cpp provides the runtime layer, command workflow, project conventions, modules, diagnostics, and developer experience around the application.
-
 ```txt
 C++:
-  language, performance, native binaries
+  language, compiler model, native execution
 
 CMake and Ninja:
   build system and ecosystem compatibility
 
 Vix.cpp:
-  application workflow, runtime modules, CLI, diagnostics, project lifecycle
+  application workflow, runtime foundations, CLI, SDK profiles,
+  registry workflow, diagnostics, tests, packaging, and release path
 ```
 
-Vix.cpp is strongest when the goal is not only to compile C++ code, but to build and maintain an application with a repeatable workflow.
-
-## When Vix.cpp is useful
-
-Vix.cpp is useful when you want a C++ project that can be created, built, run, tested, formatted, and packaged through a consistent interface.
-
-It is especially useful for projects that need to move quickly from code to a runnable application: backend services, tools, prototypes, examples, internal systems, and production-oriented C++ applications.
-
-For projects that already have complex CMake infrastructure, Vix.cpp can still be used as a cleaner command layer above the existing build. In that case, it does not need to own the whole project structure.
-
-## Summary
-
-Vix.cpp is a modern C++ runtime and developer toolkit.
-
-It keeps the native C++ model, integrates with the existing build ecosystem, and gives developers a consistent workflow for building real applications.
-
-The shortest way to experience it is:
-
-```bash
-vix run main.cpp
-```
-
-The normal project workflow is:
-
-```bash
-vix new api
-cd api
-vix build
-vix run
-vix dev
-```
+Vix.cpp is strongest when the project needs to become more than a group of source files. It helps the application gain a workflow, a runtime foundation, and a path toward real use without losing the native C++ model.
 
 ## Next step
 
-Install Vix.cpp and run your first C++ file.
+Now install Vix.cpp.
 
 Next: [Installation](/getting-started/installation)
