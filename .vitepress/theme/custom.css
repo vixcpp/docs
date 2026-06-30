@@ -19,7 +19,7 @@
   --vix-radius-s: 4px;
   --vix-transition: 0.12s ease;
 
-  --vix-sidebar-w: 272px;
+  --vix-sidebar-w: 228px;
   --vix-aside-w: 240px;
   --vix-content-max: 720px;
 
@@ -148,7 +148,10 @@ html:not(.dark) {
     transform: none !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    padding: 18px 6px 40px 24px !important;
+    padding: 18px 0 40px 24px !important;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   .VPSidebar .curtain {
     display: none !important;
@@ -266,6 +269,31 @@ html:not(.dark) {
 .VPSidebarItem .caret-icon {
   transition: transform var(--vix-transition);
 }
+.VPSidebarItem > .item {
+  width: 100% !important;
+  max-width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.VPSidebarItem > .item > .link {
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+}
+
+.VPSidebarItem > .item > .text,
+.VPSidebarItem > .item > .link > .text {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.VPSidebarItem > .item > .caret {
+  flex: 0 0 18px !important;
+  width: 18px !important;
+  margin-left: 4px !important;
+}
 
 /* Kill bullets / leftover indicators */
 .VPSidebarItem .link::before,
@@ -276,25 +304,14 @@ html:not(.dark) {
   display: none !important;
 }
 
-/* Scrollbar on the VPSidebar container */
 .VPSidebar {
-  scrollbar-width: thin;
-  scrollbar-color: var(--vp-c-divider) transparent;
-}
-.VPSidebar::-webkit-scrollbar {
-  width: 6px;
-}
-.VPSidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.VPSidebar::-webkit-scrollbar-thumb {
-  background: var(--vp-c-divider);
-  border-radius: 999px;
-}
-.VPSidebar::-webkit-scrollbar-thumb:hover {
-  background: var(--vix-accent-b);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
+.VPSidebar::-webkit-scrollbar {
+  display: none;
+}
 /* ════════════════════════════════════════════════
    4. DOC CONTENT LAYOUT
    ════════════════════════════════════════════════ */
@@ -854,26 +871,30 @@ code span.cb-sh-comment {
   .VPDoc.has-sidebar.has-aside .container {
     display: grid !important;
     grid-template-columns: minmax(0, 1fr) var(--vix-aside-w) !important;
-    column-gap: 48px !important;
+    column-gap: 36px !important;
     align-items: start !important;
-    padding-right: 32px !important;
+    padding-right: 0 !important;
   }
+
   .VPDoc.has-sidebar.has-aside .content {
     min-width: 0 !important;
     width: 100% !important;
     max-width: none !important;
     padding: 28px 0 80px 48px !important;
   }
+
   .VPDoc.has-sidebar.has-aside .content-container,
   .VPDoc.has-sidebar.has-aside .vp-doc {
     width: 100% !important;
     max-width: none !important;
   }
+
   .VPDoc.has-sidebar.has-aside .aside {
     width: var(--vix-aside-w) !important;
     min-width: var(--vix-aside-w) !important;
     max-width: var(--vix-aside-w) !important;
     padding-left: 0 !important;
+    padding-right: 0 !important;
   }
 }
 
@@ -883,13 +904,22 @@ code span.cb-sh-comment {
     top: calc(var(--vix-header-h) + 24px) !important;
     max-height: calc(100vh - var(--vix-header-h) - 48px) !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
     padding-top: 6px !important;
+    padding-right: 0 !important;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .VPDocAside::-webkit-scrollbar {
+    display: none;
   }
 }
-
 .VPDocAsideOutline .content {
   border-left: 1px solid var(--vp-c-divider) !important;
-  padding-left: 16px !important;
+  padding-left: 14px !important;
+  padding-right: 0 !important;
 }
 .VPDocAside .outline-title {
   font-size: 12px !important;
@@ -1106,9 +1136,12 @@ code span.cb-sh-comment {
     z-index: 9000 !important;
     background: var(--vp-c-bg) !important;
     border-right: 1px solid var(--vp-c-divider) !important;
-    padding: 16px 15px 32px 20px !important;
+    padding: 16px 0 32px 20px !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
+
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
   .VPSidebar .content {
     padding: 0 !important;
@@ -1197,7 +1230,7 @@ code span.cb-sh-comment {
    ════════════════════════════════════════════════ */
 @media (min-width: 1440px) {
   :root {
-    --vix-sidebar-w: 286px;
+    --vix-sidebar-w: 240px;
     --vix-aside-w: 252px;
     --vix-content-max: 752px;
   }
