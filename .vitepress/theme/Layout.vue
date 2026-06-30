@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
           />
         </svg>
       </span>
-      <span class="vix-nav__banner-text">Vix.cpp v2.6.0 is here</span>
+      <span class="vix-nav__banner-text">Vix.cpp v2.7.0 is here</span>
       <a
         href="https://blog.vixcpp.com/"
         target="_blank"
