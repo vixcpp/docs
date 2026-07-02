@@ -572,6 +572,10 @@ const cli = {
           link: "/cli/repl",
         },
         {
+          text: "vix note",
+          link: "/cli/note",
+        },
+        {
           text: "vix new",
           link: "/cli/new",
         },
@@ -1100,9 +1104,64 @@ const requests = {
   ],
 };
 
+const note = {
+  text: "Note",
+  collapsed: false,
+  items: [
+    {
+      text: "Overview",
+      link: "/modules/note/",
+    },
+    {
+      text: "Quick Start",
+      link: "/modules/note/quick-start",
+    },
+    {
+      text: "Document Format",
+      link: "/modules/note/document-format",
+    },
+    {
+      text: "Cells",
+      link: "/modules/note/cells",
+    },
+    {
+      text: "C++ Cells",
+      link: "/modules/note/cpp-cells",
+    },
+    {
+      text: "Reply Cells",
+      link: "/modules/note/reply-cells",
+    },
+    {
+      text: "HTML Cells",
+      link: "/modules/note/html-cells",
+    },
+    {
+      text: "Runtime",
+      link: "/modules/note/runtime",
+    },
+    {
+      text: "Project Context",
+      link: "/modules/note/project-context",
+    },
+    {
+      text: "Local UI",
+      link: "/modules/note/local-ui",
+    },
+    {
+      text: "Export",
+      link: "/modules/note/export",
+    },
+    {
+      text: "API Reference",
+      link: "/modules/note/api-reference",
+    },
+  ],
+};
+
 const modules = {
   text: "Modules",
-  collapsed: true,
+  collapsed: false,
   items: [
     {
       text: "Core Runtime",
@@ -1533,6 +1592,7 @@ const modules = {
         },
       ],
     },
+    note,
     {
       text: "Data and Reliability",
       collapsed: true,
