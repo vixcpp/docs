@@ -1,943 +1,564 @@
 # vix uninstall
 
-`vix uninstall` removes the Vix CLI or a globally installed Vix package.
+`vix uninstall` removes parts of the local Vix environment.
 
-Use it when you want to remove the Vix binary from your machine, remove a global package, or purge local Vix store and cache data.
+It can remove the Vix CLI, remove globally installed packages, and, starting with Vix.cpp `v2.7.1`, remove SDK profiles installed with `vix upgrade --sdk`.
 
-```bash
+```bash id="egow0a"
 vix uninstall
 ```
 
-## Overview
+Use this command when a machine needs a clean Vix setup, when an SDK profile is no longer needed, or when a global package should be removed from the local Vix registry store.
 
-`vix uninstall` has two modes:
+## What it removes
 
-```txt
-CLI uninstall mode
-global package uninstall mode
+`vix uninstall` has three main modes.
+
+```txt id="r1b179"
+vix uninstall                 remove the Vix CLI
+vix uninstall --sdk web       remove an SDK profile
+vix uninstall -g gk/jwt       remove a globally installed package
 ```
 
-CLI uninstall mode removes the Vix binary:
+The default mode removes the CLI. SDK mode is selected with `--sdk`. Global package mode is selected with `-g` or `--global`.
 
-```bash
+SDK profile removal is available from `v2.7.1`.
+
+## Remove the CLI
+
+Run `vix uninstall` without a mode flag to remove the Vix CLI from the detected install location.
+
+```bash id="gdyqdm"
 vix uninstall
 ```
 
-Global package uninstall mode removes one globally installed package:
+The command checks known candidate paths, removes the first matching CLI binary, removes install metadata, and prints a short hint to refresh the shell command cache.
 
-```bash
-vix uninstall -g gk/jwt
+```bash id="tpnkzt"
+hash -r
 ```
 
-The command can also remove local Vix store/cache data with:
+Restart the terminal if the shell still sees the old `vix` command after removal.
 
-```bash
-vix uninstall --purge
+## Preview before removing
+
+Use `--dry-run` when you want to see what would be removed without changing the filesystem.
+
+```bash id="g9tsvx"
+vix uninstall --dry-run
 ```
 
-## Usage
+This is the safest command to run before removing the CLI, an SDK profile, or a global package.
 
-```bash
-vix uninstall [options]
-vix uninstall -g <package>
+```bash id="fmrtnk"
+vix uninstall --sdk web --dry-run
+vix uninstall -g gk/jwt --dry-run
 ```
 
-## Basic examples
+## JSON output
 
-```bash
-# Remove detected Vix CLI binary
-vix uninstall
+Use `--json` when the command is called from scripts or automation.
 
-# Remove Vix CLI binary and local store/cache
-vix uninstall --purge
+```bash id="p6y43x"
+vix uninstall --dry-run --json
+```
 
-# Remove every detected Vix binary
+For SDK removal:
+
+```bash id="t24cil"
+vix uninstall --sdk web --json
+```
+
+For global packages:
+
+```bash id="tcfkiw"
+vix uninstall -g gk/jwt --json
+```
+
+JSON output reports the target kind, removed paths, dry-run state, and errors in a machine-readable format.
+
+## Verbose output
+
+Use `--verbose` when you need more detail about what the uninstall command is checking.
+
+```bash id="mzc0wf"
+vix uninstall --verbose
+```
+
+This is useful when the command cannot find the expected binary, when a path is not writable, or when the CLI was installed in a non-standard location.
+
+## Remove all detected CLI paths
+
+By default, `vix uninstall` stops after removing the first detected CLI binary.
+
+Use `--all` when you want it to try every detected CLI path.
+
+```bash id="hodykd"
 vix uninstall --all
+```
 
-# Include system locations such as /usr/local/bin and /usr/bin
+This is useful when the machine has more than one `vix` binary in different locations.
+
+## Include system paths
+
+Use `--system` to include common system locations such as `/usr/local/bin` and `/usr/bin`.
+
+```bash id="ll87lz"
 vix uninstall --all --system
-
-# Remove binary from a custom prefix
-vix uninstall --prefix /usr/local
-
-# Remove an explicit binary path
-vix uninstall --path /usr/local/bin/vix
-
-# Remove a globally installed package
-vix uninstall -g gk/jwt
 ```
 
-## Modes
+On Unix systems, system locations may require elevated permissions. When a system path cannot be removed, the command prints the path so it can be removed manually with the correct permissions.
 
-| Mode                | Command                  | Purpose                                           |
-| ------------------- | ------------------------ | ------------------------------------------------- |
-| CLI mode            | `vix uninstall`          | Remove the detected Vix CLI binary.               |
-| CLI purge mode      | `vix uninstall --purge`  | Remove Vix CLI binary and local store/cache data. |
-| Global package mode | `vix uninstall -g <pkg>` | Remove one globally installed package.            |
-
-## CLI uninstall mode
-
-Run:
-
-```bash
-vix uninstall
-```
-
-Vix tries to find the installed CLI binary, remove it, remove its install metadata, then print a shell cache tip.
-
-Example output shape:
-
-```txt
-Uninstall
-✔ Removed binary: /home/user/.local/bin/vix
-✔ Removed install.json
-ℹ You may need to run: hash -r (bash/zsh)
-✔ Uninstall complete.
-⚠ Tip: run: hash -r (bash/zsh) or restart your terminal.
-```
-
-## How Vix finds the CLI binary
-
-Vix builds a list of candidate binary paths.
-
-It can use:
-
-```txt
-explicit --path
-install.json install_dir
-VIX_CLI_PATH
-command -v vix
-explicit --prefix
-system paths when --system or --all is used
-```
-
-Then it removes the first matching binary by default.
-
-If `--all` is used, it tries to remove every detected candidate.
-
-## Candidate path order
-
-The candidate order is:
-
-```txt
-1. --path <file>
-2. install.json install_dir + /vix
-3. VIX_CLI_PATH
-4. command -v vix
-5. --prefix <dir>/bin/vix
-6. system paths when --system or --all is used
-```
-
-On Linux, system paths include:
-
-```txt
-/usr/local/bin/vix
-/usr/bin/vix
-```
-
-## Explicit path uninstall
+## Remove from a specific path
 
 Use `--path` when you know the exact binary to remove.
 
-```bash
-vix uninstall --path /usr/local/bin/vix
+```bash id="n8rajc"
+vix uninstall --path /home/user/.local/bin/vix
 ```
 
-This removes only that file.
+Use `--prefix` when Vix was installed under a known prefix.
 
-Vix refuses to remove directories.
-
-If the path is a directory, it reports:
-
-```txt
-refusing to remove directory: /path
+```bash id="gkqdwg"
+vix uninstall --prefix /home/user/.local
 ```
 
-## Prefix uninstall
+This removes:
 
-Use `--prefix` when Vix was installed under a custom prefix.
-
-```bash
-vix uninstall --prefix /usr/local
+```txt id="mblo4w"
+/home/user/.local/bin/vix
 ```
 
-This targets:
+These options are useful for custom installs and CI images.
 
-```txt
-/usr/local/bin/vix
-```
+## Purge local Vix data
 
-On Windows, the binary name is:
+Use `--purge` when you want to remove the local Vix data directory after removing the CLI.
 
-```txt
-vix.exe
-```
-
-## Remove all detected binaries
-
-Use:
-
-```bash
-vix uninstall --all
-```
-
-This tells Vix to keep trying candidate paths instead of stopping after the first removed binary.
-
-Use this when you have multiple Vix binaries in different locations.
-
-Example:
-
-```bash
-vix uninstall --all
-```
-
-## Include system locations
-
-Use:
-
-```bash
-vix uninstall --all --system
-```
-
-This includes common system locations such as:
-
-```txt
-/usr/local/bin/vix
-/usr/bin/vix
-```
-
-If Vix cannot remove a system binary because of permissions, it can suggest a command such as:
-
-```bash
-sudo rm -f /usr/local/bin/vix
-```
-
-## install.json
-
-Vix removes install metadata when uninstalling the CLI.
-
-On Linux, the install metadata path is:
-
-```txt
-~/.local/share/vix/install.json
-```
-
-On Windows, the install metadata path is under:
-
-```txt
-%LOCALAPPDATA%\Vix\install.json
-```
-
-This file can contain the install directory used to detect the CLI binary.
-
-## Purge local store and cache
-
-Use:
-
-```bash
+```bash id="wfbpwa"
 vix uninstall --purge
 ```
 
-This removes the CLI binary and the local Vix store/cache.
+This removes the local Vix store under:
 
-On Linux, the store/cache root is:
-
-```txt
+```txt id="hm87f8"
 ~/.vix
 ```
 
-On Windows, the store/cache root is:
+Use this carefully. The local store can contain SDK profiles, registry cache, global packages, and other Vix-managed local data.
 
-```txt
-%LOCALAPPDATA%\Vix\store
+Preview first:
+
+```bash id="k3p3rq"
+vix uninstall --purge --dry-run
 ```
 
-Example output shape:
+## Remove an SDK profile
 
-```txt
-Uninstall
-✔ Removed binary: /home/user/.local/bin/vix
-✔ Removed install.json
-✔ Purged local store/cache
-ℹ You may need to run: hash -r (bash/zsh)
-✔ Uninstall complete.
+SDK profile removal is available starting with Vix.cpp `v2.7.1`.
+
+Use `--sdk` with a profile name.
+
+```bash id="crw4jw"
+vix uninstall --sdk web
 ```
 
-## What `--purge` removes
+This removes the selected SDK profile directory from the local Vix SDK store.
 
-`--purge` removes local Vix data such as:
-
-```txt
-registry index
-global packages
-package store
-cache data
-local Vix metadata
+```txt id="f1m6fs"
+~/.vix/sdk/web
 ```
 
-On Linux, this means:
+The supported SDK profile names are:
 
-```txt
-~/.vix
+```txt id="tjj1gb"
+default
+web
+data
+desktop
+p2p
+game
+agent
+all
 ```
 
-Use `--purge` only when you want to remove Vix data, not just the binary.
+The `all` profile is a profile name. Removing it removes the installed `all` SDK profile.
 
-## What normal uninstall removes
-
-Normal uninstall removes:
-
-```txt
-Vix CLI binary
-install.json
+```bash id="rvjsnb"
+vix uninstall --sdk all
 ```
 
-It does not remove:
+This is different from `--sdk-all`, which removes all known SDK profiles.
 
-```txt
-~/.vix
-global packages
-registry index
-package store/cache
+## Remove one SDK version
+
+Use `--version` when you only want to remove one installed version from a profile.
+
+```bash id="w6yfkl"
+vix uninstall --sdk web --version v2.7.0
 ```
 
-Use `--purge` when you want those removed too.
+When the removed version is also the current version for that profile, the command also removes the profile’s current metadata and current pointer.
 
-## Shell command cache
+This is useful when a machine keeps several SDK versions and only one old version should be removed.
 
-After removing the binary, your shell may still remember the old path.
+## Remove multiple SDK profiles
 
-Vix prints:
+You can pass multiple SDK profiles after `--sdk`.
 
-```bash
-hash -r
+```bash id="m86jio"
+vix uninstall --sdk web data desktop
 ```
 
-Run it in Bash or Zsh:
+Comma-separated profiles are also accepted.
 
-```bash
-hash -r
+```bash id="n2m3sc"
+vix uninstall --sdk web,data,desktop
 ```
 
-Or restart your terminal.
+Use this when one machine has several SDK profiles installed and only some of them should be removed.
 
-This clears the shell command cache.
+## List installed SDK profiles
 
-## PATH post-check
+Use `--sdk-list` to see the SDK profiles installed on the machine.
 
-After uninstalling, Vix checks whether `vix` is still found in `PATH`.
-
-If it still exists, Vix warns:
-
-```txt
-Still found in PATH: /some/path/vix
+```bash id="bks3ke"
+vix uninstall --sdk-list
 ```
 
-That means another Vix binary still exists.
+JSON output is also available.
 
-Use:
-
-```bash
-which vix
+```bash id="jwa0za"
+vix uninstall --sdk-list --json
 ```
 
-or:
+The list shows each installed profile, its current version when metadata is available, and its local path.
 
-```bash
-command -v vix
+## Remove all SDK profiles
+
+Use `--sdk-all` to remove all known SDK profiles.
+
+```bash id="m1pop9"
+vix uninstall --sdk-all
 ```
 
-Then remove the remaining binary:
+Preview first:
 
-```bash
-vix uninstall --path /some/path/vix
+```bash id="c70i55"
+vix uninstall --sdk-all --dry-run
 ```
 
-or:
+This removes the known SDK profile directories under `~/.vix/sdk`.
 
-```bash
-vix uninstall --all --system
+It is not the same as:
+
+```bash id="n5imvk"
+vix uninstall --sdk all
 ```
 
-## Global package uninstall mode
+`--sdk all` removes the `all` profile. `--sdk-all` removes all known SDK profiles.
 
-Use:
+## Remove a global package
 
-```bash
+Use `-g` or `--global` to remove a globally installed package.
+
+```bash id="n68abh"
 vix uninstall -g gk/jwt
 ```
 
-or:
+The long form is also accepted.
 
-```bash
+```bash id="b1jajt"
 vix uninstall --global gk/jwt
 ```
 
-This removes one globally installed package.
+The package must exist in the global package manifest. The command removes the installed package files and updates the global manifest.
 
-It reads the global manifest:
+If the package is not found, the command reports that it is not installed globally.
 
-```txt
+## Global package paths
+
+Global package installs are tracked under the local Vix global store.
+
+```txt id="cbxv9r"
+~/.vix/global
 ~/.vix/global/installed.json
 ```
 
-Then it removes the package entry and deletes the installed package path.
-
-## Global package manifest
-
-Global packages are recorded in:
-
-```txt
-~/.vix/global/installed.json
-```
-
-The manifest contains a `packages` array.
-
-Example shape:
-
-```json
-{
-  "packages": [
-    {
-      "id": "gk/jwt",
-      "version": "1.0.0",
-      "installed_path": "/home/user/.vix/global/packages/gk.jwt"
-    }
-  ]
-}
-```
-
-When you run:
-
-```bash
-vix uninstall -g gk/jwt
-```
-
-Vix finds the package with:
-
-```txt
-id = gk/jwt
-```
-
-Then it removes:
-
-```txt
-installed_path
-```
-
-and updates the manifest.
-
-## Global package output
-
-Example:
-
-```txt
-✔ Removed: /home/user/.vix/global/packages/gk.jwt
-✔ Uninstalled gk/jwt
-```
-
-If no global manifest exists:
-
-```txt
-No global packages installed.
-```
-
-If the package is not found:
-
-```txt
-Package not found: gk/jwt
-```
-
-## Global package id format
-
-Use the package id stored in the global manifest.
-
-Example:
-
-```txt
-gk/jwt
-```
-
-Run:
-
-```bash
-vix list -g
-```
-
-to inspect globally installed packages before uninstalling.
-
-## Difference between CLI uninstall and global package uninstall
-
-| Command                  | Removes                                    |
-| ------------------------ | ------------------------------------------ |
-| `vix uninstall`          | Vix CLI binary.                            |
-| `vix uninstall --purge`  | Vix CLI binary and local store/cache data. |
-| `vix uninstall -g <pkg>` | One globally installed package.            |
-
-## Difference between `vix remove` and `vix uninstall`
-
-| Command                  | Purpose                                                |
-| ------------------------ | ------------------------------------------------------ |
-| `vix remove <pkg>`       | Remove a dependency from the current project lockfile. |
-| `vix uninstall -g <pkg>` | Remove a globally installed package.                   |
-| `vix uninstall`          | Remove the Vix CLI binary.                             |
-
-Use `vix remove` for project dependencies.
-
-Use `vix uninstall -g` for global packages.
-
-Use `vix uninstall` for the CLI itself.
-
-## Full CLI uninstall workflow
-
-Inspect current setup:
-
-```bash
-vix info
-which vix
-vix --version
-```
-
-Uninstall:
-
-```bash
-vix uninstall
-```
-
-Clear shell cache:
-
-```bash
-hash -r
-```
-
-Verify:
-
-```bash
-command -v vix
-```
-
-If still found:
-
-```bash
-vix uninstall --all --system
-hash -r
-```
-
-## Full purge workflow
-
-Use this when you want to remove Vix and local Vix data:
-
-```bash
-vix uninstall --purge
-hash -r
-```
-
-This removes the CLI binary, install metadata, and store/cache data.
-
-## Remove custom installation
-
-If Vix was installed under a custom prefix:
-
-```bash
-vix uninstall --prefix /opt/vix
-```
-
-This targets:
-
-```txt
-/opt/vix/bin/vix
-```
-
-If you know the exact binary:
-
-```bash
-vix uninstall --path /opt/vix/bin/vix
-```
-
-## Remove system installation
-
-If Vix is installed in a system path:
-
-```bash
-vix uninstall --all --system
-```
-
-If permission is denied, Vix may suggest:
-
-```bash
-sudo rm -f /usr/local/bin/vix
-```
-
-Then clear shell cache:
-
-```bash
-hash -r
-```
-
-## Remove global package
-
-```bash
-vix uninstall -g gk/jwt
-```
-
-Check:
-
-```bash
-vix list -g
-```
-
-If the package is gone, uninstall succeeded.
-
-## Options
-
-| Option           | Description                                                       |
-| ---------------- | ----------------------------------------------------------------- |
-| `-g, --global`   | Remove a globally installed package.                              |
-| `--purge`        | Remove local store/cache as well.                                 |
-| `--all`          | Try to remove every detected Vix binary in candidate paths.       |
-| `--system`       | Include system locations such as `/usr/local/bin` and `/usr/bin`. |
-| `--prefix <dir>` | Remove `<dir>/bin/vix`.                                           |
-| `--path <file>`  | Remove the binary at an explicit path.                            |
-| `-h, --help`     | Show command help.                                                |
-
-## Commands reference
-
-| Command                                   | Description                                             |
-| ----------------------------------------- | ------------------------------------------------------- |
-| `vix uninstall`                           | Remove detected Vix CLI binary.                         |
-| `vix uninstall --purge`                   | Remove CLI and local store/cache.                       |
-| `vix uninstall --all`                     | Remove every detected Vix binary candidate.             |
-| `vix uninstall --all --system`            | Remove every detected candidate including system paths. |
-| `vix uninstall --prefix /usr/local`       | Remove `/usr/local/bin/vix`.                            |
-| `vix uninstall --path /usr/local/bin/vix` | Remove explicit binary path.                            |
-| `vix uninstall -g gk/jwt`                 | Remove one global package.                              |
+The uninstall command uses this manifest to find the installed package path. This keeps global package removal tied to the Vix registry workflow instead of guessing paths manually.
 
 ## Common workflows
 
-### Remove Vix CLI
+Remove the CLI:
 
-```bash
+```bash id="t6zooa"
 vix uninstall
 hash -r
 ```
 
-### Remove Vix CLI and cache/store
+Preview CLI removal:
 
-```bash
+```bash id="lhklle"
+vix uninstall --dry-run
+```
+
+Remove the CLI and local Vix data:
+
+```bash id="qbbawe"
 vix uninstall --purge
-hash -r
 ```
 
-### Remove every detected binary
+Remove an SDK profile:
 
-```bash
-vix uninstall --all
-hash -r
+```bash id="s51n1b"
+vix uninstall --sdk web
 ```
 
-### Remove system binaries too
+Remove one SDK version:
 
-```bash
-vix uninstall --all --system
-hash -r
+```bash id="wv52hf"
+vix uninstall --sdk web --version v2.7.0
 ```
 
-### Remove a custom prefix install
+List installed SDK profiles:
 
-```bash
-vix uninstall --prefix /usr/local
-hash -r
+```bash id="d23irs"
+vix uninstall --sdk-list
 ```
 
-### Remove an explicit binary
+Remove all SDK profiles:
 
-```bash
-vix uninstall --path /usr/local/bin/vix
-hash -r
+```bash id="omwj79"
+vix uninstall --sdk-all
 ```
 
-### Remove a global package
+Remove a global package:
 
-```bash
+```bash id="h586ce"
 vix uninstall -g gk/jwt
+```
+
+Use JSON output:
+
+```bash id="k4ngyd"
+vix uninstall --sdk web --json
 ```
 
 ## Common mistakes
 
-### Using uninstall for project dependencies
+### Expecting SDK uninstall before v2.7.1
 
-Wrong:
+SDK profile removal is available from `v2.7.1`.
 
-```bash
-vix uninstall -g gk/jwt
+```bash id="yxyfui"
+vix uninstall --sdk web
 ```
 
-when you mean the current project dependency.
+On older versions, upgrade the CLI first.
 
-Correct:
-
-```bash
-vix remove gk/jwt
-vix install
+```bash id="ihaw28"
+vix upgrade
 ```
 
-### Using remove for global packages
+Then run the SDK uninstall command again.
 
-Wrong:
+### Confusing `--sdk all` and `--sdk-all`
 
-```bash
-vix remove gk/jwt
+This removes the `all` SDK profile:
+
+```bash id="iwiuwp"
+vix uninstall --sdk all
 ```
 
-when you mean a global package.
+This removes all known SDK profiles:
 
-Correct:
-
-```bash
-vix uninstall -g gk/jwt
+```bash id="seqse9"
+vix uninstall --sdk-all
 ```
 
-### Using `--purge` when you only want to remove the binary
+Use `--dry-run` when the difference matters.
 
-Wrong:
-
-```bash
-vix uninstall --purge
+```bash id="oq4doy"
+vix uninstall --sdk-all --dry-run
 ```
 
-if you want to keep registry, cache, and global packages.
+### Removing the CLI when you only wanted to remove an SDK
 
-Correct:
+This removes the CLI:
 
-```bash
+```bash id="mr6mhd"
 vix uninstall
 ```
 
-### Forgetting shell cache
+This removes an SDK profile:
 
-After uninstalling, run:
+```bash id="jf9dm9"
+vix uninstall --sdk web
+```
 
-```bash
+Always include `--sdk` when the target is an SDK profile.
+
+### Using `--purge` too early
+
+`--purge` removes the local Vix data directory after removing the CLI.
+
+```bash id="lpf6uo"
+vix uninstall --purge
+```
+
+This is useful for a clean reset, but it is stronger than removing one SDK profile or one global package. Use a targeted command when only one part should be removed.
+
+```bash id="xauu80"
+vix uninstall --sdk web
+vix uninstall -g gk/jwt
+```
+
+### Forgetting to refresh the shell
+
+After removing the CLI, some shells may still cache the old command path.
+
+```bash id="h914la"
 hash -r
 ```
 
-or restart your terminal.
+Restart the terminal if the shell still finds `vix`.
 
-### Removing only one binary when multiple exist
+### Removing from a system path without permissions
 
-If Vix says:
+If Vix was installed in `/usr/local/bin` or another system path, the uninstall command may not have permission to remove it.
 
-```txt
-Still found in PATH: /some/path/vix
+Use `--dry-run` first:
+
+```bash id="zxx2k2"
+vix uninstall --all --system --dry-run
 ```
 
-remove the remaining binary:
-
-```bash
-vix uninstall --all --system
-```
-
-or:
-
-```bash
-vix uninstall --path /some/path/vix
-```
-
-### Expecting `--system` to work without permissions
-
-System paths may require elevated permissions.
-
-If Vix cannot remove the file, use the suggested `sudo rm -f ...` command.
-
-### Passing `-g` without a package
-
-Wrong:
-
-```bash
-vix uninstall -g
-```
-
-Correct:
-
-```bash
-vix uninstall -g gk/jwt
-```
+Then remove the path with the correct permissions if needed.
 
 ## Troubleshooting
 
-### No candidate paths found
+### `vix` is still found after uninstall
 
-Vix could not detect the CLI binary.
+Check where the shell is finding it.
 
-Try:
-
-```bash
-which vix
+```bash id="jbb2gp"
 command -v vix
 ```
 
-If you know the path:
+Then remove that path explicitly.
 
-```bash
+```bash id="p195mq"
 vix uninstall --path /path/to/vix
 ```
 
-### Uninstall finished but nothing removed
+If the CLI is already removed and only the old shell cache remains, refresh the shell.
 
-This means Vix did not find a removable binary at the candidate paths.
-
-Check:
-
-```bash
-command -v vix
-```
-
-If a path appears, remove it explicitly:
-
-```bash
-vix uninstall --path /that/path
-```
-
-### Still found in PATH
-
-Run:
-
-```bash
-command -v vix
-```
-
-Then remove the returned path:
-
-```bash
-vix uninstall --path /returned/path
-```
-
-Clear shell cache:
-
-```bash
+```bash id="fbv1wz"
 hash -r
 ```
 
-### Permission denied
+### SDK profile is not found
 
-If the binary is in a system path, use:
+List installed SDK profiles.
 
-```bash
-sudo rm -f /usr/local/bin/vix
+```bash id="anwj9w"
+vix uninstall --sdk-list
 ```
 
-Then:
+Then remove the profile name shown by the list.
 
-```bash
-hash -r
+```bash id="m3i5y4"
+vix uninstall --sdk web
 ```
 
-### Missing HOME or LOCALAPPDATA
+### Unsupported SDK profile
 
-Vix needs a home directory to locate install metadata and store paths.
+Use one of the supported profile names.
 
-On Linux/macOS, make sure:
-
-```bash
-echo "$HOME"
+```txt id="jnpe84"
+default
+web
+data
+desktop
+p2p
+game
+agent
+all
 ```
 
-is set.
+For all profiles, use:
 
-On Windows, make sure:
-
-```powershell
-echo $env:LOCALAPPDATA
+```bash id="cgwkfh"
+vix uninstall --sdk-all
 ```
 
-is set.
+### Global package is not found
 
-### No global packages installed
+The global package must exist in the Vix global manifest.
 
-If:
+Check the package name used during global install, then remove that exact package id.
 
-```bash
+```bash id="bkd6gv"
 vix uninstall -g gk/jwt
 ```
 
-prints:
+### Need machine-readable output
 
-```txt
-No global packages installed.
+Add `--json`.
+
+```bash id="g328oh"
+vix uninstall --sdk-list --json
+vix uninstall --sdk web --json
+vix uninstall -g gk/jwt --json
 ```
 
-then the global manifest does not exist.
+## Command summary
 
-There is nothing to remove globally.
+```bash id="ugmwib"
+vix uninstall
+vix uninstall --dry-run
+vix uninstall --json
+vix uninstall --verbose
 
-### Invalid global manifest
+vix uninstall --purge
+vix uninstall --all
+vix uninstall --all --system
+vix uninstall --prefix /path/to/prefix
+vix uninstall --path /path/to/vix
 
-If Vix reports:
+vix uninstall --sdk default
+vix uninstall --sdk web
+vix uninstall --sdk web --version v2.7.0
+vix uninstall --sdk web data desktop
+vix uninstall --sdk web,data,desktop
+vix uninstall --sdk-list
+vix uninstall --sdk-all
 
-```txt
-Invalid global manifest.
+vix uninstall -g gk/jwt
+vix uninstall --global gk/jwt
 ```
 
-the global install file is malformed.
+## Options
 
-Check:
-
-```txt
-~/.vix/global/installed.json
-```
-
-You may need to reinstall or manually clean the corrupted global state.
-
-### Global package not found
-
-If Vix reports:
-
-```txt
-Package not found: gk/jwt
-```
-
-check installed global packages:
-
-```bash
-vix list -g
-```
-
-Then use the exact package id shown there.
-
-## Best practices
-
-Run `vix info` before uninstalling if you are unsure where Vix is installed.
-
-Use `vix uninstall` when you only want to remove the binary.
-
-Use `vix uninstall --purge` only when you want to remove local Vix data too.
-
-Use `vix uninstall --all --system` when multiple binaries exist.
-
-Use `--path` when you know the exact binary path.
-
-Run `hash -r` after uninstalling on Bash or Zsh.
-
-Use `vix uninstall -g <pkg>` only for global packages.
-
-Use `vix remove <pkg>` for project dependencies.
-
-## Related commands
-
-| Command          | Purpose                                                          |
-| ---------------- | ---------------------------------------------------------------- |
-| `vix upgrade`    | Upgrade the Vix CLI or a global package.                         |
-| `vix install -g` | Install a global package.                                        |
-| `vix list -g`    | List global packages.                                            |
-| `vix remove`     | Remove a project dependency.                                     |
-| `vix clean`      | Clean project-local generated state.                             |
-| `vix reset`      | Clean and reinstall project dependencies.                        |
-| `vix info`       | Inspect Vix paths and caches.                                    |
-| `vix doctor`     | Diagnose environment health.                                     |
-| `vix install`    | Reinstall project dependencies after project dependency changes. |
+| Option               | Meaning                                                                 |
+| -------------------- | ----------------------------------------------------------------------- |
+| `--purge`            | Remove `~/.vix` after removing the CLI                                  |
+| `--all`              | Try every detected CLI path instead of stopping after the first removal |
+| `--system`           | Include common system locations such as `/usr/local/bin` and `/usr/bin` |
+| `--prefix <dir>`     | Remove `<dir>/bin/vix`                                                  |
+| `--path <file>`      | Remove a specific Vix binary                                            |
+| `--sdk <profile>`    | Remove one SDK profile                                                  |
+| `--sdk-list`         | List installed SDK profiles                                             |
+| `--sdk-all`          | Remove all known SDK profiles                                           |
+| `--version <tag>`    | Remove one SDK version from the selected profile                        |
+| `-g, --global <pkg>` | Remove a globally installed package                                     |
+| `--dry-run`          | Print what would be removed without changing the filesystem             |
+| `--json`             | Print machine-readable output                                           |
+| `--verbose`          | Print debug information                                                 |
+| `-h, --help`         | Show command help                                                       |
 
 ## Next step
 
-Continue with shell completion.
+Use `vix upgrade` when you need to reinstall the CLI, reinstall an SDK profile, or move the local Vix environment to a newer release.
 
-[Open the vix completion guide](/cli/completion)
+[Open the upgrade guide](/cli/upgrade)
