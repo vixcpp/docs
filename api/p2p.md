@@ -42,13 +42,13 @@ local write → WAL → WalPush → peer applies → WalAck → convergence
 
 ## Main namespaces
 
-| Namespace | Purpose |
-|-----------|---------|
-| `vix::p2p` | Core P2P runtime, protocol, routing, discovery |
-| `vix::p2p::msg` | Typed P2P protocol messages |
-| `vix::p2p::pack` | Envelope packing helpers |
-| `vix::p2p::framing` | Framing implementations |
-| `vix::p2p_http` | HTTP control routes for P2P runtime |
+| Namespace           | Purpose                                        |
+| ------------------- | ---------------------------------------------- |
+| `vix::p2p`          | Core P2P runtime, protocol, routing, discovery |
+| `vix::p2p::msg`     | Typed P2P protocol messages                    |
+| `vix::p2p::pack`    | Envelope packing helpers                       |
+| `vix::p2p::framing` | Framing implementations                        |
+| `vix::p2p_http`     | HTTP control routes for P2P runtime            |
 
 ## Runtime API
 
@@ -93,15 +93,15 @@ runtime.stop();
 
 ### NodeStats fields
 
-| Field | Meaning |
-|-------|---------|
-| `peers_total` | Number of known peers |
-| `peers_connected` | Number of connected peers |
-| `handshakes_started` | Started handshakes |
-| `handshakes_completed` | Completed handshakes |
-| `connect_attempts` | Connection attempts |
-| `connect_failures` | Failed connections |
-| `backoff_skips` | Skipped due to backoff |
+| Field                  | Meaning                   |
+| ---------------------- | ------------------------- |
+| `peers_total`          | Number of known peers     |
+| `peers_connected`      | Number of connected peers |
+| `handshakes_started`   | Started handshakes        |
+| `handshakes_completed` | Completed handshakes      |
+| `connect_attempts`     | Connection attempts       |
+| `connect_failures`     | Failed connections        |
+| `backoff_skips`        | Skipped due to backoff    |
 
 ## Minimal node
 
@@ -236,15 +236,15 @@ if (std::holds_alternative<vix::p2p::msg::Ping>(any))
 
 ## Message types
 
-| Message | Purpose |
-|---------|---------|
-| `Hello` | First handshake message |
-| `HelloAck` | Handshake response |
-| `HelloFinish` | Final handshake message |
-| `Ping` / `Pong` | Liveness check |
-| `WalPush` | Push WAL bytes to a peer |
-| `WalAck` | Acknowledge applied WAL sequence |
-| `OutboxPull` | Ask peer for pending outbox items |
+| Message         | Purpose                           |
+| --------------- | --------------------------------- |
+| `Hello`         | First handshake message           |
+| `HelloAck`      | Handshake response                |
+| `HelloFinish`   | Final handshake message           |
+| `Ping` / `Pong` | Liveness check                    |
+| `WalPush`       | Push WAL bytes to a peer          |
+| `WalAck`        | Acknowledge applied WAL sequence  |
+| `OutboxPull`    | Ask peer for pending outbox items |
 
 ### Handshake
 
@@ -316,13 +316,13 @@ vix::p2p_http::shutdown_live_logs();
 
 ### HTTP control routes
 
-| Route | Purpose |
-|-------|---------|
-| `GET /p2p/ping` | Smoke test |
-| `GET /p2p/status` | Runtime stats |
-| `POST /p2p/connect` | Connect to a peer |
-| `GET /p2p/peers` | Known peers |
-| `GET /p2p/logs` | In-memory log buffer |
+| Route                  | Purpose              |
+| ---------------------- | -------------------- |
+| `GET /p2p/ping`        | Smoke test           |
+| `GET /p2p/status`      | Runtime stats        |
+| `POST /p2p/connect`    | Connect to a peer    |
+| `GET /p2p/peers`       | Known peers          |
+| `GET /p2p/logs`        | In-memory log buffer |
 | `POST /p2p/admin/hook` | Admin extension hook |
 
 ### Connect via HTTP

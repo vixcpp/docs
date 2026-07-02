@@ -147,15 +147,15 @@ ws.broadcast_json(
 
 ## Recommended event protocol
 
-| Event | Direction | Purpose |
-|-------|-----------|---------|
-| `app.ping` | client → server | Health check |
-| `app.pong` | server → client | Health response |
-| `chat.join` | client → server | User joins |
-| `chat.leave` | client → server | User leaves |
-| `chat.message` | both | Chat message |
-| `chat.error` | server → client | Chat error |
-| `system.connected` | server → client | Client connected |
+| Event                 | Direction       | Purpose             |
+| --------------------- | --------------- | ------------------- |
+| `app.ping`            | client → server | Health check        |
+| `app.pong`            | server → client | Health response     |
+| `chat.join`           | client → server | User joins          |
+| `chat.leave`          | client → server | User leaves         |
+| `chat.message`        | both            | Chat message        |
+| `chat.error`          | server → client | Chat error          |
+| `system.connected`    | server → client | Client connected    |
 | `system.disconnected` | server → client | Client disconnected |
 
 ## Run HTTP and WebSocket together
@@ -183,13 +183,13 @@ vix::serve_http_and_ws(".env", 8080, [](auto &app, auto &ws){
 
 ## WebSocket config fields
 
-| Variable | Purpose | Default |
-|----------|---------|---------|
-| `WEBSOCKET_MAX_MESSAGE_SIZE` | Max message size in bytes | 65536 |
-| `WEBSOCKET_IDLE_TIMEOUT` | Idle timeout in seconds | 60 |
-| `WEBSOCKET_ENABLE_DEFLATE` | Per-message deflate | true |
-| `WEBSOCKET_PING_INTERVAL` | Ping interval in seconds | 30 |
-| `WEBSOCKET_AUTO_PING_PONG` | Automatic ping/pong | true |
+| Variable                     | Purpose                   | Default |
+| ---------------------------- | ------------------------- | ------- |
+| `WEBSOCKET_MAX_MESSAGE_SIZE` | Max message size in bytes | 65536   |
+| `WEBSOCKET_IDLE_TIMEOUT`     | Idle timeout in seconds   | 60      |
+| `WEBSOCKET_ENABLE_DEFLATE`   | Per-message deflate       | true    |
+| `WEBSOCKET_PING_INTERVAL`    | Ping interval in seconds  | 30      |
+| `WEBSOCKET_AUTO_PING_PONG`   | Automatic ping/pong       | true    |
 
 ```cpp
 vix::websocket::Config ws_cfg = vix::websocket::Config::from_core(core_cfg);
@@ -214,11 +214,11 @@ Without upgrade headers, WebSocket connections fail through Nginx.
 
 ## WebSocket vs HTTP vs P2P
 
-| | HTTP | WebSocket | P2P |
-|-|------|-----------|-----|
-| Pattern | Request/response | Bidirectional | Node-to-node |
-| Best for | CRUD APIs | Live UI updates | Distributed sync |
-| Discovery | Manual | Manual | Auto (UDP) |
+|           | HTTP             | WebSocket       | P2P              |
+| --------- | ---------------- | --------------- | ---------------- |
+| Pattern   | Request/response | Bidirectional   | Node-to-node     |
+| Best for  | CRUD APIs        | Live UI updates | Distributed sync |
+| Discovery | Manual           | Manual          | Auto (UDP)       |
 
 ## Complete chat example
 

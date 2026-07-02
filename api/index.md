@@ -26,22 +26,22 @@ Use this section when you want to answer: which header to include, which class t
 
 ## Main public API areas
 
-| Area | Header | Purpose |
-|------|--------|---------|
-| HTTP | `<vix.hpp>` | App, Request, Response, routes |
-| JSON | `<vix/json.hpp>` | JSON values, objects, arrays, helpers |
-| Middleware | `<vix/middleware.hpp>` | CORS, rate limiting, static files, adapters |
-| Config | `<vix/env.hpp>` or `<vix.hpp>` | .env and runtime configuration |
-| WebSocket | `<vix/websocket.hpp>` | Real-time bidirectional communication |
-| Async | `<vix/async.hpp>` | Event loop, tasks, timers, signals, networking |
-| Database | `<vix/db.hpp>` | SQLite, MySQL, queries, prepared statements |
-| Cache | `<vix/cache.hpp>` | Memory cache, file cache, TTL, stale data |
-| Sync | `<vix/sync.hpp>` | WAL, outbox, retry, offline-first sync |
-| P2P | `<vix/p2p.hpp>` | Peer-to-peer runtime, discovery, messages |
-| P2P HTTP | `<vix/p2p_http.hpp>` | HTTP control routes for P2P runtimes |
-| Logging | `<vix/log.hpp>` | Structured logs and log levels |
-| Validation | `<vix/validation.hpp>` | Field validation, schemas, models |
-| Filesystem | `<vix/fs.hpp>` | Filesystem helpers |
+| Area       | Header                         | Purpose                                        |
+| ---------- | ------------------------------ | ---------------------------------------------- |
+| HTTP       | `<vix.hpp>`                    | App, Request, Response, routes                 |
+| JSON       | `<vix/json.hpp>`               | JSON values, objects, arrays, helpers          |
+| Middleware | `<vix/middleware.hpp>`         | CORS, rate limiting, static files, adapters    |
+| Config     | `<vix/env.hpp>` or `<vix.hpp>` | .env and runtime configuration                 |
+| WebSocket  | `<vix/websocket.hpp>`          | Real-time bidirectional communication          |
+| Async      | `<vix/async.hpp>`              | Event loop, tasks, timers, signals, networking |
+| Database   | `<vix/db.hpp>`                 | SQLite, MySQL, queries, prepared statements    |
+| Cache      | `<vix/cache.hpp>`              | Memory cache, file cache, TTL, stale data      |
+| Sync       | `<vix/sync.hpp>`               | WAL, outbox, retry, offline-first sync         |
+| P2P        | `<vix/p2p.hpp>`                | Peer-to-peer runtime, discovery, messages      |
+| P2P HTTP   | `<vix/p2p_http.hpp>`           | HTTP control routes for P2P runtimes           |
+| Logging    | `<vix/log.hpp>`                | Structured logs and log levels                 |
+| Validation | `<vix/validation.hpp>`         | Field validation, schemas, models              |
+| Filesystem | `<vix/fs.hpp>`                 | Filesystem helpers                             |
 
 ## The most common header
 
@@ -95,15 +95,15 @@ vix/fs.hpp         → filesystem helpers
 
 ## Which page to read next
 
-| Need | Read |
-|------|------|
-| Build routes | [HTTP API](/api/http) |
-| Return JSON | [JSON API](/api/json) |
+| Need                      | Read                              |
+| ------------------------- | --------------------------------- |
+| Build routes              | [HTTP API](/api/http)             |
+| Return JSON               | [JSON API](/api/json)             |
 | Add CORS or rate limiting | [Middleware API](/api/middleware) |
-| Read .env settings | [Config API](/api/config) |
-| Add realtime features | [WebSocket API](/api/websocket) |
-| Learn runtime primitives | [Async API](/api/async) |
-| Build distributed nodes | [P2P API](/api/p2p) |
+| Read .env settings        | [Config API](/api/config)         |
+| Add realtime features     | [WebSocket API](/api/websocket)   |
+| Learn runtime primitives  | [Async API](/api/async)           |
+| Build distributed nodes   | [P2P API](/api/p2p)               |
 
 ## What you should remember
 

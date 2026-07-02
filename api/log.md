@@ -66,12 +66,12 @@ vix::log::info("User {} logged in", user_id);
 
 Vix has several output APIs.
 
-| API | Purpose |
-| --- | --- |
+| API            | Purpose                                                        |
+| -------------- | -------------------------------------------------------------- |
 | `vix::console` | JavaScript-like development console for people coming from JS. |
-| `vix::print` | Simple readable C++ output. |
-| `vix::inspect` | Deep debugging and diagnostics. |
-| `vix::log` | Structured application logging. |
+| `vix::print`   | Simple readable C++ output.                                    |
+| `vix::inspect` | Deep debugging and diagnostics.                                |
+| `vix::log`     | Structured application logging.                                |
 
 Use `vix::console` for familiar local development messages.
 
@@ -123,30 +123,30 @@ vix::log::info("User {} has id {}", user, id);
 
 ## Public API overview
 
-| API | Purpose |
-| --- | --- |
-| `vix::log::trace(...)` | Log a trace message. |
-| `vix::log::debug(...)` | Log a debug message. |
-| `vix::log::info(...)` | Log an info message. |
-| `vix::log::warn(...)` | Log a warning message. |
-| `vix::log::error(...)` | Log an error message. |
-| `vix::log::critical(...)` | Log a critical message. |
-| `vix::log::log(level, ...)` | Log at a dynamic level. |
-| `vix::log::logf(level, message, kv...)` | Log a structured key/value message. |
-| `vix::log::configure(config)` | Configure the global logger. |
-| `vix::log::set_level(level)` | Set the active log level. |
-| `vix::log::level()` | Get the active log level. |
-| `vix::log::enabled(level)` | Check whether a level is enabled. |
-| `vix::log::set_format(format)` | Set the output format. |
-| `vix::log::set_async(bool)` | Enable or disable async logging. |
-| `vix::log::set_context(ctx)` | Set per-thread log context. |
-| `vix::log::clear_context()` | Clear per-thread log context. |
-| `vix::log::context()` | Get current per-thread context. |
-| `vix::log::set_level_from_env()` | Read level from environment. |
-| `vix::log::set_format_from_env()` | Read format from environment. |
-| `vix::log::parse_level(value)` | Parse a log level from string. |
-| `vix::log::parse_format(value)` | Parse a log format from string. |
-| `vix::log::global()` | Access the global public log adapter. |
+| API                                     | Purpose                               |
+| --------------------------------------- | ------------------------------------- |
+| `vix::log::trace(...)`                  | Log a trace message.                  |
+| `vix::log::debug(...)`                  | Log a debug message.                  |
+| `vix::log::info(...)`                   | Log an info message.                  |
+| `vix::log::warn(...)`                   | Log a warning message.                |
+| `vix::log::error(...)`                  | Log an error message.                 |
+| `vix::log::critical(...)`               | Log a critical message.               |
+| `vix::log::log(level, ...)`             | Log at a dynamic level.               |
+| `vix::log::logf(level, message, kv...)` | Log a structured key/value message.   |
+| `vix::log::configure(config)`           | Configure the global logger.          |
+| `vix::log::set_level(level)`            | Set the active log level.             |
+| `vix::log::level()`                     | Get the active log level.             |
+| `vix::log::enabled(level)`              | Check whether a level is enabled.     |
+| `vix::log::set_format(format)`          | Set the output format.                |
+| `vix::log::set_async(bool)`             | Enable or disable async logging.      |
+| `vix::log::set_context(ctx)`            | Set per-thread log context.           |
+| `vix::log::clear_context()`             | Clear per-thread log context.         |
+| `vix::log::context()`                   | Get current per-thread context.       |
+| `vix::log::set_level_from_env()`        | Read level from environment.          |
+| `vix::log::set_format_from_env()`       | Read format from environment.         |
+| `vix::log::parse_level(value)`          | Parse a log level from string.        |
+| `vix::log::parse_format(value)`         | Parse a log format from string.       |
+| `vix::log::global()`                    | Access the global public log adapter. |
 
 ## Log levels
 
@@ -163,15 +163,15 @@ enum class LogLevel
 };
 ```
 
-| Level | Use for |
-| --- | --- |
-| `Trace` | Very detailed internal events. |
-| `Debug` | Debug information useful during development. |
-| `Info` | Normal application lifecycle events. |
-| `Warn` | Recoverable problems or unexpected conditions. |
-| `Error` | Operation failed, but the process can continue. |
-| `Critical` | Serious failure requiring immediate attention. |
-| `Off` | Disable logging. |
+| Level      | Use for                                         |
+| ---------- | ----------------------------------------------- |
+| `Trace`    | Very detailed internal events.                  |
+| `Debug`    | Debug information useful during development.    |
+| `Info`     | Normal application lifecycle events.            |
+| `Warn`     | Recoverable problems or unexpected conditions.  |
+| `Error`    | Operation failed, but the process can continue. |
+| `Critical` | Serious failure requiring immediate attention.  |
+| `Off`      | Disable logging.                                |
 
 ## Default level
 
@@ -382,11 +382,11 @@ enum class LogFormat
 };
 ```
 
-| Format | Meaning |
-| --- | --- |
-| `KV` | Human-readable key/value text. |
-| `JSON` | Single-line JSON. |
-| `JSON_PRETTY` | Pretty JSON with indentation. |
+| Format        | Meaning                        |
+| ------------- | ------------------------------ |
+| `KV`          | Human-readable key/value text. |
+| `JSON`        | Single-line JSON.              |
+| `JSON_PRETTY` | Pretty JSON with indentation.  |
 
 Default format:
 
@@ -458,11 +458,11 @@ struct LogConfig
 };
 ```
 
-| Field | Default | Purpose |
-| --- | --- | --- |
-| `level` | `Info` | Minimum active log level. |
-| `format` | `KV` | Output format. |
-| `async` | `false` | Whether async logging mode is enabled. |
+| Field    | Default | Purpose                                |
+| -------- | ------- | -------------------------------------- |
+| `level`  | `Info`  | Minimum active log level.              |
+| `format` | `KV`    | Output format.                         |
+| `async`  | `false` | Whether async logging mode is enabled. |
 
 ## Async logging
 
@@ -513,7 +513,14 @@ In KV format, output shape:
 In JSON format, output shape:
 
 ```json
-{"level":"info","msg":"request completed","method":"GET","path":"/users","status":200,"duration_ms":12}
+{
+  "level": "info",
+  "msg": "request completed",
+  "method": "GET",
+  "path": "/users",
+  "status": 200,
+  "duration_ms": 12
+}
 ```
 
 ## Key/value argument rules
@@ -687,7 +694,14 @@ vix::log::logf(
 Output shape:
 
 ```json
-{"level":"info","msg":"request completed","method":"GET","path":"/health","status":200,"duration_ms":3}
+{
+  "level": "info",
+  "msg": "request completed",
+  "method": "GET",
+  "path": "/health",
+  "status": 200,
+  "duration_ms": 3
+}
 ```
 
 Use JSON when logs are consumed by tools.

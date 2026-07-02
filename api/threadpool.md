@@ -281,4 +281,3 @@ pool.shutdown();
 ```
 
 Lower-level types exist so Vix can keep the implementation explicit, testable, observable, and extensible.
-

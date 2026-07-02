@@ -112,17 +112,17 @@ Use path parameters to identify a resource (`/users/42`), query parameters to mo
 
 ## Request
 
-| Method | Purpose |
-|--------|---------|
-| `req.param("id")` | Read a path parameter |
-| `req.param("id", "0")` | Read with fallback |
+| Method                         | Purpose                              |
+| ------------------------------ | ------------------------------------ |
+| `req.param("id")`              | Read a path parameter                |
+| `req.param("id", "0")`         | Read with fallback                   |
 | `req.query_value("page", "1")` | Read a query parameter with fallback |
-| `req.query()` | Read all query parameters |
-| `req.header("Authorization")` | Read a request header |
-| `req.body()` | Read the raw request body |
-| `req.json()` | Read the parsed JSON body |
-| `req.path()` | Read the request path |
-| `req.method()` | Read the HTTP method |
+| `req.query()`                  | Read all query parameters            |
+| `req.header("Authorization")`  | Read a request header                |
+| `req.body()`                   | Read the raw request body            |
+| `req.json()`                   | Read the parsed JSON body            |
+| `req.path()`                   | Read the request path                |
+| `req.method()`                 | Read the HTTP method                 |
 
 ### Read JSON body
 
@@ -159,14 +159,14 @@ app.post("/users", [](Request &req, Response &res){
 
 ## Response
 
-| Method | Purpose |
-|--------|---------|
-| `res.text("Hello")` | Send plain text |
-| `res.send("Hello")` | Send a basic response body |
-| `res.json({...})` | Send JSON |
-| `res.status(201)` | Set HTTP status (chainable) |
-| `res.header("X-Foo", "bar")` | Set a response header |
-| `res.file("public/index.html")` | Send a file |
+| Method                          | Purpose                     |
+| ------------------------------- | --------------------------- |
+| `res.text("Hello")`             | Send plain text             |
+| `res.send("Hello")`             | Send a basic response body  |
+| `res.json({...})`               | Send JSON                   |
+| `res.status(201)`               | Set HTTP status (chainable) |
+| `res.header("X-Foo", "bar")`    | Set a response header       |
+| `res.file("public/index.html")` | Send a file                 |
 
 ```cpp
 res.status(201).json({
@@ -179,18 +179,18 @@ res.file("public/index.html");
 
 ## Status codes
 
-| Status | Meaning |
-|--------|---------|
-| 200 | OK |
-| 201 | Created |
-| 204 | No Content |
-| 400 | Bad Request |
-| 401 | Unauthorized |
-| 403 | Forbidden |
-| 404 | Not Found |
-| 409 | Conflict |
-| 429 | Too Many Requests |
-| 500 | Internal Server Error |
+| Status | Meaning               |
+| ------ | --------------------- |
+| 200    | OK                    |
+| 201    | Created               |
+| 204    | No Content            |
+| 400    | Bad Request           |
+| 401    | Unauthorized          |
+| 403    | Forbidden             |
+| 404    | Not Found             |
+| 409    | Conflict              |
+| 429    | Too Many Requests     |
+| 500    | Internal Server Error |
 
 ## Error helper
 

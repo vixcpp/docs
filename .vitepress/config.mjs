@@ -1041,6 +1041,65 @@ const apiReference = {
   ],
 };
 
+const requests = {
+  text: "Requests",
+  collapsed: true,
+  items: [
+    {
+      text: "Overview",
+      link: "/modules/requests/",
+    },
+    {
+      text: "Quick Start",
+      link: "/modules/requests/quick-start",
+    },
+    {
+      text: "Client",
+      link: "/modules/requests/client",
+    },
+    {
+      text: "Session",
+      link: "/modules/requests/session",
+    },
+    {
+      text: "Request Options",
+      link: "/modules/requests/request-options",
+    },
+    {
+      text: "Headers and Params",
+      link: "/modules/requests/headers-and-params",
+    },
+    {
+      text: "Bodies",
+      link: "/modules/requests/bodies",
+    },
+    {
+      text: "Responses",
+      link: "/modules/requests/responses",
+    },
+    {
+      text: "Timeouts",
+      link: "/modules/requests/timeouts",
+    },
+    {
+      text: "Redirects and Cookies",
+      link: "/modules/requests/redirects-and-cookies",
+    },
+    {
+      text: "HTTPS and TLS",
+      link: "/modules/requests/https-and-tls",
+    },
+    {
+      text: "Errors",
+      link: "/modules/requests/errors",
+    },
+    {
+      text: "API Reference",
+      link: "/modules/requests/api-reference",
+    },
+  ],
+};
+
 const modules = {
   text: "Modules",
   collapsed: true,
@@ -1297,6 +1356,7 @@ const modules = {
       text: "Networking",
       collapsed: true,
       items: [
+        requests,
         {
           text: "WebSocket",
           collapsed: true,

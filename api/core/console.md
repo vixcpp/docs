@@ -5,9 +5,9 @@ The `console` API provides a small JavaScript-like console for C++ developers.
 It is designed for people who are used to writing:
 
 ```js
-console.log("hello")
-console.warn("careful")
-console.error("failed")
+console.log("hello");
+console.warn("careful");
+console.error("failed");
 ```
 
 In Vix, you can write:
@@ -92,15 +92,15 @@ The goal is to provide a simple and familiar developer console.
 
 ## Public API overview
 
-| API | Purpose | Stream |
-| --- | --- | --- |
-| `vix::console.log(...)` | General development output. | stdout |
-| `vix::console.info(...)` | Informational development output. | stdout |
-| `vix::console.warn(...)` | Warning output. | stderr |
-| `vix::console.error(...)` | Error output. | stderr |
-| `vix::console.debug(...)` | Debug output, hidden unless level is Debug. | stdout |
-| `vix::console.set_level(level)` | Change the minimum visible level. | - |
-| `vix::console.level()` | Read the current level. | - |
+| API                             | Purpose                                     | Stream |
+| ------------------------------- | ------------------------------------------- | ------ |
+| `vix::console.log(...)`         | General development output.                 | stdout |
+| `vix::console.info(...)`        | Informational development output.           | stdout |
+| `vix::console.warn(...)`        | Warning output.                             | stderr |
+| `vix::console.error(...)`       | Error output.                               | stderr |
+| `vix::console.debug(...)`       | Debug output, hidden unless level is Debug. | stdout |
+| `vix::console.set_level(level)` | Change the minimum visible level.           | -      |
+| `vix::console.level()`          | Read the current level.                     | -      |
 
 ## Global object
 
@@ -135,13 +135,13 @@ enum class Level : uint8_t
 
 The current level controls what is printed.
 
-| Current level | Printed |
-| --- | --- |
-| `Debug` | debug, info, warn, error |
-| `Info` | info, warn, error |
-| `Warn` | warn, error |
-| `Error` | error |
-| `Off` | nothing |
+| Current level | Printed                  |
+| ------------- | ------------------------ |
+| `Debug`       | debug, info, warn, error |
+| `Info`        | info, warn, error        |
+| `Warn`        | warn, error              |
+| `Error`       | error                    |
+| `Off`         | nothing                  |
 
 Default level:
 
@@ -316,21 +316,21 @@ VIX_CONSOLE_LEVEL=off ./app
 
 ## Level aliases
 
-| Value | Result |
-| --- | --- |
-| `debug` | Debug |
-| `trace` | Debug |
-| `info` | Info |
-| `log` | Info |
-| `warn` | Warn |
-| `warning` | Warn |
-| `error` | Error |
-| `err` | Error |
-| `off` | Off |
-| `none` | Off |
-| `silent` | Off |
-| `never` | Off |
-| `0` | Off |
+| Value     | Result |
+| --------- | ------ |
+| `debug`   | Debug  |
+| `trace`   | Debug  |
+| `info`    | Info   |
+| `log`     | Info   |
+| `warn`    | Warn   |
+| `warning` | Warn   |
+| `error`   | Error  |
+| `err`     | Error  |
+| `off`     | Off    |
+| `none`    | Off    |
+| `silent`  | Off    |
+| `never`   | Off    |
+| `0`       | Off    |
 
 If the value is unknown, Vix falls back to `Info`.
 
@@ -398,12 +398,12 @@ The timestamp uses local time.
 
 ## Streams
 
-| Method | Stream |
-| --- | --- |
-| `log` | stdout |
-| `info` | stdout |
+| Method  | Stream |
+| ------- | ------ |
+| `log`   | stdout |
+| `info`  | stdout |
 | `debug` | stdout |
-| `warn` | stderr |
+| `warn`  | stderr |
 | `error` | stderr |
 
 This mirrors the usual developer expectation:
@@ -431,16 +431,16 @@ The console API is intentionally small and fast.
 
 It supports common primitive and string-like values:
 
-| Category | Examples |
-| --- | --- |
-| Strings | `const char *`, `char *`, `std::string`, `std::string_view` |
-| Booleans | `bool` |
-| Integers | `int`, `long`, `std::uint64_t`, etc. |
-| Floating point | `float`, `double`, `long double` |
-| Enums | enum values are printed as their underlying integer |
-| Pointers | printed as addresses |
-| String-view convertible values | values convertible to `std::string_view` |
-| Other objects | printed as `[object]` |
+| Category                       | Examples                                                    |
+| ------------------------------ | ----------------------------------------------------------- |
+| Strings                        | `const char *`, `char *`, `std::string`, `std::string_view` |
+| Booleans                       | `bool`                                                      |
+| Integers                       | `int`, `long`, `std::uint64_t`, etc.                        |
+| Floating point                 | `float`, `double`, `long double`                            |
+| Enums                          | enum values are printed as their underlying integer         |
+| Pointers                       | printed as addresses                                        |
+| String-view convertible values | values convertible to `std::string_view`                    |
+| Other objects                  | printed as `[object]`                                       |
 
 ## Strings
 
@@ -548,11 +548,11 @@ Use `vix::print` or `vix::inspect` when you want structured rendering for STL co
 
 ## Console vs Print vs Inspect
 
-| API | Use for |
-| --- | --- |
-| `vix::console` | JavaScript-like development messages. |
-| `vix::print` | Friendly C++ output with STL rendering. |
-| `vix::inspect` | Deep debugging and diagnostics. |
+| API            | Use for                                 |
+| -------------- | --------------------------------------- |
+| `vix::console` | JavaScript-like development messages.   |
+| `vix::print`   | Friendly C++ output with STL rendering. |
+| `vix::inspect` | Deep debugging and diagnostics.         |
 
 Examples:
 
