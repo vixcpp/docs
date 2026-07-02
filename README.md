@@ -180,7 +180,7 @@ Contributions are welcome, but changes should be focused. Vix.cpp is now large e
 
 For larger changes, open an issue or discussion first.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), and [CHANGELOG.md](CHANGELOG.md) for more information.
+See [CONTRIBUTING.md](https://github.com/vixcpp/vix/blob/main/CONTRIBUTING.md), [SECURITY.md](https://github.com/vixcpp/vix/blob/main/SECURITY.md), [CODE_OF_CONDUCT.md](https://github.com/vixcpp/vix/blob/main/CODE_OF_CONDUCT.md), and [CHANGELOG.md](https://github.com/vixcpp/vix/blob/main/CHANGELOG.md) for more information.
 
 ## Maintained by Softadastra
 
@@ -198,4 +198,4 @@ Softadastra builds tools that simplify modern C++ development.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) for details.
+MIT License. See [LICENSE](https://github.com/vixcpp/vix/blob/main/LICENSE) for details.
