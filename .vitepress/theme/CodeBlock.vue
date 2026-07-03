@@ -1,5 +1,10 @@
 <template>
-  <div class="cb" @mouseenter="hover = true" @mouseleave="hover = false">
+  <div
+    class="cb"
+    :class="`cb--${normalizeLang(activeLang)}`"
+    @mouseenter="hover = true"
+    @mouseleave="hover = false"
+  >
     <!-- Header -->
     <div class="cb-head">
       <div class="cb-head-left">

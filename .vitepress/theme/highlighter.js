@@ -1266,6 +1266,223 @@ export function highlightJson(raw) {
   return out;
 }
 
+/* ════════════════════════════════════════════════
+   INI / TOML-lite (vix.app, vix.module)
+   ════════════════════════════════════════════════ */
+export function highlightIni(raw) {
+  const s = String(raw ?? "");
+  return s
+    .split("\n")
+    .map((line) => {
+      // Comment
+      const cm = line.match(/^(\s*)([#;].*)$/);
+      if (cm) return esc(cm[1]) + wrap("cb-cmt", cm[2]);
+
+      // Section [module.auth]
+      const sec = line.match(/^(\s*)(\[[^\]]*\])(.*)$/);
+      if (sec) return esc(sec[1]) + wrap("cb-type", sec[2]) + esc(sec[3] || "");
+
+      // key = value
+      const kv = line.match(/^(\s*)([A-Za-z0-9_.-]+)(\s*)(=)(\s*)(.*)$/);
+      if (kv) {
+        const [, sp, key, s1, eq, s2, val] = kv;
+        return (
+          esc(sp) +
+          wrap("cb-kw", key) +
+          esc(s1) +
+          wrap("cb-op", eq) +
+          esc(s2) +
+          hlIniValue(val)
+        );
+      }
+      return hlIniValue(line);
+    })
+    .join("\n");
+}
+
+function hlIniValue(val) {
+  let out = "",
+    i = 0;
+  const n = val.length;
+  while (i < n) {
+    const ch = val[i];
+    if (ch === '"' || ch === "'") {
+      let j = i + 1;
+      while (j < n && !(val[j] === ch && val[j - 1] !== "\\")) j++;
+      out += wrap("cb-str", val.slice(i, Math.min(j + 1, n)));
+      i = j + 1;
+      continue;
+    }
+    if (/[0-9]/.test(ch)) {
+      const m = val.slice(i).match(/^[0-9]+(?:\.[0-9]+)?/);
+      out += wrap("cb-num", m[0]);
+      i += m[0].length;
+      continue;
+    }
+    if (/^(true|false)\b/.test(val.slice(i))) {
+      const m = val.slice(i).match(/^(true|false)/)[0];
+      out += wrap("cb-const", m);
+      i += m.length;
+      continue;
+    }
+    if (ch === "[" || ch === "]") {
+      out += wrap("cb-bracket", ch);
+      i++;
+      continue;
+    }
+    if (ch === ",") {
+      out += wrap("cb-op", ch);
+      i++;
+      continue;
+    }
+    out += esc(ch);
+    i++;
+  }
+  return out;
+}
+
+/* ════════════════════════════════════════════════
+   CMake
+   ════════════════════════════════════════════════ */
+const CMAKE_CMDS = new Set([
+  "add_library",
+  "add_executable",
+  "add_subdirectory",
+  "target_sources",
+  "target_link_libraries",
+  "target_include_directories",
+  "target_compile_features",
+  "target_compile_definitions",
+  "target_compile_options",
+  "set",
+  "set_target_properties",
+  "project",
+  "cmake_minimum_required",
+  "include",
+  "find_package",
+  "option",
+  "if",
+  "elseif",
+  "else",
+  "endif",
+  "foreach",
+  "endforeach",
+  "function",
+  "endfunction",
+  "macro",
+  "endmacro",
+  "message",
+  "install",
+  "file",
+  "list",
+  "string",
+  "add_compile_definitions",
+  "add_definitions",
+]);
+
+const CMAKE_KW = new Set([
+  "PRIVATE",
+  "PUBLIC",
+  "INTERFACE",
+  "REQUIRED",
+  "QUIET",
+  "ALIAS",
+  "STATIC",
+  "SHARED",
+  "MODULE",
+  "TARGET",
+  "AND",
+  "OR",
+  "NOT",
+  "STREQUAL",
+  "MATCHES",
+  "VERSION",
+  "NAMES",
+  "COMPONENTS",
+  "CONFIG",
+  "CACHE",
+  "FORCE",
+  "ON",
+  "OFF",
+]);
+
+export function highlightCmake(raw) {
+  const s = String(raw ?? "");
+  let out = "",
+    i = 0;
+  const n = s.length;
+  const isId = (c) => /[A-Za-z0-9_]/.test(c);
+
+  while (i < n) {
+    const ch = s[i];
+
+    // Comment
+    if (ch === "#") {
+      let j = i;
+      while (j < n && s[j] !== "\n") j++;
+      out += wrap("cb-cmt", s.slice(i, j));
+      i = j;
+      continue;
+    }
+    // String
+    if (ch === '"') {
+      let j = i + 1;
+      while (j < n && !(s[j] === '"' && s[j - 1] !== "\\")) j++;
+      out += wrap("cb-str", s.slice(i, Math.min(j + 1, n)));
+      i = j + 1;
+      continue;
+    }
+    // Variable ${...}
+    if (ch === "$" && s[i + 1] === "{") {
+      let j = i + 2;
+      while (j < n && s[j] !== "}") j++;
+      out +=
+        wrap("cb-op", "${") +
+        wrap("cb-mem", s.slice(i + 2, j)) +
+        wrap("cb-op", "}");
+      i = j + 1;
+      continue;
+    }
+    // Identifier / command / keyword
+    if (/[A-Za-z_]/.test(ch)) {
+      let j = i + 1;
+      while (j < n && isId(s[j])) j++;
+      const id = s.slice(i, j);
+      let k = j;
+      while (k < n && (s[k] === " " || s[k] === "\t")) k++;
+      const next = s[k] || "";
+
+      if (CMAKE_CMDS.has(id.toLowerCase()) && next === "(")
+        out += wrap("cb-fn", id);
+      else if (CMAKE_KW.has(id)) out += wrap("cb-kw", id);
+      else if (/::/.test(s.slice(j, j + 2))) out += wrap("cb-type", id);
+      else out += wrap("cb-id", id);
+      i = j;
+      continue;
+    }
+    // Number
+    if (/[0-9]/.test(ch)) {
+      const m = s.slice(i).match(/^[0-9]+(?:\.[0-9]+)*/);
+      out += wrap("cb-num", m[0]);
+      i += m[0].length;
+      continue;
+    }
+    if (s.startsWith("::", i)) {
+      out += wrap("cb-op", "::");
+      i += 2;
+      continue;
+    }
+    if (ch === "(" || ch === ")") {
+      out += wrap("cb-paren", ch);
+      i++;
+      continue;
+    }
+    out += esc(ch);
+    i++;
+  }
+  return out;
+}
+
 /* ── Plain text passthrough ── */
 export function highlightText(raw) {
   return esc(raw ?? "");
@@ -1298,7 +1515,13 @@ export function normalizeLang(lang) {
   )
     return "js";
   if (["json", "jsonc", "json5"].includes(l)) return "json";
+
+  if (["ini", "toml", "vix.app", "vix.module"].includes(l)) return "ini";
+
+  if (["cmake", "cmakelists", "cmakelists.txt"].includes(l)) return "cmake";
+
   if (["txt", "text", "plain", "plaintext"].includes(l)) return "text";
+
   return l || "text";
 }
 
@@ -1316,6 +1539,12 @@ export function highlight(raw, lang) {
       return highlightJs(raw);
     case "json":
       return highlightJson(raw);
+    case "ini":
+      return highlightIni(raw);
+    case "cmake":
+      return highlightCmake(raw);
+    case "text":
+      return highlightText(raw);
     default:
       return highlightText(raw);
   }

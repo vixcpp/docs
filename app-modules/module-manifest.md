@@ -1,0 +1,392 @@
+# Module Manifest
+
+Each application module contains a `vix.module` file. This file describes the module itself: its name, its kind, its exported include directory, its route prefix when the module is routed, and whether module tests are enabled.
+
+The module manifest belongs to the module directory. It is different from the root `vix.app` file. The root manifest describes the application and decides which modules are active. The module manifest describes one module from inside its own folder.
+
+```txt
+modules/auth/
+  CMakeLists.txt
+  vix.module
+  include/auth/
+  src/
+  tests/
+```
+
+This separation keeps the project readable. `vix.app` answers the application-level question: which modules belong to this application? `vix.module` answers the module-level question: what kind of module is this, and what does it expose?
+
+## Basic shape
+
+A simple module manifest looks like this:
+
+```ini
+name = "auth"
+kind = "module"
+
+[exports]
+include = "include"
+
+[tests]
+enabled = true
+```
+
+This describes a module named `auth`. It is a normal internal module, it exports headers from its `include` directory, and it has tests enabled.
+
+A matching module layout may look like this:
+
+```txt
+modules/auth/
+  include/auth/
+    api.hpp
+  src/
+    auth.cpp
+  tests/
+    test_auth.cpp
+  CMakeLists.txt
+  vix.module
+```
+
+The public include path comes from the `include` directory.
+
+```cpp
+#include <auth/api.hpp>
+```
+
+The source files remain private to the module target.
+
+## Routed module shape
+
+Backend and service modules are routed modules. They expose a module entry point and usually register routes on a `vix::App`.
+
+A backend module manifest looks like this:
+
+```ini
+name = "auth"
+kind = "backend"
+
+[routes]
+prefix = "/api/auth"
+
+[tests]
+enabled = true
+```
+
+The `routes.prefix` value gives the module a clear HTTP namespace. For a module named `auth`, the default route prefix is usually:
+
+```txt
+/api/auth
+```
+
+A generated backend module uses that prefix in its starter controller.
+
+```cpp
+app.get("/api/auth", [](vix::Request &req, vix::Response &res)
+{
+  (void)req;
+
+  res.json({
+    "ok", true,
+    "module", "auth",
+    "message", "Auth module is available"
+  });
+});
+```
+
+The prefix does not replace route registration. Routes are still registered by module code. The prefix gives the module a declared route ownership area and lets the module checker detect conflicts between modules.
+
+## `name`
+
+The `name` field is the stable module name.
+
+```ini
+name = "auth"
+```
+
+The name should match the module directory and the declaration in `vix.app`.
+
+```txt
+modules/auth/
+```
+
+```ini
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+```
+
+Keep this name stable. It is used in generated files, route defaults, test names, CMake target names, and module checks.
+
+## `kind`
+
+The `kind` field describes the role of the module.
+
+```ini
+kind = "backend"
+```
+
+A simple internal module usually uses:
+
+```ini
+kind = "module"
+```
+
+A backend feature module uses:
+
+```ini
+kind = "backend"
+```
+
+A routed module in a non-backend application may use:
+
+```ini
+kind = "service"
+```
+
+The value should describe what the module does in the application. A module that owns HTTP backend routes should use `backend`. A module that only exposes reusable internal C++ code can use `module`.
+
+## `[exports]`
+
+The `[exports]` section describes what the module exposes.
+
+```ini
+[exports]
+include = "include"
+```
+
+For simple modules, this tells the project that public headers are under the module’s `include` directory.
+
+```txt
+modules/auth/include/
+```
+
+The public headers should still live under a module-named folder.
+
+```txt
+modules/auth/include/auth/api.hpp
+```
+
+That gives users of the module a stable include path.
+
+```cpp
+#include <auth/api.hpp>
+```
+
+The export section should describe public surface, not private implementation. Files under `src/` should not be exported as public API.
+
+## `[routes]`
+
+The `[routes]` section is used by routed modules.
+
+```ini
+[routes]
+prefix = "/api/auth"
+```
+
+The prefix should be unique across routed modules in the same application. If two modules claim the same prefix, the project becomes harder to reason about because route ownership is no longer clear.
+
+Good route prefixes usually follow the module name.
+
+```txt
+auth      -> /api/auth
+projects  -> /api/projects
+builds    -> /api/builds
+packages  -> /api/packages
+```
+
+The prefix is also checked by `vix modules check`.
+
+```bash
+vix modules check
+```
+
+This helps catch duplicate route prefixes before the application is built or run.
+
+## `[tests]`
+
+The `[tests]` section records whether the module has tests enabled.
+
+```ini
+[tests]
+enabled = true
+```
+
+Generated modules include a starter test file.
+
+```txt
+modules/auth/tests/test_auth.cpp
+```
+
+For a simple module, the generated test usually checks the public API. For a backend module, it usually checks that the module exposes its name and that the module header is correctly wired.
+
+The test section does not mean test files are part of the main application target. Module tests remain separate from the application executable.
+
+## What does not belong in vix.module
+
+The module manifest should stay focused on module metadata. It should not become a second application manifest.
+
+Application-level activation belongs in `vix.app`.
+
+```ini
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+```
+
+Internal module dependencies also belong in the application manifest and in the module CMake target relationship.
+
+```ini
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+```cmake
+target_link_libraries(api_projects
+  PUBLIC
+    api::auth
+)
+```
+
+The `vix.module` file should describe the module itself. It should not duplicate the full application graph.
+
+## Example: simple module
+
+A simple module can use this manifest:
+
+```ini
+name = "logger"
+kind = "module"
+
+[exports]
+include = "include"
+
+[tests]
+enabled = true
+```
+
+A matching layout may look like this:
+
+```txt
+modules/logger/
+  include/logger/
+    api.hpp
+  src/
+    logger.cpp
+  tests/
+    test_logger.cpp
+  CMakeLists.txt
+  vix.module
+```
+
+This is a good shape for internal reusable code that does not register HTTP routes.
+
+## Example: backend module
+
+A backend module can use this manifest:
+
+```ini
+name = "projects"
+kind = "backend"
+
+[routes]
+prefix = "/api/projects"
+
+[tests]
+enabled = true
+```
+
+A matching layout may look like this:
+
+```txt
+modules/projects/
+  include/projects/
+    ProjectsModule.hpp
+    controllers/
+      ProjectsController.hpp
+  src/
+    ProjectsModule.cpp
+    controllers/
+      ProjectsController.cpp
+  migrations/
+  tests/
+    test_projects.cpp
+  CMakeLists.txt
+  vix.module
+```
+
+The module entry point registers the module routes.
+
+```cpp
+void ProjectsModule::register_routes(vix::App &app)
+{
+  controllers::ProjectsController::register_routes(app);
+}
+```
+
+The generated application bridge can call that entry point when the module is enabled in `vix.app`.
+
+## Generated manifests
+
+When you create a module with the CLI, Vix writes the initial `vix.module` file for you.
+
+```bash
+vix modules add auth
+```
+
+For a normal module, the generated manifest contains the export section.
+
+```ini
+name = "auth"
+kind = "module"
+
+[exports]
+include = "include"
+
+[tests]
+enabled = true
+```
+
+For a routed backend module, the generated manifest contains the route prefix.
+
+```ini
+name = "auth"
+kind = "backend"
+
+[routes]
+prefix = "/api/auth"
+
+[tests]
+enabled = true
+```
+
+You can edit the generated manifest when the module needs a different route prefix or when the module kind changes. After editing it, run the module checks.
+
+```bash
+vix modules check
+```
+
+## Common mistakes
+
+The most common mistake is confusing `vix.module` with `vix.app`. The module manifest describes one module. It does not decide whether the module is enabled in the application. Enabled and disabled state belongs to the root `vix.app` file.
+
+Another mistake is declaring a route prefix that another module already owns. This can happen when modules are copied and renamed without updating `vix.module`. Run `vix modules check` after creating or moving routed modules.
+
+A third mistake is using `[exports]` to expose private implementation folders. Public headers should live under `include/<module>/`. Implementation files under `src/` should remain private to the module target.
+
+## Recommended rule
+
+Keep `vix.module` small. It should tell the reader what the module is, what it exposes, which route prefix it owns when it is routed, and whether it has tests. The application graph belongs in `vix.app`; the module metadata belongs in `vix.module`.
+
+## Next step
+
+Continue with tests to see how module tests are generated and how they fit into the normal Vix validation workflow.
+
+[Tests](/app-modules/tests)

@@ -100,27 +100,151 @@ const projectTemplates = {
     },
     {
       text: "Application",
-      link: "/templates/application",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/templates/application",
+        },
+        {
+          text: "Generated Layout",
+          link: "/templates/application/layout",
+        },
+        {
+          text: "Module Registry",
+          link: "/templates/application/module-registry",
+        },
+        {
+          text: "Manifest",
+          link: "/templates/application/manifest",
+        },
+      ],
     },
     {
       text: "Backend",
-      link: "/templates/backend",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/templates/backend",
+        },
+        {
+          text: "Generated Layout",
+          link: "/templates/backend/layout",
+        },
+        {
+          text: "App Bootstrap",
+          link: "/templates/backend/app-bootstrap",
+        },
+        {
+          text: "Routes and Middleware",
+          link: "/templates/backend/routes-and-middleware",
+        },
+        {
+          text: "Modules Integration",
+          link: "/templates/backend/modules-integration",
+        },
+        {
+          text: "Production Files",
+          link: "/templates/backend/production-files",
+        },
+      ],
     },
     {
       text: "Web",
-      link: "/templates/web",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/templates/web",
+        },
+        {
+          text: "Generated Layout",
+          link: "/templates/web/layout",
+        },
+        {
+          text: "Rendering Flow",
+          link: "/templates/web/rendering-flow",
+        },
+        {
+          text: "Routes and Views",
+          link: "/templates/web/routes-and-views",
+        },
+        {
+          text: "Production Files",
+          link: "/templates/web/production-files",
+        },
+      ],
     },
     {
       text: "Vue",
-      link: "/templates/vue",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/templates/vue",
+        },
+        {
+          text: "Generated Layout",
+          link: "/templates/vue/layout",
+        },
+        {
+          text: "Frontend Workflow",
+          link: "/templates/vue/frontend-workflow",
+        },
+        {
+          text: "Backend Integration",
+          link: "/templates/vue/backend-integration",
+        },
+      ],
     },
     {
       text: "Game",
-      link: "/templates/game",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/templates/game",
+        },
+        {
+          text: "Generated Layout",
+          link: "/templates/game/layout",
+        },
+        {
+          text: "Assets and Package",
+          link: "/templates/game/assets-and-package",
+        },
+        {
+          text: "Manifest",
+          link: "/templates/game/manifest",
+        },
+      ],
     },
     {
       text: "Library",
-      link: "/templates/library",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/templates/library",
+        },
+        {
+          text: "Generated Layout",
+          link: "/templates/library/layout",
+        },
+        {
+          text: "Examples and Tests",
+          link: "/templates/library/examples-and-tests",
+        },
+        {
+          text: "CMake Package",
+          link: "/templates/library/cmake-package",
+        },
+        {
+          text: "Registry Metadata",
+          link: "/templates/library/registry-metadata",
+        },
+      ],
     },
   ],
 };

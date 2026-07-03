@@ -759,14 +759,74 @@ code span.cb-sh-comment {
   color: #6a9955 !important;
   font-style: normal !important;
 }
-.vp-doc .language-text code,
-.vp-doc .language-plain code,
-.vp-doc .language-plaintext code,
-.vp-doc .language-txt code,
-.vp-doc div.language- code {
-  color: #e6edf3 !important;
+/* ════════════════════════════════════════════════
+   Plain text / TXT blocks
+   Used for file lists, folder layout, raw output notes.
+   ════════════════════════════════════════════════ */
+.vp-doc div.language-txt,
+.vp-doc div.language-text,
+.vp-doc div.language-plain,
+.vp-doc div.language-plaintext {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.01)
+    ),
+    var(--cb-bg) !important;
+  border-color: rgba(216, 183, 106, 0.18) !important;
 }
 
+.vp-doc div.language-txt::before,
+.vp-doc div.language-text::before,
+.vp-doc div.language-plain::before,
+.vp-doc div.language-plaintext::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--vix-accent);
+  opacity: 0.75;
+}
+
+.vp-doc div.language-txt pre,
+.vp-doc div.language-text pre,
+.vp-doc div.language-plain pre,
+.vp-doc div.language-plaintext pre {
+  padding-left: 20px !important;
+}
+
+.vp-doc div.language-txt code,
+.vp-doc div.language-text code,
+.vp-doc div.language-plain code,
+.vp-doc div.language-plaintext code,
+.vp-doc div.language- code {
+  color: rgba(230, 237, 243, 0.86) !important;
+  font-weight: 500 !important;
+}
+/* Plain text mode for <CodeBlock lang="txt" /> */
+.cb.cb--text {
+  border-color: rgba(216, 183, 106, 0.2);
+}
+
+.cb.cb--text .cb-body {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.01)
+    ),
+    #0d1117;
+}
+
+.cb.cb--text .cb-pre {
+  color: rgba(248, 250, 252, 0.86);
+  font-weight: 500;
+}
+
+.cb.cb--text .cb-code {
+  color: rgba(248, 250, 252, 0.86);
+}
 /* ════════════════════════════════════════════════
    9. TABLES
    ════════════════════════════════════════════════ */
