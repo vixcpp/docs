@@ -1,1045 +1,699 @@
 # Best Practices
 
-This page gives practical recommendations for writing clean `vix.app` projects.
+A good `vix.app` file should be easy to read from the project root. It should tell another developer what the application builds, which files are part of the target, which include roots are used, which Vix modules or packages are linked, which runtime files are copied, and which internal app modules belong to the application.
 
-The main idea is simple:
+The manifest should not feel like a second programming language. It is a project description. Keep it explicit, stable, and close to the real shape of the application.
 
-```txt
-Keep vix.app small, explicit, and predictable.
+```bash id="vix-app-best-practices-workflow"
+vix build
+vix run
 ```
-
-`vix.app` is designed to describe one clear C++ target without forcing users to write a full `CMakeLists.txt`.
-
-## Use one manifest per target
-
-`vix.app` is intentionally simple.
-
-Recommended:
-
-```txt
-one vix.app = one target
-```
-
-Good structure:
-
-```txt
-myapp/
-  vix.app
-  src/
-    main.cpp
-```
-
-For tests:
-
-```txt
-myapp/
-  tests/
-    vix.app
-    test_app.cpp
-```
-
-For examples:
-
-```txt
-myapp/
-  examples/
-    basic/
-      vix.app
-      src/
-        main.cpp
-```
-
-This keeps each target easy to understand.
 
 ## Keep the manifest readable
 
-Prefer multi-line arrays for real projects.
+The best `vix.app` files are not the shortest ones. They are the ones where every field has a reason to exist.
 
-Recommended:
+```ini id="vix-app-best-practices-readable"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
-```ini
 sources = [
-  src/main.cpp,
-  src/app.cpp,
-  src/server.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
 ]
 
 include_dirs = [
-  include,
-]
-```
-
-Avoid very long inline arrays:
-
-```ini
-sources = [src/main.cpp, src/app.cpp, src/server.cpp, src/router.cpp, src/db.cpp]
-```
-
-Inline arrays are fine for very small projects:
-
-```ini
-sources = [src/main.cpp]
-```
-
-## Use a stable project layout
-
-Recommended application layout:
-
-```txt
-myapp/
-  vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
-  assets/
-    config.json
-```
-
-Recommended library layout:
-
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-  tests/
-    vix.app
-    test_math.cpp
-```
-
-Recommended examples layout:
-
-```txt
-mathlib/
-  examples/
-    basic/
-      vix.app
-      src/
-        main.cpp
-```
-
-## Keep main.cpp small
-
-For applications, avoid putting all logic in `main.cpp`.
-
-Prefer:
-
-```cpp
-#include <myapp/app.hpp>
-
-int main()
-{
-  return myapp::run();
-}
-```
-
-Then put the real logic in:
-
-```txt
-src/app.cpp
-include/myapp/app.hpp
-```
-
-This makes the project easier to test.
-
-## Use include/project_name/ for public headers
-
-Recommended:
-
-```txt
-include/
-  myapp/
-    app.hpp
-    config.hpp
-```
-
-Then include headers like this:
-
-```cpp
-#include <myapp/app.hpp>
-```
-
-Avoid this for larger projects:
-
-```txt
-include/
-  app.hpp
-```
-
-Namespaced include paths reduce collisions with other libraries.
-
-## Use src/ for implementation
-
-Recommended:
-
-```txt
-src/
-  main.cpp
-  app.cpp
-  server.cpp
-```
-
-Public headers should usually go under:
-
-```txt
-include/
-```
-
-Private implementation headers can go under:
-
-```txt
-src/
-```
-
-Example:
-
-```txt
-src/
-  detail/
-    parser.hpp
-```
-
-If your source includes private headers from `src/`, add:
-
-```ini
-include_dirs = [
-  include,
-  src,
-]
-```
-
-## Do not list headers as sources
-
-Usually, do not do this:
-
-```ini
-sources = [
-  src/main.cpp,
-  include/myapp/app.hpp,
-]
-```
-
-Prefer:
-
-```ini
-sources = [
-  src/main.cpp,
+  "include",
+  "src",
 ]
 
-include_dirs = [
-  include,
-]
-```
-
-Headers are included by the compiler through `include_dirs`.
-
-## Use clear target names
-
-The `name` field should be stable and simple.
-
-Recommended:
-
-```ini
-name = myapp
-```
-
-```ini
-name = mathlib
-```
-
-```ini
-name = my_app
-```
-
-Avoid:
-
-```ini
-name = "my app"
-```
-
-Use only simple characters:
-
-```txt
-letters
-numbers
-_
--
-```
-
-The target name is used by `vix build` and `vix run`.
-
-## Choose the correct target type
-
-Use:
-
-```ini
-type = executable
-```
-
-for applications.
-
-Use:
-
-```ini
-type = static
-```
-
-for static libraries.
-
-Use:
-
-```ini
-type = shared
-```
-
-for shared libraries.
-
-Recommended rule:
-
-```txt
-If it has main(), use executable.
-If it is reusable code, use static or shared.
-```
-
-## Prefer explicit type
-
-Even though `executable` can be the default, it is clearer to write it explicitly:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-This makes the manifest easier to read.
-
-## Use standard for the C++ version
-
-Prefer:
-
-```ini
-standard = c++20
-```
-
-or:
-
-```ini
-standard = c++23
-```
-
-For most projects, this is enough.
-
-Use `compile_features` only when you need explicit CMake compile features:
-
-```ini
-compile_features = [
-  cxx_std_20,
-]
-```
-
-## Keep compile options minimal
-
-A good starting point for GCC and Clang:
-
-```ini
-compile_options = [
-  -Wall,
-  -Wextra,
-]
-```
-
-For stricter projects:
-
-```ini
-compile_options = [
-  -Wall,
-  -Wextra,
-  -Wpedantic,
-]
-```
-
-Avoid adding too many compiler-specific flags in a project meant to be portable.
-
-## Do not put linker flags in compile_options
-
-Incorrect:
-
-```ini
-compile_options = [
-  "-Wl,--as-needed",
-]
-```
-
-Correct:
-
-```ini
-link_options = [
-  "-Wl,--as-needed",
-]
-```
-
-Use:
-
-```ini
-compile_options
-```
-
-for compiler flags.
-
-Use:
-
-```ini
-link_options
-```
-
-for linker flags.
-
-## Use packages and links together
-
-Remember the rule:
-
-```txt
-packages -> find_package(...)
-links    -> target_link_libraries(...)
-```
-
-Correct:
-
-```ini
 packages = [
-  fmt:REQUIRED,
+  "vix",
 ]
 
 links = [
-  fmt::fmt,
+  "vix::vix",
 ]
 ```
 
-Incorrect:
+A developer should be able to open this file and understand the application target without opening generated files or guessing how the project is wired.
 
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-```
+## Use a consistent field order
 
-`packages` finds the package, but it does not link the imported target automatically.
+A consistent order makes manifests easier to review. Put the identity first, then the source layout, compile behavior, packages, dependencies, links, runtime resources, and finally internal modules.
 
-## Quote package values with commas
-
-Correct:
-
-```ini
-packages = [
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-```
-
-Incorrect:
-
-```ini
-packages = [
-  Boost:COMPONENTS=system,filesystem:REQUIRED,
-]
-```
-
-Commas can split array items, so quote package values that contain commas.
-
-## Use output_dir for apps
-
-For executable projects, this is a good default:
-
-```ini
-output_dir = bin
-```
-
-Example:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-output_dir = bin
+```ini id="vix-app-best-practices-order"
+name = "app"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
-]
-```
-
-This gives a predictable output location:
-
-```txt
-build-ninja/bin/myapp
-```
-
-## Use output_dir for libraries when needed
-
-For libraries, this can be useful:
-
-```ini
-output_dir = lib
-```
-
-Example:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-output_dir = lib
-
-sources = [
-  src/add.cpp,
-]
-```
-
-Output can be placed under:
-
-```txt
-build-ninja/lib/
-```
-
-## Keep resources close to the app
-
-Recommended:
-
-```txt
-myapp/
-  assets/
-  config/
-  public/
-```
-
-Manifest:
-
-```ini
-resources = [
-  assets,
-  config,
-]
-```
-
-If you use:
-
-```ini
-output_dir = bin
-```
-
-resources are copied next to the executable under:
-
-```txt
-build-ninja/bin/
-```
-
-## Use custom resource destinations when needed
-
-Example:
-
-```ini
-resources = [
-  "data/config.json=config/config.json",
-]
-```
-
-This copies:
-
-```txt
-data/config.json
-```
-
-to:
-
-```txt
-config/config.json
-```
-
-next to the built target.
-
-## Avoid absolute paths
-
-Prefer relative paths:
-
-```ini
-sources = [
-  src/main.cpp,
 ]
 
 include_dirs = [
-  include,
-]
-
-resources = [
-  assets,
-]
-```
-
-Avoid:
-
-```ini
-sources = [
-  /home/user/project/src/main.cpp,
-]
-```
-
-Relative paths make projects easier to move, share, and build on other machines.
-
-## Quote paths with spaces
-
-If a path contains spaces, quote it:
-
-```ini
-sources = [
-  "src/with space.cpp",
-]
-```
-
-```ini
-resources = [
-  "my assets",
-]
-```
-
-Better practice: avoid spaces in source and resource paths when possible.
-
-## Keep tests separate
-
-Recommended:
-
-```txt
-myapp/
-  vix.app
-  tests/
-    vix.app
-    test_app.cpp
-```
-
-Root `vix.app`:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-`tests/vix.app`:
-
-```ini
-name = myapp_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_app.cpp,
-  ../src/app.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-```
-
-This avoids complex multi-target syntax.
-
-## Do not include main.cpp in tests
-
-Incorrect:
-
-```ini
-sources = [
-  test_app.cpp,
-  ../src/main.cpp,
-  ../src/app.cpp,
-]
-```
-
-Correct:
-
-```ini
-sources = [
-  test_app.cpp,
-  ../src/app.cpp,
-]
-```
-
-This avoids duplicate `main()` errors.
-
-## Keep examples separate
-
-Recommended:
-
-```txt
-examples/
-  hello/
-    vix.app
-    src/
-      main.cpp
-  threads/
-    vix.app
-    src/
-      main.cpp
-```
-
-Each example can be built and run independently:
-
-```bash
-cd examples/hello
-vix run
-```
-
-## Use CMakeLists.txt for complex projects
-
-Use `vix.app` for simple and medium projects.
-
-Use `CMakeLists.txt` when you need full build-system control.
-
-Examples:
-
-```txt
-- multiple targets in one project
-- generated source files
-- custom commands
-- install rules
-- CTest
-- FetchContent
-- CPM.cmake
-- custom toolchains
-- package export files
-- advanced platform-specific logic
-```
-
-Do not force complex CMake logic into `vix.app`.
-
-## Do not edit generated CMake
-
-For `vix.app` projects, Vix generates:
-
-```txt
-.vix/generated/app/CMakeLists.txt
-```
-
-Do not edit this file manually.
-
-Edit:
-
-```txt
-vix.app
-```
-
-The generated CMake file can be overwritten by Vix.
-
-## Do not commit generated files
-
-Usually, commit:
-
-```txt
-vix.app
-```
-
-Do not commit:
-
-```txt
-.vix/generated/app/CMakeLists.txt
-```
-
-Recommended `.gitignore`:
-
-```txt
-.vix/generated/
-build-dev/
-build-ninja/
-build-release/
-```
-
-## Start simple
-
-A good first `vix.app` should look like this:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-Add fields only when needed.
-
-For example, do not add `packages`, `links`, `resources`, or `output_dir` until the project actually needs them.
-
-## Recommended full app manifest
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-
-include_dirs = [
-  include,
 ]
 
 defines = [
-  MYAPP_VERSION="1.0.0",
 ]
 
 compile_options = [
-  -Wall,
-  -Wextra,
 ]
 
-resources = [
-  assets,
-  config,
-]
-```
-
-## Recommended full library manifest
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-output_dir = lib
-
-sources = [
-  src/add.cpp,
-  src/mul.cpp,
+link_options = [
 ]
 
-include_dirs = [
-  include,
+compile_features = [
 ]
 
-compile_options = [
-  -Wall,
-  -Wextra,
-]
-```
-
-## Recommended test manifest
-
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-  ../src/mul.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-
-compile_options = [
-  -Wall,
-  -Wextra,
-]
-```
-
-## Recommended package pattern
-
-```ini
 packages = [
-  Threads:REQUIRED,
-  fmt:REQUIRED,
+]
+
+deps = [
 ]
 
 links = [
-  Threads::Threads,
-  fmt::fmt,
+]
+
+resources = [
+]
+
+[module.name]
+enabled = true
+path = "modules/name"
+kind = "backend"
+depends = []
+```
+
+This order is not only cosmetic. It helps the reader move from the target identity to the files, then from the files to the things the target needs to build and run.
+
+## Prefer explicit source files
+
+List source files explicitly.
+
+```ini id="vix-app-best-practices-explicit-sources"
+sources = [
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
 ]
 ```
 
-Keep package discovery and linking explicit.
+Explicit source lists make changes visible in code review. When a new `.cpp` file becomes part of the application, the manifest records that decision.
 
-## Recommended project templates
+Headers usually do not belong in `sources`. They should be reached through `include_dirs`.
 
-### Simple app
-
-```txt
-hello/
-  vix.app
-  src/
-    main.cpp
+```ini id="vix-app-best-practices-headers"
+include_dirs = [
+  "include",
+  "src",
+]
 ```
 
-### App with logic
+This keeps the manifest focused on compilation units instead of turning it into a list of every file in the project.
 
-```txt
-myapp/
-  vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
+## Keep include roots clean
+
+An include directory should be a stable root, not a path that points too deep into the project.
+
+```ini id="vix-app-best-practices-good-include"
+include_dirs = [
+  "include",
+]
 ```
 
-### App with resources
+With this layout:
 
-```txt
-myapp/
-  vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
-  assets/
-  config/
+```txt id="vix-app-best-practices-include-layout"
+include/
+  api/
+    app/
+      AppBootstrap.hpp
 ```
 
-### Library with tests
+the code should include the header like this:
 
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-  tests/
-    vix.app
-    test_math.cpp
+```cpp id="vix-app-best-practices-include-code"
+#include <api/app/AppBootstrap.hpp>
 ```
 
-### Library with examples
+Avoid include roots that depend on one specific folder.
 
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-  examples/
-    basic/
-      vix.app
-      src/
-        main.cpp
+```ini id="vix-app-best-practices-bad-include"
+# Avoid this.
+include_dirs = [
+  "include/api/app",
+]
 ```
 
-## Build commands
+A clean include root gives the project a stable public shape and makes it easier to split code into app modules later.
 
-Common commands:
+## Keep `resources` for runtime files
 
-```bash
+Use `resources` for files the program needs when it runs.
+
+```ini id="vix-app-best-practices-resources"
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+```
+
+Do not use `resources` to fix source or header problems. Source files belong in `sources`, headers are found through `include_dirs`, and runtime files belong in `resources`.
+
+A game project shows this separation clearly.
+
+```ini id="vix-app-best-practices-game-resources"
+sources = [
+  "src/main.cpp",
+]
+
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
+]
+```
+
+The C++ program is compiled. The assets and metadata are copied beside the executable.
+
+## Use `output_dir = "bin"` for applications
+
+For executable applications, use a simple output directory.
+
+```ini id="vix-app-best-practices-output"
+output_dir = "bin"
+```
+
+This keeps the runtime layout predictable.
+
+```txt id="vix-app-best-practices-output-layout"
+bin/
+  api
+  .env
+  public/
+  views/
+  storage/
+```
+
+A backend should not require the developer to guess where the executable and runtime files are placed. A simple `bin` layout is enough for most applications.
+
+Library targets can use a different output directory when it makes the target clearer.
+
+```ini id="vix-app-best-practices-library-output"
+name = "mathkit"
+type = "static-library"
+output_dir = "lib"
+```
+
+## Link only what the code uses
+
+A manifest should not link every Vix module only because the SDK provides them. Link the targets the application actually uses.
+
+```ini id="vix-app-best-practices-links-basic"
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+A backend using ORM can add ORM.
+
+```ini id="vix-app-best-practices-links-orm"
+links = [
+  "vix::vix",
+  "vix::orm",
+]
+```
+
+A game should link the game-related targets it uses.
+
+```ini id="vix-app-best-practices-links-game"
+links = [
+  "vix::game",
+  "vix::io",
+]
+```
+
+A short, honest link list is better than a large list that hides the real dependency shape of the application.
+
+## Keep `packages`, `deps`, and `links` separate
+
+These fields have different jobs.
+
+```ini id="vix-app-best-practices-packages-deps-links"
+packages = [
+  "vix",
+]
+
+deps = [
+  "adastra/logger@1.0.0",
+]
+
+links = [
+  "vix::vix",
+  "adastra::logger",
+]
+```
+
+`packages` makes a package available. `deps` declares Vix Registry dependencies. `links` tells the target what it actually links against.
+
+Keeping those roles separate makes the manifest easier to debug when a dependency resolves correctly but the target is not linked, or when the link target exists but the package was never made available.
+
+## Use compile options carefully
+
+Most projects should not start with a large set of raw compiler and linker options. Add them when the project needs them, and keep platform-specific options guarded.
+
+```ini id="vix-app-best-practices-compile-options"
+compile_options = [
+  "$<$<CXX_COMPILER_ID:MSVC>:/W4>",
+  "$<$<CXX_COMPILER_ID:MSVC>:/permissive->",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>",
+]
+```
+
+Sanitizer options should be kept together across compile and link options.
+
+```ini id="vix-app-best-practices-sanitizers"
+compile_options = [
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address,undefined>",
+]
+
+link_options = [
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address,undefined>",
+]
+```
+
+Do not use raw options where a clearer manifest field exists. Include paths belong in `include_dirs`, libraries belong in `links`, and runtime files belong in `resources`.
+
+## Keep application modules at the bottom
+
+When a backend uses app modules, keep the main application target first and module declarations after it.
+
+```ini id="vix-app-best-practices-modules-order"
+name = "cloud"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+  "src/cloud/app/AppBootstrap.cpp",
+  "src/cloud/presentation/routes/RouteRegistry.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+This keeps the file readable. The top describes the application shell. The bottom describes internal feature areas.
+
+## Create modules for real feature areas
+
+Use app modules when a feature has its own responsibility and will grow with its own routes, services, models, storage logic, or public API.
+
+```txt id="vix-app-best-practices-module-candidates"
+auth
+projects
+builds
+packages
+logs
+registry
+deployments
+billing
+```
+
+Do not create a module for every small helper. A helper can stay in the main application or in a shared internal library. Modules are strongest when they represent real parts of the application.
+
+## Make module dependencies explicit
+
+When one module uses another module, declare the dependency.
+
+```ini id="vix-app-best-practices-module-dep"
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+The source code should use the public module API.
+
+```cpp id="vix-app-best-practices-module-include"
+#include <auth/api.hpp>
+```
+
+Avoid private cross-module includes.
+
+```cpp id="vix-app-best-practices-module-private"
+#include "../auth/src/AuthService.hpp"
+```
+
+A module’s `src/` directory is an implementation detail. Other modules should use public headers and explicit dependencies.
+
+## Keep disabled modules honest
+
+A disabled module can remain declared while a feature is being prepared.
+
+```ini id="vix-app-best-practices-disabled-module"
+[module.billing]
+enabled = false
+path = "modules/billing"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+Do not leave an enabled module depending on a disabled module. If `projects` depends on `auth`, then `auth` should be enabled for that active application configuration.
+
+```bash id="vix-app-best-practices-enable-module"
+vix modules enable auth
+vix modules check
+```
+
+The manifest should always describe a buildable application state.
+
+## Do not edit generated files
+
+When Vix uses `vix.app`, it generates internal build files under:
+
+```txt id="vix-app-best-practices-generated"
+.vix/generated/app/
+```
+
+Those files are not the project source of truth. Edit `vix.app`, then build again.
+
+```bash id="vix-app-best-practices-regenerate"
 vix build
 ```
 
-```bash
-vix run
+Generated files are allowed to change as Vix evolves. The manifest is the stable file that belongs in the project.
+
+## Keep `vix.app` focused
+
+`vix.app` should describe the application target. Project tasks, scripts, frontend commands, production metadata, and reusable shortcuts belong in `vix.json`.
+
+```json id="vix-app-best-practices-vix-json"
+{
+  "tasks": {
+    "build": "vix build",
+    "run": "vix run",
+    "test": "vix tests",
+    "check": "vix check --tests --run"
+  }
+}
 ```
 
-Release build:
+This separation keeps both files useful. `vix.app` explains what is being built. `vix.json` explains how the project is operated.
 
-```bash
-vix build --preset release
+## Use `vix::print` in Vix examples
+
+In normal Vix application documentation, prefer `vix::print` over `std::cout`.
+
+```cpp id="vix-app-best-practices-vix-print"
+#include <vix/print.hpp>
+
+int main()
+{
+  vix::print("Hello from Vix");
+  return 0;
+}
 ```
 
-Clean build:
+This keeps examples aligned with the Vix API and avoids teaching the project through unrelated standard output boilerplate. Notebook-style learning pages can still use `std::cout` when the goal is to teach familiar C++ basics.
 
-```bash
-vix build --clean
+## Keep examples minimal
+
+Documentation and project templates should show the smallest complete example that explains the idea.
+
+A minimal app does not need a large backend layout.
+
+```ini id="vix-app-best-practices-minimal-example"
+name = "hello"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
 ```
 
-Verbose build:
+A backend example can be longer because the source layout matters.
 
-```bash
-vix build -v
+```ini id="vix-app-best-practices-backend-example"
+sources = [
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
+]
 ```
 
-Raw CMake configure output:
+The example should match the page. Do not add fields only to make the manifest look more advanced.
 
-```bash
-vix build --cmake-verbose
+## Build after manifest changes
+
+A change to `vix.app` is a project configuration change. Build after editing it.
+
+```bash id="vix-app-best-practices-build-after-change"
+vix build
 ```
 
-Pass extra CMake variables:
+For module-based backends, check modules first.
 
-```bash
-vix build -- -DCMAKE_PREFIX_PATH=/path/to/prefix
+```bash id="vix-app-best-practices-module-build"
+vix modules check
+vix build
 ```
 
-## Review checklist
+This catches missing files, wrong include roots, invalid links, resource mistakes, and module dependency issues early.
 
-Before committing a `vix.app`, check:
+## Use checks before commits
 
-```txt
-1. Is name simple and stable?
-2. Is type correct?
-3. Is standard correct?
-4. Do all sources exist?
-5. Are include_dirs correct?
-6. Are packages and links both present when using imported targets?
-7. Are resources needed and correctly named?
-8. Is output_dir useful for this target?
-9. Are tests in a separate manifest?
-10. Is CMakeLists.txt absent if you expect Vix to use vix.app?
+For a small application:
+
+```bash id="vix-app-best-practices-check-app"
+vix build
+vix tests
 ```
 
-## Summary
+For a backend with app modules:
 
-Best practices:
-
-```txt
-- keep one target per vix.app
-- use src/ and include/
-- keep main.cpp small
-- use tests/vix.app for tests
-- use examples/<name>/vix.app for examples
-- keep packages and links separate
-- use output_dir = bin for apps
-- do not edit generated CMake
-- use CMakeLists.txt for advanced builds
+```bash id="vix-app-best-practices-check-backend"
+vix modules check
+vix check --tests --run
 ```
 
-`vix.app` should stay simple.
+For a library:
 
-CMake remains available when the project needs full control.
+```bash id="vix-app-best-practices-check-library"
+vix build
+```
 
-## Next steps
+A manifest change can affect more than compilation. It can change module wiring, resources, dependency resolution, and runtime layout. Run the workflow that matches the project type.
 
-Continue with:
+## Keep migration explicit
 
-- [Getting Started](./getting-started.md)
-- [Examples](./examples.md)
-- [Troubleshooting](./troubleshooting.md)
-- [CMake Fallback](./cmake-fallback.md)
+When moving an existing project to `vix.app`, make the switch clearly. If a root `CMakeLists.txt` still exists, Vix will use it first.
+
+```txt id="vix-app-best-practices-resolution"
+1. CMakeLists.txt
+2. vix.app
+```
+
+During migration, it is fine to prepare the manifest while the old build file still exists. When the manifest becomes the intended source of truth, remove or rename the old root build file and validate the project with Vix.
+
+```bash id="vix-app-best-practices-migration-check"
+vix build
+```
+
+For module-based backends:
+
+```bash id="vix-app-best-practices-migration-module-check"
+vix modules check
+vix build
+```
+
+The project should not stay forever with two competing build descriptions in the root.
+
+## Avoid machine-specific paths
+
+Keep paths relative to the project root.
+
+```ini id="vix-app-best-practices-relative-paths"
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "include",
+]
+
+resources = [
+  ".env=.env",
+]
+```
+
+Avoid absolute paths.
+
+```ini id="vix-app-best-practices-absolute-paths"
+# Avoid this.
+include_dirs = [
+  "/home/user/project/include",
+]
+```
+
+A manifest should work on another developer’s machine, in CI, and after the project is moved to another directory.
+
+## Review the manifest like code
+
+A `vix.app` change should be reviewed with the same care as source code. Ask what changed in the application shape.
+
+```txt id="vix-app-best-practices-review"
+Was a source file added?
+Was an include root changed?
+Was a new target linked?
+Was a registry dependency added?
+Was a runtime resource copied?
+Was a module enabled, disabled, or given a new dependency?
+```
+
+This makes manifest changes easier to understand and reduces hidden build problems.
+
+## A clean backend manifest
+
+A clean backend manifest is explicit without becoming noisy.
+
+```ini id="vix-app-best-practices-clean-backend"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
+
+compile_options = [
+  "$<$<CXX_COMPILER_ID:MSVC>:/W4>",
+  "$<$<CXX_COMPILER_ID:MSVC>:/permissive->",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+This file gives the reader a complete picture: one backend executable, clear source layout, stable include roots, Vix link target, runtime resources, and internal modules.
+
+## Final rule
+
+A `vix.app` file should make the project easier to understand. When a field makes the manifest clearer, keep it. When a field only copies complexity from another place, question it.
+
+The best manifest is not the one with the most options. It is the one that describes the application honestly and stays readable as the project grows.
+
+## Next step
+
+Return to the overview when you need the complete mental model of how `vix.app` fits into the Vix application workflow.
+
+[Overview](/guides/vix-app/)

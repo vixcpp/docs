@@ -1,979 +1,773 @@
-# vix.app Examples
+# Examples
 
-This page shows practical `vix.app` examples.
+This page collects complete `vix.app` examples for common Vix projects. The goal is not to show every field in every manifest, but to show the shapes that appear in real applications: a small executable, a backend, a game, a library, a project with registry dependencies, and a backend organized with app modules.
 
-Use these examples as starting points for your own projects.
+A `vix.app` file lives at the project root and is used by the normal Vix workflow.
+
+```bash id="vix-app-examples-workflow"
+vix build
+vix run
+```
+
+Use these examples as starting points, then remove what the project does not need. A good manifest should stay readable.
 
 ## Minimal executable
 
-Project layout:
+This is the smallest useful Vix application shape. It builds one executable from `src/main.cpp`, uses C++20, links the base Vix target, and places the result in `bin`.
 
-```txt
-hello/
-  vix.app
-  src/
-    main.cpp
-```
-
-`vix.app`:
-
-```ini
-name = hello
-type = executable
-standard = c++20
+```ini id="vix-app-example-minimal"
+name = "hello"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-`src/main.cpp`:
+A matching `src/main.cpp` can stay simple.
 
-```cpp
-#include <vix.hpp>
+```cpp id="vix-app-example-minimal-main"
+#include <vix/print.hpp>
 
 int main()
 {
-  vix::print("Hello from vix.app");
+  vix::print("Hello from Vix");
   return 0;
 }
 ```
 
-Build and run:
+Run it with:
 
-```bash
-vix build
+```bash id="vix-app-example-minimal-run"
 vix run
 ```
 
-## Executable with headers
+## Small app with headers
 
-Project layout:
+When the app starts to grow, keep headers in a clear include root and list implementation files explicitly in `sources`.
 
-```txt
+```txt id="vix-app-example-headers-layout"
 hello/
-  vix.app
   include/
     hello/
-      message.hpp
+      greeting.hpp
   src/
     main.cpp
-```
-
-`vix.app`:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-`include/hello/message.hpp`:
-
-```cpp
-#pragma once
-
-#include <string>
-
-namespace hello
-{
-  inline std::string message()
-  {
-    return "Hello from a header file";
-  }
-}
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <hello/message.hpp>
-
-int main()
-{
-  vix::print(hello::message());
-  return 0;
-}
-```
-
-Build and run:
-
-```bash
-vix build
-vix run
-```
-
-## Executable with multiple source files
-
-Project layout:
-
-```txt
-myapp/
+    greeting.cpp
   vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
 ```
 
-`vix.app`:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
+```ini id="vix-app-example-headers-manifest"
+name = "hello"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
-  src/app.cpp,
+  "src/main.cpp",
+  "src/greeting.cpp",
 ]
 
 include_dirs = [
-  include,
+  "include",
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-`include/myapp/app.hpp`:
+The source can include the public header through the project include root.
 
-```cpp
-#pragma once
-
-namespace myapp
-{
-  void run();
-}
-```
-
-`src/app.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <myapp/app.hpp>
-
-namespace myapp
-{
-  void run()
-  {
-    vix::print("Running myapp");
-  }
-}
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <myapp/app.hpp>
+```cpp id="vix-app-example-headers-main"
+#include <hello/greeting.hpp>
+#include <vix/print.hpp>
 
 int main()
 {
-  myapp::run();
+  vix::print(hello::greeting());
   return 0;
 }
 ```
 
-Build and run:
+## Backend application
 
-```bash
-vix build
-vix run
-```
+A backend is normally an executable target. The backend identity comes from the source layout, compile definitions, linked Vix modules, resources, and project metadata around the application.
 
-## Executable with compile definitions
+```ini id="vix-app-example-backend"
+# Vix backend application manifest
+# This file describes one executable backend target.
 
-Use `defines` to pass preprocessor definitions to the target.
-
-`vix.app`:
-
-```ini
-name = config_app
-type = executable
-standard = c++20
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
 ]
 
 defines = [
-  APP_NAME="config_app",
-  APP_VERSION="1.0.0",
-  ENABLE_LOGGING=1,
-]
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <vix.hpp>
-
-#ifndef APP_NAME
-#define APP_NAME "unknown"
-#endif
-
-#ifndef APP_VERSION
-#define APP_VERSION "0.0.0"
-#endif
-
-int main()
-{
-  vix::print(APP_NAME, APP_VERSION);
-  return 0;
-}
-```
-
-Build and run:
-
-```bash
-vix build
-vix run
-```
-
-## Executable with compiler options
-
-Use `compile_options` for compiler flags.
-
-`vix.app`:
-
-```ini
-name = warnings_app
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
 ]
 
 compile_options = [
-  -Wall,
-  -Wextra,
-  -Wpedantic,
+  "$<$<CXX_COMPILER_ID:MSVC>:/W4>",
+  "$<$<CXX_COMPILER_ID:MSVC>:/permissive->",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>",
 ]
-```
 
-`src/main.cpp`:
-
-```cpp
-#include <vix.hpp>
-
-int main()
-{
-  vix::print("Compiler options enabled");
-  return 0;
-}
-```
-
-Build:
-
-```bash
-vix build
-```
-
-Note: compiler options can be compiler-specific. GCC or Clang flags may not work with MSVC.
-
-## Executable with output directory
-
-Use `output_dir` to place the executable under a specific build output folder.
-
-`vix.app`:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
+compile_features = [
+  "cxx_std_20",
 ]
-```
 
-After building, the executable can be placed under:
+packages = [
+  "vix",
+]
 
-```txt
-build-ninja/bin/hello
-```
-
-Build and run:
-
-```bash
-vix build
-vix run
-```
-
-Manual run:
-
-```bash
-./build-ninja/bin/hello
-```
-
-## Executable with resources
-
-Use `resources` to copy files or folders next to the built target after a successful build.
-
-Project layout:
-
-```txt
-asset_app/
-  vix.app
-  src/
-    main.cpp
-  assets/
-    message.txt
-```
-
-`vix.app`:
-
-```ini
-name = asset_app
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
+links = [
+  "vix::vix",
 ]
 
 resources = [
-  assets,
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
 ]
 ```
 
-`src/main.cpp`:
+This manifest keeps the backend entry point and core wiring in the main application target. Runtime files are copied beside the executable so the backend can start from the normal Vix workflow.
 
-```cpp
-#include <vix.hpp>
-
-int main()
-{
-  vix::print("Resource files are copied next to the executable.");
-  return 0;
-}
-```
-
-Build:
-
-```bash
+```bash id="vix-app-example-backend-run"
 vix build
+vix run
 ```
 
-The `assets` directory is copied next to the built target.
+## Backend with ORM
 
-## Resource with custom destination
+When the backend uses ORM, make both parts visible: the compile-time feature definition and the linked Vix target.
 
-You can copy a resource to a custom destination using:
-
-```txt
-src=dest
-```
-
-`vix.app`:
-
-```ini
-name = config_app
-type = executable
-standard = c++20
-output_dir = bin
+```ini id="vix-app-example-backend-orm"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+  "VIX_USE_ORM=1",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+  "vix::orm",
 ]
 
 resources = [
-  "data/config.json=config/config.json",
-  "data/icon.png=icon.png",
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
 ]
 ```
 
-This copies:
+The manifest should show what the code actually uses. Do not link `vix::orm` unless the application needs it.
 
-```txt
-data/config.json
-```
+## Backend with app modules
 
-to:
+For a larger backend, keep the main application target focused on the app shell, then declare internal feature modules below the main fields.
 
-```txt
-config/config.json
-```
-
-next to the target.
-
-## Executable with Threads
-
-Use `packages` to call `find_package(...)`.
-
-Use `links` to link the imported target.
-
-`vix.app`:
-
-```ini
-name = threaded_app
-type = executable
-standard = c++20
+```ini id="vix-app-example-backend-modules"
+name = "cloud"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+  "src/cloud/app/AppBootstrap.cpp",
+  "src/cloud/support/HttpResponses.cpp",
+  "src/cloud/presentation/routes/RouteRegistry.cpp",
+  "src/cloud/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/cloud/presentation/controllers/HomeController.cpp",
+  "src/cloud/presentation/controllers/HealthController.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=cloud",
 ]
 
 packages = [
-  Threads:REQUIRED,
+  "vix",
 ]
 
 links = [
-  Threads::Threads,
+  "vix::vix",
+]
+
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+
+[module.builds]
+enabled = true
+path = "modules/builds"
+kind = "backend"
+depends = [
+  "projects",
+]
+
+[module.packages]
+enabled = true
+path = "modules/packages"
+kind = "backend"
+depends = [
+  "projects",
 ]
 ```
 
-`src/main.cpp`:
+The application still builds as one backend executable. The modules describe the internal feature structure and make dependencies visible from the project root.
 
-```cpp
-#include <vix.hpp>
+Useful commands for this shape:
 
-#include <thread>
+```bash id="vix-app-example-modules-commands"
+vix modules list
+vix modules check
+vix build
+```
+
+## Game application
+
+A Vix game project is also an executable, but it links the game runtime and copies assets beside the built target.
+
+```ini id="vix-app-example-game"
+# Vix game manifest
+# This file is read by Vix as the game application target.
+
+name = "space-demo"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::game",
+  "vix::io",
+]
+
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
+]
+```
+
+A small game entry point can use `vix::print` for output.
+
+```cpp id="vix-app-example-game-main"
+#include <vix/game/all.hpp>
+#include <vix/print.hpp>
+
+class MainScene final : public vix::game::Scene
+{
+public:
+  vix::game::GameBoolResult on_load() override
+  {
+    vix::print("Main scene loaded");
+    return vix::game::Scene::on_load();
+  }
+
+  void on_update(const vix::game::Frame &frame) override
+  {
+    vix::print("frame:", frame.index);
+
+    if (frame.index >= 5)
+    {
+      app().stop();
+    }
+  }
+};
 
 int main()
 {
-  std::thread worker([] {
-    vix::print("Hello from a thread");
-  });
+  vix::game::App app;
+  app.set_title("space-demo");
 
-  worker.join();
+  vix::game::GameRuntime runtime(app);
+
+  auto runtime_init = runtime.init();
+  if (!runtime_init)
+  {
+    vix::print("runtime init failed:", runtime_init.error().message());
+    return 1;
+  }
+
+  auto scene = app.scenes().create<MainScene>("main");
+  if (!scene)
+  {
+    vix::print("scene creation failed:", scene.error().message());
+    return 1;
+  }
+
+  auto active = app.scenes().set_active("main");
+  if (!active)
+  {
+    vix::print("scene activation failed:", active.error().message());
+    return 1;
+  }
+
+  auto result = app.run();
+  if (!result)
+  {
+    vix::print("game failed:", result.error().message());
+    return 1;
+  }
+
   return 0;
 }
 ```
 
-Build and run:
+## Vue frontend with Vix backend
 
-```bash
-vix build
-vix run
-```
+In a Vue + Vix project, `vix.app` describes the C++ backend target. Frontend commands belong in `vix.json`, while the backend can serve or proxy API routes during development.
 
-## Executable with fmt
-
-This example assumes `fmt` is available through your system or CMake package paths.
-
-`vix.app`:
-
-```ini
-name = fmt_app
-type = executable
-standard = c++20
+```ini id="vix-app-example-vue-backend"
+name = "dashboard"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
 ]
 
 packages = [
-  fmt:REQUIRED,
+  "vix",
 ]
 
 links = [
-  fmt::fmt,
+  "vix::vix",
+]
+
+resources = [
+  "frontend/dist=public",
 ]
 ```
 
-`src/main.cpp`:
+This keeps the C++ target small. The frontend remains a frontend project, and the backend manifest only declares what the C++ app needs to build and run.
 
-```cpp
-#include <fmt/core.h>
+A project task file can handle the frontend workflow separately.
 
-int main()
+```json id="vix-app-example-vue-tasks"
 {
-  fmt::print("Hello from fmt\n");
-  return 0;
+  "tasks": {
+    "frontend:install": {
+      "description": "Install Vue dependencies",
+      "command": "npm install",
+      "cwd": "frontend"
+    },
+    "frontend:dev": {
+      "description": "Start Vue dev server",
+      "command": "npm run dev",
+      "cwd": "frontend"
+    },
+    "frontend:build": {
+      "description": "Build Vue frontend",
+      "command": "npm run build",
+      "cwd": "frontend"
+    },
+    "backend:dev": {
+      "description": "Start Vix backend",
+      "command": "vix run"
+    },
+    "backend:build": {
+      "description": "Build Vix backend",
+      "command": "vix build"
+    }
+  }
 }
-```
-
-Build and run:
-
-```bash
-vix build
-vix run
-```
-
-Important:
-
-```txt
-packages only calls find_package(...).
-links links the target.
-```
-
-So this is correct:
-
-```ini
-packages = [fmt:REQUIRED]
-links = [fmt::fmt]
-```
-
-## Executable with Boost components
-
-This example assumes Boost is available to CMake.
-
-`vix.app`:
-
-```ini
-name = boost_app
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
-packages = [
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-
-links = [
-  Boost::system,
-  Boost::filesystem,
-]
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <vix.hpp>
-
-#include <boost/filesystem.hpp>
-
-int main()
-{
-  boost::filesystem::path p = ".";
-  vix::print("Current path:", p.string());
-  return 0;
-}
-```
-
-Build and run:
-
-```bash
-vix build
-vix run
 ```
 
 ## Static library
 
-Project layout:
+Use a static library target when the project produces reusable code instead of a runnable app.
 
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-```
-
-`vix.app`:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
+```ini id="vix-app-example-static-library"
+name = "mathkit"
+type = "static-library"
+standard = "c++20"
+output_dir = "lib"
 
 sources = [
-  src/add.cpp,
-  src/mul.cpp,
+  "src/add.cpp",
+  "src/multiply.cpp",
 ]
 
 include_dirs = [
-  include,
-]
-```
-
-`include/mathlib/math.hpp`:
-
-```cpp
-#pragma once
-
-namespace mathlib
-{
-  int add(int a, int b);
-  int mul(int a, int b);
-}
-```
-
-`src/add.cpp`:
-
-```cpp
-#include <mathlib/math.hpp>
-
-namespace mathlib
-{
-  int add(int a, int b)
-  {
-    return a + b;
-  }
-}
-```
-
-`src/mul.cpp`:
-
-```cpp
-#include <mathlib/math.hpp>
-
-namespace mathlib
-{
-  int mul(int a, int b)
-  {
-    return a * b;
-  }
-}
-```
-
-Build:
-
-```bash
-vix build
-```
-
-## Shared library
-
-Project layout:
-
-```txt
-plugin/
-  vix.app
-  include/
-    plugin/
-      plugin.hpp
-  src/
-    plugin.cpp
-```
-
-`vix.app`:
-
-```ini
-name = plugin
-type = shared
-standard = c++20
-
-sources = [
-  src/plugin.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-`include/plugin/plugin.hpp`:
-
-```cpp
-#pragma once
-
-namespace plugin
-{
-  const char *name();
-}
-```
-
-`src/plugin.cpp`:
-
-```cpp
-#include <plugin/plugin.hpp>
-
-namespace plugin
-{
-  const char *name()
-  {
-    return "plugin";
-  }
-}
-```
-
-Build:
-
-```bash
-vix build
-```
-
-## Library with tests
-
-For `vix.app` V1, the recommended approach is one manifest per target.
-
-Project layout:
-
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-  tests/
-    vix.app
-    test_add.cpp
-```
-
-Root `vix.app`:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
-sources = [
-  src/add.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-`tests/vix.app`:
-
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_add.cpp,
-  ../src/add.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-```
-
-`tests/test_add.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <mathlib/math.hpp>
-
-int main()
-{
-  if (mathlib::add(2, 3) != 5)
-  {
-    vix::print("test failed");
-    return 1;
-  }
-
-  vix::print("test passed");
-  return 0;
-}
-```
-
-Build and run tests:
-
-```bash
-cd tests
-vix build
-vix run
-```
-
-## Advanced executable
-
-This example shows most supported fields.
-
-`vix.app`:
-
-```ini
-name = myapp
-type = executable
-standard = c++23
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-  src/network/client.cpp,
-  src/network/server.cpp,
-  "src/with space.cpp",
-]
-
-include_dirs = [
-  include,
-  third_party/asio/include,
-]
-
-defines = [
-  MYAPP_VERSION="1.2.3",
-  MYAPP_ENABLE_LOGGING=1,
-]
-
-packages = [
-  Threads:REQUIRED,
-  fmt:REQUIRED,
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-
-links = [
-  Threads::Threads,
-  fmt::fmt,
-  Boost::system,
-  Boost::filesystem,
-  m,
-]
-
-compile_options = [
-  -Wall,
-  -Wextra,
-  -Wpedantic,
-  -O2,
-]
-
-link_options = [
-  "-Wl,--as-needed",
+  "include",
 ]
 
 compile_features = [
-  cxx_std_23,
+  "cxx_std_20",
 ]
 
-resources = [
-  assets,
-  "data/config.json=config/config.json",
-  "data/icon.png=icon.png",
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-Build and run:
+A clean layout for this project is:
 
-```bash
-vix build
-vix run
-```
-
-## Multiple applications
-
-`vix.app` currently describes one target.
-
-For multiple applications, keep one folder per target.
-
-Example:
-
-```txt
-workspace/
-  tools/
-    server/
-      vix.app
-      src/
-        main.cpp
-    client/
-      vix.app
-      src/
-        main.cpp
-```
-
-Build server:
-
-```bash
-cd tools/server
-vix build
-vix run
-```
-
-Build client:
-
-```bash
-cd tools/client
-vix build
-vix run
-```
-
-This keeps each manifest small and predictable.
-
-## CMake fallback example
-
-If your project needs custom CMake logic, use `CMakeLists.txt`.
-
-Example:
-
-```txt
-advanced-project/
-  CMakeLists.txt
-  src/
-    main.cpp
-```
-
-When both files exist:
-
-```txt
-CMakeLists.txt
-vix.app
-```
-
-Vix uses `CMakeLists.txt`.
-
-This allows you to start simple with `vix.app` and move to full CMake control later.
-
-## Recommended project structures
-
-### Application
-
-```txt
-myapp/
-  vix.app
+```txt id="vix-app-example-static-library-layout"
+mathkit/
   include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
-  assets/
-    config.json
-```
-
-### Library
-
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
+    mathkit/
       math.hpp
   src/
     add.cpp
-    mul.cpp
-  tests/
-    vix.app
-    test_math.cpp
+    multiply.cpp
+  vix.app
 ```
 
-### Example project
+Build it with:
 
-```txt
-examples/
-  hello/
-    vix.app
-    src/
-      main.cpp
-  threads/
-    vix.app
-    src/
-      main.cpp
-  resources/
-    vix.app
-    src/
-      main.cpp
-    assets/
-      config.json
+```bash id="vix-app-example-library-build"
+vix build
 ```
 
-## Next steps
+A library target is built, but it is not meant to be launched with `vix run`.
 
-Continue with:
+## Shared library
 
-- [Packages and Links](./packages-and-links.md)
-- [Tests](./tests.md)
-- [Project Types](./project-types.md)
-- [Best Practices](./best-practices.md)
+Use a shared library when the output must be loaded or distributed as a dynamic library.
+
+```ini id="vix-app-example-shared-library"
+name = "plugin"
+type = "shared-library"
+standard = "c++20"
+output_dir = "lib"
+
+sources = [
+  "src/plugin.cpp",
+]
+
+include_dirs = [
+  "include",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+A shared library should expose a stable public header surface and keep implementation details under `src/`.
+
+## Registry dependency
+
+The `deps` field declares Vix Registry dependencies. The `links` field still names the target that the application uses.
+
+```ini id="vix-app-example-registry-dep"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+deps = [
+  "adastra/logger@1.0.0",
+]
+
+links = [
+  "vix::vix",
+  "adastra::logger",
+]
+```
+
+After changing registry dependencies, resolve them before building.
+
+```bash id="vix-app-example-registry-commands"
+vix install
+vix build
+```
+
+The dependency entry says what Vix should resolve. The link entry says what the application target actually uses.
+
+## Resources with custom destinations
+
+Use `source=destination` when the runtime layout should be different from the source layout.
+
+```ini id="vix-app-example-custom-resources"
+name = "server"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
+resources = [
+  "config/dev.env=.env",
+  "frontend/dist=public",
+  "storage=storage",
+]
+```
+
+This is useful when the project keeps files in development-specific locations, but the running application expects a simpler layout beside the executable.
+
+## Development diagnostics
+
+A backend template can include warning and sanitizer options when the project needs stronger local diagnostics.
+
+```ini id="vix-app-example-sanitizers"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+  "VIX_SANITIZERS=1",
+]
+
+compile_options = [
+  "$<$<CXX_COMPILER_ID:MSVC>:/W4>",
+  "$<$<CXX_COMPILER_ID:MSVC>:/permissive->",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-g3>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-omit-frame-pointer>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-O1>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address,undefined>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-sanitize-recover=undefined>",
+]
+
+link_options = [
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-g>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address,undefined>",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+Keep diagnostic options intentional. They are useful during development, but they should not make the manifest harder to read than the project itself.
+
+## Recommended manifest order
+
+For most projects, this order is easy to review.
+
+```ini id="vix-app-example-recommended-order"
+name = "app"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+]
+
+include_dirs = [
+]
+
+defines = [
+]
+
+compile_options = [
+]
+
+link_options = [
+]
+
+compile_features = [
+]
+
+packages = [
+]
+
+deps = [
+]
+
+links = [
+]
+
+resources = [
+]
+
+[module.name]
+enabled = true
+path = "modules/name"
+kind = "backend"
+depends = []
+```
+
+The target identity comes first. Source layout follows. Compile behavior comes next. Packages, registry dependencies, links, resources, and app modules come after that.
+
+## Choosing the right example
+
+Start with the minimal executable when learning the manifest. Use the backend example for a server-style application. Use the module example when the backend has real feature areas that need boundaries. Use the game example when the program needs the game runtime and assets. Use a library example when the project produces reusable code instead of an application process.
+
+After editing an example into your project, run:
+
+```bash id="vix-app-example-final-check"
+vix build
+```
+
+For module-based backends, run:
+
+```bash id="vix-app-example-final-module-check"
+vix modules check
+vix build
+```
+
+## Next step
+
+Continue with migration from CMake to understand how an existing project can move toward a `vix.app` workflow without changing the way developers use `vix build` and `vix run`.
+
+[Migrating from CMake](/guides/vix-app/migration-from-cmake)

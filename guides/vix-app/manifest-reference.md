@@ -1,960 +1,756 @@
 # Manifest Reference
 
-This page documents every field supported by `vix.app`.
+This page documents the fields supported by `vix.app`.
 
-A `vix.app` file is a simple manifest placed at the root of a project.
+A `vix.app` file describes one application target. Vix reads it from the project root, resolves the target name, source files, include directories, linked libraries, registry dependencies, runtime resources, and optional internal modules, then builds the application through the normal Vix workflow.
 
-Example:
+```bash id="exsj9d"
+vix build
+vix run
+```
 
-```ini
-name = hello
-type = executable
-standard = c++20
+The manifest is intentionally readable. It is not meant to become a large build script. It should describe the shape of the application clearly enough that another developer can open the project root and understand what is being built.
+
+## Basic shape
+
+A minimal manifest contains a name and source files.
+
+```ini id="c2o4n4"
+name = "hello"
 
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+]
+```
+
+Most real applications also declare the target type, C++ standard, include directories, Vix package, linked targets, and output directory.
+
+```ini id="npbwgh"
+name = "hello"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
 ]
 
 include_dirs = [
-  include,
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-## File format
+Paths are interpreted relative to the project root. The generated build files are managed by Vix under `.vix/generated/app/`, but the source of truth remains `vix.app`.
 
-`vix.app` uses a simple key-value format.
+## Comments
 
-Supported forms:
+Comments start with `#`.
 
-```ini
-key = value
+```ini id="hvpjdl"
+# Vix application manifest
+name = "hello"
 ```
 
-```ini
-key = [value1, value2, value3]
+Use comments for context that helps future readers. Avoid turning the manifest into long prose; the documentation belongs in the project README or docs.
+
+## `name`
+
+`name` defines the application or target name.
+
+```ini id="w9td1k"
+name = "api"
 ```
 
-```ini
-key = [
-  value1,
-  value2,
-  value3,
-]
+This field is required. Vix uses it as the target name when generating the application build input. Keep it stable, because other generated files, tasks, and production configuration may refer to the same name.
+
+## `type`
+
+`type` describes the C++ target shape.
+
+```ini id="cyu70b"
+type = "executable"
 ```
 
-Comments are supported with `#`:
+Supported values include:
 
-```ini
-# This is a comment
-name = hello # inline comment
+```txt id="apopad"
+executable
+static
+static-library
+shared
+shared-library
+library
 ```
 
-Values can be quoted when needed:
+Use `executable` for applications, backends, games, command-line tools, and anything that should run with `vix run`.
 
-```ini
+```ini id="otf8ce"
+type = "executable"
+```
+
+Use `static-library` when the project produces reusable code that should be linked into another target.
+
+```ini id="pplfwd"
+type = "static-library"
+```
+
+Use `shared-library` when the output must be a dynamic library.
+
+```ini id="xw0w4x"
+type = "shared-library"
+```
+
+For clarity, prefer the full names `static-library` and `shared-library` instead of the shorter aliases.
+
+## `standard`
+
+`standard` selects the C++ standard used by the target.
+
+```ini id="krcn6m"
+standard = "c++20"
+```
+
+Common values are:
+
+```txt id="fqsjnj"
+c++11
+c++14
+c++17
+c++20
+c++23
+c++26
+```
+
+When omitted, Vix uses `c++20`. Generated Vix applications use `c++20` unless the template has a reason to choose a different standard.
+
+## `sources`
+
+`sources` lists the C++ source files that belong to the target.
+
+```ini id="bssvwy"
 sources = [
-  "src/with space.cpp",
+  "src/main.cpp",
+  "src/app/AppBootstrap.cpp",
+  "src/presentation/routes/RouteRegistry.cpp",
 ]
 ```
 
-Use quotes when a value contains spaces, commas, or special characters.
+This field is required for a normal application target. Every path is relative to the project root.
 
-## Resolution rule
+A small project may only need one source file:
 
-Vix resolves project files in this order:
-
-```txt
-1. CMakeLists.txt
-2. vix.app
-```
-
-If `CMakeLists.txt` exists, Vix uses it directly.
-
-If no `CMakeLists.txt` exists but `vix.app` exists, Vix uses `vix.app`.
-
-## Supported fields
-
-| Field | Required | Description |
-| --- | --- | --- |
-| `name` | Yes | Target name |
-| `type` | No | Target type |
-| `standard` | No | C++ standard |
-| `sources` | Yes | Source files |
-| `include_dirs` | No | Include directories |
-| `defines` | No | Preprocessor definitions |
-| `links` | No | Libraries or CMake targets to link |
-| `compile_options` | No | Compiler flags |
-| `link_options` | No | Linker flags |
-| `compile_features` | No | CMake compile features |
-| `packages` | No | Packages passed to `find_package(...)` |
-| `resources` | No | Files or directories copied after build |
-| `output_dir` | No | Output directory inside the build tree |
-
-## name
-
-Required.
-
-The `name` field defines the target name.
-
-```ini
-name = hello
-```
-
-Vix uses this name as the default build target.
-
-For example:
-
-```ini
-name = hello
-type = executable
-```
-
-generates a target named `hello`.
-
-This name is also used by `vix run` to find the executable after building.
-
-Recommended rules:
-
-```txt
-- Use letters, numbers, `_`, or `-`
-- Avoid spaces
-- Keep the name short and stable
-```
-
-Good examples:
-
-```ini
-name = hello
-```
-
-```ini
-name = mathlib
-```
-
-```ini
-name = softadastra_server
-```
-
-Avoid:
-
-```ini
-name = "my app"
-```
-
-## type
-
-Optional.
-
-Default:
-
-```ini
-type = executable
-```
-
-The `type` field defines what kind of target Vix should generate.
-
-Supported values:
-
-```ini
-type = executable
-```
-
-```ini
-type = static
-```
-
-```ini
-type = static-library
-```
-
-```ini
-type = shared
-```
-
-```ini
-type = shared-library
-```
-
-```ini
-type = library
-```
-
-### executable
-
-Creates an executable application.
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
+```ini id="j7m0zu"
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
 ]
 ```
 
-### static
+A backend project usually grows into several source files:
 
-Creates a static library.
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
+```ini id="euwav9"
 sources = [
-  src/add.cpp,
-  src/mul.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
 ]
 ```
 
-### shared
+Keep this list explicit. It makes the application target easy to inspect and avoids hiding important files behind implicit rules.
 
-Creates a shared library.
+## `include_dirs`
 
-```ini
-name = plugin
-type = shared
-standard = c++20
+`include_dirs` declares include roots for the target.
 
-sources = [
-  src/plugin.cpp,
-]
-```
-
-### library
-
-Creates a library target using the default library behavior supported by Vix.
-
-```ini
-name = core
-type = library
-standard = c++20
-
-sources = [
-  src/core.cpp,
-]
-```
-
-## standard
-
-Optional.
-
-Default:
-
-```ini
-standard = c++20
-```
-
-The `standard` field defines the C++ language standard.
-
-Supported values:
-
-```ini
-standard = c++17
-```
-
-```ini
-standard = c++20
-```
-
-```ini
-standard = c++23
-```
-
-Example:
-
-```ini
-name = hello
-type = executable
-standard = c++23
-
-sources = [
-  src/main.cpp,
-]
-```
-
-This sets the generated CMake target to use the selected C++ standard.
-
-## sources
-
-Required.
-
-The `sources` field lists the source files used by the target.
-
-```ini
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-```
-
-Source paths are relative to the directory containing `vix.app`.
-
-Example layout:
-
-```txt
-myapp/
-  vix.app
-  src/
-    main.cpp
-    app.cpp
-```
-
-Manifest:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-```
-
-Inline array syntax is also supported:
-
-```ini
-sources = [src/main.cpp, src/app.cpp]
-```
-
-If a path contains spaces, quote it:
-
-```ini
-sources = [
-  "src/my file.cpp",
-]
-```
-
-If a source file does not exist, Vix reports an error before generating the CMake project.
-
-## include_dirs
-
-Optional.
-
-The `include_dirs` field lists include directories.
-
-```ini
+```ini id="la5fqk"
 include_dirs = [
-  include,
-  third_party/asio/include,
+  "include",
+  "src",
 ]
 ```
 
-Example layout:
+Use `include` for public headers and `src` when application-internal headers are organized inside the source tree.
 
-```txt
-myapp/
-  vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
+```cpp id="ch9oru"
+#include <api/app/AppBootstrap.hpp>
 ```
 
-Manifest:
+The include path should match the way the code is written. A clean include layout makes the project easier to move, test, and split into modules later.
 
-```ini
-name = myapp
-type = executable
-standard = c++20
+## `defines`
 
-sources = [
-  src/main.cpp,
-]
+`defines` adds preprocessor definitions to the target.
 
-include_dirs = [
-  include,
-]
-```
-
-C++ usage:
-
-```cpp
-#include <myapp/app.hpp>
-```
-
-Include paths are relative to the directory containing `vix.app`.
-
-## defines
-
-Optional.
-
-The `defines` field adds preprocessor definitions.
-
-```ini
+```ini id="urxe68"
 defines = [
-  MYAPP_VERSION="1.0.0",
-  MYAPP_ENABLE_LOGGING=1,
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
 ]
 ```
 
-Example:
+Definitions can be used by generated templates, feature switches, or application-specific compile-time configuration.
 
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
+```ini id="i0fltu"
 defines = [
-  MYAPP_VERSION="1.0.0",
-  MYAPP_DEBUG=1,
+  "VIX_USE_ORM=1",
+  "VIX_SANITIZERS=1",
 ]
 ```
 
-C++ usage:
+Keep definitions meaningful. A manifest with too many compile-time switches becomes hard to understand, especially when the same behavior could be controlled through runtime configuration.
 
-```cpp
-#ifndef MYAPP_VERSION
-#define MYAPP_VERSION "unknown"
-#endif
-```
+## `packages`
 
-Definitions are passed to the generated target.
+`packages` declares external packages that should be made available to the application build.
 
-## links
-
-Optional.
-
-The `links` field lists libraries or CMake targets to link.
-
-```ini
-links = [
-  Threads::Threads,
-  fmt::fmt,
-  m,
-]
-```
-
-Use `links` for:
-
-```txt
-- CMake imported targets
-- system libraries
-- local library targets
-- simple linker library names
-```
-
-Example:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
+```ini id="br9xu3"
 packages = [
-  Threads:REQUIRED,
+  "vix",
 ]
+```
 
+For most Vix applications, the package list starts with `vix`. The application then selects the exact targets it needs through `links`.
+
+Package entries can also include requirement and component information.
+
+```ini id="kew7a3"
+packages = [
+  "vix",
+  "OpenSSL:REQUIRED",
+  "Qt6:COMPONENTS=Widgets,Network:REQUIRED",
+]
+```
+
+The component and required markers are interpreted from the package string. Whitespace around component names is trimmed.
+
+## `links`
+
+`links` declares the targets or libraries linked into the application.
+
+```ini id="gxuole"
 links = [
-  Threads::Threads,
+  "vix::vix",
 ]
 ```
 
-Important:
+This is different from `packages`. A package makes something available; `links` says what the target actually uses.
 
-```txt
-packages finds packages.
-links links targets or libraries.
+A basic Vix application often links:
+
+```ini id="pbkpk2"
+links = [
+  "vix::vix",
+]
 ```
 
-`packages` does not link automatically.
+A backend using ORM may link:
 
-## compile_options
+```ini id="u6ohp4"
+links = [
+  "vix::vix",
+  "vix::orm",
+]
+```
 
-Optional.
+A game project may link:
 
-The `compile_options` field adds compiler options to the target.
+```ini id="pixb1y"
+links = [
+  "vix::game",
+  "vix::io",
+]
+```
 
-```ini
+The list should stay honest. Link the modules the application uses, not every module that exists in the SDK.
+
+## `deps`
+
+`deps` declares dependencies from the Vix Registry.
+
+```ini id="r3mxya"
+deps = [
+  "adastra/logger",
+  "tools/json@1.2.0",
+]
+```
+
+Accepted registry dependency shapes are:
+
+```txt id="s97b95"
+namespace/name
+namespace/name@version
+@namespace/name
+@namespace/name@version
+```
+
+When Vix sees registry dependencies in `vix.app`, it syncs them into the project dependency state and resolves the lockfile. This lets the application manifest remain the place where the app shape is described while still keeping the normal Vix dependency workflow.
+
+After changing registry dependencies, run:
+
+```bash id="wxia0j"
+vix install
+vix build
+```
+
+## `compile_options`
+
+`compile_options` forwards raw compiler options to the target.
+
+```ini id="yat9qx"
 compile_options = [
-  -Wall,
-  -Wextra,
-  -Wpedantic,
+  "$<$<CXX_COMPILER_ID:MSVC>:/W4>",
+  "$<$<CXX_COMPILER_ID:MSVC>:/permissive->",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>",
 ]
 ```
 
-Example:
+Generated backend templates use this field for warning levels and optional sanitizer flags.
 
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
+```ini id="nlwpe7"
 compile_options = [
-  -Wall,
-  -Wextra,
-  -Wpedantic,
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-g3>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-omit-frame-pointer>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address,undefined>",
 ]
 ```
 
-You can also write:
+Use this field carefully. It is powerful because it reaches the compiler directly, but that also means it can make the project less portable when used without conditions.
 
-```ini
-compile_options = [-Wall, -Wextra, -Wpedantic]
-```
+## `link_options`
 
-Compiler options can be platform-specific.
+`link_options` forwards raw linker options to the target.
 
-For example, GCC or Clang options may not work with MSVC.
-
-## link_options
-
-Optional.
-
-The `link_options` field adds linker options to the target.
-
-```ini
+```ini id="izqwsl"
 link_options = [
-  "-Wl,--as-needed",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address,undefined>",
 ]
 ```
 
-Quote values that contain commas:
+Static runtime options can also be represented here:
 
-```ini
+```ini id="yvqu1y"
 link_options = [
-  "-Wl,--as-needed",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-static-libstdc++>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-static-libgcc>",
 ]
 ```
 
-Example:
+Most applications do not need custom link options at the beginning. Add them only when the project has a clear reason.
 
-```ini
-name = hello
-type = executable
-standard = c++20
+## `compile_features`
 
-sources = [
-  src/main.cpp,
-]
+`compile_features` declares target compile features.
 
-link_options = [
-  "-Wl,--as-needed",
-]
-```
-
-Linker options are toolchain-specific.
-
-## compile_features
-
-Optional.
-
-The `compile_features` field adds CMake compile features to the target.
-
-```ini
+```ini id="hgqni4"
 compile_features = [
-  cxx_std_20,
+  "cxx_std_20",
 ]
 ```
 
-Example:
+This is useful when the project wants to be explicit about the language feature level used by the target. In many Vix app manifests, `standard = "c++20"` is enough, but generated templates may also include `compile_features` for clarity.
 
-```ini
-name = hello
-type = executable
-standard = c++20
+## `resources`
+
+`resources` copies runtime files next to the built target.
+
+```ini id="fsk6nl"
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+```
+
+Each entry accepts one of two forms:
+
+```txt id="rkkgzx"
+source
+source=destination
+```
+
+When only `source` is provided, Vix copies it using the source basename. When `source=destination` is provided, Vix copies the source into the given destination path beside the built target.
+
+For a game project:
+
+```ini id="vc5p7o"
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
+]
+```
+
+For a backend project:
+
+```ini id="re5vty"
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+```
+
+Resources are for files the program needs at runtime. Source files and headers should stay in `sources` and `include_dirs`.
+
+## `output_dir`
+
+`output_dir` controls where the target output is placed inside the build tree.
+
+```ini id="zg0bm6"
+output_dir = "bin"
+```
+
+Generated Vix applications usually use `bin`. This keeps the executable and copied resources together in a predictable runtime location.
+
+```txt id="btvgtv"
+bin/
+  api
+  .env
+  public/
+  views/
+  storage/
+```
+
+Use a simple output directory name. A deeply nested output path makes local development harder without adding much value.
+
+## `modules`
+
+`modules` is the older compact list of internal application modules.
+
+```ini id="mj8fqx"
+modules = [
+  "auth",
+  "projects",
+]
+```
+
+Each entry maps to an internal application module target using the current application name as the prefix. For new Vix application modules, prefer full `[module.<name>]` sections because they carry the enabled state, path, kind, and internal dependencies in one place.
+
+## `[module.<name>]`
+
+Application modules are declared with section headers.
+
+```ini id="nxu1rd"
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+```
+
+The section name is the stable module name. In this example, the module is `auth`.
+
+```ini id="b6yo8i"
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+Application modules are especially useful in backend projects where features such as authentication, projects, builds, packages, logs, registry, or deployments need to grow independently without turning the backend into one large source folder.
+
+## `module.<name>.enabled`
+
+`enabled` controls whether the module is wired into the application.
+
+```ini id="p56rs3"
+[module.auth]
+enabled = true
+```
+
+A disabled module remains declared, but it is not linked into the generated application target.
+
+```ini id="jvm9pz"
+[module.billing]
+enabled = false
+path = "modules/billing"
+kind = "backend"
+```
+
+This is useful when a module exists in the project but should not participate in the current build.
+
+## `module.<name>.path`
+
+`path` points to the module directory relative to the project root.
+
+```ini id="l5iipk"
+[module.auth]
+path = "modules/auth"
+```
+
+When omitted, the default path follows the module name:
+
+```txt id="t5rnix"
+modules/<name>
+```
+
+A module named `auth` therefore defaults to:
+
+```txt id="d1kfau"
+modules/auth
+```
+
+## `module.<name>.kind`
+
+`kind` describes the module role.
+
+```ini id="ei2sju"
+[module.auth]
+kind = "backend"
+```
+
+Common values are:
+
+```txt id="d9nedf"
+backend
+library
+frontend
+```
+
+Backend modules can be used by Vix to generate backend module registration code. Library modules are useful for reusable internal code. Frontend is reserved for project structures that need to describe frontend-facing modules from the same manifest.
+
+## `module.<name>.depends`
+
+`depends` declares internal module dependencies by module name.
+
+```ini id="lfz8lv"
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+This tells Vix that `projects` depends on `auth`. Dependencies should be explicit. When a module uses another module’s public API, the relationship belongs in the manifest instead of being hidden in source files.
+
+A module with no internal dependencies can use an empty list:
+
+```ini id="cyw254"
+depends = []
+```
+
+## Complete backend example
+
+```ini id="a0mv1z"
+# Vix backend application manifest
+# This file describes one executable backend target.
+
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
-]
-
-compile_features = [
-  cxx_std_20,
-]
-```
-
-Common values:
-
-```txt
-cxx_std_17
-cxx_std_20
-cxx_std_23
-```
-
-In most projects, `standard` is enough.
-
-Use `compile_features` when you need explicit CMake feature declarations.
-
-## packages
-
-Optional.
-
-The `packages` field generates `find_package(...)` calls in the internal CMake project.
-
-```ini
-packages = [
-  Threads:REQUIRED,
-  fmt:REQUIRED,
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-```
-
-Supported forms:
-
-```txt
-<name>
-<name>:REQUIRED
-<name>:COMPONENTS=a,b
-<name>:COMPONENTS=a,b:REQUIRED
-```
-
-Examples:
-
-```ini
-packages = [
-  Threads,
-]
-```
-
-```ini
-packages = [
-  Threads:REQUIRED,
-]
-```
-
-```ini
-packages = [
-  "Boost:COMPONENTS=system,filesystem",
-]
-```
-
-```ini
-packages = [
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-```
-
-Important:
-
-```txt
-packages only calls find_package(...).
-It does not link the imported targets automatically.
-```
-
-You must link imported targets through `links`.
-
-Correct:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-
-links = [
-  fmt::fmt,
-]
-```
-
-Incorrect:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-```
-
-The incorrect example finds `fmt`, but does not link `fmt::fmt`.
-
-## resources
-
-Optional.
-
-The `resources` field copies files or directories next to the built target after a successful build.
-
-```ini
-resources = [
-  assets,
-  "data/config.json=config/config.json",
-]
-```
-
-Supported forms:
-
-```txt
-<src>
-<src>=<dest>
-```
-
-### Copy with basename
-
-```ini
-resources = [
-  assets,
-]
-```
-
-This copies `assets` next to the built target.
-
-### Copy with custom destination
-
-```ini
-resources = [
-  "data/config.json=config/config.json",
-]
-```
-
-This copies:
-
-```txt
-data/config.json
-```
-
-to:
-
-```txt
-config/config.json
-```
-
-next to the built target.
-
-Common use cases:
-
-```txt
-- assets
-- config files
-- templates
-- public files
-- development certificates
-```
-
-## output_dir
-
-Optional.
-
-The `output_dir` field controls where the built target is placed inside the build tree.
-
-```ini
-output_dir = bin
-```
-
-Example:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-]
-```
-
-After building, the executable can be placed under:
-
-```txt
-build-ninja/bin/hello
-```
-
-If `output_dir` is relative, Vix resolves it relative to the CMake build directory.
-
-For example:
-
-```ini
-output_dir = bin
-```
-
-means:
-
-```txt
-${CMAKE_BINARY_DIR}/bin
-```
-
-## Complete example
-
-```ini
-name = myapp
-type = executable
-standard = c++23
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-  src/network/client.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
 ]
 
 include_dirs = [
-  include,
-  third_party/asio/include,
+  "include",
+  "src",
 ]
 
 defines = [
-  MYAPP_VERSION="1.2.3",
-  MYAPP_ENABLE_LOGGING=1,
-]
-
-packages = [
-  Threads:REQUIRED,
-  fmt:REQUIRED,
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-
-links = [
-  Threads::Threads,
-  fmt::fmt,
-  Boost::system,
-  Boost::filesystem,
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
 ]
 
 compile_options = [
-  -Wall,
-  -Wextra,
-  -Wpedantic,
-]
-
-link_options = [
-  "-Wl,--as-needed",
+  "$<$<CXX_COMPILER_ID:MSVC>:/W4>",
+  "$<$<CXX_COMPILER_ID:MSVC>:/permissive->",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>",
 ]
 
 compile_features = [
-  cxx_std_23,
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 
 resources = [
-  assets,
-  "data/config.json=config/config.json",
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
 ]
 ```
 
-## Minimal example
+This manifest describes one backend executable, links the base Vix target, copies runtime resources, and declares two internal backend modules.
 
-```ini
-name = hello
-type = executable
-standard = c++20
+## Complete game example
 
-sources = [
-  src/main.cpp,
-]
-```
+```ini id="twk9d4"
+# Vix game manifest
 
-## Static library example
-
-```ini
-name = mathlib
-type = static
-standard = c++17
+name = "space-demo"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/add.cpp,
-  src/mul.cpp,
+  "src/main.cpp",
 ]
 
 include_dirs = [
-  include,
+  "src",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::game",
+  "vix::io",
+]
+
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
 ]
 ```
 
-## Shared library example
+The manifest stays small because the game target only needs one source file, the game modules, and runtime assets.
 
-```ini
-name = plugin
-type = shared
-standard = c++20
+## Field summary
+
+| Field              |    Type | Purpose                                                     |
+| ------------------ | ------: | ----------------------------------------------------------- |
+| `name`             |  string | Application or target name                                  |
+| `type`             |  string | Target shape: executable, static library, or shared library |
+| `standard`         |  string | C++ standard, such as `c++20`                               |
+| `sources`          |   array | Source files relative to the project root                   |
+| `include_dirs`     |   array | Include directories relative to the project root            |
+| `defines`          |   array | Preprocessor definitions                                    |
+| `packages`         |   array | Packages made available to the target                       |
+| `deps`             |   array | Vix Registry dependencies                                   |
+| `links`            |   array | Targets or libraries linked into the application            |
+| `compile_options`  |   array | Raw compiler options                                        |
+| `link_options`     |   array | Raw linker options                                          |
+| `compile_features` |   array | Compile feature entries                                     |
+| `resources`        |   array | Runtime files copied beside the built target                |
+| `output_dir`       |  string | Output directory inside the build tree                      |
+| `modules`          |   array | Compact internal module list                                |
+| `[module.<name>]`  | section | Full internal application module definition                 |
+
+## Recommended order
+
+Keep manifests in a predictable order. It makes diffs easier to review and helps readers understand the target from top to bottom.
+
+```ini id="iyok4r"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/plugin.cpp,
 ]
 
 include_dirs = [
-  include,
 ]
-```
 
-## Common mistakes
-
-### Missing sources
-
-Incorrect:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-```
-
-Correct:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
+defines = [
 ]
-```
 
-### Package found but target not linked
-
-`packages` only calls `find_package(...)`.
-
-You still need to link the imported target:
-
-```ini
-packages = [fmt:REQUIRED]
-links = [fmt::fmt]
-```
-
-### Source path is wrong
-
-Incorrect:
-
-```ini
-sources = [
-  main.cpp,
+compile_options = [
 ]
-```
 
-when your file is actually here:
-
-```txt
-src/main.cpp
-```
-
-Correct:
-
-```ini
-sources = [
-  src/main.cpp,
+link_options = [
 ]
+
+compile_features = [
+]
+
+packages = [
+]
+
+deps = [
+]
+
+links = [
+]
+
+resources = [
+]
+
+[module.name]
+enabled = true
+path = "modules/name"
+kind = "backend"
+depends = []
 ```
 
-### CMakeLists.txt exists
+The exact order is not the most important part of the file, but consistency matters. Put identity first, then source layout, then compile behavior, then packages and links, then runtime resources, then internal modules.
 
-If your project has both:
+## Validation
 
-```txt
-CMakeLists.txt
-vix.app
+A manifest must at least describe a valid target name and source list. Invalid URLs, missing files, unsupported target types, or malformed registry dependencies will stop the Vix command with an error.
+
+The fastest way to validate the manifest is to run:
+
+```bash id="ulb654"
+vix build
 ```
 
-Vix uses `CMakeLists.txt`.
+For projects using internal modules, also run:
 
-To use `vix.app`, remove or rename `CMakeLists.txt`.
+```bash id="g5hny1"
+vix modules check
+```
 
-## Next steps
+This catches module structure and dependency issues before they turn into harder-to-read build errors.
 
-Continue with:
+## Next step
 
-- [Examples](./examples.md)
-- [Packages and Links](./packages-and-links.md)
-- [Sources and Includes](./sources-and-includes.md)
-- [Troubleshooting](./troubleshooting.md)
+Continue with packages and links to understand how Vix packages, registry dependencies, and linked targets work together.
+
+[Packages and Links](/guides/vix-app/packages-and-links)

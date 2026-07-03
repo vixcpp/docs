@@ -1,718 +1,301 @@
 # Output Directory
 
-`vix.app` supports `output_dir` to control where the built target is placed inside the build tree.
+`output_dir` controls where Vix places the target output inside the build output. In most application projects, this field is set to `bin` so the executable and its runtime files live in one predictable directory.
 
-This is useful when you want a predictable output layout such as:
-
-```txt
-build-ninja/bin/myapp
+```ini id="vix-app-output-basic"
+output_dir = "bin"
 ```
+
+This is a small field, but it matters for daily development. When a backend reads `.env`, serves files from `public`, loads views, or a game loads assets, the program should find those files next to the built target without requiring the developer to guess where the runtime directory is.
 
 ## Basic usage
 
-```ini
-name = hello
-type = executable
-standard = c++20
-output_dir = bin
+A typical application manifest places the executable in `bin`.
+
+```ini id="vix-app-output-minimal"
+name = "hello"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
-]
-```
-
-Build:
-
-```bash
-vix build
-```
-
-The executable can be placed under:
-
-```txt
-build-ninja/bin/hello
-```
-
-Run:
-
-```bash
-vix run
-```
-
-## What output_dir means
-
-`output_dir` is relative to the CMake build directory.
-
-Example:
-
-```ini
-output_dir = bin
-```
-
-means:
-
-```txt
-${CMAKE_BINARY_DIR}/bin
-```
-
-So with the default Vix build directory:
-
-```txt
-build-ninja/
-```
-
-the final output becomes:
-
-```txt
-build-ninja/bin/
-```
-
-## Default output location
-
-If you do not set `output_dir`, the output location depends on the generated CMake project and the selected build system.
-
-Example without `output_dir`:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-The executable may be produced under:
-
-```txt
-build-ninja/hello
-```
-
-or another CMake-managed location depending on the target type and generator.
-
-For predictable output, use:
-
-```ini
-output_dir = bin
-```
-
-## Recommended app layout
-
-Project:
-
-```txt
-hello/
-  vix.app
-  src/
-    main.cpp
-```
-
-`vix.app`:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-]
-```
-
-After build:
-
-```txt
-hello/
-  build-ninja/
-    bin/
-      hello
-```
-
-## output_dir with resources
-
-`resources` are copied next to the built target.
-
-So if you use:
-
-```ini
-output_dir = bin
-```
-
-and:
-
-```ini
-resources = [
-  assets,
-]
-```
-
-the output can look like this:
-
-```txt
-build-ninja/
-  bin/
-    myapp
-    assets/
-```
-
-Complete example:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-]
-
-resources = [
-  assets,
-]
-```
-
-## Example with config files
-
-Project layout:
-
-```txt
-config_app/
-  vix.app
-  src/
-    main.cpp
-  config/
-    app.json
-```
-
-`vix.app`:
-
-```ini
-name = config_app
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-]
-
-resources = [
-  config,
-]
-```
-
-After build:
-
-```txt
-build-ninja/
-  bin/
-    config_app
-    config/
-      app.json
-```
-
-## Running manually
-
-If you want to run the executable manually:
-
-```bash
-./build-ninja/bin/config_app
-```
-
-If your program reads files using relative paths, remember that the current working directory matters.
-
-For example:
-
-```cpp
-std::ifstream file("config/app.json");
-```
-
-will look for `config/app.json` relative to the process working directory, not always relative to the executable file.
-
-## vix run and output_dir
-
-`vix run` tries to resolve the built executable automatically.
-
-For a manifest like this:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-]
-```
-
-`vix run` can find common executable locations such as:
-
-```txt
-build-ninja/myapp
-build-ninja/bin/myapp
-build-ninja/src/myapp
-```
-
-So you can usually run:
-
-```bash
-vix run
-```
-
-without manually typing the executable path.
-
-## output_dir for static libraries
-
-You can also use `output_dir` with static libraries.
-
-Example:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-output_dir = lib
-
-sources = [
-  src/add.cpp,
-  src/mul.cpp,
+  "src/main.cpp",
 ]
 
 include_dirs = [
-  include,
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-The static library output can be placed under:
+After building, Vix keeps the target output under the build area and uses the configured output directory for the application target. The exact build root depends on the active Vix build configuration, but the runtime directory remains stable from the manifest point of view.
 
-```txt
-build-ninja/lib/
+```txt id="vix-app-output-layout"
+bin/
+  hello
 ```
 
-## output_dir for shared libraries
+## Why generated apps use `bin`
 
-For shared libraries:
+Generated Vix applications use `bin` because it is simple and familiar. A developer can build the project, look for the runtime output, and understand immediately where the executable is expected to live.
 
-```ini
-name = plugin
-type = shared
-standard = c++20
-output_dir = lib
+```ini id="vix-app-output-generated"
+output_dir = "bin"
+```
+
+For an application, this is usually enough. The manifest does not need a complicated output structure unless the project has a clear reason for it.
+
+## Output directory and resources
+
+`output_dir` works together with `resources`. The output directory decides where the target is placed, and resources are copied beside that target.
+
+```ini id="vix-app-output-with-resources"
+output_dir = "bin"
+
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+```
+
+A backend runtime layout may look like this:
+
+```txt id="vix-app-output-backend-layout"
+bin/
+  api
+  .env
+  public/
+  views/
+  storage/
+```
+
+This keeps the backend runtime close to the executable. The application can start from the normal Vix workflow and still find its environment file, static files, templates, and storage directory.
+
+## Backend example
+
+A backend manifest normally uses `output_dir = "bin"`.
+
+```ini id="vix-app-output-backend-example"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/plugin.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
 ]
 
 include_dirs = [
-  include,
-]
-```
-
-The shared library output can be placed under:
-
-```txt
-build-ninja/lib/
-```
-
-Depending on the platform, the final file may look like:
-
-```txt
-libplugin.so
-```
-
-```txt
-libplugin.dylib
-```
-
-```txt
-plugin.dll
-```
-
-## Multiple presets
-
-Vix uses different build directories depending on the preset.
-
-Default development build:
-
-```bash
-vix build
-```
-
-usually uses:
-
-```txt
-build-ninja/
-```
-
-Release build:
-
-```bash
-vix build --preset release
-```
-
-uses:
-
-```txt
-build-release/
-```
-
-So with:
-
-```ini
-output_dir = bin
-```
-
-you can get:
-
-```txt
-build-ninja/bin/myapp
-```
-
-and:
-
-```txt
-build-release/bin/myapp
-```
-
-## output_dir is not an install directory
-
-`output_dir` controls where the target is placed inside the build directory.
-
-It is not the same as an install prefix.
-
-This:
-
-```ini
-output_dir = bin
-```
-
-does not install your application globally.
-
-It only affects the build output layout.
-
-For advanced install rules, use a normal `CMakeLists.txt`.
-
-## Avoid absolute output paths
-
-Prefer relative paths:
-
-```ini
-output_dir = bin
-```
-
-Avoid absolute paths:
-
-```ini
-output_dir = /usr/local/bin
-```
-
-`vix.app` is designed for local project builds.
-
-Use install tools or CMake install rules when you need system-wide installation.
-
-## Recommended values
-
-For applications:
-
-```ini
-output_dir = bin
-```
-
-For libraries:
-
-```ini
-output_dir = lib
-```
-
-For tests:
-
-```ini
-output_dir = bin
-```
-
-Examples:
-
-```ini
-name = myapp
-type = executable
-output_dir = bin
-```
-
-```ini
-name = mathlib
-type = static
-output_dir = lib
-```
-
-```ini
-name = mathlib_tests
-type = executable
-output_dir = bin
-```
-
-## Complete executable example
-
-```ini
-name = server
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-  src/server.cpp,
+  "include",
+  "src",
 ]
 
-include_dirs = [
-  include,
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 
 resources = [
-  public,
-  config,
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
 ]
 ```
 
-After build:
+The important part is not only that the binary is placed under `bin`, but that the backend resources are copied into the same runtime area. This gives the application a clean development layout without asking the source tree to become the runtime tree.
 
-```txt
-build-ninja/
-  bin/
-    server
-    public/
-    config/
-```
+## Game example
 
-## Complete library example
+A game project also benefits from a clear output directory because assets and package metadata must be available when the game starts.
 
-```ini
-name = mathlib
-type = static
-standard = c++20
-output_dir = lib
+```ini id="vix-app-output-game-example"
+name = "space-demo"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/add.cpp,
-  src/mul.cpp,
+  "src/main.cpp",
 ]
 
 include_dirs = [
-  include,
-]
-```
-
-After build:
-
-```txt
-build-ninja/
-  lib/
-    libmathlib.a
-```
-
-The exact library file name depends on the platform and toolchain.
-
-## Complete test example
-
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-  ../src/mul.cpp,
+  "src",
 ]
 
-include_dirs = [
-  ../include,
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::game",
+  "vix::io",
 ]
 
 resources = [
-  data,
+  "assets=assets",
+  "game.package.json=game.package.json",
 ]
 ```
 
-After build from the `tests/` folder:
+The runtime output then stays easy to understand.
 
-```txt
-tests/
-  build-ninja/
-    bin/
-      mathlib_tests
-      data/
+```txt id="vix-app-output-game-layout"
+bin/
+  space-demo
+  assets/
+  game.package.json
 ```
 
-Run:
+The C++ source stays in `sources`, while assets and metadata stay in `resources`.
 
-```bash
-vix run
+## Library targets
+
+`output_dir` can also be used with library targets.
+
+```ini id="vix-app-output-library"
+name = "mathkit"
+type = "static-library"
+standard = "c++20"
+output_dir = "lib"
+
+sources = [
+  "src/add.cpp",
+  "src/multiply.cpp",
+]
+
+include_dirs = [
+  "include",
+]
+```
+
+For application projects, `bin` is the better default. For reusable libraries, a directory such as `lib` can make the output easier to recognize. The choice should match the target type and the way the project is consumed.
+
+## Relative paths
+
+`output_dir` should be a relative path.
+
+```ini id="vix-app-output-relative"
+output_dir = "bin"
+```
+
+Avoid absolute machine-specific paths.
+
+```ini id="vix-app-output-avoid-absolute"
+# Avoid this.
+output_dir = "/home/user/build-output/bin"
+```
+
+A manifest with absolute paths becomes difficult to share with another developer, run in CI, or move to another machine. Keep the project portable by describing paths relative to the build output managed by Vix.
+
+## Keep it simple
+
+Most projects should use one short output directory name.
+
+```ini id="vix-app-output-simple"
+output_dir = "bin"
+```
+
+A deeply nested output directory usually does not make the project clearer.
+
+```ini id="vix-app-output-nested"
+# Avoid unless the project really needs this.
+output_dir = "runtime/linux/x86_64/debug/bin"
+```
+
+The manifest should remain readable. Build presets, release modes, and platform-specific details should be handled by the Vix workflow, not encoded into every path in the application manifest.
+
+## When to omit `output_dir`
+
+`output_dir` is optional. When it is omitted, Vix uses the default output layout for the active build workflow.
+
+```ini id="vix-app-output-omitted"
+name = "hello"
+type = "executable"
+standard = "c++20"
+
+sources = [
+  "src/main.cpp",
+]
+```
+
+For small experiments, omitting it is acceptable. For generated applications, backends, games, and projects with runtime resources, declare it explicitly so the runtime layout is obvious.
+
+```ini id="vix-app-output-explicit"
+output_dir = "bin"
 ```
 
 ## Common mistakes
 
-### Expecting output_dir to be relative to the source directory
+The most common mistake is treating `output_dir` as a source path. It is not where source files live, and it is not where headers are found. Source files belong in `sources`, headers are reached through `include_dirs`, and runtime files are copied through `resources`.
 
-Incorrect expectation:
-
-```txt
-output_dir = bin
+```ini id="vix-app-output-wrong"
+# Wrong idea.
+output_dir = "src"
 ```
 
-creates:
+Another mistake is using `output_dir` to solve missing resource problems. If the program cannot find `.env` or `public`, check `resources` first.
 
-```txt
-project/bin/myapp
-```
-
-Actual behavior:
-
-```txt
-project/build-ninja/bin/myapp
-```
-
-`output_dir` is relative to the build directory.
-
-### Expecting output_dir to install the binary
-
-`output_dir` does not install binaries into system paths.
-
-It only controls the build output location.
-
-Use CMake install rules for installation workflows.
-
-### Forgetting resources move with output_dir
-
-If you set:
-
-```ini
-output_dir = bin
-```
-
-and:
-
-```ini
+```ini id="vix-app-output-resource-fix"
 resources = [
-  assets,
+  ".env=.env",
+  "public=public",
 ]
 ```
 
-then check:
+`output_dir` decides where the runtime area is. `resources` decides what gets copied there.
 
-```txt
-build-ninja/bin/assets/
+## Checking the output layout
+
+After changing `output_dir`, build the project.
+
+```bash id="vix-app-output-build"
+vix build
 ```
 
-not:
+Then run it normally.
 
-```txt
-build-ninja/assets/
+```bash id="vix-app-output-run"
+vix run
 ```
 
-### Running manually from the wrong directory
+For applications with runtime files, confirm that the executable and copied resources appear together in the configured output directory. This is especially important for backends, games, and frontend + backend projects where the program depends on files outside the compiled C++ source.
 
-If your app expects:
+## Recommended default
 
-```txt
-config/app.json
+Use this for normal Vix applications:
+
+```ini id="vix-app-output-recommended"
+output_dir = "bin"
 ```
 
-and the file is under:
+It is clear, portable, and works well with resources. A backend gets its executable and runtime directories in one place. A game gets its executable, assets, and package metadata together. A small command-line tool stays easy to find after the build.
 
-```txt
-build-ninja/bin/config/app.json
-```
+## Next step
 
-then running from the project root may not find it unless your app resolves paths relative to the executable.
+Continue with libraries to see how `vix.app` describes static and shared library targets.
 
-## Troubleshooting
-
-### Executable not found
-
-Check the target name:
-
-```ini
-name = myapp
-```
-
-Then check common output locations:
-
-```txt
-build-ninja/myapp
-build-ninja/bin/myapp
-build-release/bin/myapp
-```
-
-### Resource not found
-
-Check whether you set `output_dir`.
-
-With:
-
-```ini
-output_dir = bin
-```
-
-resources are copied near:
-
-```txt
-build-ninja/bin/
-```
-
-### Wrong preset directory
-
-If you built with:
-
-```bash
-vix build --preset release
-```
-
-check:
-
-```txt
-build-release/
-```
-
-not:
-
-```txt
-build-ninja/
-```
-
-## Summary
-
-Use `output_dir` when you want predictable build outputs.
-
-For applications:
-
-```ini
-output_dir = bin
-```
-
-For libraries:
-
-```ini
-output_dir = lib
-```
-
-Remember:
-
-```txt
-output_dir is relative to the build directory.
-resources are copied next to the built target.
-vix run can usually find the executable automatically.
-```
-
-## Next steps
-
-Continue with:
-
-- [Resources](./resources.md)
-- [Examples](./examples.md)
-- [Libraries](./libraries.md)
-- [Troubleshooting](./troubleshooting.md)
+[Libraries](/guides/vix-app/libraries)

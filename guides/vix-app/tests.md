@@ -1,865 +1,364 @@
-# Tests with vix.app
+# Tests
 
-This guide explains how to organize tests in a `vix.app` project.
+A `vix.app` project can be tested through the normal Vix CLI workflow. The manifest describes the application target, while test commands are handled by Vix from the project root.
 
-For `vix.app` V1, the recommended approach is simple:
-
-```txt
-one vix.app = one target
+```bash id="vix-app-tests-basic"
+vix tests
 ```
 
-So for tests, the cleanest structure is:
+For application projects, tests should stay close to the code they protect. A backend can keep route, service, module, and utility tests under `tests/`, while the application itself remains described by `vix.app`.
 
-```txt
-one vix.app for the library or app
-one vix.app for the test executable
+## Basic workflow
+
+Build the application first when you want to confirm that the manifest, source list, include paths, packages, links, and resources are valid.
+
+```bash id="vix-app-tests-build"
+vix build
 ```
 
-This keeps the manifest simple and avoids turning `vix.app` into a complex multi-target build language.
+Then run the test suite.
 
-## Recommended structure
+```bash id="vix-app-tests-run"
+vix tests
+```
 
-For a small library with tests:
+For a stronger local check, use:
 
-```txt
-mathlib/
-  vix.app
+```bash id="vix-app-tests-check-run"
+vix check --tests --run
+```
+
+This is the command you usually want before a commit because it validates the project and runs the tests in one workflow.
+
+## Where tests live
+
+A simple project can use a `tests/` directory at the project root.
+
+```txt id="vix-app-tests-layout"
+api/
   include/
-    mathlib/
-      math.hpp
   src/
-    add.cpp
-    mul.cpp
   tests/
-    vix.app
-    test_math.cpp
+    health_test.cpp
+    app_bootstrap_test.cpp
+  vix.app
+  vix.json
 ```
 
-The root `vix.app` builds the library.
+The `vix.app` file should remain focused on the application target. Test files do not need to be mixed into the main application `sources` list unless they are part of the application itself, which is usually not the case.
 
-The `tests/vix.app` builds the test executable.
-
-## Library manifest
-
-Root `vix.app`:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
+```ini id="vix-app-tests-main-sources"
 sources = [
-  src/add.cpp,
-  src/mul.cpp,
-]
-
-include_dirs = [
-  include,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
 ]
 ```
 
-This builds a static library target named `mathlib`.
+Keep test sources separate. It makes the production target easier to read and avoids accidentally compiling test-only code into the application.
 
-## Library code
+## A small test
 
-`include/mathlib/math.hpp`:
+A Vix test can be a small C++ program that returns `0` on success and a non-zero value on failure.
 
-```cpp
-#pragma once
-
-namespace mathlib
-{
-  int add(int a, int b);
-  int mul(int a, int b);
-}
-```
-
-`src/add.cpp`:
-
-```cpp
-#include <mathlib/math.hpp>
-
-namespace mathlib
-{
-  int add(int a, int b)
-  {
-    return a + b;
-  }
-}
-```
-
-`src/mul.cpp`:
-
-```cpp
-#include <mathlib/math.hpp>
-
-namespace mathlib
-{
-  int mul(int a, int b)
-  {
-    return a * b;
-  }
-}
-```
-
-## Test manifest
-
-`tests/vix.app`:
-
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-  ../src/mul.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-```
-
-This creates an executable target named `mathlib_tests`.
-
-The test manifest includes the library source files directly:
-
-```ini
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-  ../src/mul.cpp,
-]
-```
-
-This is the simplest approach for `vix.app` V1.
-
-## Test code
-
-`tests/test_math.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <mathlib/math.hpp>
+```cpp id="vix-app-tests-small-test"
+#include <cassert>
+#include <string>
 
 int main()
 {
-  if (mathlib::add(2, 3) != 5)
-  {
-    vix::print("add test failed");
-    return 1;
-  }
+  std::string name = "vix";
 
-  if (mathlib::mul(4, 5) != 20)
-  {
-    vix::print("mul test failed");
-    return 1;
-  }
+  assert(name == "vix");
+  assert(!name.empty());
 
-  vix::print("all tests passed");
   return 0;
 }
 ```
 
-## Build the library
+This style is useful for small module and utility tests. It keeps the test clear and does not require a heavy framework when the check is simple.
 
-From the project root:
+## Testing code from the application
 
-```bash
-vix build
-```
+When a test needs to use application code, keep the application headers reachable through the same include layout used by the app.
 
-This builds the root target:
-
-```txt
-mathlib
-```
-
-## Build and run the tests
-
-Go to the test directory:
-
-```bash
-cd tests
-```
-
-Build the test executable:
-
-```bash
-vix build
-```
-
-Run the tests:
-
-```bash
-vix run
-```
-
-Expected output:
-
-```txt
-all tests passed
-```
-
-## Full project example
-
-```txt
-mathlib/
-  vix.app
+```txt id="vix-app-tests-include-layout"
+api/
   include/
-    mathlib/
-      math.hpp
+    api/
+      support/
+        HttpResponses.hpp
   src/
-    add.cpp
-    mul.cpp
+    api/
+      support/
+        HttpResponses.cpp
   tests/
-    vix.app
-    test_math.cpp
-```
-
-Root `vix.app`:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
-sources = [
-  src/add.cpp,
-  src/mul.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-`tests/vix.app`:
-
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-  ../src/mul.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-```
-
-Commands:
-
-```bash
-vix build
-cd tests
-vix build
-vix run
-```
-
-## App tests
-
-You can also test application logic by placing most of your code outside `main.cpp`.
-
-Recommended layout:
-
-```txt
-myapp/
+    http_responses_test.cpp
   vix.app
+```
+
+The test should include the public or shared header in the same style used by the application.
+
+```cpp id="vix-app-tests-include-example"
+#include <api/support/HttpResponses.hpp>
+
+#include <cassert>
+
+int main()
+{
+  auto response = api::support::ok_text("hello");
+
+  assert(response.status == 200);
+
+  return 0;
+}
+```
+
+The important part is the boundary. Test the code through the headers the project already exposes. Avoid reaching into private implementation files unless the test is intentionally placed next to that private code.
+
+## Tests and app modules
+
+When a backend uses app modules, each module can have tests that match its responsibility.
+
+```txt id="vix-app-tests-modules-layout"
+api/
+  modules/
+    auth/
+      include/
+      src/
+      tests/
+        auth_module_test.cpp
+    projects/
+      include/
+      src/
+      tests/
+        projects_module_test.cpp
+  tests/
+    app_routes_test.cpp
+  vix.app
+```
+
+The module declarations remain in `vix.app`.
+
+```ini id="vix-app-tests-modules-manifest"
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+Run module checks before the test suite when module boundaries matter.
+
+```bash id="vix-app-tests-modules-check"
+vix modules check
+vix tests
+```
+
+This catches structural mistakes before the test run reaches the compiler or runtime.
+
+## Testing enabled modules
+
+A disabled module is declared in the manifest, but it is not part of the active application target.
+
+```ini id="vix-app-tests-disabled-module"
+[module.billing]
+enabled = false
+path = "modules/billing"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+Tests for an inactive module should be treated carefully. When the module is not enabled, it should not be required by the main application test workflow. Enable the module before testing it as part of the application.
+
+```bash id="vix-app-tests-enable-module"
+vix modules enable billing
+vix modules check
+vix tests
+```
+
+This keeps the test result aligned with the application that Vix is actually building.
+
+## Backend test workflow
+
+A backend project usually needs more than one kind of check. The application should build, its module structure should be valid, and the test suite should pass.
+
+```bash id="vix-app-tests-backend-workflow"
+vix modules check
+vix build
+vix tests
+```
+
+For the full local validation workflow, use:
+
+```bash id="vix-app-tests-backend-check"
+vix check --tests --run
+```
+
+This is especially useful after editing `vix.app`, adding a source file, changing include paths, enabling a module, or adding a dependency.
+
+## Tasks in `vix.json`
+
+`vix.app` describes the application target. Project commands and shortcuts belong in `vix.json`.
+
+A generated backend can expose test-related tasks like this:
+
+```json id="vix-app-tests-vix-json"
+{
+  "tasks": {
+    "build": "vix build",
+    "test": "vix tests",
+    "check": "vix check --tests --run"
+  }
+}
+```
+
+Then the project can keep a short, repeatable workflow.
+
+```bash id="vix-app-tests-task-run"
+vix task test
+vix task check
+```
+
+This keeps `vix.app` clean. The manifest describes the target; `vix.json` describes convenient project commands.
+
+## What not to put in `vix.app`
+
+Do not add test-only files to the main application source list.
+
+```ini id="vix-app-tests-wrong-sources"
+# Avoid this for normal application tests.
+sources = [
+  "src/main.cpp",
+  "tests/health_test.cpp",
+]
+```
+
+The application target should compile the application. Tests should be discovered and run through the test workflow.
+
+Do not use `resources` for test source files.
+
+```ini id="vix-app-tests-wrong-resources"
+# Wrong idea.
+resources = [
+  "tests=tests",
+]
+```
+
+Resources are runtime files copied beside the built target. Test files are not runtime resources for the application.
+
+## Example project
+
+```txt id="vix-app-tests-complete-layout"
+api/
   include/
-    myapp/
-      app.hpp
+    api/
+      support/
+        HttpResponses.hpp
   src/
-    app.cpp
     main.cpp
+    api/
+      support/
+        HttpResponses.cpp
+      app/
+        AppBootstrap.cpp
+  modules/
+    auth/
+    projects/
   tests/
-    vix.app
-    test_app.cpp
+    http_responses_test.cpp
+    app_bootstrap_test.cpp
+  vix.app
+  vix.json
 ```
 
-The app manifest:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
+```ini id="vix-app-tests-complete-manifest"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
-  src/app.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
 ]
 
 include_dirs = [
-  include,
-]
-```
-
-The test manifest:
-
-```ini
-name = myapp_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_app.cpp,
-  ../src/app.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-```
-
-Notice that the test target includes `../src/app.cpp`, but not `../src/main.cpp`.
-
-This avoids having two `main()` functions in the same test executable.
-
-## Avoid testing main.cpp directly
-
-For applications, avoid putting too much logic in `main.cpp`.
-
-Prefer this:
-
-```cpp
-#include <myapp/app.hpp>
-
-int main()
-{
-  return myapp::run();
-}
-```
-
-Then put real logic in:
-
-```txt
-src/app.cpp
-include/myapp/app.hpp
-```
-
-This makes the logic testable from `tests/test_app.cpp`.
-
-## Example application code
-
-`include/myapp/app.hpp`:
-
-```cpp
-#pragma once
-
-namespace myapp
-{
-  int add(int a, int b);
-  int run();
-}
-```
-
-`src/app.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <myapp/app.hpp>
-
-namespace myapp
-{
-  int add(int a, int b)
-  {
-    return a + b;
-  }
-
-  int run()
-  {
-    vix::print("myapp running");
-    return 0;
-  }
-}
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <myapp/app.hpp>
-
-int main()
-{
-  return myapp::run();
-}
-```
-
-`tests/test_app.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <myapp/app.hpp>
-
-int main()
-{
-  if (myapp::add(10, 20) != 30)
-  {
-    vix::print("add test failed");
-    return 1;
-  }
-
-  vix::print("app tests passed");
-  return 0;
-}
-```
-
-`tests/vix.app`:
-
-```ini
-name = myapp_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_app.cpp,
-  ../src/app.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-```
-
-Run:
-
-```bash
-cd tests
-vix run
-```
-
-## Multiple test files
-
-You can split tests into multiple source files.
-
-Project layout:
-
-```txt
-mathlib/
-  tests/
-    vix.app
-    test_main.cpp
-    test_add.cpp
-    test_mul.cpp
-```
-
-`tests/vix.app`:
-
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_main.cpp,
-  test_add.cpp,
-  test_mul.cpp,
-  ../src/add.cpp,
-  ../src/mul.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-```
-
-Example `test_main.cpp`:
-
-```cpp
-#include <vix.hpp>
-
-int run_add_tests();
-int run_mul_tests();
-
-int main()
-{
-  if (run_add_tests() != 0)
-    return 1;
-
-  if (run_mul_tests() != 0)
-    return 1;
-
-  vix::print("all tests passed");
-  return 0;
-}
-```
-
-Example `test_add.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <mathlib/math.hpp>
-
-int run_add_tests()
-{
-  if (mathlib::add(2, 3) != 5)
-  {
-    vix::print("add test failed");
-    return 1;
-  }
-
-  return 0;
-}
-```
-
-Example `test_mul.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <mathlib/math.hpp>
-
-int run_mul_tests()
-{
-  if (mathlib::mul(4, 5) != 20)
-  {
-    vix::print("mul test failed");
-    return 1;
-  }
-
-  return 0;
-}
-```
-
-## Tests with compile options
-
-You can add warnings or test-specific compiler flags:
-
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-
-compile_options = [
-  -Wall,
-  -Wextra,
-  -Wpedantic,
-]
-```
-
-## Tests with defines
-
-Use test-specific preprocessor definitions:
-
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-
-defines = [
-  MATHLIB_TESTING=1,
-]
-```
-
-C++ usage:
-
-```cpp
-#ifdef MATHLIB_TESTING
-// test-only code
-#endif
-```
-
-## Tests with packages
-
-You can use external test libraries if they are available through CMake packages.
-
-Example with `Threads`:
-
-```ini
-name = threaded_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_threads.cpp,
+  "include",
+  "src",
 ]
 
 packages = [
-  Threads:REQUIRED,
+  "vix",
 ]
 
 links = [
-  Threads::Threads,
-]
-```
-
-Remember:
-
-```txt
-packages finds packages.
-links links targets.
-```
-
-## Tests with resources
-
-If tests need files, use `resources`.
-
-Project layout:
-
-```txt
-myapp/
-  tests/
-    vix.app
-    test_config.cpp
-    data/
-      config.json
-```
-
-`tests/vix.app`:
-
-```ini
-name = config_tests
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  test_config.cpp,
+  "vix::vix",
 ]
 
 resources = [
-  data,
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
 ]
 ```
 
-After building, `data/` is copied next to the test executable.
-
-## Running tests from CI
-
-A simple CI command can be:
-
-```bash
-cd tests
-vix build
-vix run
-```
-
-For release mode:
-
-```bash
-cd tests
-vix build --preset release
-vix run
-```
-
-## Recommended test layout
-
-For a library:
-
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-  tests/
-    vix.app
-    test_main.cpp
-    test_add.cpp
-    test_mul.cpp
-```
-
-For an application:
-
-```txt
-myapp/
-  vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
-  tests/
-    vix.app
-    test_app.cpp
-```
-
-## Why one manifest per test target
-
-`vix.app` is intentionally simple.
-
-For now, the clearest model is:
-
-```txt
-root/vix.app        -> app or library target
-tests/vix.app       -> test executable target
-examples/vix.app    -> example executable target
-```
-
-This avoids complex syntax like:
-
-```txt
-targets = [...]
-tests = [...]
-examples = [...]
-```
-
-Those features can exist later, but the V1 design stays small and predictable.
-
-## When to use CMakeLists.txt for tests
-
-Use a normal `CMakeLists.txt` when your test setup needs:
-
-```txt
-- many test targets
-- CTest integration
-- GoogleTest discovery
-- FetchContent
-- custom test fixtures
-- generated test data
-- install rules
-- complex dependency setup
-```
-
-For simple tests, `vix.app` is enough.
-
-For advanced test infrastructure, CMake remains the right compatibility path.
+The manifest stays focused on the application. The tests live beside the project and run through Vix.
 
 ## Common mistakes
 
-### Including main.cpp in tests
+The first mistake is treating tests as part of the application target. That makes the main source list confusing and can accidentally pull test code into the executable.
 
-Incorrect:
+The second mistake is testing module internals through private paths from another module. Module tests should respect the same public and private boundaries as the application code.
 
-```ini
-sources = [
-  test_app.cpp,
-  ../src/main.cpp,
-  ../src/app.cpp,
-]
-```
+The third mistake is changing `vix.app` and running only a single test file. After manifest changes, run a full build or check because the change may affect source wiring, modules, resources, packages, or links.
 
-This can produce duplicate `main()` errors.
+## Recommended check before commit
 
-Correct:
+For a normal application:
 
-```ini
-sources = [
-  test_app.cpp,
-  ../src/app.cpp,
-]
-```
-
-Keep `main.cpp` thin and test the real logic from other source files.
-
-### Missing include directory
-
-If your test includes:
-
-```cpp
-#include <mathlib/math.hpp>
-```
-
-you need:
-
-```ini
-include_dirs = [
-  ../include,
-]
-```
-
-### Source path is relative to tests/
-
-Inside `tests/vix.app`, paths are relative to the `tests/` directory.
-
-Correct:
-
-```ini
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-]
-```
-
-Incorrect:
-
-```ini
-sources = [
-  tests/test_math.cpp,
-  src/add.cpp,
-]
-```
-
-when the manifest is already inside `tests/`.
-
-### Package found but not linked
-
-Incorrect:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-```
-
-Correct:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-
-links = [
-  fmt::fmt,
-]
-```
-
-## Summary
-
-For tests with `vix.app`, use this pattern:
-
-```txt
-project/
-  vix.app
-  include/
-  src/
-  tests/
-    vix.app
-    test_*.cpp
-```
-
-Build and run:
-
-```bash
-cd tests
+```bash id="vix-app-tests-recommended-app"
 vix build
-vix run
+vix tests
 ```
 
-Keep test manifests small, explicit, and close to the test files.
+For a backend with app modules:
 
-## Next steps
+```bash id="vix-app-tests-recommended-modules"
+vix modules check
+vix check --tests --run
+```
 
-Continue with:
+This gives a clean signal: the manifest is valid, the module structure is valid, the application builds, and the tests pass.
 
-- [Project Types](./project-types.md)
-- [Sources and Includes](./sources-and-includes.md)
-- [Libraries](./libraries.md)
-- [Best Practices](./best-practices.md)
+## Next step
+
+Continue with examples to see complete `vix.app` manifests for application, backend, game, and library projects.
+
+[Examples](/guides/vix-app/examples)

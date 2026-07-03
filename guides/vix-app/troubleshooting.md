@@ -1,1076 +1,710 @@
 # Troubleshooting
 
-This page lists common `vix.app` problems and how to fix them.
+This page helps diagnose common `vix.app` issues. Most problems come from one of a few places: Vix is not using the manifest you think it is using, a source file is missing from `sources`, an include root is too deep or too shallow, a runtime file was not copied through `resources`, a linked target is missing, or an app module declaration does not match the module structure.
 
-Use it when `vix build` or `vix run` does not behave as expected.
+Start with the normal workflow.
 
-## Project not detected
-
-You may see an error like:
-
-```txt
-Unable to determine the project directory.
-```
-
-or:
-
-```txt
-Missing CMakeLists.txt or vix.app.
-```
-
-This means Vix could not find a project root.
-
-A `vix.app` project must have this structure:
-
-```txt
-myapp/
-  vix.app
-  src/
-    main.cpp
-```
-
-Run the command from the project root:
-
-```bash
-cd myapp
+```bash id="vix-app-troubleshooting-basic"
 vix build
 ```
 
-Or pass the project directory explicitly:
+For module-based backends, run the module check before building.
 
-```bash
-vix build --dir ./myapp
+```bash id="vix-app-troubleshooting-module-check"
+vix modules check
+vix build
 ```
 
-## CMakeLists.txt is used instead of vix.app
+The goal is to fix the manifest, not the generated files. When a project uses `vix.app`, the root manifest is the source of truth.
 
-Vix resolves projects in this order:
+## Vix is not using `vix.app`
 
-```txt
+If the project root still contains `CMakeLists.txt`, Vix will use that file first. `vix.app` is used only when no root `CMakeLists.txt` is present.
+
+```txt id="vix-app-troubleshooting-resolution"
 1. CMakeLists.txt
 2. vix.app
 ```
 
-If both files exist:
+This is intentional. It protects existing projects from changing behavior just because a `vix.app` file was added during migration.
 
-```txt
-myapp/
+Check the project root.
+
+```bash id="vix-app-troubleshooting-ls"
+ls
+```
+
+If both files exist, the existing project input is active.
+
+```txt id="vix-app-troubleshooting-both"
+project/
   CMakeLists.txt
   vix.app
+  src/
 ```
 
-Vix uses:
+To make `vix.app` active, remove or rename the root `CMakeLists.txt` when the migration is ready.
 
-```txt
-CMakeLists.txt
+```txt id="vix-app-troubleshooting-vix-app-only"
+project/
+  vix.app
+  src/
 ```
 
-To use `vix.app`, rename or remove the CMake file:
+Then build again.
 
-```bash
-mv CMakeLists.txt CMakeLists.txt.bak
+```bash id="vix-app-troubleshooting-build-after-switch"
+vix build
+```
+
+## Missing or invalid `name`
+
+A `vix.app` file must define a target name.
+
+```ini id="vix-app-troubleshooting-name"
+name = "api"
+```
+
+If the name is empty or missing, Vix cannot generate a usable application target.
+
+```ini id="vix-app-troubleshooting-missing-name"
+# Wrong.
+type = "executable"
+
+sources = [
+  "src/main.cpp",
+]
+```
+
+Fix it by adding a stable name near the top of the manifest.
+
+```ini id="vix-app-troubleshooting-name-fix"
+name = "api"
+type = "executable"
+
+sources = [
+  "src/main.cpp",
+]
+```
+
+Keep this name stable. It may be used by generated wiring, tasks, service configuration, and module target names.
+
+## Unsupported target type
+
+The `type` field must describe a supported target shape.
+
+```ini id="vix-app-troubleshooting-type"
+type = "executable"
+```
+
+Supported values include:
+
+```txt id="vix-app-troubleshooting-type-values"
+executable
+static-library
+shared-library
+```
+
+Shorter aliases such as `static`, `shared`, and `library` are accepted, but the full names are clearer in documentation and project manifests.
+
+If the project should run with `vix run`, use:
+
+```ini id="vix-app-troubleshooting-executable"
+type = "executable"
+```
+
+Use a library type only when the project produces reusable code instead of a runnable program.
+
+## Source file not found
+
+If the build fails because a source file cannot be found, check the `sources` list first.
+
+```ini id="vix-app-troubleshooting-sources"
+sources = [
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+]
+```
+
+Every path is relative to the project root, not the generated build directory.
+
+```txt id="vix-app-troubleshooting-source-root"
+api/
+  vix.app
+  src/
+    main.cpp
+    api/
+      app/
+        AppBootstrap.cpp
+```
+
+A common mistake is writing a path from the wrong directory.
+
+```ini id="vix-app-troubleshooting-source-wrong"
+# Wrong when vix.app is already at the project root.
+sources = [
+  "api/src/main.cpp",
+]
+```
+
+The correct path should start from the directory that contains `vix.app`.
+
+```ini id="vix-app-troubleshooting-source-correct"
+sources = [
+  "src/main.cpp",
+]
+```
+
+After fixing the path, build again.
+
+```bash id="vix-app-troubleshooting-source-build"
+vix build
+```
+
+## New `.cpp` file is not compiled
+
+If you added a new implementation file and the linker reports missing symbols, the file may not be listed in `sources`.
+
+```txt id="vix-app-troubleshooting-missing-cpp-layout"
+src/
+  main.cpp
+  api/
+    support/
+      HttpResponses.cpp
+```
+
+Add the new file explicitly.
+
+```ini id="vix-app-troubleshooting-add-cpp"
+sources = [
+  "src/main.cpp",
+  "src/api/support/HttpResponses.cpp",
+]
+```
+
+Headers do not usually belong in `sources`, but `.cpp` files that contain implementation code must be listed.
+
+## Header cannot be found
+
+If the compiler cannot find a header, check `include_dirs`.
+
+```ini id="vix-app-troubleshooting-include-dirs"
+include_dirs = [
+  "include",
+  "src",
+]
+```
+
+If the header is here:
+
+```txt id="vix-app-troubleshooting-header-path"
+include/api/app/AppBootstrap.hpp
+```
+
+the source should include it like this:
+
+```cpp id="vix-app-troubleshooting-header-include"
+#include <api/app/AppBootstrap.hpp>
+```
+
+and the include directory should be:
+
+```ini id="vix-app-troubleshooting-header-include-dir"
+include_dirs = [
+  "include",
+]
+```
+
+Do not point the include directory too deep into the tree.
+
+```ini id="vix-app-troubleshooting-include-too-deep"
+# Avoid this.
+include_dirs = [
+  "include/api/app",
+]
+```
+
+A deep include root makes the include style unstable and harder to understand.
+
+## Do not fix includes with resources
+
+`resources` does not help the compiler find headers. Resources are copied beside the built target for runtime use.
+
+```ini id="vix-app-troubleshooting-wrong-resource-header"
+# Wrong.
+resources = [
+  "include=include",
+]
+```
+
+Fix include problems with `include_dirs`.
+
+```ini id="vix-app-troubleshooting-correct-header"
+include_dirs = [
+  "include",
+]
+```
+
+Use `resources` only for files the program needs when it runs.
+
+## Linked target is missing
+
+If the build fails because a target or library is missing, check `packages` and `links`.
+
+```ini id="vix-app-troubleshooting-packages-links"
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+The package makes something available. The link entry connects the application target to a specific target.
+
+If the code uses ORM, the manifest should link ORM.
+
+```ini id="vix-app-troubleshooting-orm-link"
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+  "vix::orm",
+]
+```
+
+If the project uses the game runtime, link the game targets instead.
+
+```ini id="vix-app-troubleshooting-game-links"
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::game",
+  "vix::io",
+]
+```
+
+Do not link every module by default. Link the targets the application actually uses.
+
+## Registry dependency does not resolve
+
+Registry dependencies belong in `deps`.
+
+```ini id="vix-app-troubleshooting-deps"
+deps = [
+  "adastra/logger@1.0.0",
+]
+```
+
+Accepted forms are:
+
+```txt id="vix-app-troubleshooting-deps-forms"
+namespace/name
+namespace/name@version
+@namespace/name
+@namespace/name@version
+```
+
+After changing registry dependencies, resolve them and build.
+
+```bash id="vix-app-troubleshooting-deps-install"
+vix install
+vix build
+```
+
+A dependency entry does not replace `links`. If the package exports a target that the application uses, the target should still be listed in `links`.
+
+```ini id="vix-app-troubleshooting-deps-links"
+deps = [
+  "adastra/logger@1.0.0",
+]
+
+links = [
+  "vix::vix",
+  "adastra::logger",
+]
+```
+
+The exact exported target name comes from the dependency itself.
+
+## Runtime file is missing
+
+If the application builds but cannot find `.env`, `public`, `views`, `storage`, assets, or package metadata at runtime, check `resources`.
+
+```ini id="vix-app-troubleshooting-resources"
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+```
+
+Resources are copied beside the built target, usually under the configured `output_dir`.
+
+```ini id="vix-app-troubleshooting-output-resources"
+output_dir = "bin"
+
+resources = [
+  ".env=.env",
+  "public=public",
+]
+```
+
+A backend runtime layout should look like this:
+
+```txt id="vix-app-troubleshooting-runtime-layout"
+bin/
+  api
+  .env
+  public/
+```
+
+If the source path is wrong, Vix cannot copy the file. Remember that resource source paths are relative to the project root.
+
+## Resource copied to the wrong place
+
+Use `source=destination` when the runtime path should differ from the source path.
+
+```ini id="vix-app-troubleshooting-resource-destination"
+resources = [
+  "config/dev.env=.env",
+  "frontend/dist=public",
+]
+```
+
+The left side is the project file or directory. The right side is where it should appear beside the built target.
+
+```txt id="vix-app-troubleshooting-resource-result"
+bin/
+  app
+  .env
+  public/
+```
+
+Keep destination paths simple. A runtime layout that is easy to inspect is easier to debug.
+
+## `vix run` does not work for a library
+
+`vix run` is for executable targets. If the manifest describes a library, build it instead.
+
+```ini id="vix-app-troubleshooting-library"
+name = "mathkit"
+type = "static-library"
+```
+
+Use:
+
+```bash id="vix-app-troubleshooting-library-build"
+vix build
+```
+
+If the project should run as a program, change the target type.
+
+```ini id="vix-app-troubleshooting-executable-fix"
+type = "executable"
+```
+
+A project with `main()` normally should be an executable target.
+
+## Module does not appear in the list
+
+If `vix modules list` does not show a module, check that the module section is declared in `vix.app`.
+
+```ini id="vix-app-troubleshooting-module-section"
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
 ```
 
 Then run:
 
-```bash
+```bash id="vix-app-troubleshooting-module-list"
+vix modules list
+```
+
+If the module was created manually, make sure the section name is correct and the file is saved at the project root.
+
+## Module path is wrong
+
+The `path` field is relative to the project root.
+
+```ini id="vix-app-troubleshooting-module-path"
+[module.auth]
+path = "modules/auth"
+```
+
+The matching folder should exist.
+
+```txt id="vix-app-troubleshooting-module-layout"
+modules/
+  auth/
+    include/
+    src/
+```
+
+If the module folder is missing, create it through the CLI.
+
+```bash id="vix-app-troubleshooting-module-add"
+vix modules add auth
+```
+
+Then check the project.
+
+```bash id="vix-app-troubleshooting-module-path-check"
+vix modules check
+```
+
+## Module dependency is missing
+
+If one module uses another module, declare the dependency.
+
+```ini id="vix-app-troubleshooting-module-dep"
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+This tells Vix that `projects` is allowed to use the public API of `auth`.
+
+The source should include the public header.
+
+```cpp id="vix-app-troubleshooting-module-public-include"
+#include <auth/api.hpp>
+```
+
+Avoid private cross-module includes.
+
+```cpp id="vix-app-troubleshooting-module-private-include"
+// Avoid this.
+#include "../auth/src/AuthService.hpp"
+```
+
+Cross-module usage should go through public headers and explicit dependencies.
+
+## Enabled module depends on disabled module
+
+If an enabled module depends on another module, the dependency should also be enabled.
+
+```ini id="vix-app-troubleshooting-disabled-dep"
+[module.auth]
+enabled = false
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+This is not a healthy active configuration because `projects` depends on a module that is not active.
+
+Fix it by enabling the dependency:
+
+```bash id="vix-app-troubleshooting-enable-dep"
+vix modules enable auth
+vix modules check
+```
+
+or by removing the dependency from the module that no longer uses it.
+
+## Generated files were edited manually
+
+When Vix uses `vix.app`, generated build files are written under:
+
+```txt id="vix-app-troubleshooting-generated"
+.vix/generated/app/
+```
+
+Do not edit these files to change the application. They are generated output.
+
+Edit `vix.app` instead, then run:
+
+```bash id="vix-app-troubleshooting-regenerate"
 vix build
 ```
 
-## Missing name
+If the generated files look stale after a manifest change, run a clean build workflow or remove the generated directory and build again.
 
-A `vix.app` file must define a target name.
-
-Incorrect:
-
-```ini
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-Correct:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-The `name` field is used as the default build target and executable name.
-
-## Invalid name
-
-Target names should be simple.
-
-Recommended:
-
-```ini
-name = hello
-```
-
-```ini
-name = my_app
-```
-
-```ini
-name = my-app
-```
-
-Avoid spaces or special characters:
-
-```ini
-name = "my app"
-```
-
-If the name is invalid, use only:
-
-```txt
-letters
-numbers
-_
--
-```
-
-Example:
-
-```ini
-name = my_app
-```
-
-## Missing sources
-
-A `vix.app` target needs source files.
-
-Incorrect:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-```
-
-Correct:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-## Source file not found
-
-You may see:
-
-```txt
-vix.app source file not found: src/main.cpp
-```
-
-This means the file listed in `sources` does not exist.
-
-Check your project layout:
-
-```txt
-hello/
-  vix.app
-  src/
-    main.cpp
-```
-
-Correct manifest:
-
-```ini
-sources = [
-  src/main.cpp,
-]
-```
-
-Paths are relative to the directory containing `vix.app`.
-
-## Wrong relative path
-
-If `vix.app` is in the project root:
-
-```txt
-myapp/
-  vix.app
-  src/
-    main.cpp
-```
-
-Correct:
-
-```ini
-sources = [
-  src/main.cpp,
-]
-```
-
-Incorrect:
-
-```ini
-sources = [
-  myapp/src/main.cpp,
-]
-```
-
-because `vix.app` is already inside `myapp/`.
-
-## Wrong path inside tests
-
-If `vix.app` is inside `tests/`:
-
-```txt
-mathlib/
-  src/
-    add.cpp
-  tests/
-    vix.app
-    test_add.cpp
-```
-
-Correct:
-
-```ini
-sources = [
-  test_add.cpp,
-  ../src/add.cpp,
-]
-```
-
-Incorrect:
-
-```ini
-sources = [
-  tests/test_add.cpp,
-  src/add.cpp,
-]
-```
-
-Paths are relative to `tests/`.
-
-## Invalid target type
-
-Supported target types are:
-
-```ini
-type = executable
-```
-
-```ini
-type = static
-```
-
-```ini
-type = static-library
-```
-
-```ini
-type = shared
-```
-
-```ini
-type = shared-library
-```
-
-```ini
-type = library
-```
-
-Incorrect:
-
-```ini
-type = exe
-```
-
-Correct:
-
-```ini
-type = executable
-```
-
-## Invalid C++ standard
-
-Supported values include:
-
-```ini
-standard = c++17
-```
-
-```ini
-standard = c++20
-```
-
-```ini
-standard = c++23
-```
-
-Incorrect:
-
-```ini
-standard = cpp20
-```
-
-Correct:
-
-```ini
-standard = c++20
-```
-
-## Malformed array
-
-Arrays can be inline:
-
-```ini
-sources = [src/main.cpp, src/app.cpp]
-```
-
-or multi-line:
-
-```ini
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-```
-
-Incorrect:
-
-```ini
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-```
-
-The closing `]` is missing.
-
-Correct:
-
-```ini
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-```
-
-## Unknown field
-
-If you use a field that `vix.app` does not support, Vix may report an unknown field error.
-
-Incorrect:
-
-```ini
-target = hello
-```
-
-Correct:
-
-```ini
-name = hello
-```
-
-Supported fields:
-
-```txt
-name
-type
-standard
-sources
-include_dirs
-defines
-links
-compile_options
-link_options
-compile_features
-packages
-resources
-output_dir
-```
-
-## Header not found
-
-You may see a compiler error like:
-
-```txt
-fatal error: myapp/app.hpp: No such file or directory
-```
-
-Check your layout:
-
-```txt
-myapp/
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-```
-
-If your code has:
-
-```cpp
-#include <myapp/app.hpp>
-```
-
-then your manifest needs:
-
-```ini
-include_dirs = [
-  include,
-]
-```
-
-## Header files listed as sources
-
-Usually, headers do not need to be listed in `sources`.
-
-Avoid this:
-
-```ini
-sources = [
-  src/main.cpp,
-  include/myapp/app.hpp,
-]
-```
-
-Prefer this:
-
-```ini
-sources = [
-  src/main.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-## Duplicate main function
-
-You may see a linker error about multiple definitions of `main`.
-
-This often happens in tests.
-
-Incorrect test manifest:
-
-```ini
-sources = [
-  test_app.cpp,
-  ../src/main.cpp,
-  ../src/app.cpp,
-]
-```
-
-If both `test_app.cpp` and `main.cpp` define `main()`, the linker fails.
-
-Correct:
-
-```ini
-sources = [
-  test_app.cpp,
-  ../src/app.cpp,
-]
-```
-
-Keep `main.cpp` thin and test the application logic from other source files.
-
-## Undefined reference to main
-
-You may see:
-
-```txt
-undefined reference to main
-```
-
-This usually means you declared an executable target without a `main()` function.
-
-Incorrect:
-
-```ini
-name = mathlib
-type = executable
-
-sources = [
-  src/add.cpp,
-]
-```
-
-Correct for a library:
-
-```ini
-name = mathlib
-type = static
-
-sources = [
-  src/add.cpp,
-]
-```
-
-Correct for an app:
-
-```ini
-name = hello
-type = executable
-
-sources = [
-  src/main.cpp,
-]
-```
-
-and `src/main.cpp` should contain:
-
-```cpp
-int main()
-{
-  return 0;
-}
-```
-
-## Package not found
-
-You may see:
-
-```txt
-Could not find a package configuration file provided by "fmt"
-```
-
-Example manifest:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-
-links = [
-  fmt::fmt,
-]
-```
-
-This means CMake could not find the package.
-
-Possible fixes:
-
-```txt
-- install the package
-- set CMAKE_PREFIX_PATH
-- check the package name
-- use CMakeLists.txt for custom dependency setup
-```
-
-Example with `CMAKE_PREFIX_PATH`:
-
-```bash
-vix build -- -DCMAKE_PREFIX_PATH=/path/to/fmt
-```
-
-## Package found but target not linked
-
-`packages` only calls `find_package(...)`.
-
-You still need to link the imported target:
-
-```ini
-packages = [fmt:REQUIRED]
-links = [fmt::fmt]
-```
-
-Incorrect:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-```
-
-Correct:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-
-links = [
-  fmt::fmt,
-]
-```
-
-## Imported target not found
-
-You may see an error like:
-
-```txt
-Target "myapp" links to:
-  fmt::fmt
-
-but the target was not found.
-```
-
-Common causes:
-
-```txt
-- the package was not found
-- the target name is wrong
-- the package does not export that imported target
-- links contains a target that does not exist
-```
-
-Check the package documentation.
-
-For example, `fmt` commonly uses:
-
-```ini
-links = [
-  fmt::fmt,
-]
-```
-
-Boost components commonly use:
-
-```ini
-links = [
-  Boost::system,
-  Boost::filesystem,
-]
-```
-
-## Boost package syntax error
-
-If a package has components, quote the value.
-
-Correct:
-
-```ini
-packages = [
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-```
-
-Incorrect:
-
-```ini
-packages = [
-  Boost:COMPONENTS=system,filesystem:REQUIRED,
-]
-```
-
-The comma can be interpreted as an array separator if the value is not quoted.
-
-## Linker flag in compile_options
-
-Do not put linker options under `compile_options`.
-
-Incorrect:
-
-```ini
-compile_options = [
-  "-Wl,--as-needed",
-]
-```
-
-Correct:
-
-```ini
-link_options = [
-  "-Wl,--as-needed",
-]
-```
-
-Use:
-
-```ini
-compile_options
-```
-
-for compiler flags.
-
-Use:
-
-```ini
-link_options
-```
-
-for linker flags.
-
-## Compiler flag not supported
-
-Some flags work only with specific compilers.
-
-Example:
-
-```ini
-compile_options = [
-  -Wall,
-  -Wextra,
-]
-```
-
-These are common with GCC and Clang, but not always valid for MSVC.
-
-If portability matters, keep compiler-specific flags minimal.
-
-## Resource not copied
-
-Check that the resource path exists.
-
-Project:
-
-```txt
-myapp/
-  assets/
-    logo.png
-```
-
-Correct:
-
-```ini
-resources = [
-  assets,
-]
-```
-
-Incorrect:
-
-```ini
-resources = [
-  asset,
-]
-```
-
-Resource paths are relative to the directory containing `vix.app`.
-
-## Resource copied but app cannot find it
-
-Resources are copied next to the built target.
-
-If you use:
-
-```ini
-output_dir = bin
-```
-
-check:
-
-```txt
-build-ninja/bin/
-```
-
-not:
-
-```txt
-build-ninja/
-```
-
-Also remember that relative file access in C++ depends on the process working directory.
-
-If your program does:
-
-```cpp
-std::ifstream file("config/app.json");
-```
-
-make sure the process is running from the expected directory, or resolve paths relative to the executable.
-
-## Executable not found after build
-
-`vix run` tries to find the built executable using the target name.
-
-Check your manifest:
-
-```ini
-name = myapp
-type = executable
-```
-
-Then check common output locations:
-
-```txt
-build-ninja/myapp
-build-ninja/bin/myapp
-build-release/bin/myapp
-```
-
-If your project is a library:
-
-```ini
-type = static
-```
-
-then there may be no executable to run.
-
-Use:
-
-```bash
-vix build
-```
-
-or create a test executable under:
-
-```txt
-tests/vix.app
-```
-
-## vix run on a library
-
-`vix run` is mainly for executable targets.
-
-For a library:
-
-```ini
-name = mathlib
-type = static
-```
-
-use:
-
-```bash
-vix build
-```
-
-To run tests:
-
-```bash
-cd tests
-vix run
-```
-
-where `tests/vix.app` builds an executable test target.
-
-## output_dir confusion
-
-If you set:
-
-```ini
-output_dir = bin
-```
-
-the output is placed under the build directory:
-
-```txt
-build-ninja/bin/
-```
-
-not under:
-
-```txt
-project/bin/
-```
-
-`output_dir` is relative to the CMake build directory.
-
-## Generated CMake file is missing
-
-For `vix.app` projects, Vix generates:
-
-```txt
-.vix/generated/app/CMakeLists.txt
-```
-
-If it is missing, run:
-
-```bash
-vix build
-```
-
-If generation fails, check the manifest errors first.
-
-## Do not edit generated CMake
-
-Do not edit:
-
-```txt
-.vix/generated/app/CMakeLists.txt
-```
-
-Edit:
-
-```txt
-vix.app
-```
-
-The generated file can be overwritten by Vix.
-
-## Need raw CMake output
-
-Use:
-
-```bash
-vix build --cmake-verbose
-```
-
-This shows more CMake configure output.
-
-You can also use:
-
-```bash
-vix build -v
-```
-
-for a more detailed Vix build summary.
-
-## Need to pass CMake variables
-
-Pass extra CMake arguments after `--`.
-
-Example:
-
-```bash
-vix build -- -DCMAKE_PREFIX_PATH=/path/to/prefix
-```
-
-Another example:
-
-```bash
-vix build -- -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined"
-```
-
-For complex CMake variables, consider using a normal `CMakeLists.txt`.
-
-## Build directory is stale
-
-If the build behaves strangely, remove the build directory.
-
-```bash
-rm -rf build-ninja build-dev build-release
-```
-
-Then rebuild:
-
-```bash
-vix build
-```
-
-Or use:
-
-```bash
-vix build --clean
-```
-
-## .vix/generated is stale
-
-If the generated CMake project looks stale, remove it:
-
-```bash
+```bash id="vix-app-troubleshooting-clean-generated"
 rm -rf .vix/generated/app
-```
-
-Then rebuild:
-
-```bash
 vix build
 ```
 
-## Using vix.app with complex CMake logic
+## `vix.app` changed but dev output did not change
 
-`vix.app` is not meant to express every CMake feature.
+When `vix.app` changes, the project configuration has changed. Rebuild the project so Vix can refresh the generated app project and module wiring.
 
-Use `CMakeLists.txt` for:
-
-```txt
-- custom commands
-- generated sources
-- install rules
-- CTest
-- FetchContent
-- CPM.cmake
-- custom toolchains
-- many targets in one project
-- package export files
-- advanced platform-specific logic
+```bash id="vix-app-troubleshooting-config-change"
+vix build
 ```
 
-## Debug checklist
+For module-based backends, check modules first.
 
-When a `vix.app` project fails, check this list:
-
-```txt
-1. Am I in the directory containing vix.app?
-2. Does CMakeLists.txt exist? If yes, Vix uses it first.
-3. Is name defined?
-4. Is sources defined?
-5. Do all source files exist?
-6. Are include_dirs correct?
-7. Is type correct?
-8. Is standard written as c++17, c++20, or c++23?
-9. Are packages and links both present when using imported targets?
-10. Are resource paths correct?
-11. Am I checking the right build directory?
+```bash id="vix-app-troubleshooting-config-module"
+vix modules check
+vix build
 ```
 
-## Minimal known-good vix.app
+Normal source changes can use the fast rebuild path, but manifest changes should be treated as configuration changes.
 
-Use this to verify that `vix.app` works:
+## Compile option breaks one compiler
 
-```ini
-name = hello
-type = executable
-standard = c++20
+Raw compiler options can be platform-specific. Use conditional entries when an option should only apply to a compiler family.
 
-sources = [
-  src/main.cpp,
+```ini id="vix-app-troubleshooting-compiler-options"
+compile_options = [
+  "$<$<CXX_COMPILER_ID:MSVC>:/W4>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>",
 ]
 ```
 
-With:
+Avoid unconditional flags that only work on one compiler.
 
-```txt
-hello/
-  vix.app
-  src/
-    main.cpp
+```ini id="vix-app-troubleshooting-bad-compiler-option"
+# Avoid this in portable manifests.
+compile_options = [
+  "-Wall",
+]
 ```
 
-`src/main.cpp`:
+For sanitizer builds, keep compile and link flags together.
 
-```cpp
-#include <vix.hpp>
+```ini id="vix-app-troubleshooting-sanitizers"
+compile_options = [
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address,undefined>",
+]
+
+link_options = [
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fsanitize=address,undefined>",
+]
+```
+
+## Output directory is confusing
+
+For applications, use a simple output directory.
+
+```ini id="vix-app-troubleshooting-output-dir"
+output_dir = "bin"
+```
+
+This keeps the executable and runtime resources close together.
+
+```txt id="vix-app-troubleshooting-output-dir-layout"
+bin/
+  api
+  .env
+  public/
+```
+
+Avoid deeply nested output paths unless the project has a clear reason.
+
+```ini id="vix-app-troubleshooting-output-dir-bad"
+# Avoid unless necessary.
+output_dir = "runtime/linux/debug/bin"
+```
+
+The output directory should make the runtime easier to find, not harder.
+
+## Full backend check
+
+For a backend with modules, use this sequence when the error is unclear.
+
+```bash id="vix-app-troubleshooting-backend-full-check"
+vix modules list
+vix modules check
+vix build
+vix tests
+```
+
+This checks the module declarations, module structure, build manifest, and test suite in a predictable order.
+
+For a stronger single workflow:
+
+```bash id="vix-app-troubleshooting-backend-check"
+vix check --tests --run
+```
+
+Use the longer sequence when you need to see where the failure starts.
+
+## Quick diagnosis table
+
+| Symptom                          | Check first                               |
+| -------------------------------- | ----------------------------------------- |
+| `vix.app` seems ignored          | Root `CMakeLists.txt` still exists        |
+| Source file missing              | `sources` path relative to project root   |
+| Header not found                 | `include_dirs` root and include style     |
+| Link target missing              | `packages`, `deps`, and `links`           |
+| Runtime file missing             | `resources` and `output_dir`              |
+| Module not listed                | `[module.<name>]` section in `vix.app`    |
+| Module boundary error            | `depends` and public include layout       |
+| Library cannot run               | `type` is not `executable`                |
+| Generated file changes disappear | Edit `vix.app`, not `.vix/generated/app/` |
+
+## A known-good minimal app
+
+When the project is difficult to diagnose, reduce it to a minimal known-good shape.
+
+```ini id="vix-app-troubleshooting-known-good"
+name = "hello"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+```cpp id="vix-app-troubleshooting-known-good-main"
+#include <vix/print.hpp>
 
 int main()
 {
-  vix::print("hello");
+  vix::print("Hello from Vix");
   return 0;
 }
 ```
 
-Run:
+Then build and run.
 
-```bash
+```bash id="vix-app-troubleshooting-known-good-run"
 vix build
 vix run
 ```
 
-## Summary
+Once this works, add the real source files, include directories, links, resources, and modules back in small steps.
 
-Most `vix.app` issues come from:
+## Next step
 
-```txt
-- wrong relative paths
-- missing sources
-- missing include_dirs
-- CMakeLists.txt taking priority
-- packages not linked through links
-- trying to use vix.app for complex CMake workflows
-```
+Continue with best practices to keep `vix.app` readable and predictable as the project grows.
 
-Keep the manifest simple and explicit.
-
-When the project becomes complex, use `CMakeLists.txt`.
-
-## Next steps
-
-Continue with:
-
-- [Best Practices](./best-practices.md)
-- [Manifest Reference](./manifest-reference.md)
-- [Packages and Links](./packages-and-links.md)
-- [CMake Fallback](./cmake-fallback.md)
+[Best Practices](/guides/vix-app/best-practices)

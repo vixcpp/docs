@@ -1,1001 +1,299 @@
 # Project Types
 
-`vix.app` supports the most common C++ target types.
+`vix.app` describes the target that Vix should build for an application-style project. In most generated projects, that target is an executable, because the project is meant to be run with `vix run`. The same manifest format can also describe library targets when the project is meant to produce reusable code.
 
-A target type tells Vix what kind of build output should be generated.
+The important distinction is that `type` describes the C++ target shape, not the whole product category. A backend, a game, or a Vue + Vix project may all build an executable target, but they use different source layouts, linked Vix modules, resources, and project metadata.
 
-```ini
-type = executable
+## Executable applications
+
+Most Vix applications use:
+
+```ini id="b72kcz"
+type = "executable"
 ```
 
-```ini
-type = static
-```
+An executable target produces a program that can be built and run directly:
 
-```ini
-type = shared
-```
-
-```ini
-type = library
-```
-
-For most projects, you will use either:
-
-```txt
-executable -> application
-static     -> static library
-shared     -> shared library
-```
-
-## Default type
-
-If `type` is not provided, Vix uses:
-
-```ini
-type = executable
-```
-
-So this:
-
-```ini
-name = hello
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-is equivalent to:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-## Executable projects
-
-Use `executable` when your project builds an application.
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-This creates an executable target named:
-
-```txt
-hello
-```
-
-Typical layout:
-
-```txt
-hello/
-  vix.app
-  src/
-    main.cpp
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <vix.hpp>
-
-int main()
-{
-  vix::print("Hello from vix.app");
-  return 0;
-}
-```
-
-Build and run:
-
-```bash
+```bash id="lyl451"
 vix build
 vix run
 ```
 
-## Executable with multiple files
+A minimal executable manifest looks like this:
 
-A real application usually has more than one source file.
-
-```txt
-myapp/
-  vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
-```
-
-`vix.app`:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
+```ini id="b8vvoa"
+name = "hello"
+type = "executable"
+standard = "c++20"
 
 sources = [
-  src/main.cpp,
-  src/app.cpp,
+  "src/main.cpp",
 ]
 
 include_dirs = [
-  include,
+  "src",
 ]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
+output_dir = "bin"
 ```
 
-`include/myapp/app.hpp`:
+The `name` becomes the application target name. The `sources` list tells Vix which files belong to that target. The `links` list tells Vix which libraries are linked into the executable.
 
-```cpp
-#pragma once
+## Backend applications
 
-namespace myapp
-{
-  int run();
-}
+A Vix backend is normally still an executable target. It runs as a process, exposes routes, reads runtime configuration, and may later be managed by production commands such as service, proxy, health, logs, or deploy.
+
+For that reason, generated backend manifests use:
+
+```ini id="sq8hqr"
+type = "executable"
 ```
 
-`src/app.cpp`:
+The backend identity comes from the project structure, source files, definitions, resources, linked modules, and project metadata around the app.
 
-```cpp
-#include <vix.hpp>
-#include <myapp/app.hpp>
-
-namespace myapp
-{
-  int run()
-  {
-    vix::print("myapp running");
-    return 0;
-  }
-}
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <myapp/app.hpp>
-
-int main()
-{
-  return myapp::run();
-}
-```
-
-## Static library projects
-
-Use `static` when your project builds a static library.
-
-```ini
-name = mathlib
-type = static
-standard = c++20
+```ini id="k7a9vb"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/add.cpp,
-  src/mul.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
 ]
 
 include_dirs = [
-  include,
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
 ]
 ```
 
-This creates a static library target named:
+This layout gives the backend a clear entry point while still keeping controllers, middleware, routes, support code, and application bootstrap code separated. When the backend grows, internal modules can be declared in the same `vix.app` file through `[module.<name>]` sections.
 
-```txt
-mathlib
-```
+## Game applications
 
-Typical layout:
+A Vix game project also builds an executable target. The difference is in the modules it links and the resources it needs at runtime.
 
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-```
-
-`include/mathlib/math.hpp`:
-
-```cpp
-#pragma once
-
-namespace mathlib
-{
-  int add(int a, int b);
-  int mul(int a, int b);
-}
-```
-
-`src/add.cpp`:
-
-```cpp
-#include <mathlib/math.hpp>
-
-namespace mathlib
-{
-  int add(int a, int b)
-  {
-    return a + b;
-  }
-}
-```
-
-`src/mul.cpp`:
-
-```cpp
-#include <mathlib/math.hpp>
-
-namespace mathlib
-{
-  int mul(int a, int b)
-  {
-    return a * b;
-  }
-}
-```
-
-Build:
-
-```bash
-vix build
-```
-
-## Static library aliases
-
-The following values are accepted for static libraries:
-
-```ini
-type = static
-```
-
-```ini
-type = static-library
-```
-
-Use `static` for shorter manifests.
-
-Recommended:
-
-```ini
-type = static
-```
-
-## Shared library projects
-
-Use `shared` when your project builds a shared library.
-
-```ini
-name = plugin
-type = shared
-standard = c++20
+```ini id="reob7d"
+name = "space-demo"
+type = "executable"
+standard = "c++20"
 
 sources = [
-  src/plugin.cpp,
+  "src/main.cpp",
 ]
 
 include_dirs = [
-  include,
+  "src",
 ]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::game",
+  "vix::io",
+]
+
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
+]
+
+output_dir = "bin"
 ```
 
-This creates a shared library target named:
+The executable starts the game runtime, while `resources` keeps assets and game metadata available next to the built target. This keeps the build manifest focused on the C++ side without losing the runtime files needed by the game.
 
-```txt
-plugin
-```
+## Frontend + Vix backend projects
 
-Typical layout:
+A frontend + Vix project usually has a frontend directory and a Vix backend executable. The backend remains described by `vix.app`, while frontend tasks and metadata live in `vix.json`.
 
-```txt
-plugin/
-  vix.app
-  include/
-    plugin/
-      plugin.hpp
-  src/
-    plugin.cpp
-```
+The backend manifest may stay small:
 
-`include/plugin/plugin.hpp`:
-
-```cpp
-#pragma once
-
-namespace plugin
-{
-  const char *name();
-}
-```
-
-`src/plugin.cpp`:
-
-```cpp
-#include <plugin/plugin.hpp>
-
-namespace plugin
-{
-  const char *name()
-  {
-    return "plugin";
-  }
-}
-```
-
-Build:
-
-```bash
-vix build
-```
-
-## Shared library aliases
-
-The following values are accepted for shared libraries:
-
-```ini
-type = shared
-```
-
-```ini
-type = shared-library
-```
-
-Use `shared` for shorter manifests.
-
-Recommended:
-
-```ini
-type = shared
-```
-
-## Library projects
-
-`library` is also supported.
-
-```ini
-name = core
-type = library
-standard = c++20
+```ini id="wgl8ac"
+name = "dashboard"
+type = "executable"
+standard = "c++20"
 
 sources = [
-  src/core.cpp,
+  "src/main.cpp",
 ]
 
 include_dirs = [
-  include,
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
+output_dir = "bin"
+```
+
+The frontend workflow is then handled through project tasks, for example installing dependencies, running the dev server, or building the frontend. This keeps `vix.app` responsible for the C++ application target instead of turning it into a general project configuration file.
+
+## Static libraries
+
+A static library target can be used when the project produces reusable code that will be linked into another target.
+
+```ini id="dzc2bc"
+name = "mathkit"
+type = "static-library"
+standard = "c++20"
+
+sources = [
+  "src/add.cpp",
+  "src/multiply.cpp",
+]
+
+include_dirs = [
+  "include",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-Use `library` when you want the default library behavior supported by Vix.
+The accepted short form is also available:
 
-For clearer intent, prefer one of these when possible:
+```ini id="u5hsn9"
+type = "static"
+```
 
-```ini
-type = static
+Static library projects are useful for internal packages, shared application logic, or code that should be built once and linked into an executable.
+
+## Shared libraries
+
+A shared library target produces a dynamic library.
+
+```ini id="ki6dep"
+name = "plugin"
+type = "shared-library"
+standard = "c++20"
+
+sources = [
+  "src/plugin.cpp",
+]
+
+include_dirs = [
+  "include",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+The accepted short form is:
+
+```ini id="gsovw9"
+type = "shared"
+```
+
+Use a shared library when the project is meant to be loaded dynamically or distributed as a runtime library. For normal Vix applications, `executable` remains the clearer default.
+
+## Supported type values
+
+`vix.app` accepts the common names for executable and library targets.
+
+```txt id="qdd2nm"
+executable
+static
+static-library
+shared
+shared-library
+library
+```
+
+The `library` value maps to a library target. For clarity in documentation and project manifests, prefer the explicit forms:
+
+```ini id="el7w3m"
+type = "static-library"
 ```
 
 or:
 
-```ini
-type = shared
+```ini id="fbsszf"
+type = "shared-library"
 ```
+
+For applications that should run with `vix run`, use:
+
+```ini id="gego67"
+type = "executable"
+```
+
+## How Vix chooses the project input
+
+Vix keeps existing CMake projects working. When resolving a project for `vix build` or `vix run`, Vix first checks for a `CMakeLists.txt`. If one exists, the project is treated as a CMake project. If no `CMakeLists.txt` exists and `vix.app` is present, Vix loads the manifest and generates the internal application build files.
+
+```txt id="h3yw7o"
+1. CMakeLists.txt
+2. vix.app
+```
+
+This means a `vix.app` project should not also keep a root `CMakeLists.txt` unless the intention is to use the CMake project directly. In a pure `vix.app` project, let Vix generate the internal files under `.vix/generated/app/`.
 
 ## Choosing the right type
 
-Use this rule:
+Use `executable` for apps, backends, games, tools, servers, and anything the developer should run directly. Use `static-library` for reusable code that should be linked into another target. Use `shared-library` when the output must be loaded or distributed as a dynamic library.
 
-```txt
-executable -> the target has main()
-static     -> reusable code linked into another target
-shared     -> dynamic library loaded or linked at runtime
-library    -> generic library target
-```
+The project family can still be expressed through the rest of the manifest. A backend is an executable with backend sources, backend defines, runtime resources, and often app modules. A game is an executable linked with `vix::game` and `vix::io`, with assets copied as resources. The target type stays simple while the project structure carries the meaning.
 
-## Executable vs library
+## Next step
 
-An executable usually has a `main()` function.
+Continue with the manifest reference to see every supported field in one place.
 
-Example:
-
-```cpp
-int main()
-{
-  return 0;
-}
-```
-
-A library usually does not have `main()`.
-
-Example:
-
-```cpp
-namespace mathlib
-{
-  int add(int a, int b)
-  {
-    return a + b;
-  }
-}
-```
-
-If you put `main()` in a static or shared library target, it usually means your project structure should be changed.
-
-## Testing a library
-
-For `vix.app` V1, use a separate test manifest.
-
-Example:
-
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-  tests/
-    vix.app
-    test_add.cpp
-```
-
-Root `vix.app`:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
-sources = [
-  src/add.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-`tests/vix.app`:
-
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
-
-sources = [
-  test_add.cpp,
-  ../src/add.cpp,
-]
-
-include_dirs = [
-  ../include,
-]
-```
-
-Run tests:
-
-```bash
-cd tests
-vix run
-```
-
-## Application with internal library-style code
-
-For applications, it is better to keep `main.cpp` small.
-
-Recommended:
-
-```txt
-myapp/
-  vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
-```
-
-`vix.app`:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-`src/main.cpp` should only start the application:
-
-```cpp
-#include <myapp/app.hpp>
-
-int main()
-{
-  return myapp::run();
-}
-```
-
-This makes your project easier to test.
-
-## Examples as separate targets
-
-Since `vix.app` describes one target, the recommended approach is one folder per example.
-
-```txt
-examples/
-  hello/
-    vix.app
-    src/
-      main.cpp
-  threads/
-    vix.app
-    src/
-      main.cpp
-  resources/
-    vix.app
-    src/
-      main.cpp
-    assets/
-      config.json
-```
-
-Build one example:
-
-```bash
-cd examples/hello
-vix run
-```
-
-This keeps each example independent and simple.
-
-## Multiple targets
-
-`vix.app` is intentionally simple.
-
-It describes one target.
-
-For multiple targets, use one of these approaches:
-
-```txt
-- one folder with one vix.app per target
-- a normal CMakeLists.txt for full multi-target control
-```
-
-Recommended for simple projects:
-
-```txt
-workspace/
-  apps/
-    server/
-      vix.app
-      src/
-        main.cpp
-    client/
-      vix.app
-      src/
-        main.cpp
-  libs/
-    mathlib/
-      vix.app
-      src/
-        add.cpp
-      include/
-        mathlib/
-          math.hpp
-```
-
-For advanced multi-target projects, use `CMakeLists.txt`.
-
-## Type and output name
-
-The `name` field defines the target name.
-
-The `type` field defines what kind of target is generated.
-
-Example:
-
-```ini
-name = hello
-type = executable
-```
-
-This creates an executable target named:
-
-```txt
-hello
-```
-
-Example:
-
-```ini
-name = mathlib
-type = static
-```
-
-This creates a static library target named:
-
-```txt
-mathlib
-```
-
-## Type and vix run
-
-`vix run` is mainly useful for executable targets.
-
-For this manifest:
-
-```ini
-name = hello
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-you can run:
-
-```bash
-vix run
-```
-
-For this manifest:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
-sources = [
-  src/add.cpp,
-]
-```
-
-`vix build` is the main command:
-
-```bash
-vix build
-```
-
-If you want to run tests for a library, create a test executable under `tests/vix.app`.
-
-## Type and resources
-
-Resources are usually useful for executables.
-
-Example:
-
-```ini
-name = asset_app
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-]
-
-resources = [
-  assets,
-]
-```
-
-For libraries, resources are less common.
-
-## Type and packages
-
-All project types can use packages and links.
-
-Executable:
-
-```ini
-name = threaded_app
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
-packages = [
-  Threads:REQUIRED,
-]
-
-links = [
-  Threads::Threads,
-]
-```
-
-Static library:
-
-```ini
-name = core
-type = static
-standard = c++20
-
-sources = [
-  src/core.cpp,
-]
-
-packages = [
-  Threads:REQUIRED,
-]
-
-links = [
-  Threads::Threads,
-]
-```
-
-Shared library:
-
-```ini
-name = plugin
-type = shared
-standard = c++20
-
-sources = [
-  src/plugin.cpp,
-]
-
-packages = [
-  Threads:REQUIRED,
-]
-
-links = [
-  Threads::Threads,
-]
-```
-
-## Common mistakes
-
-### Using executable for a library
-
-Incorrect:
-
-```ini
-name = mathlib
-type = executable
-
-sources = [
-  src/add.cpp,
-]
-```
-
-If `src/add.cpp` does not provide `main()`, the link step will fail.
-
-Correct:
-
-```ini
-name = mathlib
-type = static
-
-sources = [
-  src/add.cpp,
-]
-```
-
-### Using static for an app
-
-Incorrect:
-
-```ini
-name = hello
-type = static
-
-sources = [
-  src/main.cpp,
-]
-```
-
-If your target is meant to run, use:
-
-```ini
-type = executable
-```
-
-### Testing by adding main.cpp twice
-
-Incorrect test manifest:
-
-```ini
-sources = [
-  test_app.cpp,
-  ../src/main.cpp,
-  ../src/app.cpp,
-]
-```
-
-This can cause duplicate `main()` errors.
-
-Correct:
-
-```ini
-sources = [
-  test_app.cpp,
-  ../src/app.cpp,
-]
-```
-
-## Recommended patterns
-
-### CLI application
-
-```txt
-cli-tool/
-  vix.app
-  src/
-    main.cpp
-```
-
-```ini
-name = cli_tool
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-```
-
-### Application with internal logic
-
-```txt
-myapp/
-  vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
-```
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-### Static library
-
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-```
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
-sources = [
-  src/add.cpp,
-  src/mul.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-### Shared library
-
-```txt
-plugin/
-  vix.app
-  include/
-    plugin/
-      plugin.hpp
-  src/
-    plugin.cpp
-```
-
-```ini
-name = plugin
-type = shared
-standard = c++20
-
-sources = [
-  src/plugin.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-## When to use CMakeLists.txt
-
-Use `CMakeLists.txt` when you need:
-
-```txt
-- many targets in one project
-- complex target dependencies
-- generated source files
-- custom commands
-- CTest integration
-- install rules
-- advanced packaging
-- platform-specific build logic
-```
-
-`vix.app` is best for one clear target.
-
-CMake is still the compatibility path for advanced build systems.
-
-## Summary
-
-```txt
-type = executable
-  build an application
-
-type = static
-  build a static library
-
-type = shared
-  build a shared library
-
-type = library
-  build a generic library target
-```
-
-Recommended rule:
-
-```txt
-Use vix.app for one simple target.
-Use CMakeLists.txt for complex multi-target projects.
-```
-
-## Next steps
-
-Continue with:
-
-- [Sources and Includes](./sources-and-includes.md)
-- [Compile Options](./compile-options.md)
-- [Libraries](./libraries.md)
-- [Tests](./tests.md)
+[Manifest Reference](/guides/vix-app/manifest-reference)

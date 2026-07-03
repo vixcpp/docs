@@ -1,710 +1,554 @@
 # Packages and Links
 
-`vix.app` separates package discovery from linking.
+`packages`, `deps`, and `links` describe what the application uses outside its own source files. They are related, but they do not mean the same thing. A package makes a library or SDK available to the build, a registry dependency declares code that should be resolved by Vix, and a link entry tells the application target what it actually uses.
 
-This is important.
+For most Vix applications, the flow is simple: declare the Vix package, link the Vix targets used by the application, then build normally.
 
-```txt
-packages -> find_package(...)
-links    -> target_link_libraries(...)
-```
-
-`packages` does not automatically link anything.
-
-You use `packages` to ask CMake to find a package.
-
-You use `links` to choose what targets or libraries your target should link against.
-
-## Basic rule
-
-Correct:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-
-links = [
-  fmt::fmt,
-]
-```
-
-Incorrect:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-```
-
-The incorrect version finds `fmt`, but it does not link `fmt::fmt`.
-
-## packages
-
-The `packages` field generates `find_package(...)` calls in the internal CMake project.
-
-Example:
-
-```ini
-packages = [
-  Threads:REQUIRED,
-  fmt:REQUIRED,
-]
-```
-
-This means Vix generates something equivalent to:
-
-```cmake
-find_package(Threads REQUIRED)
-find_package(fmt REQUIRED)
-```
-
-## links
-
-The `links` field generates `target_link_libraries(...)`.
-
-Example:
-
-```ini
-links = [
-  Threads::Threads,
-  fmt::fmt,
-]
-```
-
-This means Vix generates something equivalent to:
-
-```cmake
-target_link_libraries(myapp PRIVATE
-  Threads::Threads
-  fmt::fmt
-)
-```
-
-## Why packages and links are separate
-
-CMake packages can expose different target names.
-
-For example, a package can be found with:
-
-```cmake
-find_package(fmt REQUIRED)
-```
-
-but the target to link is usually:
-
-```cmake
-fmt::fmt
-```
-
-Another package can be found with:
-
-```cmake
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-```
-
-but the targets to link can be:
-
-```cmake
-Boost::system
-Boost::filesystem
-```
-
-Because package names and target names are not always the same, `vix.app` keeps them separate.
-
-## Supported package syntax
-
-`packages` supports these forms:
-
-```txt
-<name>
-<name>:REQUIRED
-<name>:COMPONENTS=a,b
-<name>:COMPONENTS=a,b:REQUIRED
-```
-
-## Simple package
-
-```ini
-packages = [
-  Threads,
-]
-```
-
-Generates:
-
-```cmake
-find_package(Threads)
-```
-
-## Required package
-
-```ini
-packages = [
-  Threads:REQUIRED,
-]
-```
-
-Generates:
-
-```cmake
-find_package(Threads REQUIRED)
-```
-
-## Package with components
-
-```ini
-packages = [
-  "Boost:COMPONENTS=system,filesystem",
-]
-```
-
-Generates:
-
-```cmake
-find_package(Boost COMPONENTS system filesystem)
-```
-
-## Required package with components
-
-```ini
-packages = [
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-```
-
-Generates:
-
-```cmake
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-```
-
-## Why some package values are quoted
-
-Values that contain commas should be quoted.
-
-Correct:
-
-```ini
-packages = [
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-```
-
-If you do not quote a value containing commas, the manifest parser may treat it as multiple array items.
-
-## Threads example
-
-Project layout:
-
-```txt
-threaded-app/
-  vix.app
-  src/
-    main.cpp
-```
-
-`vix.app`:
-
-```ini
-name = threaded_app
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
-packages = [
-  Threads:REQUIRED,
-]
-
-links = [
-  Threads::Threads,
-]
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <vix.hpp>
-
-#include <thread>
-
-int main()
-{
-  std::thread worker([] {
-    vix::print("Hello from a thread");
-  });
-
-  worker.join();
-  return 0;
-}
-```
-
-Build and run:
-
-```bash
+```bash id="ngh7h4"
 vix build
 vix run
 ```
 
-## fmt example
+This keeps the manifest readable. The application says what it needs, and Vix handles the build workflow around it.
 
-This example assumes `fmt` is available to CMake on your system.
+## Basic Vix application
 
-`vix.app`:
+A small application usually starts with the `vix` package and the base Vix target.
 
-```ini
-name = fmt_app
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
+```ini id="m26u6a"
 packages = [
-  fmt:REQUIRED,
+  "vix",
 ]
 
 links = [
-  fmt::fmt,
+  "vix::vix",
 ]
 ```
 
-`src/main.cpp`:
+This is enough for a normal application that uses the main Vix SDK entry point.
 
-```cpp
-#include <fmt/core.h>
+```cpp id="ryyegu"
+#include <vix/print.hpp>
 
 int main()
 {
-  fmt::print("Hello from fmt\n");
+  vix::print("Hello from Vix");
   return 0;
 }
 ```
 
-Build and run:
+The important part is that `packages` and `links` work together. The package makes Vix available, while the link entry says that this application target uses `vix::vix`.
 
-```bash
-vix build
-vix run
-```
+## Packages
 
-## Boost example
+The `packages` field declares external packages that must be available to the application.
 
-This example assumes Boost is installed and available to CMake.
-
-`vix.app`:
-
-```ini
-name = boost_app
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
+```ini id="ld4b8x"
 packages = [
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
+  "vix",
+]
+```
+
+A package entry is usually just a name. In Vix projects, `vix` is the common package name because it exposes the installed Vix SDK targets used by generated applications and modules.
+
+Package entries can also carry requirement and component information when a package supports it.
+
+```ini id="xk49if"
+packages = [
+  "vix",
+  "OpenSSL:REQUIRED",
+  "Qt6:COMPONENTS=Widgets,Network:REQUIRED",
+]
+```
+
+The supported forms are:
+
+```txt id="fzyd3v"
+name
+name:REQUIRED
+name:COMPONENTS=a,b
+name:COMPONENTS=a,b:REQUIRED
+```
+
+The order of `COMPONENTS=...` and `REQUIRED` does not matter. Component names are separated by commas, and whitespace around them is ignored.
+
+## Links
+
+The `links` field declares the targets or libraries that are linked into the application.
+
+```ini id="ayjo7x"
+links = [
+  "vix::vix",
+]
+```
+
+Think of `links` as the final usage list. If the application uses the base Vix API, link `vix::vix`. If it uses a specific SDK module, link the target for that module.
+
+A backend application using ORM may link both the base Vix target and the ORM target.
+
+```ini id="fr0g74"
+packages = [
+  "vix",
 ]
 
 links = [
-  Boost::system,
-  Boost::filesystem,
+  "vix::vix",
+  "vix::orm",
 ]
 ```
 
-`src/main.cpp`:
+A game project links the game and I/O modules instead.
 
-```cpp
-#include <vix.hpp>
+```ini id="ulcg8x"
+packages = [
+  "vix",
+]
 
-#include <boost/filesystem.hpp>
-
-int main()
-{
-  boost::filesystem::path path = ".";
-  vix::print("Current path:", path.string());
-  return 0;
-}
+links = [
+  "vix::game",
+  "vix::io",
+]
 ```
 
-Build and run:
+Keep the link list honest. A manifest should not link every module in the SDK only because they exist. It should link the targets the application actually uses.
 
-```bash
+## Package versus link
+
+A package makes something available. A link entry connects the application target to a specific library or module.
+
+```ini id="ckirdd"
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+In this example, `vix` is the package. `vix::vix` is the target used by the application.
+
+When the application starts using another Vix module, the link list is the part that changes.
+
+```ini id="vkw01z"
+links = [
+  "vix::vix",
+  "vix::orm",
+]
+```
+
+This distinction matters because one package can expose more than one target. The manifest should make the actual target usage visible.
+
+## Registry dependencies
+
+The `deps` field declares dependencies from the Vix Registry.
+
+```ini id="w45nf5"
+deps = [
+  "adastra/logger",
+  "tools/json@1.2.0",
+]
+```
+
+Accepted dependency forms are:
+
+```txt id="om5oyj"
+namespace/name
+namespace/name@version
+@namespace/name
+@namespace/name@version
+```
+
+When Vix reads dependencies from `vix.app`, it syncs them into the project dependency state and resolves the lockfile. This lets an application keep its high-level dependency intent in `vix.app` while still using the normal Vix dependency workflow.
+
+After adding or changing registry dependencies, run:
+
+```bash id="rgri4c"
+vix install
 vix build
-vix run
 ```
 
-## System libraries
+A registry dependency does not automatically mean the application is linked against every target exported by that dependency. The dependency makes the package available to the project; the `links` field should still describe what the application target uses.
 
-You can link simple system libraries directly with `links`.
+## Using Vix SDK targets
 
-Example on Linux:
+The Vix SDK is organized into focused modules. A project should link the SDK targets that match the code it uses.
 
-```ini
+A simple tool may only need the base target:
+
+```ini id="w94tcu"
 links = [
-  m,
+  "vix::vix",
 ]
 ```
 
-This links the math library.
+A backend with database features may add ORM:
 
-Complete example:
+```ini id="t439c8"
+links = [
+  "vix::vix",
+  "vix::orm",
+]
+```
 
-```ini
-name = math_app
-type = executable
-standard = c++20
+A game project can stay focused on the game runtime:
+
+```ini id="xhxxzo"
+links = [
+  "vix::game",
+  "vix::io",
+]
+```
+
+The manifest should follow the source code, not the other way around. When a module is introduced in the code, add the matching link entry. When a module is no longer used, remove it from `links`.
+
+## Backend example
+
+Generated backend applications start with the Vix package and link the base Vix target. Optional features can add more targets.
+
+```ini id="bo9l9h"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
-]
-
-links = [
-  m,
-]
-```
-
-`src/main.cpp`:
-
-```cpp
-#include <vix.hpp>
-
-#include <cmath>
-
-int main()
-{
-  vix::print("sqrt(25) =", std::sqrt(25.0));
-  return 0;
-}
-```
-
-## Local CMake targets
-
-If your generated project has access to a local target, you can list it under `links`.
-
-Example:
-
-```ini
-links = [
-  my_local_lib,
-]
-```
-
-For `vix.app` V1, the recommended approach is still one manifest per target.
-
-For multiple related targets, use either:
-
-```txt
-- one vix.app project per target
-- or a normal CMakeLists.txt for full control
-```
-
-## Header-only libraries
-
-Header-only libraries usually do not need linking.
-
-They usually only need an include directory.
-
-Example:
-
-```ini
-name = header_app
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
 ]
 
 include_dirs = [
-  third_party/some_header_lib/include,
+  "include",
+  "src",
 ]
-```
 
-No `links` field is needed if the library is truly header-only.
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
 
-## Package found but target not linked
-
-A common mistake is to write:
-
-```ini
 packages = [
-  fmt:REQUIRED,
-]
-```
-
-and expect the target to link automatically.
-
-This is not enough.
-
-You still need:
-
-```ini
-links = [
-  fmt::fmt,
-]
-```
-
-Correct complete version:
-
-```ini
-packages = [
-  fmt:REQUIRED,
+  "vix",
 ]
 
 links = [
-  fmt::fmt,
+  "vix::vix",
 ]
 ```
 
-## Imported target not found
+When the backend uses ORM, the manifest can make that explicit.
 
-If the build fails with an error similar to:
+```ini id="y21j5z"
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+  "VIX_USE_ORM=1",
+]
 
-```txt
-Target "myapp" links to:
-  fmt::fmt
-
-but the target was not found.
-```
-
-It usually means one of these things:
-
-```txt
-- the package was not found
-- the package was found but does not export that target name
-- the target name is different on your system
-- you forgot to add the package under packages
-```
-
-Check the package documentation to confirm the imported target name.
-
-## Package not found
-
-If CMake cannot find a package, you may see an error like:
-
-```txt
-Could not find a package configuration file provided by "fmt"
-```
-
-This means CMake cannot locate the package.
-
-Possible fixes:
-
-```txt
-- install the package
-- set CMAKE_PREFIX_PATH
-- use your system package manager
-- use a normal CMakeLists.txt if the dependency needs custom setup
-```
-
-You can pass extra CMake arguments after `--`:
-
-```bash
-vix build -- -DCMAKE_PREFIX_PATH=/path/to/prefix
-```
-
-## Using CMAKE_PREFIX_PATH
-
-Some packages are installed in custom locations.
-
-Example:
-
-```bash
-vix build -- -DCMAKE_PREFIX_PATH=/opt/fmt
-```
-
-or:
-
-```bash
-vix build -- -DCMAKE_PREFIX_PATH=$HOME/local
-```
-
-This helps CMake find packages installed outside the default system paths.
-
-## Multiple packages
-
-You can list several packages:
-
-```ini
 packages = [
-  Threads:REQUIRED,
-  fmt:REQUIRED,
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
+  "vix",
 ]
-```
 
-And link their imported targets:
-
-```ini
 links = [
-  Threads::Threads,
-  fmt::fmt,
-  Boost::system,
-  Boost::filesystem,
+  "vix::vix",
+  "vix::orm",
 ]
 ```
 
-Complete example:
+The definition marks the feature at compile time, while the link entry connects the target to the ORM module.
 
-```ini
-name = network_app
-type = executable
-standard = c++20
+## Game example
+
+A Vix game project has a smaller dependency shape. It usually links the game runtime and the I/O module.
+
+```ini id="wa5o3e"
+name = "space-demo"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
 ]
 
 packages = [
-  Threads:REQUIRED,
-  fmt:REQUIRED,
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
+  "vix",
 ]
 
 links = [
-  Threads::Threads,
-  fmt::fmt,
-  Boost::system,
-  Boost::filesystem,
+  "vix::game",
+  "vix::io",
+]
+
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
 ]
 ```
 
-## Using link options
+The manifest stays close to the project. Source files describe the program, links describe the SDK modules used by the program, and resources describe what the program needs at runtime.
 
-`link_options` is different from `links`.
+## Registry dependency example
 
-Use `links` for libraries and targets:
+A project can declare registry dependencies in `vix.app`.
 
-```ini
-links = [
-  fmt::fmt,
-  Threads::Threads,
-]
-```
-
-Use `link_options` for linker flags:
-
-```ini
-link_options = [
-  "-Wl,--as-needed",
-]
-```
-
-Complete example:
-
-```ini
-name = linked_app
-type = executable
-standard = c++20
+```ini id="t0h1f2"
+name = "api"
+type = "executable"
+standard = "c++20"
 
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
 ]
 
 packages = [
-  fmt:REQUIRED,
+  "vix",
+]
+
+deps = [
+  "adastra/logger@1.0.0",
 ]
 
 links = [
-  fmt::fmt,
-]
-
-link_options = [
-  "-Wl,--as-needed",
+  "vix::vix",
+  "adastra::logger",
 ]
 ```
 
-## Recommended pattern
+The exact link target exported by a registry package depends on that package. The dependency entry says what Vix should resolve. The link entry should use the target name provided by the package documentation.
 
-For every external dependency, think in two steps.
+## Required packages
 
-Step 1: find the package.
+Use `REQUIRED` when the application cannot be built without a package.
 
-```ini
+```ini id="ra3spb"
 packages = [
-  fmt:REQUIRED,
+  "vix",
+  "OpenSSL:REQUIRED",
 ]
 ```
 
-Step 2: link the target.
+This makes the manifest clearer for important external requirements. A reader can immediately see that the package is not optional for the application.
 
-```ini
-links = [
-  fmt::fmt,
-]
-```
+## Package components
 
-Final:
+Some packages expose components. Components let the manifest request only the parts the application needs.
 
-```ini
+```ini id="pp2w8x"
 packages = [
-  fmt:REQUIRED,
-]
-
-links = [
-  fmt::fmt,
+  "Qt6:COMPONENTS=Widgets,Network:REQUIRED",
 ]
 ```
 
-## When to use CMakeLists.txt instead
+A component list belongs in `packages`, while the concrete targets still belong in `links`.
 
-Use a normal `CMakeLists.txt` when dependency setup requires complex CMake logic.
-
-Examples:
-
-```txt
-- FetchContent
-- CPM.cmake
-- custom find modules
-- generated dependency targets
-- platform-specific package logic
-- optional dependency graphs
-- multiple dependency variants
-```
-
-`vix.app` is designed to keep common cases simple.
-
-For advanced dependency control, CMake is still the right tool.
-
-## Summary
-
-```txt
-packages:
-  finds packages with find_package(...)
-
-links:
-  links libraries or imported targets with target_link_libraries(...)
-
-compile_options:
-  compiler flags
-
-link_options:
-  linker flags
-```
-
-The safest pattern is:
-
-```ini
+```ini id="r6sqsv"
 packages = [
-  SomePackage:REQUIRED,
+  "Qt6:COMPONENTS=Widgets,Network:REQUIRED",
 ]
 
 links = [
-  SomePackage::SomeTarget,
+  "Qt6::Widgets",
+  "Qt6::Network",
 ]
 ```
 
-## Next steps
+This keeps the two steps readable: request the package components, then link the targets used by the application.
 
-Continue with:
+## Internal modules are different
 
-- [Tests](./tests.md)
-- [Project Types](./project-types.md)
-- [Troubleshooting](./troubleshooting.md)
-- [Best Practices](./best-practices.md)
+Vix app modules are not registry dependencies. They are internal parts of the same application, declared with `[module.<name>]`.
+
+```ini id="u1q6hl"
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+A module dependency such as `projects` depending on `auth` belongs in the module section, not in `deps`.
+
+```ini id="pkir9x"
+depends = [
+  "auth",
+]
+```
+
+Use `deps` for Vix Registry dependencies. Use `[module.<name>]` sections for internal application modules.
+
+## Recommended order
+
+In a `vix.app` file, place packages and dependencies near the link list.
+
+```ini id="gslp01"
+packages = [
+  "vix",
+]
+
+deps = [
+  "adastra/logger@1.0.0",
+]
+
+links = [
+  "vix::vix",
+  "adastra::logger",
+]
+```
+
+This order reads naturally. First the manifest says which packages are available, then which registry dependencies are required, then which targets the application actually links.
+
+## Common mistakes
+
+The most common mistake is adding a package but forgetting the matching link entry.
+
+```ini id="bbk8zd"
+packages = [
+  "vix",
+]
+```
+
+If the code uses the base Vix target, the manifest should also include:
+
+```ini id="tbeqrc"
+links = [
+  "vix::vix",
+]
+```
+
+Another common mistake is putting registry package names in `links`.
+
+```ini id="vm7kht"
+# Not enough by itself.
+deps = [
+  "adastra/logger",
+]
+```
+
+The dependency tells Vix what to resolve. The application still needs to link the exported target from that dependency.
+
+```ini id="dwbz2p"
+links = [
+  "adastra::logger",
+]
+```
+
+The exact target name must come from the package itself.
+
+A third mistake is linking too much. A large link list can hide the real shape of the application. Start with what the code uses, then add targets as the application grows.
+
+## Checking package and link changes
+
+After editing `packages`, `deps`, or `links`, build the project.
+
+```bash id="j0by05"
+vix build
+```
+
+When registry dependencies changed, install or resolve them before building.
+
+```bash id="b7m9u3"
+vix install
+vix build
+```
+
+For applications with internal modules, run the module check as well.
+
+```bash id="cbdmuu"
+vix modules check
+```
+
+This catches missing dependencies, invalid module relationships, and link issues before they become harder to diagnose.
+
+## Complete example
+
+```ini id="p33o6m"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
+
+packages = [
+  "vix",
+]
+
+deps = [
+  "adastra/logger@1.0.0",
+]
+
+links = [
+  "vix::vix",
+  "adastra::logger",
+]
+
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+This manifest keeps external dependencies, linked targets, runtime resources, and internal modules in separate places. That separation is what keeps `vix.app` readable as the application grows.
+
+## Next step
+
+Continue with resources to see how runtime files such as `.env`, `public`, `views`, assets, and package metadata are copied beside the built target.
+
+[Resources](/guides/vix-app/resources)

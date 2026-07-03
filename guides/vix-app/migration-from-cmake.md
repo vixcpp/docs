@@ -1,1025 +1,520 @@
-# Migrating from CMake to vix.app
+# Migrating from CMake
 
-This guide shows how to migrate a simple `CMakeLists.txt` project to `vix.app`.
+`vix.app` gives a Vix project a smaller application manifest. It is meant for projects where the build description should stay close to the application itself: target name, source files, include directories, linked Vix modules, resources, output directory, and optional app modules.
 
-`vix.app` is not a replacement for every CMake project.
+Existing CMake projects can still be built by Vix. Migration is not required for every project. Move to `vix.app` when the project is better served by an app-first manifest and the build shape is simple enough to describe clearly from the project root.
 
-It is a simpler entry point for projects that do not need custom CMake logic.
-
-## When migration makes sense
-
-Migrating to `vix.app` makes sense when your CMake project is simple.
-
-Good cases:
-
-```txt
-- one executable
-- one static library
-- one shared library
-- simple source list
-- simple include directories
-- simple compile definitions
-- simple package discovery
-- simple target links
-- simple resources
+```bash id="vix-app-migration-build"
+vix build
+vix run
 ```
 
-For example:
+The daily workflow stays the same. The difference is that the project source of truth becomes `vix.app`.
 
-```txt
-hello/
-  CMakeLists.txt
-  src/
-    main.cpp
-```
+## How Vix chooses the project
 
-can usually become:
+When Vix resolves a project, it looks for the existing project build file first. If `CMakeLists.txt` exists, Vix keeps the current behavior and uses it.
 
-```txt
-hello/
-  vix.app
-  src/
-    main.cpp
-```
+If no `CMakeLists.txt` is present and `vix.app` exists, Vix reads `vix.app`, generates the internal build input under `.vix/generated/app/`, and continues through the normal Vix build workflow.
 
-## When to keep CMake
-
-Keep `CMakeLists.txt` when your project needs advanced build logic.
-
-Examples:
-
-```txt
-- many targets in one file
-- custom commands
-- generated sources
-- install rules
-- CTest integration
-- FetchContent
-- CPM.cmake
-- custom toolchains
-- advanced dependency discovery
-- platform-specific build logic
-- package export files
-```
-
-The rule is simple:
-
-```txt
-Use vix.app for simple targets.
-Use CMakeLists.txt for full control.
-```
-
-## Important resolution rule
-
-Vix resolves projects in this order:
-
-```txt
+```txt id="vix-app-migration-resolution"
 1. CMakeLists.txt
 2. vix.app
 ```
 
-If both files exist, Vix uses `CMakeLists.txt`.
+This is important during migration. If both files exist in the same project root, the existing CMake project wins. To make `vix.app` the active project manifest, the old root build file must be removed, renamed, or kept on another branch once the migration is ready.
 
-So if you want Vix to use `vix.app`, remove or rename the `CMakeLists.txt`.
+## Start with the project shape
 
-Example:
+Before writing the new manifest, identify the shape of the project:
 
-```bash
-mv CMakeLists.txt CMakeLists.txt.bak
+```txt id="vix-app-migration-checklist"
+target name
+target type
+C++ standard
+source files
+include directories
+preprocessor definitions
+linked targets
+runtime resources
+output directory
 ```
 
-Then run:
+A good migration does not start by copying every build detail. It starts by describing what the application really is. Most Vix applications need fewer fields than a traditional build script because Vix already owns the command workflow around the project.
 
-```bash
+## Minimal migrated app
+
+A small executable can usually become a short `vix.app`.
+
+```ini id="vix-app-migration-minimal"
+name = "hello"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+A matching source file can use the normal Vix output helper.
+
+```cpp id="vix-app-migration-minimal-main"
+#include <vix/print.hpp>
+
+int main()
+{
+  vix::print("Hello from Vix");
+  return 0;
+}
+```
+
+After the old root build file is no longer active, the application can be built and run through Vix.
+
+```bash id="vix-app-migration-minimal-run"
 vix build
 vix run
 ```
 
-## Minimal executable migration
+## Map the target name and type
 
-Original project:
+The first fields describe the target identity.
 
-```txt
-hello/
-  CMakeLists.txt
-  src/
-    main.cpp
+```ini id="vix-app-migration-identity"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 ```
 
-Original `CMakeLists.txt`:
+Use `executable` for applications, backends, games, command-line tools, and servers.
 
-```cmake
-cmake_minimum_required(VERSION 3.24)
-
-project(hello LANGUAGES CXX)
-
-add_executable(hello
-  src/main.cpp
-)
-
-target_compile_features(hello PRIVATE cxx_std_20)
+```ini id="vix-app-migration-executable"
+type = "executable"
 ```
 
-Equivalent `vix.app`:
+Use `static-library` or `shared-library` only when the project output is reusable code rather than a runnable program.
 
-```ini
-name = hello
-type = executable
-standard = c++20
+```ini id="vix-app-migration-library-types"
+type = "static-library"
+```
 
+```ini id="vix-app-migration-shared-library"
+type = "shared-library"
+```
+
+For most application migrations, the target type should be `executable`.
+
+## Map source files
+
+Move implementation files into `sources`.
+
+```ini id="vix-app-migration-sources"
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
 ]
 ```
 
-Then remove or rename `CMakeLists.txt`:
+List the `.cpp` files that are compiled into the application. Headers usually do not belong in this list. They should be found through `include_dirs`.
 
-```bash
-mv CMakeLists.txt CMakeLists.txt.bak
+Keep the list explicit. It makes the migration easier to review because every compiled file is visible from the manifest.
+
+## Map include directories
+
+Move include roots into `include_dirs`.
+
+```ini id="vix-app-migration-includes"
+include_dirs = [
+  "include",
+  "src",
+]
 ```
 
-Build and run:
+If the project has this header:
 
-```bash
+```txt id="vix-app-migration-header-path"
+include/api/app/AppBootstrap.hpp
+```
+
+then source code should include it from the include root.
+
+```cpp id="vix-app-migration-header-include"
+#include <api/app/AppBootstrap.hpp>
+```
+
+Avoid adding include directories that point too deep into the tree. The include root should describe the project structure, not one specific file.
+
+## Map definitions
+
+Move preprocessor definitions into `defines`.
+
+```ini id="vix-app-migration-defines"
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
+```
+
+Feature flags can also live here when they are part of the application build.
+
+```ini id="vix-app-migration-feature-defines"
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+  "VIX_USE_ORM=1",
+]
+```
+
+Keep this list small. Runtime configuration should normally stay in `.env` or another runtime configuration file, while `defines` should be used for compile-time decisions.
+
+## Map packages and links
+
+A normal Vix application starts with the `vix` package and links the Vix targets it uses.
+
+```ini id="vix-app-migration-packages-links"
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+A backend using ORM can add the ORM target.
+
+```ini id="vix-app-migration-orm-links"
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+  "vix::orm",
+]
+```
+
+A game project links the game and I/O modules.
+
+```ini id="vix-app-migration-game-links"
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::game",
+  "vix::io",
+]
+```
+
+The package makes the SDK available. The link list says what the target actually uses.
+
+## Map registry dependencies
+
+If the project uses Vix Registry dependencies, declare them in `deps`.
+
+```ini id="vix-app-migration-deps"
+deps = [
+  "adastra/logger@1.0.0",
+]
+```
+
+Then link the target exported by that dependency.
+
+```ini id="vix-app-migration-deps-links"
+links = [
+  "vix::vix",
+  "adastra::logger",
+]
+```
+
+After changing registry dependencies, resolve them and build.
+
+```bash id="vix-app-migration-install-build"
+vix install
+vix build
+```
+
+The dependency entry describes what Vix should resolve. The link entry describes what the application target uses.
+
+## Map resources
+
+Files needed at runtime belong in `resources`.
+
+```ini id="vix-app-migration-resources"
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+```
+
+For a game project:
+
+```ini id="vix-app-migration-game-resources"
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
+]
+```
+
+Do not put source files or headers in `resources`. Source files belong in `sources`, and headers are found through `include_dirs`. Resources are copied beside the built target so the program can read them when it runs.
+
+## Move large backend features into app modules
+
+Migration is a good moment to separate large backend features into app modules. The main application target should keep the entry point, bootstrap, route registry, middleware registry, and shared support files. Feature areas can move under `modules/`.
+
+```ini id="vix-app-migration-modules"
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+
+[module.builds]
+enabled = true
+path = "modules/builds"
+kind = "backend"
+depends = [
+  "projects",
+]
+```
+
+Initialize the module workflow from the project root.
+
+```bash id="vix-app-migration-modules-commands"
+vix modules init
+vix modules add auth
+vix modules add projects
+vix modules add builds
+vix modules check
+```
+
+Do this when the feature boundaries are real. Do not create a module for every small helper file.
+
+## Backend migration example
+
+This is a complete migrated backend manifest.
+
+```ini id="vix-app-migration-backend-complete"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
+
+compile_options = [
+  "$<$<CXX_COMPILER_ID:MSVC>:/W4>",
+  "$<$<CXX_COMPILER_ID:MSVC>:/permissive->",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wpedantic>",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+The manifest now describes the backend target and its internal modules in one place. Vix owns the generated build files, and the developer continues to use the CLI.
+
+## Game migration example
+
+A game migration is usually smaller because the target shape is direct.
+
+```ini id="vix-app-migration-game-complete"
+name = "space-demo"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::game",
+  "vix::io",
+]
+
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
+]
+```
+
+Build and run it with the same workflow.
+
+```bash id="vix-app-migration-game-run"
 vix build
 vix run
 ```
 
-## Migrating include directories
+## Switching the project to `vix.app`
 
-Original `CMakeLists.txt`:
+Because Vix preserves existing CMake projects first, the switch should be explicit.
 
-```cmake
-cmake_minimum_required(VERSION 3.24)
+A safe migration flow is:
 
-project(myapp LANGUAGES CXX)
-
-add_executable(myapp
-  src/main.cpp
-  src/app.cpp
-)
-
-target_include_directories(myapp PRIVATE
-  include
-)
+```txt id="vix-app-migration-switch-flow"
+1. Create vix.app.
+2. Map sources, include directories, definitions, links, resources, and modules.
+3. Review the manifest.
+4. Move the old root build file out of the way when ready.
+5. Run vix build.
+6. Run vix run or the project test workflow.
 ```
 
-Equivalent `vix.app`:
+The command workflow after the switch remains simple.
 
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-Project layout:
-
-```txt
-myapp/
-  vix.app
-  include/
-    myapp/
-      app.hpp
-  src/
-    main.cpp
-    app.cpp
-```
-
-## Migrating compile definitions
-
-Original CMake:
-
-```cmake
-target_compile_definitions(myapp PRIVATE
-  MYAPP_VERSION="1.0.0"
-  MYAPP_ENABLE_LOGGING=1
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-defines = [
-  MYAPP_VERSION="1.0.0",
-  MYAPP_ENABLE_LOGGING=1,
-]
-```
-
-Complete manifest:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-
-include_dirs = [
-  include,
-]
-
-defines = [
-  MYAPP_VERSION="1.0.0",
-  MYAPP_ENABLE_LOGGING=1,
-]
-```
-
-## Migrating compile options
-
-Original CMake:
-
-```cmake
-target_compile_options(myapp PRIVATE
-  -Wall
-  -Wextra
-  -Wpedantic
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-compile_options = [
-  -Wall,
-  -Wextra,
-  -Wpedantic,
-]
-```
-
-Complete manifest:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
-compile_options = [
-  -Wall,
-  -Wextra,
-  -Wpedantic,
-]
-```
-
-## Migrating link options
-
-Original CMake:
-
-```cmake
-target_link_options(myapp PRIVATE
-  -Wl,--as-needed
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-link_options = [
-  "-Wl,--as-needed",
-]
-```
-
-Quote values that contain commas.
-
-## Migrating target links
-
-Original CMake:
-
-```cmake
-target_link_libraries(myapp PRIVATE
-  m
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-links = [
-  m,
-]
-```
-
-Complete manifest:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
-links = [
-  m,
-]
-```
-
-## Migrating find_package
-
-Original CMake:
-
-```cmake
-find_package(Threads REQUIRED)
-
-target_link_libraries(myapp PRIVATE
-  Threads::Threads
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-packages = [
-  Threads:REQUIRED,
-]
-
-links = [
-  Threads::Threads,
-]
-```
-
-Important:
-
-```txt
-packages -> find_package(...)
-links    -> target_link_libraries(...)
-```
-
-`packages` does not link targets automatically.
-
-## Migrating fmt
-
-Original CMake:
-
-```cmake
-find_package(fmt REQUIRED)
-
-target_link_libraries(myapp PRIVATE
-  fmt::fmt
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-
-links = [
-  fmt::fmt,
-]
-```
-
-## Migrating Boost components
-
-Original CMake:
-
-```cmake
-find_package(Boost REQUIRED COMPONENTS system filesystem)
-
-target_link_libraries(myapp PRIVATE
-  Boost::system
-  Boost::filesystem
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-packages = [
-  "Boost:COMPONENTS=system,filesystem:REQUIRED",
-]
-
-links = [
-  Boost::system,
-  Boost::filesystem,
-]
-```
-
-Quote package values that contain commas.
-
-## Migrating a static library
-
-Original CMake:
-
-```cmake
-cmake_minimum_required(VERSION 3.24)
-
-project(mathlib LANGUAGES CXX)
-
-add_library(mathlib STATIC
-  src/add.cpp
-  src/mul.cpp
-)
-
-target_include_directories(mathlib PUBLIC
-  include
-)
-
-target_compile_features(mathlib PUBLIC cxx_std_20)
-```
-
-Equivalent `vix.app`:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
-sources = [
-  src/add.cpp,
-  src/mul.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-Build:
-
-```bash
-vix build
-```
-
-## Migrating a shared library
-
-Original CMake:
-
-```cmake
-cmake_minimum_required(VERSION 3.24)
-
-project(plugin LANGUAGES CXX)
-
-add_library(plugin SHARED
-  src/plugin.cpp
-)
-
-target_include_directories(plugin PUBLIC
-  include
-)
-
-target_compile_features(plugin PUBLIC cxx_std_20)
-```
-
-Equivalent `vix.app`:
-
-```ini
-name = plugin
-type = shared
-standard = c++20
-
-sources = [
-  src/plugin.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-Build:
-
-```bash
-vix build
-```
-
-## Migrating output directories
-
-Original CMake:
-
-```cmake
-set_target_properties(myapp PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-output_dir = bin
-```
-
-Complete example:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-]
-```
-
-The output can be placed under:
-
-```txt
-build-ninja/bin/myapp
-```
-
-## Migrating copied resources
-
-Original CMake:
-
-```cmake
-add_custom_command(TARGET myapp POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-          ${CMAKE_SOURCE_DIR}/assets
-          $<TARGET_FILE_DIR:myapp>/assets
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-resources = [
-  assets,
-]
-```
-
-Complete example:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-]
-
-resources = [
-  assets,
-]
-```
-
-## Migrating copied config files
-
-Original CMake:
-
-```cmake
-add_custom_command(TARGET myapp POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy
-          ${CMAKE_SOURCE_DIR}/data/config.json
-          $<TARGET_FILE_DIR:myapp>/config/config.json
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-resources = [
-  "data/config.json=config/config.json",
-]
-```
-
-## Full migration example
-
-Original project:
-
-```txt
-server/
-  CMakeLists.txt
-  include/
-    server/
-      server.hpp
-  src/
-    main.cpp
-    server.cpp
-  public/
-    index.html
-```
-
-Original `CMakeLists.txt`:
-
-```cmake
-cmake_minimum_required(VERSION 3.24)
-
-project(server LANGUAGES CXX)
-
-find_package(Threads REQUIRED)
-
-add_executable(server
-  src/main.cpp
-  src/server.cpp
-)
-
-target_compile_features(server PRIVATE cxx_std_20)
-
-target_include_directories(server PRIVATE
-  include
-)
-
-target_compile_definitions(server PRIVATE
-  SERVER_VERSION="1.0.0"
-)
-
-target_compile_options(server PRIVATE
-  -Wall
-  -Wextra
-)
-
-target_link_libraries(server PRIVATE
-  Threads::Threads
-)
-
-set_target_properties(server PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-)
-
-add_custom_command(TARGET server POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-          ${CMAKE_SOURCE_DIR}/public
-          $<TARGET_FILE_DIR:server>/public
-)
-```
-
-Equivalent `vix.app`:
-
-```ini
-name = server
-type = executable
-standard = c++20
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-  src/server.cpp,
-]
-
-include_dirs = [
-  include,
-]
-
-defines = [
-  SERVER_VERSION="1.0.0",
-]
-
-compile_options = [
-  -Wall,
-  -Wextra,
-]
-
-packages = [
-  Threads:REQUIRED,
-]
-
-links = [
-  Threads::Threads,
-]
-
-resources = [
-  public,
-]
-```
-
-Then rename the old CMake file:
-
-```bash
-mv CMakeLists.txt CMakeLists.txt.bak
-```
-
-Build and run:
-
-```bash
+```bash id="vix-app-migration-final-check"
 vix build
 vix run
 ```
 
-## CMake to vix.app mapping
+For module-based backends:
 
-| CMake | vix.app |
-| --- | --- |
-| `project(myapp)` | `name = myapp` |
-| `add_executable(myapp ...)` | `type = executable` |
-| `add_library(name STATIC ...)` | `type = static` |
-| `add_library(name SHARED ...)` | `type = shared` |
-| source list | `sources = [...]` |
-| `target_include_directories` | `include_dirs = [...]` |
-| `target_compile_definitions` | `defines = [...]` |
-| `target_compile_options` | `compile_options = [...]` |
-| `target_link_options` | `link_options = [...]` |
-| `target_compile_features` | `compile_features = [...]` |
-| `find_package(...)` | `packages = [...]` |
-| `target_link_libraries(...)` | `links = [...]` |
-| post-build copy | `resources = [...]` |
-| target output directory | `output_dir = ...` |
-
-## Things that do not map directly
-
-Some CMake features do not have a direct `vix.app` equivalent.
-
-Examples:
-
-```txt
-- custom commands
-- generated sources
-- install rules
-- package export files
-- FetchContent
-- CTest
-- toolchain-specific branches
-- many targets in one file
-- generator expressions
-- custom functions and macros
-```
-
-If your project depends on these, keep `CMakeLists.txt`.
-
-## Step-by-step migration checklist
-
-1. Identify the main target.
-
-```txt
-add_executable(...)
-add_library(...)
-```
-
-2. Copy the target name to `name`.
-
-```ini
-name = myapp
-```
-
-3. Convert the target type.
-
-```ini
-type = executable
-```
-
-or:
-
-```ini
-type = static
-```
-
-or:
-
-```ini
-type = shared
-```
-
-4. Convert source files.
-
-```ini
-sources = [
-  src/main.cpp,
-]
-```
-
-5. Convert include directories.
-
-```ini
-include_dirs = [
-  include,
-]
-```
-
-6. Convert definitions.
-
-```ini
-defines = [
-  MYAPP_VERSION="1.0.0",
-]
-```
-
-7. Convert compile options.
-
-```ini
-compile_options = [
-  -Wall,
-  -Wextra,
-]
-```
-
-8. Convert packages.
-
-```ini
-packages = [
-  Threads:REQUIRED,
-]
-```
-
-9. Convert linked libraries.
-
-```ini
-links = [
-  Threads::Threads,
-]
-```
-
-10. Convert resources if needed.
-
-```ini
-resources = [
-  assets,
-]
-```
-
-11. Rename `CMakeLists.txt`.
-
-```bash
-mv CMakeLists.txt CMakeLists.txt.bak
-```
-
-12. Build.
-
-```bash
+```bash id="vix-app-migration-final-module-check"
+vix modules check
 vix build
 ```
 
-13. Run.
+## Keep the old file during review
 
-```bash
+During review, it is reasonable to keep the old build file on the branch while the new manifest is being written. Just remember that Vix will not use `vix.app` as long as the old root build file is still active.
+
+When the manifest is ready, make the switch in one clear commit. This makes the migration easier to understand in project history.
+
+## What to migrate later
+
+Do not migrate everything at once when the project is large. Start with the main target and the files needed to build it. Then move runtime files into `resources`. After that, introduce app modules for real backend features.
+
+A calm migration is better than a large rewrite. The goal is to make the project easier to understand, not to change its architecture for no reason.
+
+## When to keep the existing project
+
+Keep the existing project build file when the project depends on heavy custom build behavior that is not naturally expressed in `vix.app`, or when the project is a low-level library with very specific platform logic.
+
+Vix can still build existing projects. `vix.app` is best when the application can be described as a clear target with explicit sources, include roots, links, resources, and modules.
+
+## Common mistakes
+
+The first mistake is creating `vix.app` and expecting Vix to use it while `CMakeLists.txt` still exists in the root. Vix preserves the existing project first. Remove or rename the old root build file when the migration is ready.
+
+The second mistake is copying too much build logic into `compile_options` and `link_options`. Start with the target shape, sources, includes, packages, links, and resources. Add raw options only when they are truly needed.
+
+The third mistake is putting test files, headers, assets, and runtime files all into `sources`. The manifest has separate fields for separate jobs. Use them that way.
+
+## Recommended final check
+
+For a small application:
+
+```bash id="vix-app-migration-recommended-app"
+vix build
 vix run
 ```
 
-## Verify the generated CMake
+For a backend with modules:
 
-For `vix.app` projects, Vix generates an internal CMake project under:
-
-```txt
-.vix/generated/app/CMakeLists.txt
+```bash id="vix-app-migration-recommended-backend"
+vix modules check
+vix check --tests --run
 ```
 
-You can inspect it when debugging.
+For a library:
 
-Do not edit it manually.
-
-If you need to change the build, edit:
-
-```txt
-vix.app
+```bash id="vix-app-migration-recommended-library"
+vix build
 ```
 
-## Debugging migration issues
+Once the project builds cleanly and the manifest is readable, the migration is complete.
 
-Use verbose output:
+## Next step
 
-```bash
-vix build -v
-```
+Continue with CMake fallback to understand how Vix behaves when a project keeps an existing root build file instead of switching to `vix.app`.
 
-Use raw CMake configure output:
-
-```bash
-vix build --cmake-verbose
-```
-
-Pass extra CMake options:
-
-```bash
-vix build -- -DCMAKE_PREFIX_PATH=/path/to/prefix
-```
-
-## Common migration mistakes
-
-### Keeping CMakeLists.txt
-
-If both files exist:
-
-```txt
-CMakeLists.txt
-vix.app
-```
-
-Vix uses `CMakeLists.txt`.
-
-To test `vix.app`, rename the CMake file:
-
-```bash
-mv CMakeLists.txt CMakeLists.txt.bak
-```
-
-### Forgetting links
-
-This is not enough:
-
-```ini
-packages = [
-  fmt:REQUIRED,
-]
-```
-
-You also need:
-
-```ini
-links = [
-  fmt::fmt,
-]
-```
-
-### Missing include directories
-
-If your source includes:
-
-```cpp
-#include <myapp/app.hpp>
-```
-
-and the file is under:
-
-```txt
-include/myapp/app.hpp
-```
-
-you need:
-
-```ini
-include_dirs = [
-  include,
-]
-```
-
-### Including generated sources
-
-If your CMake project generates source files during the build, `vix.app` may not be the right fit.
-
-Use CMake for generated-source workflows.
-
-### Migrating too much too early
-
-Do not try to migrate a large complex CMake project all at once.
-
-Start with small apps, examples, demos, or libraries.
-
-## Recommended migration targets
-
-Good first migration targets:
-
-```txt
-- examples
-- demos
-- simple CLI tools
-- small libraries
-- test apps
-- prototype projects
-```
-
-Risky migration targets:
-
-```txt
-- monorepos
-- SDKs with install rules
-- projects using FetchContent heavily
-- projects with many generated files
-- projects with many platform-specific branches
-```
-
-## Summary
-
-`vix.app` can replace simple CMake files.
-
-It maps common CMake patterns to a small manifest:
-
-```ini
-name = myapp
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-But it should not replace complex CMake projects.
-
-Use this rule:
-
-```txt
-Start simple with vix.app.
-Keep CMake when you need full control.
-```
-
-## Next steps
-
-Continue with:
-
-- [CMake Fallback](./cmake-fallback.md)
-- [Manifest Reference](./manifest-reference.md)
-- [Troubleshooting](./troubleshooting.md)
-- [Best Practices](./best-practices.md)
+[CMake Fallback](/guides/vix-app/cmake-fallback)

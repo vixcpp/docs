@@ -1,327 +1,437 @@
 # vix.app
 
-`vix.app` is the simple application manifest for Vix.cpp.
+`vix.app` is the application manifest used by Vix projects that want a direct app-first workflow.
 
-It gives C++ projects a small, readable project description without forcing every application to start with a hand-written `CMakeLists.txt`.
+Instead of asking the user to maintain a hand-written build file for every generated application, Vix reads `vix.app`, understands the target, sources, includes, dependencies, resources, and internal modules, then generates the internal build project it needs under `.vix/generated/app/`. The user keeps working with the Vix commands they already know.
 
-A `vix.app` file describes what the project is, which files it builds, which include directories it uses, which libraries it links, and which output it should produce.
-
-Vix.cpp can then generate the internal CMake project needed to build the application.
-
-```txt
-vix.app
-  -> generated CMake project
-  -> vix build
-  -> native executable or library
+```bash id="llkbju"
+vix build
+vix run
 ```
 
-The result is still native C++. Vix.cpp does not replace the compiler, the linker, or the C++ build ecosystem. It provides a simpler entry point for projects that do not need full manual CMake control at the beginning.
+For generated Vix applications, `vix.app` is the central file that describes what the application is and how it should be assembled. It is intentionally small enough to read quickly, but it still carries the important parts of a real C++ application: source files, include directories, linked Vix modules, external dependencies, compile options, copied resources, output location, and application modules.
 
-## Why `vix.app` exists
+## Why vix.app exists
 
-C++ projects often start with build configuration before the developer can focus on the application itself.
+A Vix application should be understandable from the project root. When a developer opens a generated backend, game, desktop, or app project, the important build shape should not be hidden behind a large custom build script. `vix.app` gives the project one readable manifest that says: this is the app name, these are the files, these are the libraries, these resources must be copied, and these internal modules are enabled.
 
-For advanced projects, that control is useful.
+A minimal application manifest looks like this:
 
-For many simple and medium projects, the developer usually only needs to describe a few things:
-
-```txt
-what the project is called
-what kind of target it builds
-which C++ standard it uses
-which source files are compiled
-which include directories are available
-which libraries or packages are linked
-where the output goes
-```
-
-That information does not always need a full CMake file written by hand.
-
-`vix.app` exists to make the common application path smaller:
-
-```txt
-describe the application
-  -> let Vix.cpp generate the internal build project
-  -> build and run with the Vix workflow
-```
-
-This keeps the early project experience focused on the application instead of build boilerplate.
-
-## A minimal example
-
-A minimal application can use this structure:
-
-```txt
-hello/
-├── vix.app
-└── src/
-    └── main.cpp
-```
-
-`vix.app`:
-
-```ini
-name = hello
-type = executable
-standard = c++20
+```ini id="losx9m"
+name = "hello"
+type = "executable"
+standard = "c++20"
 
 sources = [
-  src/main.cpp,
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
+output_dir = "bin"
+```
+
+With that file in place, the normal workflow stays simple:
+
+```bash id="qpedwh"
+vix build
+vix run
+```
+
+Vix reads the manifest, generates the internal project, configures the build, and runs the application target.
+
+## How Vix uses it
+
+When Vix resolves a project, it keeps existing CMake projects working first. If a `CMakeLists.txt` exists, Vix uses the project as a normal CMake-based project. If there is no `CMakeLists.txt` and a `vix.app` file exists, Vix loads the application manifest and generates the internal project from it.
+
+```txt id="yldkli"
+project root
+  ├─ vix.app
+  ├─ vix.json
+  └─ src/
+```
+
+The generated files are written under:
+
+```txt id="c0ad4d"
+.vix/generated/app/
+```
+
+The most important generated file is:
+
+```txt id="m3mids"
+.vix/generated/app/CMakeLists.txt
+```
+
+That file belongs to Vix. It can be inspected when debugging, but it should not be edited directly. The source of truth remains `vix.app`.
+
+## Required fields
+
+A usable `vix.app` needs two important pieces of information: the target name and the source files.
+
+```ini id="bhytqa"
+name = "hello"
+
+sources = [
+  "src/main.cpp",
 ]
 ```
 
-`src/main.cpp`:
+When no standard is provided, Vix uses `c++20`. When no target type is provided, Vix treats the project as an executable application.
 
-```cpp
-#include <vix.hpp>
+```ini id="wwtp5h"
+standard = "c++20"
+type = "executable"
+```
+
+## Application types
+
+The `type` field describes the generated target shape. Most Vix applications use an executable target.
+
+```ini id="qny2as"
+type = "executable"
+```
+
+Library targets are also supported:
+
+```ini id="uv8408"
+type = "static-library"
+```
+
+```ini id="l5pelw"
+type = "shared-library"
+```
+
+Backend applications can use a backend-oriented application kind while still producing an executable target.
+
+```ini id="vc6lga"
+name = "api"
+type = "backend"
+standard = "c++20"
+```
+
+In this case, Vix maps the target to an executable because a backend application still needs to run as a process. The backend kind gives Vix enough context to apply backend application behavior without asking the user to write a lower-level build file.
+
+## Sources and includes
+
+The `sources` field lists the C++ files that belong to the application target. Paths are written relative to the project root.
+
+```ini id="q3f80k"
+sources = [
+  "src/main.cpp",
+  "src/app/AppBootstrap.cpp",
+  "src/presentation/routes/RouteRegistry.cpp",
+]
+```
+
+The `include_dirs` field declares include roots for the target.
+
+```ini id="khzcx4"
+include_dirs = [
+  "include",
+  "src",
+]
+```
+
+A backend template usually includes both `include` and `src`, because some application code is public to the app itself while other code stays organized under the source tree.
+
+## Packages and links
+
+`packages` and `links` are related, but they do different work.
+
+`packages` asks Vix to make a package available to the generated project.
+
+```ini id="gj7ep5"
+packages = [
+  "vix",
+]
+```
+
+`links` tells Vix which targets or libraries must actually be linked into the application.
+
+```ini id="wl4bcd"
+links = [
+  "vix::vix",
+]
+```
+
+For Vix modules, this is where the application selects the parts it uses. A game project, for example, links the game and I/O modules:
+
+```ini id="zbhs1p"
+links = [
+  "vix::game",
+  "vix::io",
+]
+```
+
+The important rule is simple: declaring a package does not automatically link every target from that package. The application still lists the target it wants in `links`.
+
+## Registry dependencies
+
+A `vix.app` file can also declare dependencies from the Vix Registry.
+
+```ini id="lir8wh"
+deps = [
+  "adastra/logger",
+  "tools/json@1.2.0",
+]
+```
+
+When Vix sees registry dependencies in `vix.app`, it syncs them into `vix.json`, resolves them into `vix.lock`, and links them through the generated dependency file used by the build. This keeps the application manifest readable while still preserving the normal Vix dependency workflow.
+
+After adding or changing registry dependencies, run:
+
+```bash id="w25dw0"
+vix install
+vix build
+```
+
+## Defines and compile options
+
+Preprocessor definitions are declared with `defines`.
+
+```ini id="vg7azm"
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
+```
+
+Raw compiler options can be added with `compile_options`.
+
+```ini id="y2qvs8"
+compile_options = [
+  "$<$<CXX_COMPILER_ID:MSVC>:/W4>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall>",
+  "$<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wextra>",
+]
+```
+
+Compile features can also be declared explicitly.
+
+```ini id="xgl1ev"
+compile_features = [
+  "cxx_std_20",
+]
+```
+
+Most projects do not need many compile options at the beginning. Generated templates include the defaults needed for a solid starting point, and the manifest can grow as the application becomes more specific.
+
+## Resources
+
+Applications often need files at runtime: `.env`, public assets, views, storage directories, game assets, or package metadata. The `resources` field copies those entries next to the built target.
+
+```ini id="t7hw0q"
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+```
+
+Each entry has this shape:
+
+```txt id="s1e3sp"
+source=destination
+```
+
+The source is relative to the project root. The destination is relative to the runtime output directory. When the destination is omitted, Vix keeps the source basename.
+
+## Output directory
+
+The `output_dir` field controls where Vix places the built target inside the build tree.
+
+```ini id="kmod5p"
+output_dir = "bin"
+```
+
+Generated Vix applications normally use `bin`, which keeps the runnable program and copied runtime resources in a predictable place.
+
+## App modules
+
+`vix.app` also controls internal application modules. This is one of the most important parts of the application workflow, especially for backend projects that grow beyond a single folder.
+
+A module is declared with a `[module.<name>]` section.
+
+```ini id="c4lsnc"
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = [
+  "users",
+]
+```
+
+Enabled modules are linked into the generated application target. Disabled modules remain in the manifest, but Vix does not wire them into the application build.
+
+```ini id="nhiwu1"
+[module.billing]
+enabled = false
+path = "modules/billing"
+kind = "backend"
+```
+
+This makes it possible to keep a clear internal architecture while still controlling module activation from one place.
+
+The `vix modules` command updates this part of the manifest.
+
+```bash id="b2khky"
+vix modules add auth
+vix modules list
+vix modules disable auth
+vix modules enable auth
+```
+
+For backend modules, Vix can also generate application module registration files under `.vix/generated/app/`. The application can then register enabled backend modules through the generated module entry point.
+
+## Backend example
+
+A backend manifest usually has more source files and runtime resources than a minimal command-line application.
+
+```ini id="igt9rg"
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+  "src/api/app/AppBootstrap.cpp",
+  "src/api/support/HttpResponses.cpp",
+  "src/api/presentation/routes/RouteRegistry.cpp",
+  "src/api/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/api/presentation/controllers/HomeController.cpp",
+  "src/api/presentation/controllers/HealthController.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
+]
+```
+
+This is the kind of manifest generated for a structured Vix backend. It keeps the backend target readable from the root while leaving the application code organized in normal C++ folders.
+
+## Game example
+
+A game project uses the same manifest idea, but links the game modules and copies game assets.
+
+```ini id="lfzyp6"
+name = "space-demo"
+type = "executable"
+standard = "c++20"
+
+sources = [
+  "src/main.cpp",
+]
+
+include_dirs = [
+  "src",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::game",
+  "vix::io",
+]
+
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
+]
+
+output_dir = "bin"
+```
+
+The C++ entry point can stay focused on the game itself:
+
+```cpp id="kiy6ab"
+#include <vix/game/all.hpp>
+#include <vix/print.hpp>
 
 int main()
 {
-  vix::print("Hello from vix.app");
+  vix::game::App app;
+  app.set_title("space-demo");
+
+  vix::print("game ready");
+
   return 0;
 }
 ```
 
-Build the project:
+## Relationship with vix.json
 
-```bash
-vix build
+`vix.app` describes the application target. `vix.json` describes project metadata, tasks, dependency state, production configuration, and other Vix project-level information.
+
+A project can have both files:
+
+```txt id="gebvi6"
+vix.app    application target manifest
+vix.json   project metadata, tasks, registry deps, production settings
+vix.lock   resolved dependency lockfile
 ```
 
-Run it:
+When `deps` are declared in `vix.app`, Vix syncs them into `vix.json` so the registry workflow remains consistent.
 
-```bash
-vix run
+## Generated files
+
+Vix can generate files under `.vix/generated/app/` while building or running an application manifest project.
+
+```txt id="j9plxy"
+.vix/generated/app/
+  CMakeLists.txt
+  include/
+  vix_app_modules.cpp
 ```
 
-The project stays simple, but it still builds as a native C++ application.
+These files are implementation details. They exist so Vix can turn a small application manifest into a complete build input. The project should be edited through `vix.app`, source files, module files, and normal Vix commands.
 
-## What `vix.app` describes
+## Next step
 
-A `vix.app` file can describe the normal build properties of an application or library.
+Start with the getting started guide to create a small application and understand the basic workflow before moving into the full manifest reference.
 
-Common fields include:
-
-| Field             | Purpose                                                              |
-| ----------------- | -------------------------------------------------------------------- |
-| `name`            | Target or application name.                                          |
-| `type`            | Target type, such as `executable`, `static`, `shared`, or `library`. |
-| `standard`        | C++ standard used by the target.                                     |
-| `sources`         | Source files compiled into the target.                               |
-| `include_dirs`    | Include directories available to the target.                         |
-| `defines`         | Preprocessor definitions.                                            |
-| `packages`        | CMake packages required by the target.                               |
-| `links`           | Libraries or imported targets linked to the target.                  |
-| `compile_options` | Extra compiler options.                                              |
-| `link_options`    | Extra linker options.                                                |
-| `resources`       | Files or directories copied with the target.                         |
-| `output_dir`      | Output directory for the generated artifact.                         |
-
-Example:
-
-```ini
-name = myapp
-type = executable
-standard = c++23
-output_dir = bin
-
-sources = [
-  src/main.cpp,
-  src/app.cpp,
-]
-
-include_dirs = [
-  include,
-]
-
-defines = [
-  MYAPP_VERSION="1.0.0",
-]
-
-packages = [
-  Threads:REQUIRED,
-]
-
-links = [
-  Threads::Threads,
-]
-
-compile_options = [
-  -Wall,
-  -Wextra,
-]
-```
-
-This is still a project description, not a new programming language. It is meant to cover common cases clearly.
-
-## Project detection
-
-Vix.cpp supports both existing CMake projects and `vix.app` projects.
-
-The project resolution order is:
-
-```txt
-1. If CMakeLists.txt exists, Vix.cpp uses the CMake project.
-2. If no CMakeLists.txt exists but vix.app exists, Vix.cpp uses vix.app.
-```
-
-This rule protects existing CMake projects.
-
-A project with `CMakeLists.txt` continues to use its CMake build definition.
-
-A project with only `vix.app` uses the manifest-based Vix.cpp workflow.
-
-When Vix.cpp uses `vix.app`, it generates the internal CMake project under:
-
-```txt
-.vix/generated/app/CMakeLists.txt
-```
-
-Do not edit the generated file manually.
-
-Edit `vix.app` instead.
-
-## Supported target types
-
-`vix.app` supports common target types.
-
-```ini
-type = executable
-```
-
-Use this for applications and command-line tools.
-
-```ini
-type = static
-```
-
-Use this for static libraries.
-
-```ini
-type = shared
-```
-
-Use this for shared libraries.
-
-```ini
-type = library
-```
-
-Use this when you want the default library behavior supported by Vix.cpp.
-
-The target type should match what the project is meant to produce.
-
-## `vix.app` and CMake
-
-`vix.app` does not remove CMake.
-
-It gives a simpler entry point for projects that do not need custom CMake logic yet.
-
-Internally, Vix.cpp can generate a CMake project from the manifest. That means the project still benefits from the native C++ build ecosystem.
-
-```txt
-Simple project:
-  vix.app -> generated CMake -> native build
-
-Advanced project:
-  CMakeLists.txt -> normal CMake build
-```
-
-This separation lets a project start small and move to full CMake control later.
-
-## When to use `vix.app`
-
-Use `vix.app` when the project has a straightforward structure.
-
-Good examples include:
-
-- small applications
-- command-line tools
-- examples
-- learning projects
-- simple libraries
-- prototypes
-- demos
-- applications with a few dependencies
-- projects that do not need custom CMake logic
-
-A typical layout is:
-
-```txt
-app/
-├── vix.app
-├── include/
-└── src/
-```
-
-`vix.app` keeps this kind of project readable and easy to build.
-
-## When to use `CMakeLists.txt`
-
-Use a normal `CMakeLists.txt` when the build needs full CMake control.
-
-Examples include:
-
-- multiple complex targets
-- custom code generation
-- generated source files
-- advanced install rules
-- exported CMake packages
-- complex toolchains
-- platform-specific build logic
-- advanced dependency discovery
-- custom CMake functions
-- large monorepos
-
-The rule is practical:
-
-```txt
-Start with vix.app when the project is simple.
-Move to CMakeLists.txt when the build needs advanced control.
-```
-
-Vix.cpp can work with both paths.
-
-## What `vix.app` is not
-
-`vix.app` is not meant to become a second CMake language.
-
-It should not try to cover every advanced build case.
-
-Its role is to describe common application and library projects clearly.
-
-When the build becomes complex, use CMake directly.
-
-The model is:
-
-```txt
-vix.app for clarity
-CMake for full control
-Vix.cpp connects both
-```
-
-## How it fits into Vix.cpp
-
-`vix.app` is one part of the larger Vix.cpp application workflow.
-
-A typical project may use:
-
-```txt
-vix.app  -> describes the application build
-vix.json -> describes project metadata, tasks, dependencies, and workflow
-vix.lock -> records exact dependency versions
-.env     -> stores local runtime configuration
-```
-
-Each file has a separate job.
-
-This keeps the project easier to understand for developers, CI systems, tooling, and language models that read the documentation.
-
-## Next steps
-
-Continue with:
-
-- [Getting Started](./getting-started)
-- [Manifest Reference](./manifest-reference)
-- [Examples](./examples)
-- [Packages and Links](./packages-and-links)
+[Getting Started](/guides/vix-app/getting-started)

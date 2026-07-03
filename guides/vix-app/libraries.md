@@ -1,980 +1,446 @@
 # Libraries
 
-`vix.app` can build simple C++ libraries.
+`vix.app` can describe executable applications, but it can also describe library targets. A library target is useful when the project is not meant to start a process by itself, but to provide reusable C++ code that another application, module, or package can link against.
 
-Supported library target types:
+Most Vix projects begin as applications, so `type = "executable"` is the common default. Use a library target when the output of the project is the code itself.
 
-```ini
-type = static
+```ini id="vix-app-library-type"
+type = "static-library"
 ```
 
-```ini
-type = shared
-```
+A library project is still built with the normal Vix workflow.
 
-```ini
-type = library
-```
-
-For most projects, prefer explicit types:
-
-```txt
-static -> static library
-shared -> shared library
-```
-
-## Static library
-
-A static library is linked into another executable or library at build time.
-
-Use:
-
-```ini
-type = static
-```
-
-Example:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
-sources = [
-  src/add.cpp,
-  src/mul.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-## Static library layout
-
-Recommended layout:
-
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-```
-
-`include/mathlib/math.hpp`:
-
-```cpp
-#pragma once
-
-namespace mathlib
-{
-  int add(int a, int b);
-  int mul(int a, int b);
-}
-```
-
-`src/add.cpp`:
-
-```cpp
-#include <mathlib/math.hpp>
-
-namespace mathlib
-{
-  int add(int a, int b)
-  {
-    return a + b;
-  }
-}
-```
-
-`src/mul.cpp`:
-
-```cpp
-#include <mathlib/math.hpp>
-
-namespace mathlib
-{
-  int mul(int a, int b)
-  {
-    return a * b;
-  }
-}
-```
-
-Build:
-
-```bash
+```bash id="vix-app-library-build"
 vix build
 ```
 
-## Shared library
+## Static libraries
 
-A shared library is loaded or linked dynamically at runtime.
+A static library is linked into another target at build time. It is a good fit for reusable code, internal packages, utility layers, shared domain logic, or code that should become part of the final executable.
 
-Use:
-
-```ini
-type = shared
-```
-
-Example:
-
-```ini
-name = plugin
-type = shared
-standard = c++20
+```ini id="vix-app-static-library-basic"
+name = "mathkit"
+type = "static-library"
+standard = "c++20"
 
 sources = [
-  src/plugin.cpp,
+  "src/add.cpp",
+  "src/multiply.cpp",
 ]
 
 include_dirs = [
-  include,
+  "include",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-## Shared library layout
+A simple layout for this project could look like this:
 
-Recommended layout:
-
-```txt
-plugin/
+```txt id="vix-app-static-library-layout"
+mathkit/
+  include/
+    mathkit/
+      math.hpp
+  src/
+    add.cpp
+    multiply.cpp
   vix.app
+```
+
+The public headers live under `include/`, and the implementation files live under `src/`. This keeps the library clear for users: they include from the public namespace, while implementation details stay in the source tree.
+
+```cpp id="vix-app-library-include-example"
+#include <mathkit/math.hpp>
+```
+
+## Shared libraries
+
+A shared library is built as a dynamic library. Use it when the output needs to be loaded dynamically, distributed as a runtime library, or separated from the final executable for deployment reasons.
+
+```ini id="vix-app-shared-library-basic"
+name = "plugin"
+type = "shared-library"
+standard = "c++20"
+
+sources = [
+  "src/plugin.cpp",
+]
+
+include_dirs = [
+  "include",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+```
+
+A shared library should have a stable public header surface. The code that consumes it should not need to know how the library is implemented internally.
+
+```txt id="vix-app-shared-library-layout"
+plugin/
   include/
     plugin/
       plugin.hpp
   src/
     plugin.cpp
-```
-
-`include/plugin/plugin.hpp`:
-
-```cpp
-#pragma once
-
-namespace plugin
-{
-  const char *name();
-}
-```
-
-`src/plugin.cpp`:
-
-```cpp
-#include <plugin/plugin.hpp>
-
-namespace plugin
-{
-  const char *name()
-  {
-    return "plugin";
-  }
-}
-```
-
-Build:
-
-```bash
-vix build
-```
-
-## Generic library
-
-`library` is also supported:
-
-```ini
-name = core
-type = library
-standard = c++20
-
-sources = [
-  src/core.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-Use `library` when you want Vix to use its default library behavior.
-
-For clearer manifests, prefer:
-
-```ini
-type = static
-```
-
-or:
-
-```ini
-type = shared
-```
-
-## Header-only libraries
-
-A header-only library usually does not need `sources`.
-
-However, `vix.app` expects source files for a build target.
-
-For a pure header-only library, the simplest V1 approach is usually:
-
-```txt
-- use it through include_dirs from another app
-- or use a normal CMakeLists.txt for package-style library behavior
-```
-
-Example app using a header-only library:
-
-```txt
-myapp/
   vix.app
-  third_party/
-    tiny/
-      include/
-        tiny/
-          tiny.hpp
-  src/
-    main.cpp
 ```
 
-`vix.app`:
+Use a shared library only when the project needs that runtime shape. For normal reusable code inside an application, a static library or an internal module is usually simpler.
 
-```ini
-name = myapp
-type = executable
-standard = c++20
+## Supported library type values
 
-sources = [
-  src/main.cpp,
-]
+`vix.app` accepts these library-related type values:
 
-include_dirs = [
-  third_party/tiny/include,
-]
+```txt id="vix-app-library-type-values"
+static
+static-library
+shared
+shared-library
+library
 ```
 
-No `links` field is needed if the dependency is truly header-only.
+For documentation and project manifests, prefer the explicit forms.
 
-## Library with public headers
+```ini id="vix-app-prefer-static"
+type = "static-library"
+```
 
-For reusable libraries, keep public headers under `include/`.
+```ini id="vix-app-prefer-shared"
+type = "shared-library"
+```
 
-Recommended:
+The short forms are accepted, but the full names are easier to read during review.
 
-```txt
-mathlib/
+## Library source layout
+
+A clean library layout separates public headers from private implementation files.
+
+```txt id="vix-app-library-clean-layout"
+mathkit/
   include/
-    mathlib/
-      math.hpp
+    mathkit/
+      add.hpp
+      multiply.hpp
   src/
     add.cpp
-```
-
-Then users include:
-
-```cpp
-#include <mathlib/math.hpp>
-```
-
-Avoid putting public headers directly in `src/`.
-
-`src/` should mainly contain implementation files and private headers.
-
-## Library with private headers
-
-You can use private headers under `src/`.
-
-Example layout:
-
-```txt
-mathlib/
+    multiply.cpp
+  tests/
   vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    detail/
-      helpers.hpp
 ```
 
-`vix.app`:
+The manifest lists the implementation files in `sources`.
 
-```ini
-name = mathlib
-type = static
-standard = c++20
-
+```ini id="vix-app-library-sources"
 sources = [
-  src/add.cpp,
+  "src/add.cpp",
+  "src/multiply.cpp",
 ]
+```
 
+The manifest lists the public include root in `include_dirs`.
+
+```ini id="vix-app-library-includes"
 include_dirs = [
-  include,
-  src,
+  "include",
 ]
 ```
 
-Then `src/add.cpp` can include:
+Headers are normally not listed in `sources`. They are reached through the include directory and included by the source files or by applications that consume the library.
 
-```cpp
-#include <detail/helpers.hpp>
+## Public headers
+
+A library should expose headers from a stable public path.
+
+```cpp id="vix-app-library-public-include"
+#include <mathkit/add.hpp>
 ```
 
-Public users should still include only:
+This works when the project has:
 
-```cpp
-#include <mathlib/math.hpp>
+```txt id="vix-app-library-public-header-path"
+include/mathkit/add.hpp
 ```
 
-## Library with compile definitions
+and the manifest declares:
 
-You can add compile definitions to a library target.
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
-sources = [
-  src/add.cpp,
-]
-
+```ini id="vix-app-library-public-include-dir"
 include_dirs = [
-  include,
-]
-
-defines = [
-  MATHLIB_ENABLE_FAST_PATH=1,
+  "include",
 ]
 ```
 
-C++ usage:
+Avoid include styles that depend on relative source locations.
 
-```cpp
-#ifdef MATHLIB_ENABLE_FAST_PATH
-// optimized implementation
-#endif
+```cpp id="vix-app-library-bad-relative-include"
+// Avoid this in public code.
+#include "../src/internal/AddImpl.hpp"
 ```
 
-## Library with compile options
+Relative implementation paths make the library harder to consume and harder to reorganize. Public code should include public headers. Private implementation details should stay under `src/`.
 
-You can add compiler options:
+## Linking from a library
 
-```ini
-name = mathlib
-type = static
-standard = c++20
+A library can link Vix SDK targets or external package targets when its implementation depends on them.
 
-sources = [
-  src/add.cpp,
-  src/mul.cpp,
-]
-
-include_dirs = [
-  include,
-]
-
-compile_options = [
-  -Wall,
-  -Wextra,
-]
-```
-
-## Library with packages
-
-Libraries can use packages and links.
-
-Example with `Threads`:
-
-```ini
-name = workerlib
-type = static
-standard = c++20
-
-sources = [
-  src/worker.cpp,
-]
-
-include_dirs = [
-  include,
-]
-
+```ini id="vix-app-library-links"
 packages = [
-  Threads:REQUIRED,
+  "vix",
 ]
 
 links = [
-  Threads::Threads,
+  "vix::vix",
 ]
 ```
 
-Remember:
+For a data-oriented library, the target list may include a more specific Vix module.
 
-```txt
-packages finds packages.
-links links targets or libraries.
+```ini id="vix-app-library-data-links"
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::orm",
+]
 ```
 
-## Library with output_dir
+The same rule applies here as in applications: link what the code uses. Do not link every available module only because the SDK provides it.
 
-Use `output_dir` to place the library under a predictable build folder.
+## Registry dependencies
 
-```ini
-name = mathlib
-type = static
-standard = c++20
-output_dir = lib
+A library can declare Vix Registry dependencies through `deps`.
+
+```ini id="vix-app-library-deps"
+deps = [
+  "adastra/logger@1.0.0",
+]
+```
+
+The dependency is resolved by Vix, while `links` should name the target exported by that dependency.
+
+```ini id="vix-app-library-deps-links"
+deps = [
+  "adastra/logger@1.0.0",
+]
+
+links = [
+  "adastra::logger",
+]
+```
+
+The dependency entry describes what the project needs from the registry. The link entry describes what the library target actually links against.
+
+## Static library example
+
+```ini id="vix-app-static-library-complete"
+name = "mathkit"
+type = "static-library"
+standard = "c++20"
+output_dir = "lib"
 
 sources = [
-  src/add.cpp,
-  src/mul.cpp,
+  "src/add.cpp",
+  "src/multiply.cpp",
 ]
 
 include_dirs = [
-  include,
+  "include",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-After build, the library can be placed under:
+This manifest builds reusable code into a static library. The output directory is set to `lib` because the target is not an application executable.
 
-```txt
-build-ninja/lib/
-```
+## Shared library example
 
-The exact file name depends on the platform and toolchain.
-
-Examples:
-
-```txt
-libmathlib.a
-libmathlib.so
-mathlib.lib
-mathlib.dll
-```
-
-## Testing a library
-
-For `vix.app` V1, use a separate test executable.
-
-Recommended layout:
-
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-  tests/
-    vix.app
-    test_math.cpp
-```
-
-Root `vix.app`:
-
-```ini
-name = mathlib
-type = static
-standard = c++20
+```ini id="vix-app-shared-library-complete"
+name = "plugin"
+type = "shared-library"
+standard = "c++20"
+output_dir = "lib"
 
 sources = [
-  src/add.cpp,
-  src/mul.cpp,
+  "src/plugin.cpp",
 ]
 
 include_dirs = [
-  include,
+  "include",
+]
+
+compile_features = [
+  "cxx_std_20",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-`tests/vix.app`:
+This manifest builds a dynamic library. Keep the public headers stable and avoid exposing private implementation details through the include tree.
 
-```ini
-name = mathlib_tests
-type = executable
-standard = c++20
+## Libraries and `vix run`
 
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-  ../src/mul.cpp,
-]
+A library target can be built, but it is not an application entry point. `vix run` is meant for executable targets.
 
-include_dirs = [
-  ../include,
-]
-```
-
-Run tests:
-
-```bash
-cd tests
-vix run
-```
-
-## Why tests include library sources again
-
-In `vix.app` V1, one manifest describes one target.
-
-So the test executable can include the library implementation files directly:
-
-```ini
-sources = [
-  test_math.cpp,
-  ../src/add.cpp,
-  ../src/mul.cpp,
-]
-```
-
-This avoids introducing a complex multi-target syntax too early.
-
-For advanced library and test setups, use `CMakeLists.txt`.
-
-## Example library test
-
-`tests/test_math.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <mathlib/math.hpp>
-
-int main()
-{
-  if (mathlib::add(2, 3) != 5)
-  {
-    vix::print("add failed");
-    return 1;
-  }
-
-  if (mathlib::mul(4, 5) != 20)
-  {
-    vix::print("mul failed");
-    return 1;
-  }
-
-  vix::print("all tests passed");
-  return 0;
-}
-```
-
-## Using a local library from an app
-
-For simple V1 projects, the easiest approach is to include the library source files directly in the app target.
-
-Example layout:
-
-```txt
-workspace/
-  app/
-    vix.app
-    src/
-      main.cpp
-  libs/
-    mathlib/
-      include/
-        mathlib/
-          math.hpp
-      src/
-        add.cpp
-```
-
-`app/vix.app`:
-
-```ini
-name = calculator
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-  ../libs/mathlib/src/add.cpp,
-]
-
-include_dirs = [
-  ../libs/mathlib/include,
-]
-```
-
-This is simple and works well for small projects.
-
-For larger projects with several libraries, use a normal `CMakeLists.txt`.
-
-## Shared library notes
-
-Shared libraries are more platform-sensitive than static libraries.
-
-Depending on the operating system, the output may be:
-
-```txt
-libplugin.so
-libplugin.dylib
-plugin.dll
-```
-
-Runtime loading and library search paths can also differ between platforms.
-
-For simple shared libraries, `vix.app` is enough.
-
-For advanced shared library packaging, use `CMakeLists.txt`.
-
-## Library naming
-
-The `name` field defines the target name.
-
-Example:
-
-```ini
-name = mathlib
-type = static
-```
-
-The target is named:
-
-```txt
-mathlib
-```
-
-The output file may include platform-specific prefixes or suffixes.
-
-Examples:
-
-```txt
-libmathlib.a
-libmathlib.so
-mathlib.lib
-```
-
-## Library and vix run
-
-`vix run` is mainly for executables.
-
-For a library target:
-
-```ini
-name = mathlib
-type = static
-```
-
-use:
-
-```bash
+```bash id="vix-app-library-build-only"
 vix build
 ```
 
-To run something, create a test executable or example executable.
+Use `type = "executable"` when the project should produce a program that can be launched directly.
 
-Example:
-
-```txt
-mathlib/
-  examples/
-    basic/
-      vix.app
-      src/
-        main.cpp
+```ini id="vix-app-library-executable"
+type = "executable"
 ```
 
-`examples/basic/vix.app`:
+Use a library type when the project exists to be consumed by another target.
 
-```ini
-name = mathlib_example
-type = executable
-standard = c++20
+```ini id="vix-app-library-static"
+type = "static-library"
+```
+
+## Libraries versus app modules
+
+A library target and a Vix app module solve different problems.
+
+A library target is the main output of a project. It is useful when the whole project exists to produce reusable code.
+
+```ini id="vix-app-library-main-target"
+name = "mathkit"
+type = "static-library"
+```
+
+An app module is an internal part of an application. It lives inside a larger app and is declared through `[module.<name>]`.
+
+```ini id="vix-app-library-module-example"
+name = "api"
+type = "executable"
+
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+```
+
+For a backend application with features such as `auth`, `projects`, `builds`, or `packages`, use app modules. For a standalone reusable package such as `mathkit`, use a library target.
+
+## Resources in library projects
+
+Most library projects do not need `resources`. Runtime files usually belong to applications, not libraries.
+
+```ini id="vix-app-library-no-resources"
+name = "mathkit"
+type = "static-library"
+standard = "c++20"
 
 sources = [
-  src/main.cpp,
-  ../../src/add.cpp,
-  ../../src/mul.cpp,
+  "src/add.cpp",
 ]
 
 include_dirs = [
-  ../../include,
+  "include",
 ]
 ```
 
-Run:
+Add resources only when the library genuinely needs files beside its output, for example test data, generated metadata, or plugin assets.
 
-```bash
-cd examples/basic
-vix run
-```
-
-## Examples for a library
-
-Recommended layout:
-
-```txt
-mathlib/
-  vix.app
-  include/
-    mathlib/
-      math.hpp
-  src/
-    add.cpp
-    mul.cpp
-  examples/
-    basic/
-      vix.app
-      src/
-        main.cpp
-  tests/
-    vix.app
-    test_math.cpp
-```
-
-This keeps each executable target separate:
-
-```txt
-root/vix.app              -> library
-examples/basic/vix.app    -> example executable
-tests/vix.app             -> test executable
-```
-
-## Example executable for a library
-
-`examples/basic/vix.app`:
-
-```ini
-name = mathlib_example
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-  ../../src/add.cpp,
-  ../../src/mul.cpp,
-]
-
-include_dirs = [
-  ../../include,
+```ini id="vix-app-library-resources"
+resources = [
+  "data=data",
 ]
 ```
 
-`examples/basic/src/main.cpp`:
-
-```cpp
-#include <vix.hpp>
-#include <mathlib/math.hpp>
-
-int main()
-{
-  vix::print("2 + 3 =", mathlib::add(2, 3));
-  vix::print("4 * 5 =", mathlib::mul(4, 5));
-  return 0;
-}
-```
-
-Run:
-
-```bash
-cd examples/basic
-vix run
-```
-
-## When to use CMakeLists.txt for libraries
-
-Use `CMakeLists.txt` when your library needs:
-
-```txt
-- multiple targets in one project
-- separate public/private dependencies
-- install rules
-- package export files
-- CMake config generation
-- FetchContent
-- CTest integration
-- complex examples
-- complex dependency graphs
-```
-
-`vix.app` is best for simple libraries and small local workflows.
+Do not use resources for public headers. Headers belong under `include_dirs`.
 
 ## Common mistakes
 
-### Using executable for library code
+The most common mistake is using a library type for a project that has a `main()` function and should run as an application.
 
-Incorrect:
+```ini id="vix-app-library-wrong-executable"
+# Wrong for a runnable app.
+type = "static-library"
+```
 
-```ini
-name = mathlib
-type = executable
+For a runnable program, use:
 
+```ini id="vix-app-library-correct-executable"
+type = "executable"
+```
+
+Another mistake is listing headers as source files. A normal library should list `.cpp` files in `sources` and expose headers through `include_dirs`.
+
+```ini id="vix-app-library-correct-sources"
 sources = [
-  src/add.cpp,
+  "src/add.cpp",
+]
+
+include_dirs = [
+  "include",
 ]
 ```
 
-If there is no `main()`, linking will fail.
+A third mistake is exposing private implementation headers as public API. Keep public headers under `include/<library-name>/` and private details under `src/`.
 
-Correct:
+## Checking a library manifest
 
-```ini
-name = mathlib
-type = static
+After editing the library manifest, build the project.
 
-sources = [
-  src/add.cpp,
-]
-```
-
-### Trying to run a library directly
-
-This builds a library:
-
-```ini
-name = mathlib
-type = static
-```
-
-Use:
-
-```bash
+```bash id="vix-app-library-check-build"
 vix build
 ```
 
-not:
+A missing source file, incorrect include root, or wrong target type usually appears immediately during the build. Keep the manifest small and explicit so these errors are easy to find.
 
-```bash
-vix run
+## Recommended default
+
+Use `static-library` for reusable code unless the project has a clear reason to produce a dynamic library.
+
+```ini id="vix-app-library-recommended"
+type = "static-library"
 ```
 
-unless you have a test or example executable.
+Use `shared-library` when runtime loading or dynamic distribution is part of the project design.
 
-### Forgetting include_dirs
-
-If your source uses:
-
-```cpp
-#include <mathlib/math.hpp>
+```ini id="vix-app-library-recommended-shared"
+type = "shared-library"
 ```
 
-and the file is here:
+Use `executable` for applications, backends, games, tools, and servers.
 
-```txt
-include/mathlib/math.hpp
+```ini id="vix-app-library-recommended-executable"
+type = "executable"
 ```
 
-you need:
+## Next step
 
-```ini
-include_dirs = [
-  include,
-]
-```
+Continue with examples to see complete `vix.app` manifests for applications, backends, games, and libraries.
 
-### Including main.cpp in a library
-
-A library target should usually not include `main.cpp`.
-
-Keep `main.cpp` for executable targets.
-
-## Recommended patterns
-
-### Small static library
-
-```ini
-name = mathlib
-type = static
-standard = c++20
-
-sources = [
-  src/add.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-### Small shared library
-
-```ini
-name = plugin
-type = shared
-standard = c++20
-
-sources = [
-  src/plugin.cpp,
-]
-
-include_dirs = [
-  include,
-]
-```
-
-### Library with tests
-
-```txt
-mathlib/
-  vix.app
-  include/
-  src/
-  tests/
-    vix.app
-    test_math.cpp
-```
-
-### Library with examples
-
-```txt
-mathlib/
-  vix.app
-  include/
-  src/
-  examples/
-    basic/
-      vix.app
-      src/
-        main.cpp
-```
-
-## Summary
-
-Use:
-
-```ini
-type = static
-```
-
-for static libraries.
-
-Use:
-
-```ini
-type = shared
-```
-
-for shared libraries.
-
-Use:
-
-```bash
-vix build
-```
-
-to build library targets.
-
-Use separate `vix.app` files for tests and examples:
-
-```txt
-tests/vix.app
-examples/basic/vix.app
-```
-
-For complex multi-target library projects, use `CMakeLists.txt`.
-
-## Next steps
-
-Continue with:
-
-- [Tests](./tests.md)
-- [Project Types](./project-types.md)
-- [Examples](./examples.md)
-- [Best Practices](./best-practices.md)
+[Examples](/guides/vix-app/examples)

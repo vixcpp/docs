@@ -438,32 +438,20 @@ const vixApp = {
       link: "/guides/vix-app/getting-started",
     },
     {
-      text: "Manifest Reference",
-      link: "/guides/vix-app/manifest-reference",
-    },
-    {
-      text: "Examples",
-      link: "/guides/vix-app/examples",
-    },
-    {
-      text: "Packages and Links",
-      link: "/guides/vix-app/packages-and-links",
-    },
-    {
-      text: "Tests",
-      link: "/guides/vix-app/tests",
-    },
-    {
       text: "Project Types",
       link: "/guides/vix-app/project-types",
+    },
+    {
+      text: "Manifest Reference",
+      link: "/guides/vix-app/manifest-reference",
     },
     {
       text: "Sources and Includes",
       link: "/guides/vix-app/sources-and-includes",
     },
     {
-      text: "Compile Options",
-      link: "/guides/vix-app/compile-options",
+      text: "Packages and Links",
+      link: "/guides/vix-app/packages-and-links",
     },
     {
       text: "Resources",
@@ -474,8 +462,24 @@ const vixApp = {
       link: "/guides/vix-app/output-directory",
     },
     {
+      text: "Compile Options",
+      link: "/guides/vix-app/compile-options",
+    },
+    {
       text: "Libraries",
       link: "/guides/vix-app/libraries",
+    },
+    {
+      text: "App Modules",
+      link: "/guides/vix-app/app-modules",
+    },
+    {
+      text: "Tests",
+      link: "/guides/vix-app/tests",
+    },
+    {
+      text: "Examples",
+      link: "/guides/vix-app/examples",
     },
     {
       text: "Migrating from CMake",
@@ -492,6 +496,53 @@ const vixApp = {
     {
       text: "Best Practices",
       link: "/guides/vix-app/best-practices",
+    },
+  ],
+};
+
+const applicationModules = {
+  text: "Application Modules",
+  collapsed: false,
+  items: [
+    {
+      text: "Overview",
+      link: "/app-modules/",
+    },
+    {
+      text: "Why Modules Exist",
+      link: "/app-modules/why-modules",
+    },
+    {
+      text: "CLI Workflow",
+      link: "/app-modules/cli-workflow",
+    },
+    {
+      text: "Module Layout",
+      link: "/app-modules/module-layout",
+    },
+    {
+      text: "Backend Modules",
+      link: "/app-modules/backend-modules",
+    },
+    {
+      text: "Using with vix.app",
+      link: "/app-modules/with-vix-app",
+    },
+    {
+      text: "Using with CMake",
+      link: "/app-modules/with-cmake",
+    },
+    {
+      text: "Dependencies and Checks",
+      link: "/app-modules/dependencies-and-checks",
+    },
+    {
+      text: "Generated Registration",
+      link: "/app-modules/generated-registration",
+    },
+    {
+      text: "Troubleshooting",
+      link: "/app-modules/troubleshooting",
     },
   ],
 };
@@ -1735,6 +1786,7 @@ const sidebar = [
   vixBook,
   guides,
   vixApp,
+  applicationModules,
   middleware,
   cli,
   examples,
