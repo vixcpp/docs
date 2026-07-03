@@ -467,4 +467,4 @@ Keep the CMake package shape honest. Public headers live under `include/<library
 
 Continue with best practices to see how to keep the library API, examples, tests, and build target clean as the project grows.
 
-[Best Practices](/templates/library/best-practices)
+[Best Practices](/templates/library/registry-metadata)

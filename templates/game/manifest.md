@@ -559,4 +559,4 @@ Keep the game manifest explicit. Use `sources` only for C++ implementation files
 
 Continue with the game workflow to see how to build, run, add scenes, add assets, and keep the generated game project aligned as it grows.
 
-[Game Workflow](/templates/game/workflow)
+[Game Workflow](/templates/game/assets-and-package)

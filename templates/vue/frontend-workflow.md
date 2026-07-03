@@ -435,4 +435,4 @@ Use npm and Vite for the Vue frontend. Use Vix for the C++ backend. Keep fronten
 
 Continue with the API proxy page to understand how the generated Vite proxy connects Vue requests to the Vix backend during development.
 
-[API Proxy](/templates/vue/api-proxy)
+[API Proxy](/templates/vue/backend-integration)

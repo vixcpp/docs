@@ -529,4 +529,4 @@ Keep the backend and frontend separate, but let them share a simple API boundary
 
 Continue with the development workflow to see how the Vue frontend, Vite proxy, and Vix backend are used together during local development.
 
-[Development Workflow](/templates/vue/development-workflow)
+[Development Workflow](/templates/vue/frontend-workflow)

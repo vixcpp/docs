@@ -394,4 +394,4 @@ Use tests to protect behavior and examples to teach usage. Keep both of them clo
 
 Continue with the CMake integration page to understand why the library template uses root build files and how the library target is exposed to examples, tests, and consumers.
 
-[CMake Integration](/templates/library/cmake-integration)
+[CMake Integration](/templates/library/cmake-package)

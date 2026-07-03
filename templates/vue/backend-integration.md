@@ -593,4 +593,4 @@ Keep the integration simple. Vue owns the browser UI. Vix owns the backend API. 
 
 Continue with the API proxy page to see how Vite forwards frontend requests to the Vix backend during development.
 
-[API Proxy](/templates/vue/api-proxy)
+[API Proxy](/templates/vue/backend-integration)

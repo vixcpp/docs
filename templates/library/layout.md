@@ -413,4 +413,4 @@ Keep the public API under `include/<library>/`, keep tests focused on public beh
 
 Continue with the public API page to understand how the generated library exposes headers and how the include structure should grow.
 
-[Public API](/templates/library/public-api)
+[Public API](/templates/library/layout)

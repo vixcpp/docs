@@ -418,4 +418,4 @@ Use `vix.json` to describe the library as a Vix project: name, version, type, de
 
 Continue with best practices to see how to keep the library API, examples, tests, CMake target, and metadata clean as the project grows.
 
-[Best Practices](/templates/library/best-practices)
+[Best Practices](/templates/library/registry-metadata)
