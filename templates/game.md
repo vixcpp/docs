@@ -1,177 +1,63 @@
 # Game Template
 
-The game template creates a Vix game project.
-Use it when you want to build a small game, a simulation, an interactive prototype, a real-time visualization, or the beginning of a custom engine on top of Vix.cpp.
+The game template creates a small Vix game project with a C++ entry point, a game package file, an assets directory, and a `vix.app` manifest that links the Vix game runtime.
 
-Create a game project with:
+Use this template when the project is meant to run as a game or interactive runtime, not as an HTTP backend, server-rendered web app, or general command-line application.
 
-```bash
-vix new mario --game
+```bash id="game-template-create"
+vix new space-demo --game
 ```
 
-You can also use:
+After creation, the normal first workflow is:
 
-```bash
-vix new mario --template game
+```bash id="game-template-first-workflow"
+cd space-demo
+vix build
+vix run
 ```
 
 ## What this template is for
 
-Use the game template when you want:
+The game template is for projects that start from the Vix game foundation. It gives the project a minimal scene, a runtime entry point, asset storage, package metadata, and a manifest that links the correct Vix targets.
 
-- a C++ game project
-- a game prototype
-- a simulation
-- an interactive tool
-- a custom engine foundation
-- a 2D rendering experiment
-- a real-time visualization
-- a project with scenes, frame updates, assets, and game metadata
+A generated game project is still a normal `vix.app` project. The difference is in the linked modules and runtime files. Instead of linking only the base Vix target, the game template links `vix::game` and `vix::io`, and it copies game resources such as `assets/` and `game.package.json` beside the built executable.
 
-This template is not trying to be Unity, Unreal, or Godot.
-It gives you a clean Vix game foundation so you can build your own architecture.
-
-## What `vix/game` provides
-
-`vix/game` is a game application foundation for Vix.cpp.
-
-It provides building blocks such as:
-
-- application lifecycle
-- game loop
-- frame timing
-- fixed update support
-- event system
-- scene management
-- ECS-style registry
-- entities, components, systems
-- asset management
-- asset cache
-- async asset loading
-- background job system
-- input system
-- window abstraction
-- renderer abstraction
-- 2D rendering foundation
-- runtime context
-- editor runtime foundation
-- scripting runtime foundation
-- audio runtime foundation
-- physics runtime foundation
-- game package metadata
-- game export workflow
-
-The important idea is:
-
-```txt
-Vix gives you the runtime foundation.
-You keep control of your game architecture.
+```txt id="game-template-map"
+src/main.cpp        -> game entry point
+assets/             -> game assets
+game.package.json   -> game metadata
+vix.app             -> C++ target manifest
+vix.json            -> project tasks and metadata
 ```
 
-## Design used by this template
+## Generated project shape
 
-The game template uses a **runtime-first game architecture**.
+A generated game project follows this general layout:
 
-The generated project starts with:
-
-```txt
-App
-  -> GameRuntime
-      -> SceneManager
-          -> MainScene
-              -> on_load()
-              -> on_update(frame)
+```txt id="game-template-layout"
+space-demo/
+  assets/
+  src/
+    main.cpp
+  game.package.json
+  README.md
+  vix.app
+  vix.json
 ```
 
-The generated app runs a small scene, prints frame updates, then stops after a few frames.
+The layout is intentionally small. The generated project gives you a working game runtime first, then leaves room to add scenes, assets, systems, gameplay code, and export workflows as the project grows.
 
-This is intentional.
+## Entry point
 
-It proves that:
+The generated game starts from:
 
-- the project builds
-- the game runtime starts
-- the scene system works
-- the update loop runs
-- the game can stop cleanly
-
-## Quick start
-
-Create the project:
-
-```bash
-vix new mario --game
+```txt id="game-template-main-path"
+src/main.cpp
 ```
 
-Enter the project:
+The file includes the Vix game headers and defines a minimal scene.
 
-```bash
-cd mario
-```
-
-Build it:
-
-```bash
-vix build
-```
-
-Run it:
-
-```bash
-vix run
-```
-
-Expected output shape:
-
-```txt
-Main scene loaded
-frame: 0
-frame: 1
-frame: 2
-frame: 3
-frame: 4
-frame: 5
-```
-
-The generated game is short-lived by default.
-
-It runs a few frames and exits.
-
-That makes it easy to verify the template from the terminal.
-
-## Generated structure
-
-A generated game project looks like this:
-
-```txt
-mario/
-├── assets/
-├── src/
-│   └── main.cpp
-├── game.package.json
-├── README.md
-├── vix.app
-└── vix.json
-```
-
-## What each file does
-
-| File or folder      | Role                                                     |
-| ------------------- | -------------------------------------------------------- |
-| `src/main.cpp`      | Game entry point and first scene.                        |
-| `assets/`           | Game assets such as images, text files, sounds, or maps. |
-| `game.package.json` | Game metadata used by packaging and export workflows.    |
-| `vix.app`           | Vix build manifest for the game executable.              |
-| `vix.json`          | Project metadata and tasks.                              |
-| `README.md`         | Generated project documentation.                         |
-
-## `src/main.cpp`
-
-The generated game starts with one scene.
-
-A simplified version looks like this:
-
-```cpp
+```cpp id="game-template-main-scene"
 #include <vix/game/all.hpp>
 #include <vix/print.hpp>
 
@@ -194,11 +80,19 @@ public:
     }
   }
 };
+```
 
+The generated scene is simple because it is meant to prove that the runtime starts, loads a scene, receives frame updates, and can stop the application cleanly.
+
+## Game runtime
+
+The generated `main()` creates the game app, initializes the runtime, creates the scene, activates it, and runs the application.
+
+```cpp id="game-template-runtime"
 int main()
 {
   vix::game::App app;
-  app.set_title("mario");
+  app.set_title("space-demo");
 
   vix::game::GameRuntime runtime(app);
 
@@ -234,47 +128,62 @@ int main()
 }
 ```
 
-## Main concepts
+The important part is the shape of the startup flow.
 
-| Concept            | Role                                                              |
-| ------------------ | ----------------------------------------------------------------- |
-| `App`              | Main game application facade.                                     |
-| `GameRuntime`      | Initializes and coordinates runtime systems.                      |
-| `Scene`            | Represents a game state such as menu, gameplay, pause, or editor. |
-| `SceneManager`     | Creates, stores, activates, and updates scenes.                   |
-| `Frame`            | Carries frame timing and frame index.                             |
-| `on_load()`        | Runs when the scene loads.                                        |
-| `on_update(frame)` | Runs every frame.                                                 |
-| `app().stop()`     | Stops the game loop.                                              |
-
-## Runtime flow
-
-The generated flow is:
-
-```txt
-main()
-  -> create App
-  -> create GameRuntime
-  -> runtime.init()
-  -> create MainScene
-  -> set active scene
+```txt id="game-template-runtime-flow"
+vix::game::App
+  -> GameRuntime
+      -> runtime.init()
+  -> SceneManager
+      -> create MainScene
+      -> set active scene
   -> app.run()
-      -> scene.on_load()
-      -> scene.on_update(frame)
-  -> app exits
 ```
 
-This gives you the base loop needed by games and simulations.
+This gives the project a real game loop from the first run without hiding the startup sequence.
 
-## `game.package.json`
+## Scenes
 
-`game.package.json` describes the game project.
+The generated game uses a `Scene` as the first unit of game behavior.
 
-Generated shape:
-
-```json
+```cpp id="game-template-scene-class"
+class MainScene final : public vix::game::Scene
 {
-  "name": "mario",
+public:
+  vix::game::GameBoolResult on_load() override;
+  void on_update(const vix::game::Frame &frame) override;
+};
+```
+
+`on_load()` is called when the scene is loaded. `on_update()` is called during the game loop and receives frame information.
+
+The starter scene prints the frame index and stops after a few frames. That makes the first run predictable.
+
+```txt id="game-template-output"
+Main scene loaded
+frame: 0
+frame: 1
+frame: 2
+frame: 3
+frame: 4
+frame: 5
+```
+
+A real game can replace this starter scene with its own scene classes, input handling, rendering logic, gameplay systems, asset loading, and world state.
+
+## Game package
+
+The template generates a game package file.
+
+```txt id="game-template-package-file"
+game.package.json
+```
+
+A generated package can look like this:
+
+```json id="game-template-package-json"
+{
+  "name": "space-demo",
   "version": "0.1.0",
   "author": "",
   "entry_scene": "main",
@@ -285,47 +194,54 @@ Generated shape:
 }
 ```
 
-Use it for:
+This file describes game-level metadata. It is not the C++ build manifest. It belongs to the game runtime and asset/export side of the project.
 
-- game name
-- version
-- author
-- entry scene
-- asset root
-- output directory
-- scene list
-- asset list
+The build target is described by `vix.app`. The game package describes the game itself.
 
-This file is used by game packaging and export workflows.
+## Assets
 
-## `assets/`
+Game assets belong in:
 
-Put game assets in:
-
-```txt
+```txt id="game-template-assets-dir"
 assets/
 ```
 
-Examples:
+This directory is where the project can place images, audio, maps, data files, exported content, or other files needed by the game at runtime.
 
-```txt
-assets/player.png
-assets/background.png
-assets/level-01.json
-assets/dialogue.txt
-assets/audio/theme.ogg
+The generated `vix.app` declares assets as a runtime resource.
+
+```ini id="game-template-assets-resource"
+resources = [
+  "assets=assets",
+  "game.package.json=game.package.json",
+]
 ```
 
-The game export workflow can scan this directory and generate export metadata.
+This matters because the built executable runs from the build output. Assets must be available beside the executable when the game starts.
 
-## `vix.app`
+A runtime output can look like this:
 
-The generated game project uses `vix.app` as its build manifest.
+```txt id="game-template-runtime-layout"
+bin/
+  space-demo
+  assets/
+  game.package.json
+```
 
-Example shape:
+Do not put game assets in `sources`. Assets are runtime files, not C++ compilation inputs.
 
-```txt
-name = "mario"
+## Manifest
+
+The game template uses `vix.app` as the application manifest.
+
+```txt id="game-template-vix-app-file"
+vix.app
+```
+
+The generated manifest describes one executable target.
+
+```ini id="game-template-vix-app"
+name = "space-demo"
 type = "executable"
 standard = "c++20"
 
@@ -358,21 +274,49 @@ resources = [
 output_dir = "bin"
 ```
 
-The important links are:
+The important fields are `links` and `resources`. The game template links the game and IO targets, then copies the asset directory and game package file into the runtime output.
 
-```txt
-vix::game
-vix::io
+## Linked Vix targets
+
+The generated game links:
+
+```ini id="game-template-links"
+links = [
+  "vix::game",
+  "vix::io",
+]
 ```
 
-The resources make assets and game metadata available to the built executable.
+`vix::game` provides the game runtime foundation. `vix::io` provides IO support used by game projects and runtime resources.
 
-## `vix.json`
+This is different from a basic application manifest, which usually links:
 
-The generated game project includes tasks such as:
+```ini id="game-template-app-link"
+links = [
+  "vix::vix",
+]
+```
 
-```json
+The game template should link the targets the runtime actually needs. Do not remove `vix::game` from a generated game unless the project is no longer using the Vix game runtime.
+
+## Project metadata
+
+The generated project also includes `vix.json`.
+
+```txt id="game-template-vix-json-file"
+vix.json
+```
+
+A generated game project can include tasks like this:
+
+```json id="game-template-vix-json"
 {
+  "name": "space-demo",
+  "deps": [],
+  "vars": {
+    "preset": "dev-ninja",
+    "log_level": "info"
+  },
   "tasks": {
     "dev": "vix run",
     "build": "vix build",
@@ -386,372 +330,189 @@ The generated game project includes tasks such as:
 }
 ```
 
-Common commands:
+`vix.json` describes project workflow and tasks. `vix.app` describes the compiled C++ target. `game.package.json` describes game metadata.
 
-```bash
-vix task build
-vix task run
-vix task check
+Keep those roles separate.
+
+```txt id="game-template-file-roles"
+vix.app             -> C++ executable target
+vix.json            -> Vix project workflow
+game.package.json   -> game metadata
+assets/             -> runtime game files
 ```
 
 ## Build and run
 
-Build:
+Build the game from the project root.
 
-```bash
+```bash id="game-template-build"
 vix build
 ```
 
-Run:
+Run it with:
 
-```bash
+```bash id="game-template-run"
 vix run
 ```
 
-Run development mode:
+The generated starter scene prints a few frames and exits. That behavior is intentional. It gives the first project a predictable run result before the developer adds a real loop, rendering, input, or gameplay code.
 
-```bash
-vix dev
+## Development workflow
+
+A normal first session looks like this:
+
+```bash id="game-template-dev-workflow"
+vix new space-demo --game
+cd space-demo
+
+vix build
+vix run
 ```
 
-For generated short-lived games, `vix run` is often enough.
+After editing the scene or game code:
 
-Use `vix dev` when you want Vix to rebuild while you edit.
-
-## Export the game
-
-The game template is prepared for export workflows.
-
-Run:
-
-```bash
-vix game export
+```bash id="game-template-edit-workflow"
+vix build
+vix run
 ```
 
-This can generate:
+When assets are added under `assets/`, keep them in the asset directory and let the existing resource declaration copy them with the runtime output.
 
-```txt
-dist/
-  mario/
-    assets/
-    game.package.json
-    README.md
-    export.json
-```
+No manifest change is needed for new files under `assets/` when the whole directory is already declared as a resource.
 
-`export.json` records exported metadata such as:
+## Adding more source files
 
-- game name
-- version
-- asset root
-- output path
-- copied files
-- exported assets
+When the game grows, split code into more files.
 
-## Headless vs windowed games
-
-The generated template is terminal-friendly and short-lived.
-
-It does not force a window backend.
-
-That is intentional.
-
-`vix/game` is backend-independent by design.
-
-You can start with the simple runtime and later add:
-
-- SDL window backend
-- OpenGL renderer
-- input handling
-- sprites
-- cameras
-- textures
-- editor tools
-
-For example, a windowed SDL/OpenGL demo uses:
-
-```cpp
-#include <memory>
-
-#include <vix/game/all.hpp>
-#include <vix/game/backends/sdl/SDLOpenGLRenderer.hpp>
-#include <vix/game/backends/sdl/SDLWindow.hpp>
-#include <vix/print.hpp>
-```
-
-Then it configures:
-
-```cpp
-config.window.width = 960;
-config.window.height = 540;
-config.window.opengl = true;
-```
-
-And installs the backends:
-
-```cpp
-context
-  .set_window_backend(std::make_unique<vix::game::sdl::SDLWindow>())
-  .set_renderer_backend(std::make_unique<vix::game::sdl::SDLOpenGLRenderer>());
-```
-
-For the full SDL/OpenGL setup, use the dedicated game guide.
-
-## System dependencies for SDL/OpenGL
-
-The default generated game can run without forcing SDL/OpenGL.
-
-If you use the SDL/OpenGL backend, install the required system libraries.
-
-Ubuntu or Debian:
-
-```bash
-sudo apt update
-sudo apt install -y libsdl2-dev libsdl2-image-dev libgl1-mesa-dev
-```
-
-Then build with SDL support if the project or module requires it.
-
-The exact build flags are covered in the game guide.
-
-## How to add a new scene
-
-Create a new scene class.
-
-Example:
-
-```cpp
-class MenuScene final : public vix::game::Scene
-{
-public:
-  vix::game::GameBoolResult on_load() override
-  {
-    vix::print("Menu scene loaded");
-    return vix::game::Scene::on_load();
-  }
-
-  void on_update(const vix::game::Frame &frame) override
-  {
-    (void)frame;
-  }
-};
-```
-
-Register it:
-
-```cpp
-auto menu = app.scenes().create<MenuScene>("menu");
-```
-
-Activate it:
-
-```cpp
-app.scenes().set_active("menu");
-```
-
-## How to organize a growing game
-
-The generated template starts with everything in `src/main.cpp`.
-
-That is fine for the first run.
-
-When the game grows, split code into folders:
-
-```txt
+```txt id="game-template-more-sources-layout"
 src/
-├── main.cpp
-├── scenes/
-│   ├── MainScene.hpp
-│   ├── MainScene.cpp
-│   ├── MenuScene.hpp
-│   └── MenuScene.cpp
-├── systems/
-│   ├── MovementSystem.hpp
-│   └── MovementSystem.cpp
-├── components/
-│   ├── Transform.hpp
-│   └── Sprite.hpp
-└── assets/
-    └── AssetIds.hpp
+  main.cpp
+  scenes/
+    MainScene.cpp
+    MainScene.hpp
+  systems/
+    MovementSystem.cpp
+    MovementSystem.hpp
 ```
 
-Then update `vix.app`:
+Then list new `.cpp` files in `vix.app`.
 
-```txt
+```ini id="game-template-more-sources-manifest"
 sources = [
   "src/main.cpp",
   "src/scenes/MainScene.cpp",
-  "src/scenes/MenuScene.cpp",
   "src/systems/MovementSystem.cpp",
 ]
 ```
 
-## How to use assets
+Headers are reached through `include_dirs`.
 
-Put files in:
-
-```txt
-assets/
-```
-
-Then keep stable asset names in your code.
-
-Example:
-
-```txt
-assets/player.png
-assets/levels/level-01.json
-```
-
-As the project grows, create:
-
-```txt
-src/assets/AssetIds.hpp
-```
-
-Example:
-
-```cpp
-#pragma once
-
-namespace assets
-{
-  inline constexpr const char *Player = "assets/player.png";
-  inline constexpr const char *Level01 = "assets/levels/level-01.json";
-}
-```
-
-This avoids hardcoding asset paths everywhere.
-
-## Game template vs application template
-
-Use the game template when the project is a real-time app.
-
-Use the application template when the project is a normal executable or HTTP app.
-
-| Need           | Template                   |
-| -------------- | -------------------------- |
-| Game loop      | `game`                     |
-| Scenes         | `game`                     |
-| Frame updates  | `game`                     |
-| Assets         | `game`                     |
-| Normal C++ app | `application`              |
-| HTTP server    | `application` or `backend` |
-
-## Game template vs backend template
-
-Use the game template for interactive real-time applications.
-
-Use the backend template for APIs and services.
-
-| Need                             | Template  |
-| -------------------------------- | --------- |
-| Game or simulation               | `game`    |
-| JSON API                         | `backend` |
-| Realtime rendering               | `game`    |
-| WebSocket service                | `backend` |
-| Asset pipeline                   | `game`    |
-| Health checks and API middleware | `backend` |
-
-## Common mistakes
-
-### Expecting a full game engine
-
-`vix/game` is a foundation, not a complete engine.
-
-It gives you structure, runtime, scenes, assets, and abstractions.
-
-You build the higher-level engine or game systems on top.
-
-### Forgetting that generated games are short-lived
-
-The generated game stops after a few frames.
-
-That is normal.
-
-It is a verification template.
-
-When you build a real game, remove this condition:
-
-```cpp
-if (frame.index >= 5)
-{
-  app().stop();
-}
-```
-
-### Adding new `.cpp` files without updating `vix.app`
-
-If you add source files, add them to:
-
-```txt
-sources = [
+```ini id="game-template-include-dirs"
+include_dirs = [
+  "src",
 ]
 ```
 
-in `vix.app`.
+A `.cpp` file that is not listed in `sources` is not compiled into the game target.
 
-### Putting assets outside `assets/`
+## Adding assets
 
-Keep game assets under:
+Assets should stay under the asset root declared in `game.package.json`.
 
-```txt
+```json id="game-template-asset-root"
+{
+  "asset_root": "assets"
+}
+```
+
+For example:
+
+```txt id="game-template-assets-layout"
 assets/
+  sprites/
+    player.png
+  audio/
+    theme.ogg
+  maps/
+    level01.json
 ```
 
-This keeps export and packaging workflows simple.
+Because the manifest already declares:
 
-### Trying SDL/OpenGL without system dependencies
-
-Install SDL/OpenGL dependencies before building a windowed renderer project.
-
-Ubuntu or Debian:
-
-```bash
-sudo apt install -y libsdl2-dev libsdl2-image-dev libgl1-mesa-dev
+```ini id="game-template-assets-resource-again"
+resources = [
+  "assets=assets",
+]
 ```
 
-## What you should remember
+the asset directory can be copied into the runtime output.
 
-The game template creates a Vix game project with:
+Keep the source tree and runtime tree easy to understand. Put source code in `src/`, and put game runtime files in `assets/`.
 
-```txt
-App
-GameRuntime
-Scene
-SceneManager
-Frame updates
-assets/
-game.package.json
-vix.app
-vix.json
+## Difference from the application template
+
+The application template creates a general Vix C++ app. It is a good fit for small HTTP apps, tools, and projects that do not need the game runtime.
+
+The game template creates a game-oriented executable. It links `vix::game`, creates a `GameRuntime`, uses scenes, and carries `assets/` and `game.package.json` as runtime resources.
+
+```txt id="game-template-app-difference"
+application template  -> general Vix app
+game template         -> Vix game runtime + scene + assets
 ```
 
-The generated project is intentionally simple.
+Use the game template when the game runtime is part of the project from the beginning.
 
-It proves the runtime works, then gives you a clean place to grow.
+## Difference from the backend and web templates
 
-Create a game:
+The backend and web templates start HTTP applications. They create controllers, route registries, middleware registries, environment files, public directories, views, storage, and production metadata.
 
-```bash
-vix new mario --game
-cd mario
-vix build
-vix run
+The game template starts a game runtime. It does not generate HTTP controllers, route registries, middleware registries, `.env.example`, or production service metadata.
+
+```txt id="game-template-other-difference"
+backend/web  -> server process and HTTP routes
+game         -> game runtime and scenes
 ```
 
-Export later:
+Choose the template based on the process you want to run.
 
-```bash
-vix game export
+## Tests
+
+The game template focuses on a runnable game starter. If the project adds tests, keep them separate from the game executable.
+
+A simple future layout can look like this:
+
+```txt id="game-template-tests-layout"
+tests/
+  test_basic.cpp
+  vix.app
 ```
 
-## Next steps
+The test target should define its own `main()` and should not include `src/main.cpp` from the game executable.
 
-Continue with:
+Run tests through the normal Vix test workflow when the project has test targets.
 
-- [Application template](/templates/application)
-- [Backend template](/templates/backend)
-- [Game guide](/guides/game)
-- [Build and run](/cli/run)
-- [vix.app](/guides/vix-app/)
+```bash id="game-template-tests-command"
+vix tests
+```
+
+For a basic game starter, `vix build` and `vix run` are the first useful checks.
+
+## Common mistakes
+
+The most common mistake is adding assets to `sources`. Asset files are not C++ files. Keep them under `assets/` and copy them through `resources`.
+
+Another mistake is removing `game.package.json` from resources. The game may need package metadata at runtime, so the generated manifest copies it beside the executable.
+
+A third mistake is adding new `.cpp` files under `src/` and forgetting to add them to `vix.app`. The files exist in the project, but they are not part of the game target until the manifest lists them.
+
+A fourth mistake is treating `game.package.json` as a replacement for `vix.app`. The package file describes game metadata. The manifest describes the C++ target.
+
+## Recommended rule
+
+Use the game template when the project should start from the Vix game runtime. Keep C++ code in `src/`, assets in `assets/`, game metadata in `game.package.json`, C++ build wiring in `vix.app`, and project tasks in `vix.json`. When the game grows, add source files deliberately and keep runtime assets out of the C++ source list.
+
+## Next step
+
+Continue with the generated layout to see each file created by the game template and how the runtime, scene, assets, package file, and manifest fit together.
+
+[Generated Layout](/templates/game/layout)

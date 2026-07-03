@@ -1,206 +1,147 @@
-# Vue Template
+# Vue.js Template
 
-The Vue template creates a project with two parts:
+The Vue template creates a combined project with a Vue frontend and a Vix C++ backend. The frontend lives in `frontend/` and is managed by Vite. The backend remains a normal Vix application and serves the API that the Vue app can call during development or after deployment.
 
-```txt
-Vue frontend
-Vix C++ backend
+Use this template when the browser interface should be a Vue application, but the backend should stay in C++ with Vix.
+
+```bash id="vue-template-create"
+vix new dashboard --template vue
 ```
 
-Use it when you want a modern browser UI powered by Vue, while keeping the backend in C++ with Vix.
-Create a Vue project with:
+After creation, the normal first workflow is:
 
-```bash
-vix new dashboard --template vue
+```bash id="vue-template-first-workflow"
+cd dashboard
+npm install --prefix frontend
+vix dev
 ```
 
 ## What this template is for
 
-Use the Vue template when you want:
+The Vue template is for projects where the frontend and backend are developed together but keep separate responsibilities. Vue owns the browser UI, components, client-side state, and frontend build. Vix owns the C++ backend, API routes, build workflow, and project orchestration.
 
-- a Vue frontend
-- a Vix C++ backend
-- API routes under `/api`
-- Vite development server
-- frontend hot reload
-- C++ backend performance
-- one project containing both frontend and backend
-- dashboards, SaaS apps, admin panels, internal tools, or customer portals
+This is different from the web template. The web template renders HTML directly from the Vix backend using `views/`. The Vue template gives the browser its own frontend application under `frontend/`, and that frontend talks to the backend through API routes.
 
-This template is different from the web template.
-The web template renders HTML on the server with Vix templates.
-The Vue template renders the UI in the browser with Vue.
-
-## Design used by this template
-
-The Vue template uses a **frontend + backend architecture**.
-
-The project is split into two clear parts:
-
-```txt
-frontend/      -> Vue application
-src/main.cpp   -> Vix C++ backend
+```txt id="vue-template-responsibility-map"
+frontend/  -> Vue application
+src/       -> Vix C++ backend
+vix.app    -> backend target manifest
+vix.json   -> project tasks and Vue/Vix workflow
 ```
 
-The development flow is:
+## Generated project shape
 
-```txt
-browser
-  -> Vite dev server
-      -> Vue app
-          -> fetch("/api/hello")
-              -> Vite proxy
-                  -> Vix backend on http://localhost:8080
+A generated Vue project follows this general layout:
+
+```txt id="vue-template-layout"
+dashboard/
+  src/
+    main.cpp
+
+  include/
+    app/
+      ModuleRegistry.hpp
+
+  frontend/
+    package.json
+    index.html
+    vite.config.js
+    src/
+      main.js
+      App.vue
+
+  tests/
+  vix.app
+  vix.json
+  README.md
 ```
 
-This gives you a modern frontend workflow while keeping backend logic in C++.
+The exact backend files can follow the application template shape, because the Vue template uses a Vix backend as the server side of the project. The important part is the split: C++ backend files stay at the project root, while Vue files stay under `frontend/`.
 
-## Quick start
+## Backend
 
-Create the project:
+The backend is a Vix application. It is built and run through the normal Vix workflow.
 
-```bash
-vix new dashboard --template vue
-```
-
-Enter the project:
-
-```bash
-cd dashboard
-```
-
-Install frontend dependencies:
-
-```bash
-cd frontend
-npm install
-cd ..
-```
-
-Start development mode:
-
-```bash
-vix dev
-```
-
-Then open the Vue dev server URL shown by Vite.
-
-If you want to run frontend and backend manually, start the backend first:
-
-```bash
+```bash id="vue-template-backend-run"
+vix build
 vix run
 ```
 
-Then start Vue in another terminal:
+The backend is described by `vix.app`.
 
-```bash
-cd frontend
-npm run dev
+```txt id="vue-template-vix-app-file"
+vix.app
 ```
 
-## Generated structure
+A small backend manifest usually describes one executable target with source files, include roots, linked Vix targets, and an output directory.
 
-A Vue project generated with:
+```ini id="vue-template-backend-manifest"
+name = "dashboard"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
-```bash
-vix new dashboard --template vue
+sources = [
+  "src/main.cpp",
+  "src/app/ModuleRegistry.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
 ```
 
-has this structure:
+The backend should expose API routes that the Vue frontend can call. In the generated starter project, the frontend calls an API route under `/api`.
 
-```txt
-dashboard/
-├── src/
-│   └── main.cpp
-├── frontend/
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   └── src/
-│       ├── main.js
-│       └── App.vue
-├── tests/
-├── vix.app
-├── vix.json
-└── README.md
-```
-
-Some projects may also include `.env` and `.env.example` depending on the selected options and current generator version.
-
-## What each part does
-
-| File or folder            | Role                                                               |
-| ------------------------- | ------------------------------------------------------------------ |
-| `src/main.cpp`            | Vix C++ backend entry point.                                       |
-| `frontend/`               | Vue frontend application.                                          |
-| `frontend/src/`           | Vue source files.                                                  |
-| `frontend/src/App.vue`    | Main Vue component.                                                |
-| `frontend/src/main.js`    | Vue application mount point.                                       |
-| `frontend/vite.config.js` | Vite configuration and API proxy.                                  |
-| `frontend/package.json`   | Frontend dependencies and scripts.                                 |
-| `vix.app`                 | Vix backend build manifest.                                        |
-| `vix.json`                | Project metadata, frontend config, tasks, and dependency metadata. |
-| `tests/`                  | Backend tests.                                                     |
-
-## Backend role
-
-The backend is the Vix C++ part.
-
-It handles API routes.
-
-The generated frontend calls:
-
-```txt
+```txt id="vue-template-api-path"
 GET /api/hello
 ```
 
-During development, the Vue app calls:
+## Frontend
 
-```js
-fetch("/api/hello");
-```
+The Vue application lives under:
 
-That request is proxied by Vite to:
-
-```txt
-http://localhost:8080
-```
-
-So the browser talks to Vue, and Vue talks to the Vix backend through `/api`.
-
-## Frontend role
-
-The frontend is the Vue application in:
-
-```txt
+```txt id="vue-template-frontend-dir"
 frontend/
 ```
 
-It owns:
+The generated frontend contains a Vite project.
 
-- pages
-- components
-- browser UI
-- frontend state
-- CSS
-- frontend routing if you add Vue Router later
-- calls to the backend API
-
-The generated `App.vue` loads a message from the backend:
-
-```js
-const response = await fetch("/api/hello");
-const data = await response.json();
-message.value = data.message || "Hello from Vix";
+```txt id="vue-template-frontend-layout"
+frontend/
+  package.json
+  index.html
+  vite.config.js
+  src/
+    main.js
+    App.vue
 ```
 
-This confirms that the frontend and backend are connected.
+The frontend is installed with npm.
+
+```bash id="vue-template-npm-install"
+npm install --prefix frontend
+```
+
+During development, Vite serves the Vue app and proxies API requests to the Vix backend.
 
 ## Vite proxy
 
-The generated Vite config contains:
+The generated Vite config proxies `/api` requests to the Vix backend.
 
-```js
+```js id="vue-template-vite-config"
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+
 export default defineConfig({
   clearScreen: false,
   plugins: [vue()],
@@ -213,168 +154,95 @@ export default defineConfig({
 });
 ```
 
-This means:
+This lets the Vue frontend call the backend with a relative URL.
 
-```txt
-frontend request: /api/hello
-real backend:     http://localhost:8080/api/hello
+```js id="vue-template-fetch-api"
+const response = await fetch("/api/hello");
 ```
 
-This avoids CORS issues during local development.
+The browser talks to the Vite dev server, and Vite forwards `/api` requests to the backend running on port `8080`.
 
-The browser sees one frontend origin.
-
-Vite forwards API requests to the backend.
-
-## Development mode
-
-Use:
-
-```bash
-vix dev
+```txt id="vue-template-dev-flow"
+browser
+  -> Vite dev server
+      -> Vue frontend
+      -> /api proxy
+          -> Vix backend on localhost:8080
 ```
 
-For Vue projects, Vix can detect the Vue frontend from `vix.json` and `frontend/package.json`.
+## Vue entry point
 
-When detected, the dev session can start the Vue dev server and run the Vix backend together.
+The generated frontend entry point is:
 
-The project detection is based on:
-
-```txt
-vix.json contains "template": "vue"
-vix.json contains "frontend"
-frontend/package.json exists
+```txt id="vue-template-main-js-file"
+frontend/src/main.js
 ```
 
-If you prefer manual control, run two terminals:
+It creates and mounts the Vue app.
 
-Terminal 1:
-
-```bash
-vix run
-```
-
-Terminal 2:
-
-```bash
-cd frontend
-npm run dev
-```
-
-## `frontend/package.json`
-
-The generated frontend package contains:
-
-```json
-{
-  "name": "dashboard-frontend",
-  "private": true,
-  "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@vitejs/plugin-vue": "latest",
-    "vite": "latest",
-    "vue": "latest"
-  },
-  "devDependencies": {}
-}
-```
-
-Useful commands:
-
-```bash
-cd frontend
-npm install
-npm run dev
-npm run build
-npm run preview
-```
-
-## `frontend/src/main.js`
-
-This file mounts Vue into the browser page.
-
-```js
+```js id="vue-template-main-js"
 import { createApp } from "vue";
 import App from "./App.vue";
 
 createApp(App).mount("#app");
 ```
 
-The target element is in:
+The HTML entry point contains the mount element.
 
-```txt
-frontend/index.html
-```
-
-```html
+```html id="vue-template-index-html"
 <div id="app"></div>
+<script type="module" src="/src/main.js"></script>
 ```
 
-## `frontend/src/App.vue`
+This is the normal Vite + Vue structure. Vix does not replace the Vue frontend workflow; it provides the backend side of the project.
 
-`App.vue` is the first Vue component.
+## Generated App.vue
 
-It shows the frontend and backend connection.
+The starter `App.vue` calls the backend and displays the response.
 
-The generated component:
+```vue id="vue-template-app-vue"
+<script setup>
+import { ref } from "vue";
 
-- creates a reactive `message`
-- calls `/api/hello`
-- displays the backend response
-- shows a fallback if the backend cannot be reached
+const message = ref("Loading from Vix...");
 
-This is the first place to edit when building your UI.
-
-## `src/main.cpp`
-
-`src/main.cpp` is the Vix backend entry point.
-
-It should expose API routes used by the Vue frontend.
-
-A simple backend can look like this:
-
-```cpp
-#include <vix.hpp>
-
-using namespace vix;
-
-int main()
-{
-  App app;
-
-  app.get("/api/hello", [](Request &, Response &res) {
-    res.json({
-      "message", "Hello from the Vix backend"
-    });
-  });
-
-  app.run();
-
-  return 0;
+async function loadMessage() {
+  try {
+    const response = await fetch("/api/hello");
+    const data = await response.json();
+    message.value = data.message || "Hello from Vix";
+  } catch (error) {
+    message.value = "Could not reach the Vix backend";
+  }
 }
+
+loadMessage();
+</script>
+
+<template>
+  <main class="page">
+    <section class="card">
+      <p class="eyebrow">Vue + Vix</p>
+      <h1>Frontend powered by Vue</h1>
+      <p class="message">{{ message }}</p>
+    </section>
+  </main>
+</template>
 ```
 
-Keep API routes under:
+The example is intentionally small. Its job is to show the connection between the Vue app and the Vix backend, not to define the final frontend architecture.
 
-```txt
-/api
+## Project metadata
+
+The generated project uses `vix.json` to describe the combined workflow.
+
+```txt id="vue-template-vix-json-file"
+vix.json
 ```
 
-This matches the Vite proxy and keeps frontend pages separate from backend APIs.
+A generated Vue project can include frontend metadata.
 
-## `vix.json`
-
-`vix.json` stores the Vue project metadata.
-
-The generated file includes a `frontend` section:
-
-```json
+```json id="vue-template-vix-json-frontend"
 {
   "frontend": {
     "framework": "vue",
@@ -386,9 +254,13 @@ The generated file includes a `frontend` section:
 }
 ```
 
-It also includes useful tasks:
+This tells Vix where the frontend lives, how it is started during development, and how it is built for production.
 
-```json
+## Tasks
+
+The Vue template also generates project tasks for frontend and backend workflows.
+
+```json id="vue-template-vix-json-tasks"
 {
   "tasks": {
     "frontend:install": {
@@ -413,476 +285,186 @@ It also includes useful tasks:
     "backend:build": {
       "description": "Build Vix backend",
       "command": "vix build --preset ${preset}"
+    },
+    "fmt": "vix fmt",
+    "check": {
+      "description": "Validate backend project health",
+      "command": "vix check --preset ${preset} --tests"
+    },
+    "test": {
+      "description": "Run backend tests",
+      "command": "vix tests --preset ${preset} --fail-fast"
     }
   }
 }
 ```
 
-Run tasks with:
+This keeps the project workflow visible. Frontend commands run inside `frontend/`, while backend commands run from the project root.
 
-```bash
-vix task frontend:install
-vix task frontend:dev
-vix task frontend:build
-vix task backend:dev
-vix task backend:build
+## Development workflow
+
+A normal development session starts by installing frontend dependencies.
+
+```bash id="vue-template-install"
+npm install --prefix frontend
 ```
 
-## `vix.app`
+Then start the project.
 
-`vix.app` describes the backend target.
-
-It is for the C++ backend, not the Vue frontend.
-
-The Vue frontend is managed by:
-
-```txt
-frontend/package.json
-frontend/vite.config.js
+```bash id="vue-template-dev"
+vix dev
 ```
 
-The backend is managed by:
+In the generated workflow, `vix dev` is meant to coordinate the backend and frontend development process. The backend runs through Vix, and the Vue frontend runs through Vite.
 
-```txt
-vix.app
-vix.json
-src/main.cpp
+When working manually, the two sides can also be started separately.
+
+```bash id="vue-template-manual-backend"
+vix run
 ```
 
-Simple rule:
-
-```txt
-vix.app       -> C++ backend build
-package.json  -> Vue frontend build
-vix.json      -> project orchestration
+```bash id="vue-template-manual-frontend"
+npm run dev --prefix frontend
 ```
 
-## How frontend and backend talk
+The frontend can then call the backend through `/api`.
 
-The generated app uses this path:
+## Build workflow
 
-```txt
-/api/hello
-```
+The backend and frontend can be built separately.
 
-Frontend code:
-
-```js
-const response = await fetch("/api/hello");
-```
-
-Backend route:
-
-```cpp
-app.get("/api/hello", [](Request &, Response &res) {
-  res.json({
-    "message", "Hello from the Vix backend"
-  });
-});
-```
-
-During development:
-
-```txt
-Vue frontend -> Vite proxy -> Vix backend
-```
-
-In production, you usually serve the built frontend and backend behind the same domain or reverse proxy.
-
-## Build the frontend
-
-Run:
-
-```bash
-cd frontend
-npm run build
-```
-
-This creates:
-
-```txt
-frontend/dist/
-```
-
-The `dist` folder contains the production frontend assets.
-
-## Build the backend
-
-From the project root:
-
-```bash
+```bash id="vue-template-build-backend"
 vix build
 ```
 
-For release:
-
-```bash
-vix build --preset release
+```bash id="vue-template-build-frontend"
+npm run build --prefix frontend
 ```
 
-## Run the backend
+The frontend build output is normally written under:
 
-From the project root:
-
-```bash
-vix run
-```
-
-The backend should listen on the port configured by the environment.
-
-Common default:
-
-```txt
-http://localhost:8080
-```
-
-## Recommended development workflow
-
-For daily development:
-
-```bash
-vix dev
-```
-
-If automatic Vue dev mode is not available on your platform, use two terminals.
-
-Terminal 1:
-
-```bash
-vix run
-```
-
-Terminal 2:
-
-```bash
-cd frontend
-npm run dev
-```
-
-Then open the Vite dev server URL.
-
-## Recommended production workflow
-
-Build the frontend:
-
-```bash
-cd frontend
-npm run build
-cd ..
-```
-
-Build the backend:
-
-```bash
-vix build --preset release
-```
-
-Then deploy:
-
-```txt
-backend executable
+```txt id="vue-template-frontend-dist"
 frontend/dist
-environment variables
-reverse proxy configuration
 ```
 
-A common production setup is:
+A production project can later decide how the built frontend is served. Some projects may let a reverse proxy serve the frontend. Others may copy `frontend/dist` into the backend runtime as `public/`.
 
-```txt
-Nginx
-  -> serves frontend static files
-  -> proxies /api to the Vix backend
+When the backend should serve the compiled Vue frontend, declare the built frontend as a runtime resource in `vix.app`.
+
+```ini id="vue-template-dist-resource"
+resources = [
+  "frontend/dist=public",
+]
 ```
 
-This keeps the browser UI fast while Vix handles backend API requests.
+That keeps the C++ source list focused on C++ files while allowing the compiled frontend to travel with the backend executable.
 
-## How to add a new API route
+## API boundary
 
-Add a route in `src/main.cpp`:
+The Vue template works best when the frontend and backend communicate through clear API routes.
 
-```cpp
-app.get("/api/status", [](Request &, Response &res) {
-  res.json({
-    "ok", true,
-    "service", "dashboard"
-  });
-});
+```txt id="vue-template-api-boundary"
+Vue components
+  -> fetch("/api/...")
+      -> Vix backend route
+          -> JSON response
 ```
 
-Call it from Vue:
+The frontend should not depend on backend source files. The backend should not depend on Vue component files. They share an HTTP boundary, not C++ headers or JavaScript imports.
 
-```js
-const response = await fetch("/api/status");
-const data = await response.json();
+This makes the project easier to reason about. Vue can evolve as a frontend app, and Vix can evolve as a backend service.
+
+## Difference from the web template
+
+The web template renders HTML inside the Vix backend.
+
+```txt id="vue-template-web-difference"
+Vix route
+  -> template context
+  -> views/*.html
+  -> HTML response
 ```
 
-Because the path starts with `/api`, Vite will proxy it to the backend during development.
+The Vue template uses a separate frontend application.
 
-## How to add Vue pages
-
-For a small project, you can continue editing:
-
-```txt
-frontend/src/App.vue
+```txt id="vue-template-vue-difference"
+Vue app
+  -> API request
+  -> Vix backend
+  -> JSON response
 ```
 
-When the UI grows, add:
+Use the web template when the backend should render HTML directly. Use the Vue template when the browser UI should be a Vue application with its own frontend build process.
 
-```txt
-frontend/src/components/
-frontend/src/pages/
-frontend/src/api/
+## Difference from the backend template
+
+The backend template is API-first and generates a structured backend shell with `AppBootstrap`, route registry, middleware registry, controllers, response helpers, runtime directories, and production metadata.
+
+The Vue template is a combined frontend/backend project. It gives the frontend its own Vue workspace and keeps the backend as the API server. If the backend side later needs the full production backend structure, use the backend template as the base and add a Vue frontend deliberately.
+
+## Difference from the application template
+
+The application template is the smallest Vix app shape. It is a good starting point when there is no separate frontend framework.
+
+The Vue template adds a real frontend workspace. Use it when Vue is part of the project from the beginning, not when the project only needs a simple C++ HTTP application.
+
+## Tests and checks
+
+Backend tests are run through Vix.
+
+```bash id="vue-template-tests"
+vix tests
 ```
 
-Recommended structure:
+A stronger backend validation can use:
 
-```txt
-frontend/src/
-├── api/
-│   └── client.js
-├── components/
-│   └── AppCard.vue
-├── pages/
-│   └── DashboardPage.vue
-├── App.vue
-└── main.js
+```bash id="vue-template-check"
+vix check --tests --run
 ```
 
-Use `frontend/src/api/` for functions that call the backend.
+The frontend build should also be checked when frontend files change.
 
-Example:
-
-```js
-export async function getStatus() {
-  const response = await fetch("/api/status");
-  return response.json();
-}
+```bash id="vue-template-frontend-check"
+npm run build --prefix frontend
 ```
 
-## How to add frontend routing
+A local CI-style workflow should validate both sides.
 
-When the UI grows, install Vue Router:
-
-```bash
-cd frontend
-npm install vue-router
+```bash id="vue-template-ci"
+vix check --tests
+vix tests --fail-fast
+npm install --prefix frontend
+npm run build --prefix frontend
 ```
 
-Then create:
-
-```txt
-frontend/src/router/
-frontend/src/pages/
-```
-
-Use Vue Router for browser navigation.
-
-Keep backend routes under `/api`.
-
-## How to organize backend code
-
-The generated Vue template starts with a simple backend.
-
-That is intentional.
-
-If the backend grows, you can split routes into files:
-
-```txt
-src/main.cpp
-src/routes.cpp
-src/routes.hpp
-```
-
-If the backend becomes a serious API, move to the backend template structure:
-
-```bash
-vix new api --template backend
-```
-
-Use the backend template when you need:
-
-- controllers
-- middleware registries
-- route registries
-- application layer
-- domain layer
-- infrastructure layer
-- migrations
-- production diagnostics
-
-## Vue template vs web template
-
-Use the Vue template when Vue renders the UI in the browser.
-
-Use the web template when Vix renders HTML on the server.
-
-| Need                           | Template |
-| ------------------------------ | -------- |
-| Vue SPA frontend               | `vue`    |
-| Server-rendered HTML           | `web`    |
-| Frontend hot reload            | `vue`    |
-| HTML templates rendered by C++ | `web`    |
-| Browser-side components        | `vue`    |
-| Backend-rendered pages         | `web`    |
-
-## Vue template vs backend template
-
-Use the Vue template when the frontend is a major part of the product.
-
-Use the backend template when the main product is a backend service or API.
-
-| Need                                               | Template  |
-| -------------------------------------------------- | --------- |
-| Vue frontend + C++ backend                         | `vue`     |
-| Production-oriented JSON API                       | `backend` |
-| Vite frontend workflow                             | `vue`     |
-| Controllers, middleware, health checks, migrations | `backend` |
-| Browser UI first                                   | `vue`     |
-| API/service first                                  | `backend` |
-
-A Vue project can call a backend API.
-
-A backend project can serve static files.
-
-The difference is the main development strategy.
+The generated `vix.json` can expose a `ci` task that runs the backend checks and frontend build in one workflow.
 
 ## Common mistakes
 
-### Starting the frontend before installing dependencies
+The most common mistake is treating the Vue project as if it were rendered by Vix templates. Vue files under `frontend/` are handled by Vite and the Vue toolchain. Server-rendered views belong to the web template, not to the Vue template.
 
-Run this first:
+Another mistake is using `/public/...` URLs when the frontend is served by Vite. In Vue components, use normal frontend asset handling or public paths according to the Vite project structure.
 
-```bash
-cd frontend
-npm install
-```
+A third mistake is calling the backend with a hard-coded development URL from components. During development, use relative `/api` paths so the Vite proxy can forward requests to the Vix backend.
 
-### Calling the backend without `/api`
-
-During development, the proxy is configured for:
-
-```txt
-/api
-```
-
-Prefer API routes like:
-
-```txt
-/api/hello
-/api/users
-/api/orders
-/api/status
-```
-
-### Hardcoding backend URLs in Vue
-
-Avoid this in normal development:
-
-```js
-fetch("http://localhost:8080/api/hello");
-```
-
-Prefer:
-
-```js
+```js id="vue-template-good-fetch"
 fetch("/api/hello");
 ```
 
-This lets Vite proxy the request in development and makes production easier.
+Avoid this in frontend code when the proxy is already configured:
 
-### Forgetting to start the backend
-
-If Vue shows:
-
-```txt
-Could not reach the Vix backend
+```js id="vue-template-avoid-fetch"
+fetch("http://localhost:8080/api/hello");
 ```
 
-Start the backend:
+A fourth mistake is adding backend `.cpp` files and forgetting to add them to `vix.app`. The backend remains a Vix application, so its source list must still describe the files compiled into the executable.
 
-```bash
-vix run
-```
+## Recommended rule
 
-or:
+Use the Vue template when the frontend is a real Vue application and the backend is a Vix API server. Keep Vue code under `frontend/`, keep C++ backend code under the Vix project root, use `/api` as the development boundary, let Vite handle frontend development, and let Vix handle the backend workflow.
 
-```bash
-vix dev
-```
+## Next step
 
-### Mixing frontend build and backend build
+Continue with the generated layout to see each file created by the Vue template and how the frontend and backend sides fit together.
 
-Use the right command for each side:
-
-```txt
-npm run build  -> builds Vue frontend
-vix build      -> builds Vix backend
-```
-
-### Putting backend logic in Vue
-
-Vue should call APIs.
-
-Backend logic belongs in C++.
-
-Example:
-
-```txt
-Vue component
-  -> fetch("/api/orders")
-      -> Vix backend
-          -> database or service logic
-```
-
-## What you should remember
-
-The Vue template gives you:
-
-```txt
-Vue frontend
-+ Vix C++ backend
-+ Vite proxy for /api
-+ project tasks in vix.json
-```
-
-The development flow is:
-
-```txt
-Vue app
-  -> fetch("/api/...")
-      -> Vite proxy
-          -> Vix backend
-```
-
-Create a Vue project:
-
-```bash
-vix new dashboard --template vue
-cd dashboard
-cd frontend
-npm install
-cd ..
-vix dev
-```
-
-Use:
-
-```bash
-vix task frontend:dev
-vix task frontend:build
-vix task backend:dev
-vix task backend:build
-```
-
-when you want task-based workflows.
-
-## Next steps
-
-Continue with:
-
-- [Backend template](/templates/backend)
-- [Web template](/templates/web)
-- [Build a REST API](/guides/build-rest-api)
-- [Routes](/book/04-routes)
-- [Request and Response](/book/05-request-response)
-- [Realtime WebSocket](/book/11-realtime-websocket)
+[Generated Layout](/templates/vue/layout)

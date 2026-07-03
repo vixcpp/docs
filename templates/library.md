@@ -1,1152 +1,325 @@
 # Library Template
 
-The library template creates a reusable C++ library project.
-Use it when you want to build code that can be imported by other C++ projects, published to the Vix Registry, versioned, tested, and reused.
+The library template creates a small C++ library project. It is meant for reusable code: headers, examples, tests, and project metadata that can be built and checked without turning the project into an application.
 
-Create a library project with:
+Use this template when the project should produce a library rather than a program that runs with `vix run`.
 
-```bash
-vix new mathlib --lib
+```bash id="library-template-create"
+vix new mathkit --lib
+```
+
+After creation, the normal first workflow is:
+
+```bash id="library-template-first-workflow"
+cd mathkit
+vix build --build-target all
+vix build --build-target all -- -Dmathkit_BUILD_TESTS=ON
+vix tests
 ```
 
 ## What this template is for
 
-Use the library template when you want:
+The library template is for C++ code that should be reused by other projects. A generated library project starts with a public header, a basic test, an example program, project metadata, and build files that make the library easy to compile and validate.
 
-- a reusable C++ library
-- a header-only package
-- a clean public `include/` API
-- tests
-- examples
-- a stable CMake target
-- registry-safe packaging
-- a project that can be published with `vix publish`
-- a project that can depend on other registry packages with `vix add`
+This template is different from the application, backend, web, Vue, and game templates. Those templates start from something that runs as a process. The library template starts from an API surface. Its first responsibility is to expose clean headers and keep reusable code independent from a specific application runtime.
 
-This template is different from an application.
-A library is not mainly something you run.
-A library is something other projects include and link.
-
-## Design used by this template
-
-The library template uses a **registry-safe C++ library design**.
-
-The important ideas are:
-
-```txt
-public headers live in include/
-tests are separate
-examples are separate
-the library exposes a stable target
-the project can be published to the registry
+```txt id="library-template-purpose-map"
+include/   -> public library headers
+tests/     -> validation code
+examples/  -> small usage examples
+vix.json   -> project metadata and tasks
 ```
 
-A library should be easy to consume.
+## Generated project shape
 
-That means:
+A generated library project named `mathkit` follows this general shape:
 
-- clear namespace
-- clear include path
-- stable target name
-- tests that do not depend on examples
-- examples that do not pollute consumers
-- package metadata in `vix.json`
-- reproducible dependency state through `vix.lock`
+```txt id="library-template-layout"
+mathkit/
+  include/
+    mathkit/
+      mathkit.hpp
 
-## Quick start
+  tests/
+    test_basic.cpp
 
-Create the library:
+  examples/
+    basic.cpp
+    CMakeLists.txt
 
-```bash
-vix new mathlib --lib
+  CMakeLists.txt
+  CMakePresets.json
+  README.md
+  vix.json
 ```
 
-Enter the project:
+The generated layout is intentionally simple. It gives the project one public include root, one starter header, one test file, and one example program. That is enough to start a reusable library without forcing an application structure onto the project.
 
-```bash
-cd mathlib
+## Public headers
+
+The public API lives under `include/`.
+
+```txt id="library-template-include-layout"
+include/
+  mathkit/
+    mathkit.hpp
 ```
 
-Build it:
+This layout gives users a stable include path.
 
-```bash
-vix build
+```cpp id="library-template-include-example"
+#include <mathkit/mathkit.hpp>
 ```
 
-Run tests:
+The directory under `include/` should match the library name. That avoids collisions with other libraries and makes the include style predictable when the library is consumed by another project.
 
-```bash
-vix tests
+For small header-only libraries, the generated starter header can be enough at the beginning. As the library grows, split the API into more headers under the same namespace directory.
+
+```txt id="library-template-include-growth"
+include/
+  mathkit/
+    mathkit.hpp
+    add.hpp
+    multiply.hpp
+    version.hpp
 ```
 
-Run examples if enabled by the generated project:
+## Header-only starting point
 
-```bash
-vix build --build-target all
-```
+The generated library template is centered on a header-only starting point. That means the first version of the library can expose its behavior directly through headers without requiring a separate compiled implementation file.
 
-## Generated structure
+This is useful for small utilities, type definitions, templates, lightweight algorithms, and libraries where the public API is still taking shape. It also makes the first example and test easy to understand because the library can be included directly.
 
-A generated library project usually looks like this:
-
-```txt
-mathlib/
-├── include/
-│   └── mathlib/
-│       └── mathlib.hpp
-├── tests/
-│   └── test_basic.cpp
-├── examples/
-│   ├── basic.cpp
-│   └── CMakeLists.txt
-├── CMakeLists.txt
-├── vix.json
-└── README.md
-```
-
-The exact structure can evolve between Vix versions, but the strategy stays the same:
-
-```txt
-include/   -> public API
-tests/     -> validation
-examples/  -> usage examples
-vix.json   -> package metadata, tasks, dependencies
-```
-
-## What each file does
-
-| File or folder              | Role                                                      |
-| --------------------------- | --------------------------------------------------------- |
-| `include/<name>/<name>.hpp` | Public library header.                                    |
-| `tests/`                    | Test programs for the library.                            |
-| `examples/`                 | Example programs showing how to use the library.          |
-| `CMakeLists.txt`            | Native build and package target definition.               |
-| `vix.json`                  | Vix metadata, tasks, registry metadata, and dependencies. |
-| `README.md`                 | Generated documentation for the library.                  |
-| `vix.lock`                  | Created when registry dependencies are installed.         |
-
-## Public include path
-
-A library should expose a clean include path.
-
-For a library named `mathlib`, users should include:
-
-```cpp
-#include <mathlib/mathlib.hpp>
-```
-
-This is why public headers live under:
-
-```txt
-include/mathlib/
-```
-
-Do not put public headers directly at the project root.
-
-Do not force consumers to include files from `src/`.
-
-## Public namespace
-
-The generated library uses a namespace matching the package name.
-
-Example:
-
-```cpp
-namespace mathlib
-{
-  // public API here
-}
-```
-
-This keeps the library easy to consume:
-
-```cpp
-auto nodes = mathlib::make_chain(5);
-```
-
-For larger libraries, keep the public namespace stable.
-Changing the namespace later is a breaking change.
-
-## Example generated header
-
-A simple generated header can look like this:
-
-```cpp
-#pragma once
-
-#include <cstddef>
-#include <vector>
-
-namespace mathlib
-{
-  struct Node
-  {
-    std::size_t id{};
-    std::vector<std::size_t> children{};
-  };
-
-  inline std::vector<Node> make_chain(std::size_t n)
-  {
-    std::vector<Node> nodes;
-    nodes.reserve(n);
-
-    for (std::size_t i = 0; i < n; ++i)
-    {
-      nodes.push_back(Node{i, {}});
-    }
-
-    for (std::size_t i = 0; i + 1 < n; ++i)
-    {
-      nodes[i].children.push_back(i + 1);
-    }
-
-    return nodes;
-  }
-}
-```
-
-The generated code is intentionally simple.
-
-Its job is to prove that:
-
-- the include path works
-- the namespace works
-- tests can include the library
-- examples can include the library
-- the project can be built and published
+A real project can still grow beyond this shape later. If the library needs `.cpp` implementation files, add them deliberately and keep the build target updated.
 
 ## Tests
 
-The library template includes a basic test.
+The generated project includes a test file.
 
-A simple test can look like this:
-
-```cpp
-#include <vix/tests/tests.hpp>
-#include <mathlib/mathlib.hpp>
-
-int main()
-{
-  using namespace vix::tests;
-
-  auto &registry = TestRegistry::instance();
-  registry.clear();
-
-  registry.add(TestCase("mathlib basic test", [] {
-    auto nodes = mathlib::make_chain(5);
-    Assert::equal(nodes.size(), static_cast<std::size_t>(5));
-  }));
-
-  return TestRunner::run_all_and_exit();
-}
+```txt id="library-template-tests-layout"
+tests/
+  test_basic.cpp
 ```
 
-Run tests with:
+Tests validate that the library can be included and used correctly.
 
-```bash
+Run the test workflow with:
+
+```bash id="library-template-tests-command"
 vix tests
 ```
 
-Use tests to protect your public API.
+Before running tests, build the project with the test option enabled when the generated build expects it.
 
-Before publishing a new version, always run:
-
-```bash
-vix tests
+```bash id="library-template-enable-tests"
+vix build --build-target all -- -Dmathkit_BUILD_TESTS=ON
 ```
+
+The exact project name appears in the build option. For a project named `mathkit`, the option is:
+
+```txt id="library-template-test-option"
+mathkit_BUILD_TESTS
+```
+
+For another project, replace `mathkit` with that project name.
 
 ## Examples
 
-Examples show users how to use the library.
+The generated project includes an example program.
 
-A basic example can look like this:
-
-```cpp
-#include <mathlib/mathlib.hpp>
-#include <iostream>
-
-int main()
-{
-  auto nodes = mathlib::make_chain(3);
-  std::cout << "nodes=" << nodes.size() << "\n";
-  return 0;
-}
+```txt id="library-template-examples-layout"
+examples/
+  basic.cpp
+  CMakeLists.txt
 ```
 
-Examples are useful for:
+Examples are not tests. They show how the library is meant to be used from a small external program.
 
-- documentation
-- smoke tests
-- teaching
-- verifying consumer usage
+A good example should stay short and practical. It should include the public header and use the library the same way another project would.
 
-Keep examples small and focused.
-
-## Stable target name
-
-A library should expose a stable CMake target.
-
-For a library named `mathlib`, the canonical target should be:
-
-```cmake
-mathlib::mathlib
+```cpp id="library-template-example-include"
+#include <mathkit/mathkit.hpp>
 ```
 
-This is important because consumers can depend on your library without guessing the internal target name.
+The example directory also has its own `CMakeLists.txt`, so the example can be built as a small consumer of the library.
 
-Example consumer usage:
+## Build files
 
-```cmake
-target_link_libraries(app PRIVATE mathlib::mathlib)
+A generated library project includes normal CMake build files.
+
+```txt id="library-template-build-files"
+CMakeLists.txt
+CMakePresets.json
 ```
 
-A stable target name is part of the public API of a C++ library.
+This is useful for libraries because many C++ projects consume libraries through CMake targets, examples, install rules, tests, and package-style workflows.
 
-## Why tests and examples are separate
+The Vix CLI can still drive the build.
 
-Tests and examples should not be forced on every consumer.
-
-A user who installs your library usually wants the library target, not your test executables or example programs.
-
-That is why a clean library design keeps:
-
-```txt
-library target
-test targets
-example targets
+```bash id="library-template-build"
+vix build --build-target all
 ```
 
-separate.
-
-This avoids target collisions and keeps registry consumption safe.
+The important point is that the library template is not an app-first runtime template. It is a reusable C++ library shape, so the generated build files are part of how the library exposes and validates its target.
 
 ## `vix.json`
 
-`vix.json` is the Vix project and registry metadata file.
+The generated project includes `vix.json`.
 
-For a library, it should describe:
-
-- package name
-- version
-- description
-- license
-- repository
-- dependencies
-- tasks
-- registry metadata
-
-Example shape:
-
-```json
-{
-  "name": "mathlib",
-  "version": "0.1.0",
-  "type": "library",
-  "description": "Small reusable C++ library.",
-  "license": "MIT",
-  "repo": "https://github.com/yourname/mathlib",
-  "deps": [],
-  "tasks": {
-    "build": "vix build",
-    "test": "vix tests",
-    "check": "vix check --tests",
-    "ci": ["vix build", "vix tests"]
-  }
-}
+```txt id="library-template-vix-json-file"
+vix.json
 ```
 
-The exact generated shape can evolve, but the role stays the same:
+This file describes project metadata and task shortcuts. It belongs to the Vix workflow around the library.
 
-```txt
-vix.json = package metadata + tasks + dependency declarations
+A generated library can expose tasks for building, testing, and checking the project. The exact task set can evolve, but the role stays the same: `vix.json` describes project workflow, not the public C++ API.
+
+```txt id="library-template-vix-json-role"
+vix.json  -> project metadata and tasks
+include/  -> public library API
+tests/    -> validation code
+examples/ -> usage examples
 ```
 
-## Registry overview
+## README
 
-The Vix Registry is used to discover, install, update, and publish reusable packages.
+The generated README gives the project a local starting guide.
 
-A library can be:
-
-```txt
-searched
-added
-installed
-locked
-updated
-published
-unpublished
+```txt id="library-template-readme-file"
+README.md
 ```
 
-The local registry index must be synced before package search and dependency resolution.
+It should explain what the library is, how to include it, how to build it, how to run tests, and how to try the example.
 
-Sync the registry:
+The README belongs to the generated project itself. These documentation pages explain the template in more detail.
 
-```bash
-vix registry sync
+## Build workflow
+
+A normal first build compiles all available targets.
+
+```bash id="library-template-build-all"
+vix build --build-target all
 ```
 
-Search packages:
+For tests, enable the generated test option and build again.
 
-```bash
-vix search softadastra
+```bash id="library-template-build-tests"
+vix build --build-target all -- -Dmathkit_BUILD_TESTS=ON
 ```
 
-Use pagination:
+Then run the tests.
 
-```bash
-vix search softadastra --page 2 --limit 5
-```
-
-The registry already contains many packages.
-
-At the time of this documentation work, your registry has around:
-
-```txt
-135 packages
-```
-
-## Search packages
-
-Use `vix search` to find packages.
-
-Example:
-
-```bash
-vix search softadastra
-```
-
-Expected output shape:
-
-```txt
-Search
-  query : "softadastra"
-  page  : 1
-  limit : 5
-
-softadastra/core  (latest: 1.7.0)
-  Foundational primitives for Softadastra systems.
-  repo: https://github.com/softadastra/core
-
-softadastra/fs  (latest: 1.11.1)
-  Filesystem observation and change detection layer.
-  repo: https://github.com/softadastra/fs
-```
-
-Go to the next page:
-
-```bash
-vix search softadastra --page 2 --limit 5
-```
-
-Use search before adding a package.
-
-It helps you confirm:
-
-- package namespace
-- package name
-- latest version
-- description
-- repository URL
-
-## Add a dependency
-
-A library can use another library from the registry.
-
-Example:
-
-```bash
-vix add softadastra/core@^1.7.0
-```
-
-Then install:
-
-```bash
-vix install
-```
-
-The normal dependency workflow is:
-
-```bash
-vix registry sync
-vix add <namespace>/<name>[@version]
-vix install
-```
-
-Examples:
-
-```bash
-vix add softadastra/core@^1.7.0
-vix add softadastra/fs
-vix add softadastra/json@0.3.0
-```
-
-When you run `vix add`, Vix updates dependency metadata.
-
-If the project has `vix.json`, the dependency is added there.
-
-If needed, Vix can create the dependency metadata structure.
-
-Then `vix install` installs from the lock state.
-
-## `vix.lock`
-
-`vix.lock` records the installed dependency state.
-
-It keeps installs reproducible.
-
-The important rule is:
-
-```txt
-vix.json  -> what the project requests
-vix.lock  -> what the project installed
-```
-
-Commit both files when building a reusable library:
-
-```bash
-git add vix.json vix.lock
-git commit -m "chore: add registry dependencies"
-```
-
-This allows another developer to run:
-
-```bash
-vix install
-```
-
-and get the same dependency state.
-
-## Install dependencies
-
-Install project dependencies:
-
-```bash
-vix install
-```
-
-`vix install` uses `vix.lock`.
-
-If `vix.lock` is missing, add a package first:
-
-```bash
-vix add <namespace>/<name>[@version]
-```
-
-Then run:
-
-```bash
-vix install
-```
-
-Installed dependencies are stored in the Vix project workspace and global Vix store.
-
-## List dependencies
-
-Show installed project dependencies:
-
-```bash
-vix list
-```
-
-This reads the project lock file and prints dependencies.
-
-Use it after:
-
-```bash
-vix add
-vix install
-```
-
-to verify what is installed.
-
-## Check for new versions
-
-Check if installed dependencies are behind the registry:
-
-```bash
-vix outdated
-```
-
-Check one package:
-
-```bash
-vix outdated softadastra/core
-```
-
-Machine-readable output:
-
-```bash
-vix outdated --json
-```
-
-Strict CI mode:
-
-```bash
-vix outdated --strict
-```
-
-Important rule:
-
-```txt
-vix outdated checks vix.lock
-```
-
-So it reports the installed state, not only what is written in `vix.json`.
-
-## Update dependencies
-
-Update dependencies:
-
-```bash
-vix update
-```
-
-Update and install:
-
-```bash
-vix update --install
-```
-
-Update one package:
-
-```bash
-vix update softadastra/core --install
-```
-
-Use this flow:
-
-```bash
-vix registry sync
-vix outdated
-vix update --install
+```bash id="library-template-run-tests"
 vix tests
 ```
 
-Then commit:
+This workflow is different from application templates. A library does not usually have a main runtime command. The important checks are whether the library target builds, whether examples compile, and whether tests pass.
 
-```bash
-git add vix.json vix.lock
-git commit -m "chore: update registry dependencies"
+## Adding headers
+
+Add public headers under the library include directory.
+
+```txt id="library-template-add-headers"
+include/
+  mathkit/
+    mathkit.hpp
+    vector.hpp
+    matrix.hpp
 ```
 
-## Remove a dependency
+Then include them through the public include path.
 
-Remove a package:
-
-```bash
-vix remove softadastra/core
+```cpp id="library-template-add-headers-include"
+#include <mathkit/vector.hpp>
+#include <mathkit/matrix.hpp>
 ```
 
-Then reinstall remaining dependencies:
+Do not place public headers directly under `src/` when the header is meant to be consumed by another project. The public API should live under `include/<library>/`.
 
-```bash
-vix install
+## Adding implementation files
+
+A header-only library can stay header-only. When the project needs compiled implementation files, add a source directory deliberately.
+
+```txt id="library-template-add-sources"
+src/
+  vector.cpp
+  matrix.cpp
 ```
 
-If needed, purge local dependency files for that package:
+Then update the build target so those files are compiled into the library.
 
-```bash
-vix remove softadastra/core --purge
+The rule is simple: public headers define the API, and implementation files provide compiled code when the library needs it. Do not mix those responsibilities by hiding public API inside private source paths.
+
+## Library API boundary
+
+The library template is useful because it encourages a clean API boundary.
+
+```txt id="library-template-api-boundary"
+include/mathkit/  public API
+src/              private implementation, when used
+tests/            validation
+examples/         usage from outside the library
 ```
 
-Use remove when the library no longer depends on a package.
+Tests can reach the library through its public headers. Examples should do the same. This gives the project early feedback about whether the public API is actually usable.
 
-## Reset project dependency state
+A library that only works when examples include private files is not ready to be consumed cleanly.
 
-Reset the local project state:
+## Difference from the application template
 
-```bash
-vix reset
+The application template creates something that runs.
+
+```txt id="library-template-app-difference"
+application template -> executable application
+library template     -> reusable C++ library
 ```
 
-This runs:
+An application has an entry point and is normally started with `vix run`. A library exposes headers and targets that other code can use. It is validated through builds, examples, and tests.
 
-```txt
-vix clean
-vix install
+Use the application template when the project is the final program. Use the library template when the project is reusable code.
+
+## Difference from backend, web, Vue, and game templates
+
+Backend, web, Vue, and game templates all create runnable project shapes.
+
+```txt id="library-template-template-difference"
+backend -> HTTP API service
+web     -> server-rendered HTML app
+Vue     -> Vue frontend with Vix backend
+game    -> Vix game runtime
+library -> reusable C++ code
 ```
 
-Use this when you want to clean local build/cache state and reinstall project dependencies.
+The library template does not create controllers, middleware registries, views, public assets, a Vue frontend, game scenes, or runtime resources. It starts from the public C++ API.
 
-It only affects the current project.
+## Consuming the library
 
-It does not remove the global Vix directory.
+A generated library should be easy to consume from another C++ project. The consumer should include the public header and link the library target exposed by the build.
 
-## Store commands
-
-The Vix store keeps cached dependency checkouts.
-
-Show store path:
-
-```bash
-vix store path
+```cpp id="library-template-consumer-code"
+#include <mathkit/mathkit.hpp>
 ```
 
-Garbage collect unused store entries for the current project:
-
-```bash
-vix store gc
-```
-
-Use store cleanup carefully.
-
-If other projects depend on cached entries, check what will be removed before deleting aggressively.
-
-## Global packages
-
-Some registry workflows can use global packages.
-
-Install globally when supported by your package workflow:
-
-```bash
-vix add --global softadastra/core
-```
-
-List global packages:
-
-```bash
-vix list --global
-```
-
-For normal library development, prefer project dependencies.
-
-Global packages are useful for tools or shared developer utilities.
-
-## Publish a library
-
-A library can be published directly to the Vix Registry.
-
-The basic workflow is:
-
-```bash
-vix registry sync
-vix publish
-```
-
-A safer release workflow is:
-
-```bash
-vix tests
-git status
-git add .
-git commit -m "chore: prepare release"
-git tag v0.1.0
-vix registry sync
-vix publish 0.1.0
-```
-
-`vix publish` expects a clean Git repository.
-
-Commit your changes before publishing.
-
-It resolves the release version, tag, commit, and package metadata.
-
-## Dry-run publish
-
-Before publishing for real, use:
-
-```bash
-vix publish 0.1.0 --dry-run
-```
-
-Use dry-run to check:
-
-- package name
-- version
-- repository
-- tag
-- commit
-- registry metadata
-
-without changing the registry.
-
-## Publish notes
-
-You can include notes when publishing:
-
-```bash
-vix publish 0.1.0 --notes "Initial public release"
-```
-
-Use notes to explain what changed in the version.
-
-## Cleanup after publish
-
-If your publish workflow supports cleanup:
-
-```bash
-vix publish 0.1.0 --cleanup
-```
-
-Use cleanup when you want Vix to remove temporary registry work after publication.
-
-## Unpublish
-
-Unpublish is a dangerous operation.
-
-Use it only when a package entry was published incorrectly.
-
-Example:
-
-```bash
-vix unpublish softadastra/core@1.7.0
-```
-
-Before unpublishing, prefer publishing a fixed version when possible.
-
-Registry consumers may already depend on the published version.
-
-## Recommended library release workflow
-
-Use this workflow for a normal library release:
-
-```bash
-vix registry sync
-vix outdated
-vix tests
-vix build
-git status
-git add .
-git commit -m "chore(release): prepare v0.1.0"
-git tag v0.1.0
-vix publish 0.1.0 --dry-run
-vix publish 0.1.0
-```
-
-After publishing, verify:
-
-```bash
-vix registry sync
-vix search mathlib
-```
-
-Then test consumption from another project:
-
-```bash
-mkdir -p /tmp/vix-consume-test
-cd /tmp/vix-consume-test
-
-vix new app --app
-cd app
-
-vix registry sync
-vix add yourname/mathlib@0.1.0
-vix install
-vix build
-```
-
-## How another project uses your library
-
-A consumer project runs:
-
-```bash
-vix registry sync
-vix add yourname/mathlib@0.1.0
-vix install
-```
-
-Then includes your header:
-
-```cpp
-#include <mathlib/mathlib.hpp>
-```
-
-And links your package target if needed by the generated build.
-
-For a good library, the consumer should not need to know your internal folder structure.
-
-## Versioning
-
-Use semantic versions:
-
-```txt
-0.1.0
-0.2.0
-1.0.0
-1.1.0
-2.0.0
-```
-
-Suggested meaning:
-
-| Version change | Use when                          |
-| -------------- | --------------------------------- |
-| Patch          | Bug fix, no public API break.     |
-| Minor          | New feature, backward-compatible. |
-| Major          | Breaking public API change.       |
-
-Examples:
-
-```bash
-git tag v0.1.0
-vix publish 0.1.0
-```
-
-```bash
-git tag v0.2.0
-vix publish 0.2.0
-```
-
-## Public API discipline
-
-A library is judged by its public API.
-
-Keep public headers stable.
-
-Avoid exposing unnecessary internals.
-
-Good public API:
-
-```txt
-include/mathlib/mathlib.hpp
-include/mathlib/graph.hpp
-include/mathlib/version.hpp
-```
-
-Avoid making consumers include:
-
-```txt
-src/internal/...
-build/...
-examples/...
-tests/...
-```
-
-The public include directory is the contract.
-
-## How to grow a library
-
-Start simple:
-
-```txt
-include/mathlib/mathlib.hpp
-```
-
-When the library grows, split headers:
-
-```txt
-include/mathlib/
-├── mathlib.hpp
-├── graph.hpp
-├── node.hpp
-├── algorithms.hpp
-└── version.hpp
-```
-
-Keep `mathlib.hpp` as the main convenience include:
-
-```cpp
-#pragma once
-
-#include <mathlib/graph.hpp>
-#include <mathlib/node.hpp>
-#include <mathlib/algorithms.hpp>
-#include <mathlib/version.hpp>
-```
-
-## Header-only vs compiled library
-
-The generated scaffold starts as a header-only library.
-
-That is the simplest registry-safe starting point.
-
-Use header-only when:
-
-- the library is small
-- templates are important
-- consumers should not link compiled objects
-- the implementation is simple
-
-Move to a compiled library when:
-
-- compile time becomes too high
-- implementation should be hidden
-- the library has many `.cpp` files
-- binary boundaries matter
-
-For compiled libraries, keep public headers in `include/` and implementation in `src/`.
-
-Example:
-
-```txt
-include/mathlib/mathlib.hpp
-src/mathlib.cpp
-```
-
-## Using registry dependencies inside a library
-
-A library can depend on another registry library.
-
-Example:
-
-```bash
-vix registry sync
-vix add softadastra/core@^1.7.0
-vix install
-```
-
-Then document the dependency in your README.
-
-If the dependency affects your public API, users must also receive it through the registry install workflow.
-
-Keep dependencies intentional.
-
-A library with too many unnecessary dependencies becomes harder to adopt.
-
-## CI workflow
-
-A simple CI workflow should run:
-
-```bash
-vix registry sync
-vix install
-vix build
-vix tests
-vix outdated --strict
-```
-
-For release branches, use:
-
-```bash
-vix publish <version> --dry-run
-```
-
-before publishing.
+The exact target name and installation shape are controlled by the generated build files. The documentation for the generated project should show the expected consumer usage once the library API becomes stable.
 
 ## Common mistakes
 
-### Publishing without syncing the registry
+The most common mistake is treating the library like an application. A library does not need an application entry point unless it is only an example or test target.
 
-Run:
+Another mistake is putting public headers in private source directories. Headers that users include should live under `include/<library>/`.
 
-```bash
-vix registry sync
-```
+A third mistake is writing examples that depend on private files. Examples should use the library through the same public API that a real consumer would use.
 
-before searching, adding, updating, or publishing packages.
+A fourth mistake is changing the project name but forgetting that generated build options often include the project name, such as `mathkit_BUILD_TESTS`.
 
-### Publishing with uncommitted changes
+A fifth mistake is running only the build and never compiling examples or tests. A library can compile by itself and still be difficult to consume. Examples and tests help catch that early.
 
-`vix publish` expects a clean Git repository.
+## Recommended rule
 
-Check:
+Use the library template when the project should expose reusable C++ code. Keep public headers under `include/<library>/`, keep examples small, keep tests close to the public API, and use the build workflow to validate that the library can be compiled and consumed cleanly.
 
-```bash
-git status
-```
+## Next step
 
-Commit before publishing.
+Continue with the generated layout to see each file created by the library template and how the public header, tests, examples, build files, and project metadata fit together.
 
-### Forgetting to create a tag
-
-Publish uses the release version and Git tag.
-
-Create a tag:
-
-```bash
-git tag v0.1.0
-```
-
-Then publish:
-
-```bash
-vix publish 0.1.0
-```
-
-### Forgetting `vix.lock`
-
-If your library uses registry dependencies, commit:
-
-```txt
-vix.json
-vix.lock
-```
-
-`vix.json` records what you request.
-
-`vix.lock` records what was installed.
-
-### Breaking the include path
-
-Do not move public headers randomly.
-
-For a package named `mathlib`, this should stay stable:
-
-```cpp
-#include <mathlib/mathlib.hpp>
-```
-
-### Changing the namespace casually
-
-Namespace is part of the public API.
-
-Changing:
-
-```cpp
-namespace mathlib
-```
-
-to another namespace can break users.
-
-### Adding dependencies without thinking
-
-Every dependency becomes part of your library maintenance story.
-
-Use `vix add` when the dependency is useful and intentional.
-
-## What you should remember
-
-Create a library:
-
-```bash
-vix new mathlib --lib
-cd mathlib
-vix build
-vix tests
-```
-
-Search packages:
-
-```bash
-vix registry sync
-vix search softadastra
-```
-
-Add a dependency:
-
-```bash
-vix add softadastra/core@^1.7.0
-vix install
-```
-
-Check versions:
-
-```bash
-vix outdated
-```
-
-Update:
-
-```bash
-vix update --install
-```
-
-Publish:
-
-```bash
-git tag v0.1.0
-vix registry sync
-vix publish 0.1.0
-```
-
-The library template is the best place to learn the Vix Registry because libraries are meant to be reused, versioned, installed, and published.
-
-## Next steps
-
-Continue with:
-
-- [Application template](/templates/application)
-- [Backend template](/templates/backend)
-- [vix.app](/guides/vix-app/)
-- [Build and run](/cli/run)
-- [CLI commands](/cli/)
+[Generated Layout](/templates/library/layout)

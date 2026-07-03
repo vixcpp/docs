@@ -1,206 +1,87 @@
 # Web Template
 
-The web template creates a server-rendered Vix web application.
+The web template creates a server-rendered Vix application. It is built for projects that return HTML pages from the backend, serve static assets from `public/`, and keep browser-facing routes inside C++ controllers.
 
-Use it when you want to build a web application where C++ renders HTML pages directly on the server.
-
-Create a web project with:
+This template is different from the backend template. A backend project is usually API-first and starts with JSON routes such as `/api` and `/health`. A web project is page-first. It starts with routes such as `/`, `/dashboard`, and `/health`, then renders HTML through the Vix template engine.
 
 ```bash
 vix new site --template web
+```
+
+After creation, the normal first workflow is:
+
+```bash
+cd site
+cp .env.example .env
+vix dev
+curl http://localhost:8080/health
 ```
 
 ## What this template is for
 
-Use the web template when you want:
+Use the web template when the application should render pages on the server. It is a good fit for dashboards, internal tools, admin panels, documentation sites, small business applications, and web projects that do not need a separate frontend framework at the beginning.
 
-- HTML rendered by the Vix backend
-- layouts and reusable partials
-- pages generated from C++ route handlers
-- static CSS and JavaScript
-- simple dashboards
-- internal tools
-- admin pages
-- status pages
-- lightweight server-rendered websites
+The generated project gives you a C++ application with a clear startup flow, page controllers, a route registry, a middleware registry, views, public assets, a local environment file, a `vix.app` manifest, and project workflow metadata in `vix.json`.
 
-This template is not a Vue app.
+It is still a Vix application. The difference is that the first-class output is HTML, not only JSON.
 
-This template is not only a JSON API.
+## Generated project shape
 
-It is a C++ web application where Vix handles:
-
-```txt
-HTTP routes
-HTML templates
-static files
-middleware
-health checks
-server startup
-```
-
-## Design used by this template
-
-The web template uses a simple **server-rendered MVC-style design**.
-
-MVC means:
-
-```txt
-Model      -> data used by the page
-View       -> HTML template
-Controller -> route handler that prepares data and renders the view
-```
-
-In this template:
-
-```txt
-PageController
-  -> creates template context
-  -> calls res.render(...)
-  -> returns HTML
-```
-
-The main flow is:
-
-```txt
-main.cpp
-  -> AppBootstrap
-      -> templates
-      -> static files
-      -> middleware
-      -> routes
-          -> PageController
-              -> views/*.html
-```
-
-This design is easy to understand:
-
-- `controllers/` decide what page to render.
-- `views/` contain HTML templates.
-- `public/` contains CSS and JavaScript.
-- `routes/` register controllers.
-- `middleware/` registers request middleware.
-- `AppBootstrap` wires everything together.
-
-## Quick start
-
-Create the project:
-
-```bash
-vix new site --template web
-```
-
-Enter the project:
-
-```bash
-cd site
-```
-
-Create local configuration:
-
-```bash
-cp .env.example .env
-```
-
-Start development mode:
-
-```bash
-vix dev
-```
-
-Open:
-
-```txt
-http://127.0.0.1:8080
-```
-
-Open the dashboard:
-
-```txt
-http://127.0.0.1:8080/dashboard
-```
-
-Check health:
-
-```bash
-curl http://127.0.0.1:8080/health
-```
-
-## Generated structure
-
-A web project generated with:
-
-```bash
-vix new site --template web
-```
-
-has this structure:
+A generated web project follows this general layout:
 
 ```txt
 site/
-├── include/
-│   └── site/
-│       ├── app/
-│       │   └── AppBootstrap.hpp
-│       └── presentation/
-│           ├── controllers/
-│           │   ├── PageController.hpp
-│           │   └── HealthController.hpp
-│           ├── middleware/
-│           │   └── MiddlewareRegistry.hpp
-│           └── routes/
-│               └── RouteRegistry.hpp
-├── src/
-│   ├── main.cpp
-│   └── site/
-│       ├── app/
-│       │   └── AppBootstrap.cpp
-│       └── presentation/
-│           ├── controllers/
-│           │   ├── PageController.cpp
-│           │   └── HealthController.cpp
-│           ├── middleware/
-│           │   └── MiddlewareRegistry.cpp
-│           └── routes/
-│               └── RouteRegistry.cpp
-├── views/
-│   ├── base.html
-│   ├── header.html
-│   ├── index.html
-│   └── dashboard.html
-├── public/
-│   ├── app.css
-│   └── app.js
-├── storage/
-├── tests/
-├── .env.example
-├── .env
-├── vix.app
-├── vix.json
-└── README.md
+  include/
+    site/
+      app/
+        AppBootstrap.hpp
+      presentation/
+        controllers/
+          PageController.hpp
+          HealthController.hpp
+        middleware/
+          MiddlewareRegistry.hpp
+        routes/
+          RouteRegistry.hpp
+
+  src/
+    main.cpp
+    site/
+      app/
+        AppBootstrap.cpp
+      presentation/
+        controllers/
+          PageController.cpp
+          HealthController.cpp
+        middleware/
+          MiddlewareRegistry.cpp
+        routes/
+          RouteRegistry.cpp
+
+  views/
+    base.html
+    header.html
+    index.html
+    dashboard.html
+
+  public/
+    app.css
+    app.js
+
+  storage/
+  tests/
+
+  .env.example
+  README.md
+  vix.app
+  vix.json
 ```
 
-## What each folder does
+The layout keeps the web shell small and readable. Startup belongs to `AppBootstrap`, page routes belong to `PageController`, health checks belong to `HealthController`, route wiring belongs to `RouteRegistry`, and global HTTP behavior belongs to `MiddlewareRegistry`.
 
-| File or folder              | Role                                                   |
-| --------------------------- | ------------------------------------------------------ |
-| `src/main.cpp`              | Minimal entry point.                                   |
-| `app/`                      | Application startup and wiring.                        |
-| `presentation/controllers/` | Page and health route handlers.                        |
-| `presentation/routes/`      | Central route registration.                            |
-| `presentation/middleware/`  | Central middleware registration.                       |
-| `views/`                    | Server-rendered HTML templates.                        |
-| `public/`                   | Static CSS, JavaScript, images, and assets.            |
-| `storage/`                  | Runtime local storage.                                 |
-| `tests/`                    | Generated test target.                                 |
-| `.env.example`              | Documented environment variables.                      |
-| `.env`                      | Local runtime configuration.                           |
-| `vix.app`                   | Build manifest.                                        |
-| `vix.json`                  | Project metadata, tasks, and production orchestration. |
+## Entry point
 
-## `main.cpp`
-
-`main.cpp` stays intentionally small.
+The generated `main.cpp` is intentionally small.
 
 ```cpp
 #include <site/app/AppBootstrap.hpp>
@@ -212,457 +93,238 @@ int main()
 }
 ```
 
-Do not put all routes, template rendering, middleware, and startup logic in `main.cpp`.
+The entry point should stay focused on starting the process. It should not become the place where page routes, static files, middleware, or template setup are written by hand.
 
-The startup logic belongs in `AppBootstrap`.
+## AppBootstrap
 
-## `AppBootstrap`
+`AppBootstrap` owns the startup sequence of the generated web app.
 
-`AppBootstrap` owns the startup sequence.
-
-It does four important things:
+The generated flow is:
 
 ```txt
-load .env
-create vix::App
-configure templates and public files
-register middleware and routes
-start the server
+main.cpp
+  -> AppBootstrap
+      -> vix::config::Config
+      -> vix::App
+      -> app.templates("views")
+      -> app.static_dir("public", "/")
+      -> MiddlewareRegistry
+      -> RouteRegistry
+      -> app.run(cfg)
 ```
 
-The generated bootstrap configures:
+The bootstrap loads `.env`, creates the Vix app, configures the template directory, mounts the static asset directory, registers middleware, registers routes, and starts the server.
+
+The generated setup is simple:
 
 ```cpp
+vix::config::Config cfg{".env"};
+vix::App app;
+
 app.templates("views");
 app.static_dir("public", "/");
-```
 
-Then it registers:
+presentation::middleware::MiddlewareRegistry::register_all(app);
+presentation::routes::RouteRegistry::register_all(app);
 
-```cpp
-MiddlewareRegistry::register_all(app);
-RouteRegistry::register_all(app);
-```
-
-Finally, it starts the server with configuration:
-
-```cpp
 app.run(cfg);
 ```
 
-This means the port comes from `.env`, not from hardcoded source code.
+This is the core of the web template. The app is ready to render templates and serve public assets without requiring a separate JavaScript frontend.
 
-## `presentation/`
+## Views
 
-The `presentation/` layer is the HTTP and rendering layer.
-
-It contains:
+The web template generates HTML views under:
 
 ```txt
-controllers/
-routes/
-middleware/
+views/
 ```
 
-Use it for:
-
-- page routes
-- template rendering
-- HTTP health checks
-- request middleware
-- browser-facing logic
-
-For a web template, this layer is where most of your page logic starts.
-
-## `PageController`
-
-`PageController` owns the browser-facing pages.
-
-Generated routes:
+The starter views are:
 
 ```txt
-GET /
-GET /dashboard
+base.html
+header.html
+index.html
+dashboard.html
 ```
 
-The controller creates a template context:
+The generated templates demonstrate the basic features expected from a server-rendered web app: layouts, blocks, includes, variables, and loops.
+
+```html
+{% extends "base.html" %} {% block content %}
+<section class="hero">
+  <h1>{{ title }}</h1>
+  <p>Hello {{ user }}.</p>
+</section>
+{% endblock %}
+```
+
+The base layout includes the header and exposes a content block.
+
+```html
+{% include "header.html" %}
+
+<main class="page">{% block content %}{% endblock %}</main>
+```
+
+The page controller creates the template context and renders the view.
 
 ```cpp
 vix::template_::Context ctx;
 ctx.set("title", "Home");
 ctx.set("app_name", "site");
 ctx.set("user", "Guest");
-```
 
-Then it renders a template:
-
-```cpp
 res.render("index.html", ctx);
 ```
 
-For the dashboard, it also shows how to pass arrays to templates:
+## Public assets
 
-```cpp
-vix::template_::Array features;
-features.emplace_back("Server-rendered HTML");
-features.emplace_back("Layouts with extends");
-features.emplace_back("Partials with include");
-features.emplace_back("Static assets");
-
-ctx.set("features", features);
-```
-
-Then:
-
-```cpp
-res.render("dashboard.html", ctx);
-```
-
-This is the central idea of the web template:
+Static files live under:
 
 ```txt
-C++ prepares data
-HTML template displays data
+public/
 ```
 
-## `HealthController`
-
-`HealthController` owns the health endpoint.
-
-Generated route:
+The generated project starts with:
 
 ```txt
-GET /health
+public/
+  app.css
+  app.js
 ```
 
-It returns JSON:
-
-```json
-{
-  "ok": true,
-  "status": "ok",
-  "service": "site",
-  "template": "web"
-}
-```
-
-Use `/health` for:
-
-- local checks
-- deployment checks
-- reverse proxy checks
-- monitoring
-- production diagnostics
-
-## `RouteRegistry`
-
-Routes are centralized in:
-
-```txt
-src/site/presentation/routes/RouteRegistry.cpp
-```
-
-The generated registry connects controllers to the app:
-
-```cpp
-controllers::PageController::register_routes(app);
-controllers::HealthController::register_routes(app);
-```
-
-When you add a new page controller, register it here.
-
-Example:
-
-```cpp
-controllers::BlogController::register_routes(app);
-controllers::AdminController::register_routes(app);
-```
-
-This keeps `AppBootstrap` clean.
-
-## `MiddlewareRegistry`
-
-Middleware is centralized in:
-
-```txt
-src/site/presentation/middleware/MiddlewareRegistry.cpp
-```
-
-The generated middleware registry installs:
-
-```txt
-security headers
-request logging
-X-Web marker header
-```
-
-Recommended web middleware order:
-
-```txt
-CORS
--> rate limit
--> request logging
--> security headers
--> body limits
--> auth
--> routes
-```
-
-Use this folder when you add:
-
-- authentication checks
-- sessions
-- rate limiting
-- security headers
-- request logging
-- body limits
-- custom web headers
-
-## `views/`
-
-The `views/` folder contains server-side HTML templates.
-
-Generated files:
-
-```txt
-views/base.html
-views/header.html
-views/index.html
-views/dashboard.html
-```
-
-The generated templates show:
-
-```txt
-layout inheritance
-partials
-variables
-loops
-blocks
-```
-
-## `base.html`
-
-`base.html` is the layout.
-
-It defines the shared HTML structure:
-
-```html
-<!doctype html>
-<html lang="en">
-  <head>
-    <title>{{ title }} - {{ app_name }}</title>
-    <link rel="stylesheet" href="/app.css" />
-  </head>
-  <body>
-    {% include "header.html" %}
-
-    <main class="page">{% block content %}{% endblock %}</main>
-
-    <script src="/app.js"></script>
-  </body>
-</html>
-```
-
-Use this file for shared structure:
-
-- `<head>`
-- CSS links
-- scripts
-- global layout
-- shared header/footer
-
-## `header.html`
-
-`header.html` is a partial.
-
-It is included by `base.html`:
-
-```html
-{% include "header.html" %}
-```
-
-Use partials for repeated pieces:
-
-- navbar
-- footer
-- sidebar
-- alerts
-- shared UI blocks
-
-## `index.html`
-
-`index.html` extends the base layout:
-
-```html
-{% extends "base.html" %} {% block content %} ... {% endblock %}
-```
-
-It receives data from `PageController`.
-
-Example variables:
-
-```txt
-{{ title }}
-{{ app_name }}
-{{ user }}
-```
-
-## `dashboard.html`
-
-`dashboard.html` shows a more advanced page.
-
-It receives:
-
-```txt
-title
-app_name
-user
-total_orders
-features
-```
-
-It also demonstrates a loop:
-
-```html
-{% for feature in features %}
-<li>{{ feature }}</li>
-{% endfor %}
-```
-
-Use this page as a starting point for:
-
-- admin dashboard
-- internal panel
-- status page
-- reporting page
-- customer portal
-
-## `public/`
-
-The `public/` folder contains static assets.
-
-Generated files:
-
-```txt
-public/app.css
-public/app.js
-```
-
-The generated app mounts it at `/`:
+The bootstrap mounts this directory at `/`.
 
 ```cpp
 app.static_dir("public", "/");
 ```
 
-That means:
+That means files such as `public/app.css` and `public/app.js` are available as:
 
 ```txt
-public/app.css -> http://127.0.0.1:8080/app.css
-public/app.js  -> http://127.0.0.1:8080/app.js
+/app.css
+/app.js
 ```
 
-Use `public/` for:
+The generated `base.html` uses those paths directly.
 
-- CSS
-- JavaScript
-- images
-- icons
-- fonts
-- static downloads
-- browser assets
-
-Do not put C++ source code in `public/`.
-
-## `.env.example`
-
-`.env.example` documents the expected configuration.
-
-It includes values such as:
-
-```dotenv
-APP_NAME=site
-APP_ENV=development
-APP_TEMPLATE=web
-
-SERVER_HOST=0.0.0.0
-SERVER_PORT=8080
-SERVER_REQUEST_TIMEOUT=5000
-SERVER_IO_THREADS=0
-SERVER_SESSION_TIMEOUT_SEC=20
-
-SERVER_TLS_ENABLED=false
-
-VIX_LOG_LEVEL=info
-VIX_LOG_FORMAT=kv
-
-PUBLIC_PATH=public
-VIEWS_PATH=views
-TEMPLATE_AUTO_ESCAPE_HTML=true
-TEMPLATE_CACHE=true
-
-STORAGE_PATH=storage
-
-VIX_SERVICE_NAME=site
-VIX_HEALTH_LOCAL=http://127.0.0.1:8080/health
-VIX_HEALTH_PUBLIC=
-VIX_PROXY_DOMAIN=
+```html
+<link rel="stylesheet" href="/app.css" />
+<script src="/app.js"></script>
 ```
 
-When someone clones the project, they should run:
+## Routes
 
-```bash
-cp .env.example .env
-```
-
-## `.env`
-
-`.env` contains local runtime values.
-
-Use it for:
-
-- local port
-- environment name
-- logging level
-- public directory
-- views directory
-- storage path
-- production diagnostics values
-
-To change the port:
-
-```dotenv
-SERVER_PORT=3000
-```
-
-Then run:
-
-```bash
-vix dev
-```
-
-The source code does not need to change.
-
-## `vix.app`
-
-`vix.app` is the build manifest.
-
-It describes the executable web target.
-
-The generated web manifest includes source files such as:
+The generated web project starts with three routes.
 
 ```txt
-src/main.cpp
-src/site/app/AppBootstrap.cpp
-src/site/presentation/routes/RouteRegistry.cpp
-src/site/presentation/middleware/MiddlewareRegistry.cpp
+GET /             HTML home page
+GET /dashboard    HTML dashboard page
+GET /health       JSON health check
+```
+
+The page routes are registered from `PageController`.
+
+```txt
 src/site/presentation/controllers/PageController.cpp
+```
+
+The health route is registered from `HealthController`.
+
+```txt
 src/site/presentation/controllers/HealthController.cpp
 ```
 
-It also includes runtime resources:
+The route registry connects both controllers.
+
+```cpp
+void RouteRegistry::register_all(vix::App &app)
+{
+  controllers::PageController::register_routes(app);
+  controllers::HealthController::register_routes(app);
+}
+```
+
+This keeps `AppBootstrap` small. The bootstrap asks the route registry to register routes, and the registry decides which controllers belong to the generated web shell.
+
+## Middleware
+
+The web template creates a middleware registry.
 
 ```txt
+include/site/presentation/middleware/MiddlewareRegistry.hpp
+src/site/presentation/middleware/MiddlewareRegistry.cpp
+```
+
+The generated middleware starts with security headers, request logging, and a simple web marker header.
+
+```cpp
+app.use(vix::middleware::app::security_headers_dev(false));
+
+app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
+{
+  (void)res;
+
+  vix::log::info("{} {}", req.method(), req.path());
+  next();
+});
+
+app.use([](vix::Request &req, vix::Response &res, vix::App::Next next)
+{
+  (void)req;
+
+  res.header("X-Web", "true");
+  next();
+});
+```
+
+The registry is the right place for global web behavior such as security headers, logging, rate limiting, body limits, or other middleware that should apply before page routes are handled.
+
+## Manifest
+
+The web template uses `vix.app` as the application manifest.
+
+```txt
+vix.app
+```
+
+The generated manifest describes one executable web target.
+
+```ini
+name = "site"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
+
+sources = [
+  "src/main.cpp",
+  "src/site/app/AppBootstrap.cpp",
+  "src/site/presentation/routes/RouteRegistry.cpp",
+  "src/site/presentation/middleware/MiddlewareRegistry.cpp",
+  "src/site/presentation/controllers/PageController.cpp",
+  "src/site/presentation/controllers/HealthController.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_WEB_APP=1",
+  "VIX_APP_NAME=site",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
+]
+
 resources = [
   ".env=.env",
   "public=public",
@@ -671,534 +333,225 @@ resources = [
 ]
 ```
 
-That means the web app has access to its runtime files when built.
+The source list describes the C++ files compiled into the executable. The resources list describes runtime files copied beside the built target.
 
-The build flow is:
+This distinction matters. HTML views, CSS, JavaScript, and storage directories are runtime resources, not C++ source files.
 
-```txt
-vix.app
-  -> Vix generates internal CMake
-  -> vix build compiles the web app
-  -> vix dev starts the app in development mode
-```
+## Project metadata
 
-Do not edit the generated CMake project manually.
-
-Edit `vix.app`.
-
-## `vix.json`
-
-`vix.json` stores project metadata, tasks, and production orchestration.
-
-The web template uses it for:
-
-- project name
-- version
-- template type
-- tasks
-- production service settings
-- proxy settings
-- health checks
-- deployment settings
-- logs
-- required environment variables
-- web runtime defaults
-
-Common tasks include:
-
-```bash
-vix task dev
-vix task build
-vix task test
-vix task check
-```
-
-The generated production section prepares:
+The generated web project also includes `vix.json`.
 
 ```txt
-production.service
-production.ports
-production.proxy
-production.health
-production.deploy
-production.logs
-production.env
-production.web
+vix.json
 ```
 
-## Configuration model
+This file describes project metadata, tasks, and production-oriented workflow settings for Vix commands.
 
-The web template uses two main configuration files:
+A generated web project can expose tasks such as:
 
-```txt
-.env       -> runtime values
-vix.json   -> project orchestration
-```
-
-Use `.env` for values that change per environment:
-
-```txt
-SERVER_PORT
-VIX_LOG_LEVEL
-PUBLIC_PATH
-VIEWS_PATH
-STORAGE_PATH
-```
-
-Use `vix.json` for project-level metadata:
-
-```txt
-tasks
-service name
-proxy configuration
-health check URLs
-deployment workflow
-required environment variables
-web defaults
-```
-
-Simple rule:
-
-```txt
-.env       = how the app runs here
-vix.json   = how Vix manages the project
-```
-
-## Generated routes
-
-The web template starts with:
-
-```txt
-GET /             HTML home page
-GET /dashboard    HTML dashboard page
-GET /health       JSON health check
-```
-
-Use:
-
-```bash
-curl http://127.0.0.1:8080/health
-```
-
-For HTML pages, open in the browser:
-
-```txt
-http://127.0.0.1:8080/
-http://127.0.0.1:8080/dashboard
-```
-
-## How to add a new page
-
-Example: add an About page.
-
-Create a template:
-
-```txt
-views/about.html
-```
-
-Example:
-
-```html
-{% extends "base.html" %} {% block content %}
-<section class="card">
-  <p class="eyebrow">About</p>
-  <h1>{{ title }}</h1>
-  <p class="lead">This page is rendered by Vix.cpp.</p>
-</section>
-{% endblock %}
-```
-
-Add a route in `PageController.cpp`:
-
-```cpp
-app.get("/about", [](vix::Request &req, vix::Response &res)
+```json
 {
-  (void)req;
-
-  vix::template_::Context ctx;
-  ctx.set("title", "About");
-  ctx.set("app_name", "site");
-
-  res.render("about.html", ctx);
-});
+  "tasks": {
+    "dev": "vix dev",
+    "build": "vix build",
+    "check": "vix check --tests --run",
+    "test": "vix tests",
+    "env": "vix env check",
+    "health": "vix health",
+    "logs": "vix logs",
+    "service": "vix service status",
+    "proxy": "vix proxy nginx check",
+    "doctor": "vix doctor production",
+    "deploy": "vix deploy"
+  }
+}
 ```
 
-Then run:
+The split is clear:
+
+```txt
+vix.app   -> C++ target manifest
+vix.json  -> project workflow and production metadata
+.env      -> runtime values
+views/    -> HTML templates
+public/   -> static assets
+```
+
+## Environment file
+
+The web template includes `.env.example`.
+
+```txt
+.env.example
+```
+
+Copy it before running the project locally.
 
 ```bash
-vix dev
+cp .env.example .env
 ```
 
-Open:
+The generated environment file documents values such as the application name, template type, server settings, logging settings, public path, views path, storage path, and production diagnostics.
 
-```txt
-http://127.0.0.1:8080/about
+```dotenv
+APP_NAME=site
+APP_ENV=development
+APP_TEMPLATE=web
+
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8080
+
+PUBLIC_PATH=public
+VIEWS_PATH=views
+TEMPLATE_AUTO_ESCAPE_HTML=true
+TEMPLATE_CACHE=true
+
+STORAGE_PATH=storage
 ```
 
-## How to add a new controller
+The real `.env` file can hold local or deployment-specific values. The example file should stay safe to commit.
 
-When pages grow, avoid putting every route in `PageController`.
+## Runtime resources
 
-Create a new controller:
+The generated manifest copies the runtime directories beside the built target.
 
-```txt
-include/site/presentation/controllers/BlogController.hpp
-src/site/presentation/controllers/BlogController.cpp
-```
-
-Register it in:
-
-```txt
-src/site/presentation/routes/RouteRegistry.cpp
-```
-
-Example:
-
-```cpp
-controllers::BlogController::register_routes(app);
-```
-
-Add the `.cpp` file to `vix.app`:
-
-```txt
-sources = [
-  "src/main.cpp",
-  "src/site/app/AppBootstrap.cpp",
-  "src/site/presentation/routes/RouteRegistry.cpp",
-  "src/site/presentation/middleware/MiddlewareRegistry.cpp",
-  "src/site/presentation/controllers/PageController.cpp",
-  "src/site/presentation/controllers/HealthController.cpp",
-  "src/site/presentation/controllers/BlogController.cpp",
+```ini
+resources = [
+  ".env=.env",
+  "public=public",
+  "views=views",
+  "storage=storage",
 ]
 ```
 
-Then rebuild:
-
-```bash
-vix build
-```
-
-## How to add static assets
-
-Put static files in:
+A runtime output may look like this:
 
 ```txt
-public/
+bin/
+  site
+  .env
+  public/
+    app.css
+    app.js
+  views/
+    base.html
+    header.html
+    index.html
+    dashboard.html
+  storage/
 ```
 
-Examples:
+This is why `resources` is important. The executable runs from the build output, so the templates and static files must be available there.
+
+If the application cannot find a view or a static file, check the resource list and the output directory before changing the C++ code.
+
+## Difference from the backend template
+
+The web and backend templates both use `AppBootstrap`, `RouteRegistry`, `MiddlewareRegistry`, `vix.app`, `vix.json`, `.env.example`, and runtime resources. Their purpose is different.
+
+The backend template is API-oriented. It starts with JSON routes and prepares the project for backend services, production checks, and feature modules.
+
+The web template is page-oriented. It starts with server-rendered HTML, template views, public assets, and browser-facing routes.
+
+Choose the web template when the first interface of the project is HTML rendered by the server. Choose the backend template when the project is mainly an API service.
+
+## Difference from the Vue template
+
+The web template renders HTML directly from the Vix backend. The Vue template creates a separate Vue frontend under `frontend/` and uses Vite during development.
+
+The web template:
 
 ```txt
-public/logo.svg
-public/admin.css
-public/dashboard.js
-public/images/hero.png
+Vix renders HTML from views/
+Vix serves public assets
+No separate frontend build required at the start
 ```
 
-Use them in templates:
-
-```html
-<link rel="stylesheet" href="/admin.css" />
-<img src="/images/hero.png" alt="Hero" />
-<script src="/dashboard.js"></script>
-```
-
-## How to add shared layouts
-
-Use `base.html` for common layout.
-
-Use partials for repeated sections.
-
-Example:
+The Vue template:
 
 ```txt
-views/footer.html
-views/sidebar.html
-views/flash.html
+Vue owns the browser UI
+Vite runs the frontend dev server
+Vix owns the backend API
+/api is proxied to the Vix backend
 ```
 
-Include them:
+Use the web template when server-rendered pages are enough. Use the Vue template when the frontend needs to be a separate Vue application.
 
-```html
-{% include "footer.html" %}
+## Tests
+
+The web template includes a generated test target.
+
+```txt
+tests/
+  test_basic.cpp
+  vix.app
 ```
 
-## How to add dynamic data
+The generated test is small. It confirms that the test runner is wired and that the generated project can compile test targets.
 
-Dynamic data is passed from C++ to the template context.
-
-Example:
-
-```cpp
-vix::template_::Context ctx;
-ctx.set("title", "Dashboard");
-ctx.set("user", "Gaspard");
-ctx.set("total_orders", 42);
-
-res.render("dashboard.html", ctx);
-```
-
-Then in the template:
-
-```html
-<h1>{{ title }}</h1>
-<p>Welcome back, {{ user }}.</p>
-<strong>{{ total_orders }}</strong>
-```
-
-For lists:
-
-```cpp
-vix::template_::Array features;
-features.emplace_back("Fast C++ server");
-features.emplace_back("Server-rendered HTML");
-
-ctx.set("features", features);
-```
-
-Template:
-
-```html
-<ul>
-  {% for feature in features %}
-  <li>{{ feature }}</li>
-  {% endfor %}
-</ul>
-```
-
-## Web template vs backend template
-
-Use the web template when the main output is HTML.
-
-Use the backend template when the main output is JSON APIs and backend services.
-
-| Need                                                             | Template  |
-| ---------------------------------------------------------------- | --------- |
-| HTML pages rendered by C++                                       | `web`     |
-| JSON API service                                                 | `backend` |
-| Static assets with server-rendered pages                         | `web`     |
-| Controllers, middleware, health checks, production API structure | `backend` |
-| Large frontend app with Vue                                      | `vue`     |
-
-The web template can still return JSON for `/health`.
-
-The backend template can still serve static files.
-
-The difference is the main purpose.
-
-## Web template vs Vue template
-
-Use the web template when C++ renders the HTML.
-
-Use the Vue template when Vue renders the UI in the browser.
-
-| Need                                 | Template |
-| ------------------------------------ | -------- |
-| Server-rendered HTML                 | `web`    |
-| Vue SPA frontend                     | `vue`    |
-| Simple admin or internal pages       | `web`    |
-| Complex interactive frontend         | `vue`    |
-| Mostly C++ driven rendering          | `web`    |
-| Mostly JavaScript frontend rendering | `vue`    |
-
-## Build and run
-
-Start development mode:
-
-```bash
-vix dev
-```
-
-Build:
-
-```bash
-vix build
-```
-
-Run:
-
-```bash
-vix run
-```
-
-Run tests:
+Run tests with:
 
 ```bash
 vix tests
 ```
 
-Check the project:
+For a stronger local validation, run:
 
 ```bash
 vix check --tests --run
 ```
 
-## Production direction
+The test target is separate from the application target. It defines its own `main()` and should not include the application `main.cpp`.
 
-The web template is production-oriented, but it is still a starter.
+## Recommended workflow
 
-Before production, you will usually add:
-
-- real error pages
-- real CORS policy if needed
-- real sessions or authentication
-- CSRF protection for forms
-- rate limiting
-- template caching policy
-- Nginx proxy
-- TLS termination
-- health checks
-- service management
-- logs
-- deployment workflow
-
-The template gives you the structure where these pieces belong.
-
-## When not to use this template
-
-Do not use the web template when you only want a tiny C++ experiment.
-
-Use the application template:
-
-```bash
-vix new hello --app
-```
-
-Do not use the web template when your main product is a JSON API.
-
-Use the backend template:
-
-```bash
-vix new api --template backend
-```
-
-Do not use the web template when your main frontend is Vue.
-
-Use the Vue template:
-
-```bash
-vix new dashboard --template vue
-```
-
-## Common mistakes
-
-### Thinking `web` means Vue
-
-The web template is server-rendered.
-
-The HTML is rendered by Vix on the server.
-
-For Vue, use:
-
-```bash
-vix new dashboard --template vue
-```
-
-### Putting all pages in one controller forever
-
-`PageController` is enough at the beginning.
-
-When the app grows, create more controllers:
-
-```txt
-BlogController
-AdminController
-AuthController
-SettingsController
-```
-
-### Forgetting to update `vix.app`
-
-When you add a new `.cpp` file, add it to:
-
-```txt
-sources = [
-]
-```
-
-in `vix.app`.
-
-### Putting CSS inside templates forever
-
-For maintainability, keep CSS in:
-
-```txt
-public/
-```
-
-Example:
-
-```txt
-public/app.css
-public/admin.css
-```
-
-### Hardcoding runtime values
-
-Avoid hardcoding ports and paths.
-
-Use `.env`:
-
-```dotenv
-SERVER_PORT=8080
-PUBLIC_PATH=public
-VIEWS_PATH=views
-```
-
-## What you should remember
-
-The web template is for server-rendered HTML with Vix.
-
-The main flow is:
-
-```txt
-main.cpp
-  -> AppBootstrap
-      -> app.templates("views")
-      -> app.static_dir("public", "/")
-      -> MiddlewareRegistry
-      -> RouteRegistry
-          -> PageController
-              -> res.render("template.html", ctx)
-```
-
-Use each folder for its role:
-
-| Folder                      | Role                                       |
-| --------------------------- | ------------------------------------------ |
-| `app/`                      | Startup and wiring.                        |
-| `presentation/controllers/` | Page and health handlers.                  |
-| `presentation/routes/`      | Route registration.                        |
-| `presentation/middleware/`  | Middleware registration.                   |
-| `views/`                    | HTML templates.                            |
-| `public/`                   | CSS, JavaScript, images, and static files. |
-| `storage/`                  | Runtime local storage.                     |
-| `tests/`                    | Tests.                                     |
-
-Create a web app:
+A normal first session with the web template looks like this:
 
 ```bash
 vix new site --template web
 cd site
+
 cp .env.example .env
 vix dev
 ```
 
-Open:
+Then open:
 
 ```txt
 http://127.0.0.1:8080
-http://127.0.0.1:8080/dashboard
 ```
 
-## Next steps
+Check the health route:
 
-Continue with:
+```bash
+curl http://localhost:8080/health
+```
 
-- [Vue template](/templates/vue)
-- [Backend template](/templates/backend)
-- [Templates guide](/guides/templates)
-- [Static files](/guides/static-files)
-- [Routes](/book/04-routes)
-- [Request and Response](/book/05-request-response)
+For validation:
+
+```bash
+vix build
+vix tests
+vix check --tests --run
+```
+
+## Common mistakes
+
+The most common mistake is choosing the web template when the project really needs a separate frontend application. If the browser UI will be built with Vue, use the Vue template instead.
+
+Another mistake is treating `views/` and `public/` as source files. They are runtime resources. They should be copied through `resources`, not compiled through `sources`.
+
+A third mistake is adding a new controller `.cpp` file and forgetting to add it to `vix.app`. Source files must be listed in the manifest before they are compiled.
+
+A fourth mistake is hard-coding runtime paths in C++ when they should be configuration values. Keep local runtime values in `.env` and document them in `.env.example`.
+
+## Recommended rule
+
+Use the web template when Vix should own the HTTP server and render HTML on the server. Keep startup in `AppBootstrap`, page handlers in controllers, route wiring in `RouteRegistry`, middleware in `MiddlewareRegistry`, templates in `views/`, assets in `public/`, and runtime values in `.env`.
+
+## Next step
+
+Continue with the generated layout to see each file created by the web template and what role it plays in the project.
+
+[Generated Layout](/templates/web/layout)

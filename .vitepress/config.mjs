@@ -49,7 +49,7 @@ const gettingStarted = {
 
 const sdkProfiles = {
   text: "SDK Profiles",
-  collapsed: false,
+  collapsed: true,
   items: [
     {
       text: "Overview",
@@ -177,7 +177,7 @@ const projectTemplates = {
       ],
     },
     {
-      text: "Vue",
+      text: "Vue.js",
       collapsed: true,
       items: [
         {
@@ -288,6 +288,53 @@ const vixBook = {
     {
       text: "Next Steps",
       link: "/book/09-next-steps",
+    },
+  ],
+};
+
+const productionFiles = {
+  text: "Production Files",
+  collapsed: true,
+  items: [
+    {
+      text: "Overview",
+      link: "/guides/production-files/",
+    },
+    {
+      text: "Service",
+      link: "/guides/production-files/service",
+    },
+    {
+      text: "Proxy",
+      link: "/guides/production-files/proxy",
+    },
+    {
+      text: "Health Checks",
+      link: "/guides/production-files/health",
+    },
+    {
+      text: "Logs",
+      link: "/guides/production-files/logs",
+    },
+    {
+      text: "Deploy",
+      link: "/guides/production-files/deploy",
+    },
+    {
+      text: "Environment",
+      link: "/guides/production-files/environment",
+    },
+    {
+      text: "Database",
+      link: "/guides/production-files/database",
+    },
+    {
+      text: "WebSocket",
+      link: "/guides/production-files/websocket",
+    },
+    {
+      text: "Existing C++ Projects",
+      link: "/guides/production-files/existing-cpp-projects",
     },
   ],
 };
@@ -626,7 +673,7 @@ const vixApp = {
 
 const applicationModules = {
   text: "Application Modules",
-  collapsed: false,
+  collapsed: true,
   items: [
     {
       text: "Overview",
@@ -673,7 +720,7 @@ const applicationModules = {
 
 const middleware = {
   text: "Middleware",
-  collapsed: false,
+  collapsed: true,
   items: [
     {
       text: "Overview",
@@ -975,7 +1022,7 @@ const cli = {
 
 const examples = {
   text: "Examples",
-  collapsed: false,
+  collapsed: true,
   items: [
     {
       text: "Overview",
@@ -984,7 +1031,7 @@ const examples = {
 
     {
       text: "Getting Started",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Hello App",
@@ -1003,7 +1050,7 @@ const examples = {
 
     {
       text: "Middleware",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Middleware API",
@@ -1067,7 +1114,7 @@ const examples = {
 
     {
       text: "Static Files",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Static Site",
@@ -1078,7 +1125,7 @@ const examples = {
 
     {
       text: "Realtime",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "WebSocket Chat",
@@ -1089,7 +1136,7 @@ const examples = {
 
     {
       text: "Database",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "SQLite API",
@@ -1100,7 +1147,7 @@ const examples = {
 
     {
       text: "Async",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Background Task",
@@ -1281,7 +1328,7 @@ const requests = {
 
 const note = {
   text: "Note",
-  collapsed: false,
+  collapsed: true,
   items: [
     {
       text: "Overview",
@@ -1336,7 +1383,7 @@ const note = {
 
 const modules = {
   text: "Modules",
-  collapsed: false,
+  collapsed: true,
   items: [
     {
       text: "Core Runtime",
@@ -1719,7 +1766,7 @@ const modules = {
     },
     {
       text: "UI",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Overview",
@@ -1908,6 +1955,7 @@ const sidebar = [
   sdkProfiles,
   projectTemplates,
   vixBook,
+  productionFiles,
   guides,
   vixApp,
   applicationModules,

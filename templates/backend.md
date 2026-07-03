@@ -1,252 +1,82 @@
 # Backend Template
 
-The backend template creates a production-oriented Vix backend application.
-Use it when you want more than a simple `main.cpp`.
+The backend template creates a structured Vix application for API services and production-oriented backends. It keeps the executable target simple, but gives the project a clearer internal shape from the beginning: startup is owned by `AppBootstrap`, routes are grouped through `RouteRegistry`, middleware is grouped through `MiddlewareRegistry`, and generated application modules can be connected without rewriting the main entry point.
 
-It is designed for real backend services that need:
-
-- API routes
-- health checks
-- middleware
-- static files
-- templates
-- configuration
-- storage
-- database migrations
-- production diagnostics
-- deployment metadata
-- a structure that can grow without becoming messy
-
-Create a backend project with:
+Use this template when the project is meant to become a backend service rather than a small example application.
 
 ```bash
 vix new api --template backend
+```
+
+After creation, the normal first workflow is:
+
+```bash
+cd api
+cp .env.example .env
+vix build
+vix run
+curl http://localhost:8080/health
 ```
 
 ## What this template is for
 
-Use the backend template when you want to build:
+The backend template is designed for C++ applications that need a stable backend shell. A small application can keep routes directly in `main.cpp`, but a backend usually grows into configuration, middleware, health checks, route groups, response helpers, runtime directories, tests, production tasks, and internal feature modules. The template gives those responsibilities a place before the project becomes difficult to reorganize.
 
-- REST APIs
-- JSON APIs
-- backend services
-- admin backends
-- realtime backends
-- WebSocket-ready services
-- production services behind Nginx and systemd
-- services with health checks and diagnostics
-- APIs that may later need database, auth, logs, migrations, static files, or background logic
+It is still one executable application. The template does not split the backend into services, and it does not force every feature to become a module on day one. It creates a clean application shell that can run immediately, then gives the project enough structure to grow feature by feature.
 
-This template is not only a demo.
+## Generated project shape
 
-It gives you a serious starting structure for a backend application.
-
-## Design used by this template
-
-The backend template uses a **layered backend architecture inspired by Clean Architecture**.
-
-The important idea is simple:
-
-```txt
-main.cpp
-  -> app bootstrap
-      -> middleware
-      -> routes
-          -> controllers
-              -> application logic
-                  -> domain logic
-                      -> infrastructure
-```
-
-The generated project starts small, but the folders already prepare the application to grow.
-
-This design separates responsibilities:
-
-| Layer             | Role                                                                                              |
-| ----------------- | ------------------------------------------------------------------------------------------------- |
-| `app/`            | Starts and wires the application.                                                                 |
-| `presentation/`   | Handles HTTP routes, controllers, middleware, and request/response concerns.                      |
-| `application/`    | Contains use cases and application workflows.                                                     |
-| `domain/`         | Contains business rules and core models.                                                          |
-| `infrastructure/` | Contains database, file system, external services, repositories, clients, and technical adapters. |
-| `support/`        | Contains shared helpers used by the backend.                                                      |
-
-The goal is not to make the project complicated.
-
-The goal is to prevent a backend from becoming one giant `main.cpp`.
-
-## Quick start
-
-Create the project:
-
-```bash
-vix new api --template backend
-```
-
-Enter the project:
-
-```bash
-cd api
-```
-
-Create your local configuration:
-
-```bash
-cp .env.example .env
-```
-
-Start development mode:
-
-```bash
-vix dev
-```
-
-Open:
-
-```txt
-http://127.0.0.1:8080
-http://127.0.0.1:8080/status.html
-```
-
-Check the API:
-
-```bash
-curl http://127.0.0.1:8080/api
-curl http://127.0.0.1:8080/health
-curl http://127.0.0.1:8080/api/health
-```
-
-## Generated structure
-
-A backend project generated with:
-
-```bash
-vix new api --template backend
-```
-
-has this structure:
+A generated backend project follows this general layout:
 
 ```txt
 api/
-├── include/
-│   └── api/
-│       ├── app/
-│       │   └── AppBootstrap.hpp
-│       ├── support/
-│       │   └── HttpResponses.hpp
-│       └── presentation/
-│           ├── controllers/
-│           ├── middleware/
-│           └── routes/
-├── src/
-│   ├── main.cpp
-│   └── api/
-│       ├── app/
-│       │   └── AppBootstrap.cpp
-│       ├── application/
-│       ├── domain/
-│       ├── infrastructure/
-│       ├── presentation/
-│       │   ├── controllers/
-│       │   │   ├── HomeController.hpp
-│       │   │   ├── HomeController.cpp
-│       │   │   ├── HealthController.hpp
-│       │   │   └── HealthController.cpp
-│       │   ├── middleware/
-│       │   │   ├── MiddlewareRegistry.hpp
-│       │   │   └── MiddlewareRegistry.cpp
-│       │   └── routes/
-│       │       ├── RouteRegistry.hpp
-│       │       └── RouteRegistry.cpp
-│       └── support/
-│           └── HttpResponses.cpp
-├── public/
-│   ├── index.html
-│   ├── app.css
-│   ├── app.js
-│   ├── status.html
-│   ├── status.css
-│   └── status.js
-├── views/
-├── storage/
-├── migrations/
-├── tests/
-├── .env.example
-├── .env
-├── vix.app
-├── vix.json
-└── README.md
+  include/
+    api/
+      app/
+        AppBootstrap.hpp
+      presentation/
+        controllers/
+          HomeController.hpp
+          HealthController.hpp
+        middleware/
+          MiddlewareRegistry.hpp
+        routes/
+          RouteRegistry.hpp
+      support/
+        HttpResponses.hpp
+
+  src/
+    main.cpp
+    api/
+      app/
+        AppBootstrap.cpp
+      presentation/
+        controllers/
+          HomeController.cpp
+          HealthController.cpp
+        middleware/
+          MiddlewareRegistry.cpp
+        routes/
+          RouteRegistry.cpp
+      support/
+        HttpResponses.cpp
+
+  public/
+  views/
+  storage/
+  tests/
+
+  .env.example
+  README.md
+  vix.app
+  vix.json
 ```
 
-## Why this design exists
+The important part is the separation of responsibilities. `main.cpp` starts the program, `AppBootstrap` owns startup, route and middleware registries keep HTTP wiring organized, and support helpers keep common response logic out of controllers.
 
-A backend usually starts simple.
+## Entry point
 
-At the beginning, you may only need:
-
-```txt
-GET /api
-GET /health
-```
-
-But later, a real backend often needs:
-
-- authentication
-- users
-- roles
-- orders
-- billing
-- file uploads
-- WebSocket events
-- database access
-- migrations
-- background jobs
-- logs
-- health checks
-- deployment checks
-- static status pages
-- reverse proxy configuration
-
-If everything stays inside `main.cpp`, the project becomes hard to maintain.
-
-The backend template avoids that problem by separating the project early, but without forcing you to fill every folder immediately.
-
-You can start with the generated files and add logic progressively.
-
-## Request flow
-
-The generated backend follows this flow:
-
-```txt
-main.cpp
-  -> AppBootstrap
-      -> load .env
-      -> create vix::App
-      -> configure templates
-      -> mount public files
-      -> register middleware
-      -> register routes
-      -> start server
-```
-
-Then an HTTP request follows this flow:
-
-```txt
-client request
-  -> middleware stack
-  -> route registry
-  -> controller
-  -> response helper
-  -> response sent to client
-```
-
-This flow gives you a clear place for each responsibility.
-
-## `main.cpp`
-
-`main.cpp` is intentionally small.
-
-It only starts the application:
+The generated `main.cpp` stays intentionally small.
 
 ```cpp
 #include <api/app/AppBootstrap.hpp>
@@ -258,560 +88,103 @@ int main()
 }
 ```
 
-Do not put all routes, middleware, database code, and business logic in `main.cpp`.
+This file should remain the process entry point, not the place where the backend grows all its routes and setup code. The backend startup sequence belongs to `AppBootstrap`.
 
-`main.cpp` should stay focused on startup.
+## AppBootstrap
 
-The `app/` folder owns the application startup sequence.
+`AppBootstrap` owns the backend startup flow. It loads configuration from `.env`, creates the `vix::App`, configures templates and static files, registers middleware, registers application routes, connects generated modules, then starts the server.
 
-Generated files:
-
-```txt
-include/api/app/AppBootstrap.hpp
-src/api/app/AppBootstrap.cpp
-```
-
-`AppBootstrap` is responsible for:
-
-- loading `.env`
-- creating `vix::App`
-- reading configuration
-- configuring templates
-- mounting static files
-- enabling static compression when configured
-- registering middleware
-- registering routes
-- starting the server
-
-The generated bootstrap reads values such as:
+The generated flow is close to this:
 
 ```txt
-templates.path
-public.path
-public.mount
-public.index
-public.cache_control
-public.spa_fallback
-public.compression
+main.cpp
+  -> AppBootstrap
+      -> vix::config::Config
+      -> vix::App
+      -> public files
+      -> views
+      -> MiddlewareRegistry
+      -> RouteRegistry
+      -> generated app modules
+      -> app.run(cfg)
 ```
 
-Then it configures:
+This keeps startup readable. When the backend grows, the bootstrap should still explain the application startup path without becoming a long list of feature controllers.
 
-```cpp
-app.templates(viewsPath);
-app.static_dir(publicPath, publicMount, publicIndex, ...);
-```
+## Routes
 
-Finally, it starts the application:
-
-```cpp
-app.run(cfg);
-```
-
-This is why the port and runtime settings belong in `.env`, not in the source code.
-
-## `presentation/`
-
-The `presentation/` layer is the HTTP layer.
-
-It contains the code that talks to the outside world through HTTP.
-
-Generated folders:
+The backend template creates a route registry.
 
 ```txt
-presentation/controllers/
-presentation/routes/
-presentation/middleware/
-```
-
-Use this layer for:
-
-- HTTP routes
-- request parsing
-- response formatting
-- middleware registration
-- authentication middleware
-- CORS
-- rate limiting
-- API controllers
-- status endpoints
-
-Do not put core business rules here.
-
-Controllers should call application services when the project grows.
-
-## `presentation/routes/`
-
-Routes are centralized in:
-
-```txt
+include/api/presentation/routes/RouteRegistry.hpp
 src/api/presentation/routes/RouteRegistry.cpp
 ```
 
-The generated `RouteRegistry` registers controller routes:
-
-```cpp
-controllers::HomeController::register_routes(app);
-controllers::HealthController::register_routes(app);
-```
-
-This means `AppBootstrap` does not need to know every controller.
-
-When you add a new controller, register it here.
-
-Example:
-
-```cpp
-controllers::UserController::register_routes(app);
-controllers::OrderController::register_routes(app);
-```
-
-This keeps route wiring clear.
-
-## `presentation/controllers/`
-
-Controllers own HTTP route handlers.
-
-Generated controllers:
-
-```txt
-HomeController
-HealthController
-```
-
-`HomeController` registers:
+The registry groups application-level routes in one place. The generated backend starts with a home API route and health routes.
 
 ```txt
 GET /api
-```
-
-`HealthController` registers:
-
-```txt
 GET /health
 GET /api/health
 ```
 
-A controller should handle HTTP concerns:
-
-- reading route parameters
-- reading query parameters
-- validating request shape
-- calling application services
-- sending JSON responses
-
-Example role:
+The controllers own the actual route handlers.
 
 ```txt
-UserController
-  -> receives HTTP request
-  -> validates input
-  -> calls CreateUserUseCase
-  -> returns JSON response
+HomeController      basic API route
+HealthController    health check routes
 ```
 
-A controller should not contain heavy business logic.
+This structure keeps `AppBootstrap` from knowing about every controller directly. The bootstrap asks `RouteRegistry` to register routes, and the registry decides which controllers belong to the base backend shell.
 
-## `presentation/middleware/`
+## Middleware
 
-Middleware is centralized in:
+The backend template also creates a middleware registry.
 
 ```txt
+include/api/presentation/middleware/MiddlewareRegistry.hpp
 src/api/presentation/middleware/MiddlewareRegistry.cpp
 ```
 
-The generated middleware registry installs:
+The generated middleware includes a basic production-oriented order: security headers, request logging, and an API marker header. It also leaves examples for common middleware such as CORS and rate limiting.
 
-- security headers
-- request logging
-- an `X-API: true` marker header for `/api` routes
+Middleware belongs in the registry because it affects the application as a whole. Feature-specific behavior can still live inside modules or controllers, but global HTTP behavior should remain visible from one place.
 
-The generated file also documents the recommended production order:
+## Response helpers
 
-```txt
-CORS -> rate limit -> request logging -> security headers -> body limits -> auth -> routes
-```
-
-This order matters.
-
-For example:
-
-- CORS should run early because browsers need it.
-- Rate limiting should run before expensive logic.
-- Request logging should observe the request.
-- Security headers should apply to responses.
-- Body limits should protect memory.
-- Auth should run before protected routes.
-- Routes should run after middleware is ready.
-
-When your app grows, add middleware here instead of scattering it across `main.cpp`.
-
-## `support/`
-
-The `support/` folder contains shared backend helpers.
-
-Generated files:
+The backend template includes JSON response helpers.
 
 ```txt
 include/api/support/HttpResponses.hpp
 src/api/support/HttpResponses.cpp
 ```
 
-The generated helpers include:
+These helpers provide a small place for common response shapes, such as JSON errors, successful JSON payloads, and message responses. This avoids repeating the same response structure inside every controller.
+
+A generated backend can use helpers such as:
 
 ```cpp
-json_error(...)
-json_ok(...)
-json_message(...)
+api::support::json_error(res, 404, "not_found", "Resource not found");
+api::support::json_message(res, "Backend is running");
 ```
 
-Use this folder for small reusable helpers that are not business logic.
+As the backend grows, support code like this can remain application-level when it is shared by the whole service, or move into modules when it belongs to a specific feature.
 
-Examples:
+## Runtime directories
 
-- JSON response helpers
-- pagination helpers
-- HTTP error helpers
-- request parsing helpers
-- shared constants
-
-Do not put database repositories here.
-
-Do not put business rules here.
-
-Use `application/`, `domain/`, and `infrastructure/` for that.
-
-## `application/`
-
-The `application/` folder is empty at the beginning.
-
-It is where you put use cases.
-
-A use case is an application action.
-
-Examples:
+The backend template creates runtime-oriented directories.
 
 ```txt
-CreateUser
-LoginUser
-PlaceOrder
-SendMessage
-UploadFile
-GenerateReport
+public/
+views/
+storage/
 ```
 
-When the project grows, the controller should not do everything.
+`public/` is used for static files. `views/` can be used for templates when the backend needs to render files. `storage/` gives the application a local writable area for generated data, SQLite databases, uploads, logs, or other runtime files, depending on the project.
 
-Instead, the controller should call a use case.
+These directories are also declared as resources in `vix.app`, so they are copied beside the built target.
 
-Example flow:
-
-```txt
-POST /api/users
-  -> UserController
-      -> CreateUserUseCase
-          -> UserRepository
-          -> returns result
-      -> JSON response
-```
-
-Use `application/` for orchestration.
-
-It coordinates domain logic and infrastructure.
-
-## `domain/`
-
-The `domain/` folder is empty at the beginning.
-
-It is where you put business rules.
-
-Examples:
-
-```txt
-User
-Order
-Invoice
-Payment
-Role
-Permission
-Message
-Conversation
-```
-
-Use this folder for logic that should not depend on HTTP, database, Vix, or external services.
-
-Good domain code should be easy to test.
-
-Example:
-
-```txt
-domain/User.hpp
-domain/Order.hpp
-domain/PermissionPolicy.hpp
-```
-
-The domain layer answers questions like:
-
-```txt
-Can this user perform this action?
-Is this order valid?
-Can this invoice be paid?
-Is this message allowed?
-```
-
-## `infrastructure/`
-
-The `infrastructure/` folder is empty at the beginning.
-
-It is where you put technical adapters.
-
-Examples:
-
-```txt
-MySqlUserRepository
-SqliteOrderRepository
-FileStorage
-EmailClient
-RedisCache
-PaymentGatewayClient
-WebSocketMessageStore
-```
-
-Use this folder for things that talk to the outside world:
-
-- database
-- file system
-- Redis
-- HTTP clients
-- payment APIs
-- email providers
-- storage services
-- external APIs
-
-The application layer can depend on interfaces, while infrastructure provides concrete implementations.
-
-## `public/`
-
-The backend template includes `public/` on purpose.
-
-This does not mean the backend is a frontend framework.
-
-Static files are useful in a production backend.
-
-Generated files include:
-
-```txt
-public/index.html
-public/app.css
-public/app.js
-public/status.html
-public/status.css
-public/status.js
-```
-
-Use `public/` for:
-
-- a simple landing page
-- a backend status page
-- a WebSocket test page
-- a local diagnostics UI
-- static assets
-- deployment check pages
-- a small admin/status interface
-
-This is useful especially when the backend has WebSocket or realtime features.
-
-For example, a backend may expose:
-
-```txt
-/status.html
-```
-
-to test:
-
-- HTTP is running
-- static files are served
-- health endpoint responds
-- WebSocket connection can be tested later
-
-The generated `AppBootstrap` mounts `public/` at `/`.
-
-That means:
-
-```txt
-public/index.html   -> http://127.0.0.1:8080/
-public/status.html  -> http://127.0.0.1:8080/status.html
-```
-
-## `views/`
-
-The `views/` folder is for server-side templates.
-
-The backend template configures:
-
-```cpp
-app.templates(viewsPath);
-```
-
-The folder can stay empty if your backend only returns JSON.
-
-Use `views/` when you want the backend to render HTML pages.
-
-Examples:
-
-- admin page
-- status dashboard
-- email preview page
-- simple internal tool
-- server-rendered documentation page
-
-If your project is mainly server-rendered HTML, use the web template instead:
-
-```bash
-vix new site --template web
-```
-
-## `storage/`
-
-The `storage/` folder is for runtime storage.
-
-Examples:
-
-```txt
-storage/api.db
-storage/uploads/
-storage/cache/
-storage/logs/
-storage/tmp/
-```
-
-The generated `.env.example` can point SQLite to:
-
-```dotenv
-DATABASE_SQLITE_PATH=storage/api.db
-```
-
-Use `storage/` for local files that belong to the running service.
-
-Do not put source code here.
-
-## `migrations/`
-
-The `migrations/` folder is for database migrations.
-
-A migration is a database change saved as a file.
-
-Examples:
-
-```txt
-001_create_users.sql
-002_create_orders.sql
-003_add_user_roles.sql
-```
-
-The backend template includes migration settings in `.env`:
-
-```dotenv
-VIX_ORM_DIR=migrations
-```
-
-Use this folder when your backend starts using a database.
-
-## `tests/`
-
-The `tests/` folder contains backend tests.
-
-The generated backend includes a basic test executable.
-
-Run tests with:
-
-```bash
-vix tests
-```
-
-Use tests for:
-
-- domain rules
-- use cases
-- helpers
-- controllers
-- regression checks
-- safety before deployment
-
-As the backend grows, add tests close to the logic you care about.
-
-## `.env.example`
-
-`.env.example` documents the expected configuration.
-
-It is safe to commit.
-
-It contains values such as:
-
-```dotenv
-APP_NAME=api
-APP_ENV=development
-
-SERVER_HOST=0.0.0.0
-SERVER_PORT=8080
-
-PUBLIC_PATH=public
-PUBLIC_MOUNT=/
-PUBLIC_INDEX=index.html
-PUBLIC_CACHE_CONTROL=public, max-age=3600
-PUBLIC_SPA_FALLBACK=false
-PUBLIC_COMPRESSION=false
-
-DATABASE_ENGINE=sqlite
-DATABASE_SQLITE_PATH=storage/api.db
-
-WEBSOCKET_ENABLED=false
-WEBSOCKET_HOST=0.0.0.0
-WEBSOCKET_PORT=9090
-```
-
-When someone clones the project, they should run:
-
-```bash
-cp .env.example .env
-```
-
-## `.env`
-
-`.env` contains local runtime values.
-
-Use `.env` for:
-
-- local port
-- local database path
-- local logging level
-- local WebSocket settings
-- secrets
-- machine-specific values
-
-Do not hardcode these values in C++ source code.
-
-## `vix.app`
-
-`vix.app` is the build manifest.
-
-It describes the backend executable target.
-
-The generated backend manifest includes source files such as:
-
-```txt
-src/main.cpp
-src/api/app/AppBootstrap.cpp
-src/api/support/HttpResponses.cpp
-src/api/presentation/routes/RouteRegistry.cpp
-src/api/presentation/middleware/MiddlewareRegistry.cpp
-src/api/presentation/controllers/HomeController.cpp
-src/api/presentation/controllers/HealthController.cpp
-```
-
-It also includes resources:
-
-```txt
+```ini
 resources = [
   ".env=.env",
   "public=public",
@@ -820,227 +193,24 @@ resources = [
 ]
 ```
 
-That means these runtime folders are copied or made available next to the built executable.
+This matters because the executable runs from the build output, and the runtime files need to be available next to it.
 
-The build flow is:
+## Manifest
+
+The backend template uses `vix.app` as the application manifest.
 
 ```txt
 vix.app
-  -> Vix generates internal CMake
-  -> vix build compiles the backend
-  -> vix run starts the backend
 ```
 
-Do not edit the generated CMake project manually.
+The generated manifest describes one executable backend target.
 
-Edit `vix.app`.
+```ini
+name = "api"
+type = "executable"
+standard = "c++20"
+output_dir = "bin"
 
-## `vix.json`
-
-`vix.json` is the project metadata and orchestration file.
-
-The backend template uses it for:
-
-- project name
-- version
-- template type
-- tasks
-- production service settings
-- proxy settings
-- health checks
-- deployment settings
-- logs
-- database defaults
-- required environment variables
-
-Common tasks include:
-
-```bash
-vix task dev
-vix task build
-vix task test
-vix task check
-```
-
-The generated `vix.json` also prepares production-oriented sections such as:
-
-```txt
-production.service
-production.ports
-production.websocket
-production.proxy
-production.health
-production.deploy
-production.logs
-production.env
-production.database
-```
-
-This gives Vix enough metadata to help with production workflows.
-
-## Configuration model
-
-The backend template uses two kinds of configuration.
-
-```txt
-.env       -> runtime values
-vix.json   -> project orchestration
-```
-
-Use `.env` for values that change per environment:
-
-```txt
-SERVER_PORT
-DATABASE_SQLITE_PATH
-WEBSOCKET_PORT
-VIX_LOG_LEVEL
-```
-
-Use `vix.json` for project-level metadata:
-
-```txt
-tasks
-production service name
-proxy configuration
-health check URLs
-deployment workflow
-required env variables
-```
-
-Do not duplicate everything everywhere.
-
-The simple rule is:
-
-```txt
-.env       = how the app runs here
-vix.json   = how Vix manages the project
-```
-
-## Generated routes
-
-The backend starts with these routes:
-
-```txt
-GET /api
-GET /health
-GET /api/health
-```
-
-The `/` route is served from:
-
-```txt
-public/index.html
-```
-
-That means:
-
-```txt
-GET /       -> static HTML page
-GET /api    -> JSON backend route
-GET /health -> health check
-```
-
-This separation is useful:
-
-- `/` can show a simple status or landing page.
-- `/api` proves the API layer works.
-- `/health` is for local checks, monitoring, service checks, and deployment scripts.
-
-## Middleware stack
-
-The generated middleware registry installs:
-
-```txt
-security headers
-request logging
-X-API marker for /api routes
-```
-
-Recommended production order:
-
-```txt
-CORS
--> rate limit
--> request logging
--> security headers
--> body limits
--> auth
--> routes
-```
-
-As your backend grows, add middleware in `MiddlewareRegistry`.
-
-Examples:
-
-```txt
-CORS
-rate limiting
-auth
-request body size limits
-compression
-sessions
-API version headers
-```
-
-## WebSocket-ready configuration
-
-The backend template includes WebSocket configuration in `.env.example` and `vix.json`.
-
-Example:
-
-```dotenv
-WEBSOCKET_ENABLED=false
-WEBSOCKET_HOST=0.0.0.0
-WEBSOCKET_PORT=9090
-WEBSOCKET_MAX_MESSAGE_SIZE=65536
-WEBSOCKET_IDLE_TIMEOUT=60
-WEBSOCKET_ENABLE_DEFLATE=true
-WEBSOCKET_PING_INTERVAL=30
-WEBSOCKET_AUTO_PING_PONG=true
-```
-
-This does not mean every backend starts a WebSocket server automatically.
-
-It means the backend is prepared for realtime features.
-
-When you add WebSocket later, you already have:
-
-- the port convention
-- environment variables
-- production metadata
-- proxy metadata
-- a place for static status or test pages
-
-This is why `public/status.html` is useful.
-
-A backend can serve a small page that helps verify HTTP and later WebSocket behavior.
-
-## How to add a new route
-
-Example: add a users controller.
-
-Create:
-
-```txt
-include/api/presentation/controllers/UserController.hpp
-src/api/presentation/controllers/UserController.cpp
-```
-
-Register the controller in:
-
-```txt
-src/api/presentation/routes/RouteRegistry.cpp
-```
-
-Example:
-
-```cpp
-controllers::UserController::register_routes(app);
-```
-
-Add the new `.cpp` file to `vix.app`:
-
-```txt
 sources = [
   "src/main.cpp",
   "src/api/app/AppBootstrap.cpp",
@@ -1049,330 +219,218 @@ sources = [
   "src/api/presentation/middleware/MiddlewareRegistry.cpp",
   "src/api/presentation/controllers/HomeController.cpp",
   "src/api/presentation/controllers/HealthController.cpp",
-  "src/api/presentation/controllers/UserController.cpp",
+]
+
+include_dirs = [
+  "include",
+  "src",
+]
+
+defines = [
+  "VIX_BACKEND_APP=1",
+  "VIX_APP_NAME=api",
+]
+
+packages = [
+  "vix",
+]
+
+links = [
+  "vix::vix",
 ]
 ```
 
-Then run:
+Selected features can add definitions, compile options, link options, and linked targets. For example, ORM support can add:
+
+```ini
+defines = [
+  "VIX_USE_ORM=1",
+]
+
+links = [
+  "vix::vix",
+  "vix::orm",
+]
+```
+
+The manifest remains the source of truth for the backend target. Vix converts it into an internal CMake project under `.vix/generated/app/`.
+
+## Project metadata
+
+The backend template also generates `vix.json`.
+
+```txt
+vix.json
+```
+
+This file describes project metadata, tasks, and production-oriented configuration used by Vix commands. It can include tasks such as:
+
+```json
+{
+  "tasks": {
+    "dev": "vix dev",
+    "build": "vix build",
+    "check": "vix check --tests --run",
+    "test": "vix tests",
+    "env": "vix env check",
+    "health": "vix health",
+    "logs": "vix logs",
+    "service": "vix service status",
+    "proxy": "vix proxy nginx check",
+    "doctor": "vix doctor production",
+    "deploy": "vix deploy"
+  }
+}
+```
+
+The split is important. `vix.app` describes the C++ target. `vix.json` describes the wider project workflow around that target.
+
+## Environment file
+
+The generated backend includes `.env.example`.
+
+```txt
+.env.example
+```
+
+Copy it before running the backend locally.
 
 ```bash
-vix build
-vix run
+cp .env.example .env
 ```
 
-## How to add business logic
+The file documents runtime values such as server host, port, logging settings, public file settings, storage path, database settings, ORM values, WebSocket settings, and production diagnostics.
 
-Do not put business logic directly in the controller forever.
-
-Start simple, then move logic into `application/`.
-
-Example:
-
-```txt
-src/api/application/CreateUserUseCase.hpp
-src/api/application/CreateUserUseCase.cpp
+```dotenv
+APP_NAME=api
+APP_ENV=development
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8080
+PUBLIC_PATH=public
+VIEWS_PATH=views
+DATABASE_ENGINE=sqlite
+DATABASE_SQLITE_PATH=storage/api.db
 ```
 
-The controller should become:
+Local values and secrets belong in `.env`. The generated `.env.example` documents what the project expects without committing real local secrets.
 
-```txt
-HTTP request
-  -> UserController
-      -> CreateUserUseCase
-          -> result
-  -> JSON response
+## Application modules
+
+The backend template is ready for `vix modules`. The generated bootstrap includes the generated module registration bridge.
+
+```cpp
+vix::app_generated::register_app_modules(app);
 ```
 
-This keeps controllers thin.
-
-## How to add domain logic
-
-Put business rules in `domain/`.
-
-Example:
-
-```txt
-src/api/domain/User.hpp
-src/api/domain/UserPolicy.hpp
-```
-
-Use this layer for logic like:
-
-```txt
-validate user role
-check if order can be cancelled
-check if invoice can be paid
-validate message policy
-```
-
-Domain logic should not know about HTTP.
-
-## How to add database code
-
-Put database code in `infrastructure/`.
-
-Example:
-
-```txt
-src/api/infrastructure/database/SqliteConnection.hpp
-src/api/infrastructure/repositories/UserRepository.hpp
-src/api/infrastructure/repositories/SqliteUserRepository.cpp
-```
-
-Use `migrations/` for database schema changes.
-
-Example:
-
-```txt
-migrations/001_create_users.sql
-```
-
-## How to add static files
-
-Put static files in:
-
-```txt
-public/
-```
-
-Examples:
-
-```txt
-public/status.html
-public/admin.html
-public/app.css
-public/app.js
-public/ws-test.html
-```
-
-Then open:
-
-```txt
-http://127.0.0.1:8080/status.html
-```
-
-Use this for simple backend pages, not for large frontend applications.
-
-For large frontend applications, use the Vue template:
+That means backend features can later be added as application modules.
 
 ```bash
-vix new dashboard --template vue
+vix modules init
+vix modules add auth
+vix modules add projects
+vix modules check
 ```
 
-## How to add templates
+Modules are then declared in `vix.app`.
 
-Put HTML templates in:
+```ini
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+This keeps feature-specific routes and logic inside modules while the backend shell remains stable. `AppBootstrap` still owns startup; modules own their feature routes and implementation.
+
+## Tests
+
+The backend template includes a generated test target.
 
 ```txt
-views/
+tests/
+  test_basic.cpp
 ```
 
-Use templates when your backend should render HTML.
+The generated test is small. It confirms that the test runner is wired and that the generated project can compile test targets.
 
-For a project mainly focused on server-rendered pages, prefer:
-
-```bash
-vix new site --template web
-```
-
-## Build and run
-
-Start development mode:
-
-```bash
-vix dev
-```
-
-Build:
-
-```bash
-vix build
-```
-
-Run:
-
-```bash
-vix run
-```
-
-Run tests:
+Run tests with:
 
 ```bash
 vix tests
 ```
 
-Check the project:
+For a stronger local validation, run:
 
 ```bash
 vix check --tests --run
 ```
 
-## Production direction
-
-The backend template is production-oriented, but it is still a starter.
-
-Before production, you will usually add:
-
-- real logging policy
-- real error handling
-- CORS policy
-- rate limiting
-- authentication
-- database migrations
-- service user
-- Nginx proxy
-- TLS termination
-- health checks
-- deployment scripts
-- monitoring
-- backups
-
-The template gives you the structure where these pieces belong.
-
-## When not to use this template
-
-Do not use the backend template when you only want a tiny experiment.
-
-Use the application template instead:
+For module-based backends, run module checks before the full project check.
 
 ```bash
-vix new hello --app
+vix modules check
+vix check --tests --run
 ```
 
-Do not use the backend template when you mainly want server-rendered HTML pages.
+## Difference from the application template
 
-Use the web template instead:
+The application template is smaller. It creates a minimal Vix app, a module registry, a manifest, and a basic test.
 
-```bash
-vix new site --template web
-```
+The backend template is more structured. It creates a startup owner, route registry, middleware registry, controllers, support helpers, runtime directories, production metadata, environment configuration, and module integration.
 
-Do not use the backend template when you want a Vue frontend and a Vix backend together.
+Choose the application template when the project should start small. Choose the backend template when the project is already meant to be a backend service with a long-term structure.
 
-Use the Vue template instead:
+## Difference from the web template
 
-```bash
-vix new dashboard --template vue
-```
+The backend and web templates both generate a structured Vix executable, but their intent is different.
 
-## Common mistakes
+The backend template is API-oriented. It starts with JSON routes such as `/api`, `/health`, and `/api/health`, and it prepares the project for backend services, production checks, and feature modules.
 
-### Putting everything in `main.cpp`
+The web template is page-oriented. It renders HTML from `views/`, serves assets from `public/`, and starts with browser-facing routes such as `/` and `/dashboard`.
 
-Avoid growing `main.cpp`.
+Use `backend` when the project is mainly an API or service. Use `web` when the project should render server-side HTML pages.
 
-Keep it small.
+## Recommended workflow
 
-Use:
-
-```txt
-AppBootstrap
-RouteRegistry
-MiddlewareRegistry
-controllers
-```
-
-### Putting business logic in controllers forever
-
-A controller can start simple.
-
-But when logic grows, move it to:
-
-```txt
-application/
-domain/
-```
-
-### Putting database code in controllers
-
-Database code belongs in:
-
-```txt
-infrastructure/
-```
-
-Controllers should not directly become database scripts.
-
-### Forgetting to update `vix.app`
-
-When you add new `.cpp` files, add them to:
-
-```txt
-sources = [
-]
-```
-
-in `vix.app`.
-
-### Confusing static files with frontend apps
-
-`public/` is useful for status pages, simple assets, diagnostics, and small HTML pages.
-
-For a full frontend app, use the Vue template.
-
-### Hardcoding runtime values
-
-Avoid hardcoding ports, paths, or secrets.
-
-Use `.env`.
-
-## What you should remember
-
-The backend template uses a layered backend architecture inspired by Clean Architecture.
-
-The main flow is:
-
-```txt
-main.cpp
-  -> AppBootstrap
-      -> MiddlewareRegistry
-      -> RouteRegistry
-          -> Controllers
-              -> Application
-                  -> Domain
-                  -> Infrastructure
-```
-
-Use each folder for its role:
-
-| Folder            | Role                                    |
-| ----------------- | --------------------------------------- |
-| `app/`            | Startup and wiring.                     |
-| `presentation/`   | HTTP layer.                             |
-| `application/`    | Use cases and workflows.                |
-| `domain/`         | Business rules.                         |
-| `infrastructure/` | Database and external systems.          |
-| `support/`        | Shared backend helpers.                 |
-| `public/`         | Static backend assets and status pages. |
-| `views/`          | Server-rendered templates.              |
-| `storage/`        | Runtime local storage.                  |
-| `migrations/`     | Database migrations.                    |
-| `tests/`          | Tests.                                  |
-
-Create a backend:
+A normal first backend session looks like this:
 
 ```bash
 vix new api --template backend
 cd api
+
 cp .env.example .env
-vix dev
+vix build
+vix run
+curl http://localhost:8080/health
 ```
 
-Check it:
+When the backend starts using modules:
 
 ```bash
-curl http://127.0.0.1:8080/api
-curl http://127.0.0.1:8080/health
-curl http://127.0.0.1:8080/api/health
+vix modules init
+vix modules add auth
+vix modules check
+vix build
 ```
 
-## Next steps
+Before committing larger backend changes:
 
-Continue with:
+```bash
+vix modules check
+vix check --tests --run
+```
 
-- [Web template](/templates/web)
-- [Vue template](/templates/vue)
-- [Build a REST API](/guides/build-rest-api)
-- [Middleware](/book/07-middleware)
-- [Database](/book/10-database)
-- [Realtime WebSocket](/book/11-realtime-websocket)
+## Next step
+
+Continue with the generated layout to see each file created by the backend template and how the backend shell is organized.
+
+[Generated Layout](/templates/backend/layout)
