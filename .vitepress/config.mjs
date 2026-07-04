@@ -1226,6 +1226,56 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "IO",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/io/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/io/quick-start",
+            },
+            {
+              text: "Input and Output",
+              link: "/modules/io/input-and-output",
+            },
+            {
+              text: "Read and Write",
+              link: "/modules/io/read-and-write",
+            },
+            {
+              text: "Lines",
+              link: "/modules/io/lines",
+            },
+            {
+              text: "Buffers",
+              link: "/modules/io/buffers",
+            },
+            {
+              text: "Copy",
+              link: "/modules/io/copy",
+            },
+            {
+              text: "Standard Streams",
+              link: "/modules/io/standard-streams",
+            },
+            {
+              text: "Options",
+              link: "/modules/io/options",
+            },
+            {
+              text: "Errors",
+              link: "/modules/io/errors",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/io/api-reference",
+            },
+          ],
+        },
+        {
           text: "Core",
           collapsed: true,
           items: [
