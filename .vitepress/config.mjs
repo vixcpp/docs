@@ -1184,6 +1184,48 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "OS",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/os/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/os/quick-start",
+            },
+            {
+              text: "Platform and Architecture",
+              link: "/modules/os/platform-and-architecture",
+            },
+            {
+              text: "User and Process",
+              link: "/modules/os/user-and-process",
+            },
+            {
+              text: "Directories",
+              link: "/modules/os/directories",
+            },
+            {
+              text: "System Resources",
+              link: "/modules/os/system-resources",
+            },
+            {
+              text: "Sleep",
+              link: "/modules/os/sleep",
+            },
+            {
+              text: "Errors",
+              link: "/modules/os/errors",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/os/api-reference",
+            },
+          ],
+        },
+        {
           text: "Core",
           collapsed: true,
           items: [
