@@ -1088,6 +1088,56 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "FS",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/fs/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/fs/quick-start",
+            },
+            {
+              text: "Paths and Results",
+              link: "/modules/fs/paths-and-results",
+            },
+            {
+              text: "Read and Write",
+              link: "/modules/fs/read-and-write",
+            },
+            {
+              text: "Directories",
+              link: "/modules/fs/directories",
+            },
+            {
+              text: "Listing",
+              link: "/modules/fs/listing",
+            },
+            {
+              text: "Copy, Move, and Remove",
+              link: "/modules/fs/copy-move-remove",
+            },
+            {
+              text: "Metadata",
+              link: "/modules/fs/metadata",
+            },
+            {
+              text: "Options",
+              link: "/modules/fs/options",
+            },
+            {
+              text: "Errors",
+              link: "/modules/fs/errors",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/fs/api-reference",
+            },
+          ],
+        },
+        {
           text: "Core",
           collapsed: true,
           items: [
