@@ -1276,6 +1276,56 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Env",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/env/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/env/quick-start",
+            },
+            {
+              text: "Process Environment",
+              link: "/modules/env/process-environment",
+            },
+            {
+              text: "Typed Values",
+              link: "/modules/env/typed-values",
+            },
+            {
+              text: ".env Files",
+              link: "/modules/env/env-files",
+            },
+            {
+              text: "Parsing",
+              link: "/modules/env/parsing",
+            },
+            {
+              text: "Layered Loading",
+              link: "/modules/env/layered-loading",
+            },
+            {
+              text: "Load Into Process",
+              link: "/modules/env/load-into-process",
+            },
+            {
+              text: "Options",
+              link: "/modules/env/options",
+            },
+            {
+              text: "Errors",
+              link: "/modules/env/errors",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/env/api-reference",
+            },
+          ],
+        },
+        {
           text: "Core",
           collapsed: true,
           items: [

@@ -743,13 +743,11 @@ This helper is mostly useful inside module implementations and tests. Applicatio
 
 Use the topic pages when you need more explanation around a specific group of APIs:
 
-```text id="wsgl4o"
-modules/io/input-and-output.md
-modules/io/read-and-write.md
-modules/io/lines.md
-modules/io/buffers.md
-modules/io/copy.md
-modules/io/standard-streams.md
-modules/io/options.md
-modules/io/errors.md
-```
+- [Input and Output](/modules/io/input-and-output)
+- [Read and Write](/modules/io/read-and-write)
+- [Lines](/modules/io/lines)
+- [Buffers](/modules/io/buffers)
+- [Copy](/modules/io/copy)
+- [Standard Streams](/modules/io/standard-streams)
+- [Options](/modules/io/options)
+- [Errors](/modules/io/errors)

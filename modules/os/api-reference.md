@@ -529,11 +529,9 @@ This helper is mostly useful inside OS module implementations and tests. Applica
 
 Use the topic pages when you need more explanation around a specific group of APIs:
 
-```text id="06zjhw"
-modules/os/platform-and-architecture.md
-modules/os/user-and-process.md
-modules/os/directories.md
-modules/os/system-resources.md
-modules/os/sleep.md
-modules/os/errors.md
-```
+- [Platform and Architecture](/modules/os/platform-and-architecture)
+- [User and Process](/modules/os/user-and-process)
+- [Directories](/modules/os/directories)
+- [System Resources](/modules/os/system-resources)
+- [Sleep](/modules/os/sleep)
+- [Errors](/modules/os/errors)
