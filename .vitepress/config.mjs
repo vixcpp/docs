@@ -52,35 +52,13 @@ const getStartedSidebar = {
 };
 
 /* ========================================================================
- * 2. GUIDES  —  practical "how do I build something?" workflows
+ * 2. GUIDES  —  practical learning pages
  * ===================================================================== */
 
 const guidesSidebar = {
   text: "Guides",
   collapsed: false,
   items: [
-    {
-      text: "Understand Vix.cpp",
-      collapsed: true,
-      items: [
-        {
-          text: "What is Vix.cpp?",
-          link: "/getting-started/what-is-vixcpp",
-        },
-        {
-          text: "Vix.cpp vs CMake",
-          link: "/guides/vix-vs-cmake",
-        },
-        {
-          text: "C++ Runtime",
-          link: "/guides/cpp-runtime",
-        },
-        {
-          text: "C++ Developer Toolkit",
-          link: "/guides/cpp-developer-toolkit",
-        },
-      ],
-    },
     {
       text: "Application Workflows",
       collapsed: true,
@@ -264,24 +242,6 @@ const guidesSidebar = {
       ],
     },
     {
-      text: "Runtime Workflows",
-      collapsed: true,
-      items: [
-        {
-          text: "Replay a Run",
-          link: "/guides/replay",
-        },
-        {
-          text: "Runtime Arguments",
-          link: "/guides/runtime-arguments",
-        },
-        {
-          text: "Diagnostics",
-          link: "/guides/diagnostics",
-        },
-      ],
-    },
-    {
       text: "Production Files",
       collapsed: true,
       items: [
@@ -296,14 +256,6 @@ const guidesSidebar = {
         {
           text: "Proxy",
           link: "/guides/production-files/proxy",
-        },
-        {
-          text: "Health Checks",
-          link: "/guides/production-files/health",
-        },
-        {
-          text: "Logs",
-          link: "/guides/production-files/logs",
         },
         {
           text: "Deploy",
@@ -337,463 +289,11 @@ const guidesSidebar = {
         },
       ],
     },
-    {
-      text: "Project Templates",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/templates/",
-        },
-        {
-          text: "Application",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/templates/application",
-            },
-            {
-              text: "Generated Layout",
-              link: "/templates/application/layout",
-            },
-            {
-              text: "Module Registry",
-              link: "/templates/application/module-registry",
-            },
-            {
-              text: "Manifest",
-              link: "/templates/application/manifest",
-            },
-          ],
-        },
-        {
-          text: "Backend",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/templates/backend",
-            },
-            {
-              text: "Generated Layout",
-              link: "/templates/backend/layout",
-            },
-            {
-              text: "App Bootstrap",
-              link: "/templates/backend/app-bootstrap",
-            },
-            {
-              text: "Routes and Middleware",
-              link: "/templates/backend/routes-and-middleware",
-            },
-            {
-              text: "Modules Integration",
-              link: "/templates/backend/modules-integration",
-            },
-            {
-              text: "Production Files",
-              link: "/templates/backend/production-files",
-            },
-          ],
-        },
-        {
-          text: "Web",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/templates/web",
-            },
-            {
-              text: "Generated Layout",
-              link: "/templates/web/layout",
-            },
-            {
-              text: "Rendering Flow",
-              link: "/templates/web/rendering-flow",
-            },
-            {
-              text: "Routes and Views",
-              link: "/templates/web/routes-and-views",
-            },
-            {
-              text: "Production Files",
-              link: "/templates/web/production-files",
-            },
-          ],
-        },
-        {
-          text: "Vue.js",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/templates/vue",
-            },
-            {
-              text: "Generated Layout",
-              link: "/templates/vue/layout",
-            },
-            {
-              text: "Frontend Workflow",
-              link: "/templates/vue/frontend-workflow",
-            },
-            {
-              text: "Backend Integration",
-              link: "/templates/vue/backend-integration",
-            },
-          ],
-        },
-        {
-          text: "Game",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/templates/game",
-            },
-            {
-              text: "Generated Layout",
-              link: "/templates/game/layout",
-            },
-            {
-              text: "Assets and Package",
-              link: "/templates/game/assets-and-package",
-            },
-            {
-              text: "Manifest",
-              link: "/templates/game/manifest",
-            },
-          ],
-        },
-        {
-          text: "Library",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/templates/library",
-            },
-            {
-              text: "Generated Layout",
-              link: "/templates/library/layout",
-            },
-            {
-              text: "Examples and Tests",
-              link: "/templates/library/examples-and-tests",
-            },
-            {
-              text: "CMake Package",
-              link: "/templates/library/cmake-package",
-            },
-            {
-              text: "Registry Metadata",
-              link: "/templates/library/registry-metadata",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      text: "vix.app",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/guides/vix-app/",
-        },
-        {
-          text: "Getting Started",
-          link: "/guides/vix-app/getting-started",
-        },
-        {
-          text: "Project Types",
-          link: "/guides/vix-app/project-types",
-        },
-        {
-          text: "Manifest Reference",
-          link: "/guides/vix-app/manifest-reference",
-        },
-        {
-          text: "Sources and Includes",
-          link: "/guides/vix-app/sources-and-includes",
-        },
-        {
-          text: "Packages and Links",
-          link: "/guides/vix-app/packages-and-links",
-        },
-        {
-          text: "Resources",
-          link: "/guides/vix-app/resources",
-        },
-        {
-          text: "Output Directory",
-          link: "/guides/vix-app/output-directory",
-        },
-        {
-          text: "Compile Options",
-          link: "/guides/vix-app/compile-options",
-        },
-        {
-          text: "Libraries",
-          link: "/guides/vix-app/libraries",
-        },
-        {
-          text: "App Modules",
-          link: "/guides/vix-app/app-modules",
-        },
-        {
-          text: "Tests",
-          link: "/guides/vix-app/tests",
-        },
-        {
-          text: "Examples",
-          link: "/guides/vix-app/examples",
-        },
-        {
-          text: "Migrating from CMake",
-          link: "/guides/vix-app/migration-from-cmake",
-        },
-        {
-          text: "CMake Fallback",
-          link: "/guides/vix-app/cmake-fallback",
-        },
-        {
-          text: "Troubleshooting",
-          link: "/guides/vix-app/troubleshooting",
-        },
-        {
-          text: "Best Practices",
-          link: "/guides/vix-app/best-practices",
-        },
-      ],
-    },
-    {
-      text: "Application Modules",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/app-modules/",
-        },
-        {
-          text: "Why Modules Exist",
-          link: "/app-modules/why-modules",
-        },
-        {
-          text: "CLI Workflow",
-          link: "/app-modules/cli-workflow",
-        },
-        {
-          text: "Module Layout",
-          link: "/app-modules/module-layout",
-        },
-        {
-          text: "Backend Modules",
-          link: "/app-modules/backend-modules",
-        },
-        {
-          text: "Using with vix.app",
-          link: "/app-modules/with-vix-app",
-        },
-        {
-          text: "Using with CMake",
-          link: "/app-modules/with-cmake",
-        },
-        {
-          text: "Dependencies and Checks",
-          link: "/app-modules/dependencies-and-checks",
-        },
-        {
-          text: "Generated Registration",
-          link: "/app-modules/generated-registration",
-        },
-        {
-          text: "Troubleshooting",
-          link: "/app-modules/troubleshooting",
-        },
-      ],
-    },
-    {
-      text: "SDK Profiles",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/sdks/",
-        },
-        {
-          text: "Default SDK",
-          link: "/sdks/default",
-        },
-        {
-          text: "Web SDK",
-          link: "/sdks/web",
-        },
-        {
-          text: "Data SDK",
-          link: "/sdks/data",
-        },
-        {
-          text: "Desktop SDK",
-          link: "/sdks/desktop",
-        },
-        {
-          text: "P2P SDK",
-          link: "/sdks/p2p",
-        },
-        {
-          text: "Game SDK",
-          link: "/sdks/game",
-        },
-        {
-          text: "Agent SDK",
-          link: "/sdks/agent",
-        },
-        {
-          text: "Full SDK",
-          link: "/sdks/all",
-        },
-      ],
-    },
-    {
-      text: "Examples",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/examples/",
-        },
-        {
-          text: "Getting Started",
-          collapsed: true,
-          items: [
-            {
-              text: "Hello App",
-              link: "/examples/hello-app",
-            },
-            {
-              text: "JSON API",
-              link: "/examples/json-api",
-            },
-            {
-              text: "Production Bootstrap",
-              link: "/examples/production-bootstrap",
-            },
-          ],
-        },
-        {
-          text: "Middleware",
-          collapsed: true,
-          items: [
-            {
-              text: "Middleware API",
-              link: "/examples/middleware-api",
-            },
-            {
-              text: "HTTP Cache",
-              link: "/examples/http-cache",
-            },
-          ],
-        },
-        {
-          text: "Request Parsing",
-          collapsed: true,
-          items: [
-            {
-              text: "Multipart Upload",
-              link: "/examples/multipart-upload",
-            },
-            {
-              text: "Form Parser",
-              link: "/examples/form-parser",
-            },
-          ],
-        },
-        {
-          text: "Sessions and Cookies",
-          collapsed: true,
-          items: [
-            {
-              text: "Cookies",
-              link: "/examples/cookies",
-            },
-            {
-              text: "Session Counter",
-              link: "/examples/session-counter",
-            },
-          ],
-        },
-        {
-          text: "Authentication",
-          collapsed: true,
-          items: [
-            {
-              text: "API Key Auth",
-              link: "/examples/auth-api-key",
-            },
-            {
-              text: "JWT Auth",
-              link: "/examples/auth-jwt",
-            },
-            {
-              text: "RBAC",
-              link: "/examples/auth-rbac",
-            },
-          ],
-        },
-        {
-          text: "Static Files",
-          collapsed: true,
-          items: [
-            {
-              text: "Static Site",
-              link: "/examples/static-site",
-            },
-          ],
-        },
-        {
-          text: "Realtime",
-          collapsed: true,
-          items: [
-            {
-              text: "WebSocket Chat",
-              link: "/examples/websocket-chat",
-            },
-          ],
-        },
-        {
-          text: "Database",
-          collapsed: true,
-          items: [
-            {
-              text: "SQLite API",
-              link: "/examples/sqlite-api",
-            },
-          ],
-        },
-        {
-          text: "Async",
-          collapsed: true,
-          items: [
-            {
-              text: "Background Task",
-              link: "/examples/background-task",
-            },
-            {
-              text: "Async App",
-              link: "/examples/async-app",
-            },
-          ],
-        },
-      ],
-    },
   ],
 };
 
 /* ========================================================================
- * 3. CONCEPTS  —  the ideas behind Vix
+ * 3. CONCEPTS  —  conceptual material
  * ===================================================================== */
 
 const conceptsSidebar = {
@@ -844,7 +344,7 @@ const conceptsSidebar = {
     },
     {
       text: "Foundations",
-      collapsed: true,
+      collapsed: false,
       items: [
         {
           text: "Vix.cpp vs CMake",
@@ -857,6 +357,10 @@ const conceptsSidebar = {
         {
           text: "C++ Developer Toolkit",
           link: "/guides/cpp-developer-toolkit",
+        },
+        {
+          text: "Why Modules Exist",
+          link: "/app-modules/why-modules",
         },
       ],
     },
@@ -902,33 +406,11 @@ const conceptsSidebar = {
         },
       ],
     },
-    {
-      text: "Application Modules",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/app-modules/",
-        },
-        {
-          text: "Why Modules Exist",
-          link: "/app-modules/why-modules",
-        },
-        {
-          text: "Module Layout",
-          link: "/app-modules/module-layout",
-        },
-        {
-          text: "Generated Registration",
-          link: "/app-modules/generated-registration",
-        },
-      ],
-    },
   ],
 };
 
 /* ========================================================================
- * 4. DIAGNOSTICS  —  check, debug, replay, logs, health, troubleshoot
+ * 4. DIAGNOSTICS  —  diagnostic / troubleshooting pages only
  * ===================================================================== */
 
 const diagnosticsSidebar = {
@@ -936,20 +418,12 @@ const diagnosticsSidebar = {
   collapsed: false,
   items: [
     {
-      text: "Inspect and Fix",
+      text: "Inspect and Debug",
       collapsed: false,
       items: [
         {
-          text: "vix check",
-          link: "/cli/check",
-        },
-        {
-          text: "vix doctor",
-          link: "/cli/doctor",
-        },
-        {
-          text: "vix replay",
-          link: "/cli/replay",
+          text: "Replay a Run",
+          link: "/guides/replay",
         },
         {
           text: "Runtime Arguments",
@@ -971,7 +445,7 @@ const diagnosticsSidebar = {
     },
     {
       text: "Troubleshooting",
-      collapsed: true,
+      collapsed: false,
       items: [
         {
           text: "vix.app Troubleshooting",
@@ -991,7 +465,7 @@ const diagnosticsSidebar = {
 };
 
 /* ========================================================================
- * 5. ADVANCED  —  deeper technical / internal material
+ * 5. ADVANCED  —  deeper technical material
  * ===================================================================== */
 
 const advancedSidebar = {
@@ -1018,7 +492,7 @@ const advancedSidebar = {
     },
     {
       text: "Advanced vix.app",
-      collapsed: true,
+      collapsed: false,
       items: [
         {
           text: "Migrating from CMake",
@@ -1036,7 +510,7 @@ const advancedSidebar = {
     },
     {
       text: "Internals",
-      collapsed: true,
+      collapsed: false,
       items: [
         {
           text: "Architecture",
@@ -1055,10 +529,6 @@ const advancedSidebar = {
           link: "/internals/cache-system",
         },
         {
-          text: "Error Diagnostics",
-          link: "/internals/error-diagnostics",
-        },
-        {
           text: "Performance",
           link: "/internals/performance",
         },
@@ -1072,8 +542,7 @@ const advancedSidebar = {
 };
 
 /* ========================================================================
- * 6. REFERENCE  —  exact lookup (CLI, vix.app, templates, app modules,
- *    modules, API)
+ * 6. REFERENCE  —  exact lookup material
  * ===================================================================== */
 
 const referenceSidebar = {
@@ -1327,7 +796,7 @@ const referenceSidebar = {
       ],
     },
     {
-      text: "vix.app Reference",
+      text: "vix.app",
       collapsed: true,
       items: [
         {
@@ -1381,22 +850,6 @@ const referenceSidebar = {
         {
           text: "Examples",
           link: "/guides/vix-app/examples",
-        },
-        {
-          text: "Migrating from CMake",
-          link: "/guides/vix-app/migration-from-cmake",
-        },
-        {
-          text: "CMake Fallback",
-          link: "/guides/vix-app/cmake-fallback",
-        },
-        {
-          text: "Troubleshooting",
-          link: "/guides/vix-app/troubleshooting",
-        },
-        {
-          text: "Best Practices",
-          link: "/guides/vix-app/best-practices",
         },
       ],
     },
@@ -1567,10 +1020,6 @@ const referenceSidebar = {
           link: "/app-modules/",
         },
         {
-          text: "Why Modules Exist",
-          link: "/app-modules/why-modules",
-        },
-        {
           text: "CLI Workflow",
           link: "/app-modules/cli-workflow",
         },
@@ -1597,10 +1046,6 @@ const referenceSidebar = {
         {
           text: "Generated Registration",
           link: "/app-modules/generated-registration",
-        },
-        {
-          text: "Troubleshooting",
-          link: "/app-modules/troubleshooting",
         },
       ],
     },
@@ -2295,6 +1740,138 @@ const referenceSidebar = {
       ],
     },
     {
+      text: "Examples",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/examples/",
+        },
+        {
+          text: "Getting Started",
+          collapsed: true,
+          items: [
+            {
+              text: "Hello App",
+              link: "/examples/hello-app",
+            },
+            {
+              text: "JSON API",
+              link: "/examples/json-api",
+            },
+            {
+              text: "Production Bootstrap",
+              link: "/examples/production-bootstrap",
+            },
+          ],
+        },
+        {
+          text: "Middleware",
+          collapsed: true,
+          items: [
+            {
+              text: "Middleware API",
+              link: "/examples/middleware-api",
+            },
+            {
+              text: "HTTP Cache",
+              link: "/examples/http-cache",
+            },
+          ],
+        },
+        {
+          text: "Request Parsing",
+          collapsed: true,
+          items: [
+            {
+              text: "Multipart Upload",
+              link: "/examples/multipart-upload",
+            },
+            {
+              text: "Form Parser",
+              link: "/examples/form-parser",
+            },
+          ],
+        },
+        {
+          text: "Sessions and Cookies",
+          collapsed: true,
+          items: [
+            {
+              text: "Cookies",
+              link: "/examples/cookies",
+            },
+            {
+              text: "Session Counter",
+              link: "/examples/session-counter",
+            },
+          ],
+        },
+        {
+          text: "Authentication",
+          collapsed: true,
+          items: [
+            {
+              text: "API Key Auth",
+              link: "/examples/auth-api-key",
+            },
+            {
+              text: "JWT Auth",
+              link: "/examples/auth-jwt",
+            },
+            {
+              text: "RBAC",
+              link: "/examples/auth-rbac",
+            },
+          ],
+        },
+        {
+          text: "Static Files",
+          collapsed: true,
+          items: [
+            {
+              text: "Static Site",
+              link: "/examples/static-site",
+            },
+          ],
+        },
+        {
+          text: "Realtime",
+          collapsed: true,
+          items: [
+            {
+              text: "WebSocket Chat",
+              link: "/examples/websocket-chat",
+            },
+          ],
+        },
+        {
+          text: "Database",
+          collapsed: true,
+          items: [
+            {
+              text: "SQLite API",
+              link: "/examples/sqlite-api",
+            },
+          ],
+        },
+        {
+          text: "Async",
+          collapsed: true,
+          items: [
+            {
+              text: "Background Task",
+              link: "/examples/background-task",
+            },
+            {
+              text: "Async App",
+              link: "/examples/async-app",
+            },
+          ],
+        },
+      ],
+    },
+    {
       text: "API Reference",
       collapsed: true,
       items: [
@@ -2433,8 +2010,8 @@ const sidebar = [
   guidesSidebar,
   conceptsSidebar,
   diagnosticsSidebar,
-  advancedSidebar,
   referenceSidebar,
+  advancedSidebar,
   contributingSidebar,
 ];
 
