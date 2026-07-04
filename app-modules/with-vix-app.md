@@ -222,6 +222,35 @@ vix modules check
 
 The command reports undeclared dependencies, enabled modules depending on disabled modules, and circular dependency chains.
 
+## Registry dependencies owned by modules
+
+A module can also own registry dependencies in its `vix.module` file. This is useful when the package is part of one feature implementation and should not be presented as a dependency of the whole application shell.
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+The command updates `modules/auth/vix.module`.
+
+```ini
+[deps]
+registry = [
+  "gk/jwt@^1.0.0",
+]
+
+links = [
+  "gk::jwt",
+]
+```
+
+The root `vix.app` still decides whether `auth` is enabled. When it is enabled, Vix merges the module registry dependencies into the application dependency resolution, refreshes the root `vix.lock`, and injects the module link targets into the generated CMake build. When the module is disabled, its dependency metadata remains in the module folder but does not participate in the active generated build.
+
+Use `--link` when the package exports a CMake target that does not match the default `namespace::name` form.
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth --link gk::jwt
+```
+
 ## Generated build wiring
 
 When Vix builds a `vix.app` project, it generates the internal CMake project under:

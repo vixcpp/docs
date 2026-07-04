@@ -220,6 +220,8 @@ It also checks module boundaries. Public headers should not include private impl
 
 For backend modules, it also checks route prefix conflicts declared in `vix.module`.
 
+It also checks the new module dependency metadata: a module that declares registry packages should declare the link targets it needs, and a module that declares dependency links should also declare the registry packages that provide them.
+
 ```bash
 vix modules check
 vix build
@@ -262,6 +264,14 @@ target_link_libraries(api_projects
 ```
 
 The manifest describes the application architecture. CMake describes the build relationship. Both should agree.
+
+Registry packages that belong to one module are declared in the module manifest rather than in `vix.app`. Use `vix add --module` for that workflow.
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+This updates `modules/auth/vix.module` with both the registry package and the CMake link target. The root `vix.lock` is still refreshed from the effective application dependency graph, including enabled module dependencies.
 
 ## Working with CMake
 

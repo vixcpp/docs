@@ -2,7 +2,7 @@
 
 `vix add` adds a Vix Registry package to the current project.
 
-Use it when your project needs a package from the Vix Registry.
+Use it when the application itself needs a package, or when an application module needs a registry package that should stay declared with that module.
 
 ```bash
 vix add gk/jwt
@@ -10,16 +10,16 @@ vix add gk/jwt
 
 ## Overview
 
-`vix add` is the command for declaring a new project dependency.
+`vix add` is the command for declaring a new dependency requirement.
 
-It resolves the package from the local registry index, chooses the correct version, updates `vix.json`, resolves the full dependency graph, and rewrites `vix.lock`.
+For a normal project dependency, it resolves the package from the local registry index, chooses the correct version, updates `vix.json`, resolves the full dependency graph, and rewrites `vix.lock`. In a modular `vix.app` project, the same command can also attach a dependency to a specific module. In that case the dependency is written to the module's own `vix.module` file, while the root lockfile still records the resolved package graph used by the application build.
 
-It is the right command when you want to add or change one dependency requirement.
+This distinction matters because application modules are meant to keep feature ownership visible. A JWT package used only by `auth` should not have to look like a dependency of the whole application shell. The module can declare that it needs the registry package and the CMake target that should be linked, while Vix still resolves everything from the project root.
 
 ```txt
 vix add
   -> resolve package
-  -> update vix.json
+  -> update vix.json or modules/<name>/vix.module
   -> resolve project dependencies
   -> fetch pinned package commits
   -> rewrite vix.lock
@@ -29,6 +29,9 @@ vix add
 
 ```bash
 vix add [@]namespace/name[@version]
+vix add [@]namespace/name[@version] --module <name>
+vix add [@]namespace/name[@version] -m <name>
+vix add [@]namespace/name[@version] --module <name> --link <target>
 ```
 
 ## Basic examples
@@ -48,6 +51,12 @@ vix add @gk/jwt
 
 # Scoped-style syntax with a range
 vix add @gk/jwt@~1.2.0
+
+# Add the package to a module instead of the root dependency list
+vix add gk/jwt@^1.0.0 --module auth
+
+# Override the CMake target linked by that module
+vix add gk/jwt@^1.0.0 --module auth --link gk::jwt
 ```
 
 ## What it does
@@ -64,7 +73,7 @@ Vix does this:
 2. Parses the package spec.
 3. Finds the package in the local registry index.
 4. Resolves the requested version or range.
-5. Updates `vix.json`.
+5. Updates `vix.json`, or updates `modules/<name>/vix.module` when `--module` is used.
 6. Resolves all project dependencies.
 7. Fetches required package repositories at pinned commits.
 8. Computes package content hashes.
@@ -161,20 +170,65 @@ Supported forms include:
 
 The selected version is stored exactly in `vix.lock`.
 
-The requested version or range is stored in `vix.json`.
+For root-level dependencies, the requested version or range is stored in `vix.json`. For module dependencies, it is stored in the module's `vix.module` file.
 
 ## What files are updated
 
-`vix add` updates:
+Without `--module`, `vix add` updates:
 
 ```txt
 vix.json
 vix.lock
 ```
 
-It does not directly edit `vix.app`.
+With `--module`, it updates:
 
-After adding a dependency, you still need to link the package in `vix.app` or CMake when your code uses it.
+```txt
+modules/<name>/vix.module
+vix.lock
+```
+
+It does not directly edit `vix.app`. The module must already be declared there for the generated `vix.app` build to treat it as part of the active application graph.
+
+## Module dependencies
+
+Use `--module` when the package is owned by one application module.
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+The command writes the registry dependency and the link target into the module manifest.
+
+```ini
+[deps]
+registry = [
+  "gk/jwt@^1.0.0",
+]
+
+links = [
+  "gk::jwt",
+]
+```
+
+If `--link` is not provided, Vix derives the link target from the package id by using the namespace and package name as a CMake namespace target. For `gk/jwt`, the default target is `gk::jwt`. Use `--link` when the package exports a different CMake target name.
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth --link gk::jwt
+```
+
+When the module is enabled in `vix.app`, Vix includes the module registry dependencies in the project dependency resolution and injects the declared module links into the generated module target. The dependency still appears in the root `vix.lock`, because the lockfile belongs to the application build, not to an individual module.
+
+After adding a module dependency, build from the project root.
+
+```bash
+vix modules check
+vix build
+```
+
+The module check command also validates that a module does not declare registry dependencies without link targets, or link targets without registry dependencies. That rule keeps the module manifest understandable: the registry list says what package is installed, and the links list says what the module target uses at build time.
+
+For root-level dependencies, you still need to link the package in `vix.app` or CMake when your code uses it. For module-level dependencies, keep the link target in the module's `[deps]` section.
 
 ## `vix.json`
 
@@ -392,12 +446,7 @@ vix add gk/jwt
 
 This resolves the latest version from the local registry index.
 
-The resolved exact version is stored in both:
-
-```txt
-vix.json
-vix.lock
-```
+For a root-level dependency, the resolved exact version is stored in both `vix.json` and `vix.lock`. For a module dependency, the module manifest receives the dependency spec and the root lockfile receives the resolved exact version.
 
 For no-version input, the requested version becomes the resolved exact version.
 
@@ -420,7 +469,7 @@ Example result:
 vix add gk/jwt@^1.0.0
 ```
 
-This stores the declared range in `vix.json`:
+For a root-level dependency, this stores the declared range in `vix.json`:
 
 ```json
 {
@@ -449,7 +498,7 @@ And stores the exact resolved version in `vix.lock`:
 vix add gk/jwt@1.0.0
 ```
 
-This stores:
+For a root-level dependency, this stores:
 
 ```json
 {
@@ -510,9 +559,9 @@ If the dependency exposes headers or targets, you must still use it from your pr
 
 ## Using the dependency in `vix.app`
 
-`vix add` updates `vix.json` and `vix.lock`.
+For root-level dependencies, `vix add` updates `vix.json` and `vix.lock`.
 
-For `vix.app` projects, also add the package target alias to `links`.
+For `vix.app` projects, also add the package target alias to `links` when the application target uses the package directly. If the package belongs to a module, use `vix add --module` instead and keep the link target in `modules/<name>/vix.module`.
 
 Example dependency:
 
@@ -674,24 +723,32 @@ because CI should install the exact versions from `vix.lock`.
 
 ## Options
 
-`vix add` currently takes one package spec.
+`vix add` takes one package spec. By default it writes a root dependency; with `--module`, it writes the dependency to a module manifest instead.
 
 ```bash
 vix add [@]namespace/name[@version]
+vix add [@]namespace/name[@version] --module <name>
+vix add [@]namespace/name[@version] -m <name>
+vix add [@]namespace/name[@version] --module <name> --link <target>
 ```
 
-| Option       | Description |
-| ------------ | ----------- |
-| `-h, --help` | Show help.  |
+| Option              | Description |
+| ------------------- | ----------- |
+| `-m, --module <name>` | Add the dependency to `modules/<name>/vix.module` instead of the root dependency list. |
+| `--module <name>`   | Long form of `-m`. |
+| `--link <target>`   | Set the CMake target linked by the module dependency. |
+| `-h, --help`        | Show help. |
 
 ## Commands reference
 
-| Command                 | Description                    |
-| ----------------------- | ------------------------------ |
-| `vix add gk/jwt`        | Add latest available version.  |
-| `vix add gk/jwt@1.0.0`  | Add exact version.             |
-| `vix add gk/jwt@^1.0.0` | Add compatible range.          |
-| `vix add @gk/jwt`       | Add using scoped-style syntax. |
+| Command                                      | Description |
+| -------------------------------------------- | ----------- |
+| `vix add gk/jwt`                             | Add latest available version to the root dependency list. |
+| `vix add gk/jwt@1.0.0`                       | Add exact version. |
+| `vix add gk/jwt@^1.0.0`                      | Add compatible range. |
+| `vix add @gk/jwt`                            | Add using scoped-style syntax. |
+| `vix add gk/jwt@^1.0.0 --module auth`        | Add the dependency to the `auth` module. |
+| `vix add gk/jwt@^1.0.0 --module auth --link gk::jwt` | Add the dependency to `auth` with an explicit CMake link target. |
 
 ## Common workflows
 
@@ -780,15 +837,15 @@ vix update
 
 ### Expecting `vix add` to only update `vix.json`
 
-`vix add` also rewrites `vix.lock`.
+`vix add` also rewrites `vix.lock`. With `--module`, it updates `modules/<name>/vix.module` instead of adding the dependency directly to `vix.json`.
 
-It resolves the whole project dependency graph after updating `vix.json`.
+It resolves the whole project dependency graph after updating the root manifest or the module manifest.
 
 ### Expecting `vix add` to automatically edit `vix.app`
 
-`vix add` updates package metadata.
+`vix add` updates package metadata. It does not add root `vix.app` link entries automatically.
 
-For `vix.app`, add the target alias to `links` when you need to link it.
+For root-level `vix.app` dependencies, add the target alias to `links` when you need to link it. For module-level dependencies, use `vix add --module` so the link target is written to the module manifest.
 
 Example:
 

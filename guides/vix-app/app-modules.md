@@ -437,9 +437,9 @@ billing
 
 Do not create a module for every small helper file. A small utility can stay in the main application or in a shared internal library. Modules are most useful when they represent real application features.
 
-## Modules versus registry dependencies
+## Modules and registry dependencies
 
-An app module is part of the same application.
+An app module is part of the same application. It gives a feature a clear place in the source tree and a declared position in the application graph.
 
 ```ini
 [module.auth]
@@ -449,15 +449,26 @@ kind = "backend"
 depends = []
 ```
 
-A registry dependency comes from outside the project and belongs in `deps`.
+Registry dependencies come from outside the project and are resolved by Vix. If a package is used by the application shell, keep it in the root dependency list. If a package belongs to one module, declare it in that module with `vix add --module`.
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+The command writes the dependency to `modules/auth/vix.module`.
 
 ```ini
-deps = [
-  "adastra/logger@1.0.0",
+[deps]
+registry = [
+  "gk/jwt@^1.0.0",
+]
+
+links = [
+  "gk::jwt",
 ]
 ```
 
-Use modules for internal application features. Use registry dependencies for external packages resolved by Vix.
+When `auth` is enabled in `vix.app`, Vix includes those registry dependencies in the application dependency resolution and links the declared targets into the generated module target. This keeps package ownership close to the feature that uses it while preserving one root `vix.lock` for the application build.
 
 ## Modules versus libraries
 

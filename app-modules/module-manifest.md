@@ -1,8 +1,8 @@
 # Module Manifest
 
-Each application module contains a `vix.module` file. This file describes the module itself: its name, its kind, its exported include directory, its route prefix when the module is routed, and whether module tests are enabled.
+Each application module contains a `vix.module` file. This file describes the module itself: its name, its kind, its exported include directory, its route prefix when the module is routed, module-owned registry dependencies, and whether module tests are enabled.
 
-The module manifest belongs to the module directory. It is different from the root `vix.app` file. The root manifest describes the application and decides which modules are active. The module manifest describes one module from inside its own folder.
+The module manifest belongs to the module directory. It is different from the root `vix.app` file. The root manifest describes the application and decides which modules are active. The module manifest describes one module from inside its own folder, including registry packages that are used by that module rather than by the application shell as a whole.
 
 ```txt
 modules/auth/
@@ -66,6 +66,13 @@ kind = "backend"
 
 [routes]
 prefix = "/api/auth"
+
+[deps]
+registry = [
+]
+
+links = [
+]
 
 [tests]
 enabled = true
@@ -203,6 +210,31 @@ vix modules check
 
 This helps catch duplicate route prefixes before the application is built or run.
 
+## `[deps]`
+
+The `[deps]` section records registry packages that belong to this module. Use it when a package is part of the module implementation rather than part of the application shell. For example, an `auth` module may use a JWT package while the rest of the backend only depends on the public `auth` API.
+
+```ini
+[deps]
+registry = [
+  "gk/jwt@^1.0.0",
+]
+
+links = [
+  "gk::jwt",
+]
+```
+
+The `registry` list contains Vix Registry package specs. The `links` list contains the CMake targets that should be linked to the generated module target. These lists are intentionally kept together: one tells Vix what package must be resolved, and the other tells the build what target the module uses.
+
+The easiest way to update this section is through `vix add --module`.
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+When the module is enabled in `vix.app`, Vix includes its registry dependencies in the application dependency resolution and writes the exact resolved graph to the root `vix.lock`. During the generated `vix.app` build, Vix also passes the declared link targets to the module CMake target. A disabled module can keep its dependency metadata on disk, but those dependencies are not part of the active application graph until the module is enabled.
+
 ## `[tests]`
 
 The `[tests]` section records whether the module has tests enabled.
@@ -224,7 +256,7 @@ The test section does not mean test files are part of the main application targe
 
 ## What does not belong in vix.module
 
-The module manifest should stay focused on module metadata. It should not become a second application manifest.
+The module manifest should stay focused on module metadata. It should not become a second application manifest, even though it may declare registry packages used by the module itself.
 
 Application-level activation belongs in `vix.app`.
 
@@ -236,7 +268,7 @@ kind = "backend"
 depends = []
 ```
 
-Internal module dependencies also belong in the application manifest and in the module CMake target relationship.
+Internal module-to-module dependencies still belong in the application manifest and in the module CMake target relationship.
 
 ```ini
 [module.projects]
@@ -255,7 +287,7 @@ target_link_libraries(api_projects
 )
 ```
 
-The `vix.module` file should describe the module itself. It should not duplicate the full application graph.
+The `vix.module` file should describe the module itself. It should not duplicate the full application graph. Registry dependencies are different: they can live in `vix.module` when they are part of the module implementation, because that keeps package ownership close to the code that uses it.
 
 ## Example: simple module
 
@@ -350,11 +382,18 @@ kind = "module"
 [exports]
 include = "include"
 
+[deps]
+registry = [
+]
+
+links = [
+]
+
 [tests]
 enabled = true
 ```
 
-For a routed backend module, the generated manifest contains the route prefix.
+For a routed backend module, the generated manifest contains the route prefix and the same empty dependency section.
 
 ```ini
 name = "auth"
@@ -362,6 +401,13 @@ kind = "backend"
 
 [routes]
 prefix = "/api/auth"
+
+[deps]
+registry = [
+]
+
+links = [
+]
 
 [tests]
 enabled = true
@@ -383,7 +429,7 @@ A third mistake is using `[exports]` to expose private implementation folders. P
 
 ## Recommended rule
 
-Keep `vix.module` small. It should tell the reader what the module is, what it exposes, which route prefix it owns when it is routed, and whether it has tests. The application graph belongs in `vix.app`; the module metadata belongs in `vix.module`.
+Keep `vix.module` small. It should tell the reader what the module is, what it exposes, which route prefix it owns when it is routed, which registry packages are part of the module implementation, and whether it has tests. The application graph belongs in `vix.app`; the module metadata belongs in `vix.module`.
 
 ## Next step
 
