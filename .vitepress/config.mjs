@@ -1138,6 +1138,52 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Path",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/path/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/path/quick-start",
+            },
+            {
+              text: "Lexical Paths",
+              link: "/modules/path/lexical-paths",
+            },
+            {
+              text: "Join and Normalize",
+              link: "/modules/path/join-and-normalize",
+            },
+            {
+              text: "Path Components",
+              link: "/modules/path/components",
+            },
+            {
+              text: "Absolute and Relative",
+              link: "/modules/path/absolute-and-relative",
+            },
+            {
+              text: "Separators and Styles",
+              link: "/modules/path/separators-and-styles",
+            },
+            {
+              text: "Options",
+              link: "/modules/path/options",
+            },
+            {
+              text: "Errors",
+              link: "/modules/path/errors",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/path/api-reference",
+            },
+          ],
+        },
+        {
           text: "Core",
           collapsed: true,
           items: [
