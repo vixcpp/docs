@@ -68,18 +68,20 @@ The profile information shows:
 
 ## Common SDK profiles
 
-| Profile   | Use it for                                                                       |
-| --------- | -------------------------------------------------------------------------------- |
-| `default` | Normal Vix.cpp projects and local development                                    |
-| `web`     | HTTP apps, APIs, WebSocket, middleware, validation, crypto, WebRPC, and requests |
-| `data`    | Database, ORM, key-value storage, key-value workflows, and cache modules         |
-| `desktop` | Desktop apps using the Vix UI desktop shell                                      |
-| `p2p`     | Peer-to-peer networking and local-first systems                                  |
-| `game`    | Game-oriented and realtime application workflows                                 |
-| `agent`   | Local agent tooling and controlled automation workflows                          |
-| `all`     | Full SDK profile for advanced development and release validation                 |
+| Profile                    | Use it for                                                                       |
+| -------------------------- | -------------------------------------------------------------------------------- |
+| [`default`](/sdks/default) | Normal Vix.cpp projects and local development                                    |
+| [`web`](/sdks/web)         | HTTP apps, APIs, WebSocket, middleware, validation, crypto, WebRPC, and requests |
+| [`data`](/sdks/data)       | Database, ORM, key-value storage, key-value workflows, and cache modules         |
+| [`desktop`](/sdks/desktop) | Desktop apps using the Vix UI desktop shell                                      |
+| [`p2p`](/sdks/p2p)         | Peer-to-peer networking and local-first systems                                  |
+| [`game`](/sdks/game)       | Game-oriented and realtime application workflows                                 |
+| [`agent`](/sdks/agent)     | Local agent tooling and controlled automation workflows                          |
+| [`all`](/sdks/all)         | Full SDK profile for advanced development and release validation                 |
 
 The `all` profile is a complete SDK profile. It is not required for most projects.
+
+To understand what each SDK profile contains before installing it, read the [SDK profiles overview](/sdks/).
 
 For a normal web backend or API, use:
 
