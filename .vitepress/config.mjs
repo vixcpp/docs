@@ -1326,6 +1326,52 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Time",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/time/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/time/quick-start",
+            },
+            {
+              text: "Durations",
+              link: "/modules/time/durations",
+            },
+            {
+              text: "Timestamps",
+              link: "/modules/time/timestamps",
+            },
+            {
+              text: "Clocks",
+              link: "/modules/time/clocks",
+            },
+            {
+              text: "Dates",
+              link: "/modules/time/dates",
+            },
+            {
+              text: "DateTime",
+              link: "/modules/time/datetimes",
+            },
+            {
+              text: "Parsing",
+              link: "/modules/time/parsing",
+            },
+            {
+              text: "Chrono Interop",
+              link: "/modules/time/chrono-interop",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/time/api-reference",
+            },
+          ],
+        },
+        {
           text: "Core",
           collapsed: true,
           items: [
