@@ -1908,6 +1908,26 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "WebRPC",
+          collapsed: true,
+          items: [
+            { text: "Overview", link: "/modules/webrpc/" },
+            { text: "Quick Start", link: "/modules/webrpc/quick-start" },
+            { text: "Requests", link: "/modules/webrpc/requests" },
+            { text: "Responses", link: "/modules/webrpc/responses" },
+            { text: "Errors", link: "/modules/webrpc/errors" },
+            { text: "Context", link: "/modules/webrpc/context" },
+            { text: "Router", link: "/modules/webrpc/router" },
+            { text: "Dispatcher", link: "/modules/webrpc/dispatcher" },
+            {
+              text: "Batches and Notifications",
+              link: "/modules/webrpc/batches-and-notifications",
+            },
+            { text: "Metadata", link: "/modules/webrpc/metadata" },
+            { text: "API Reference", link: "/modules/webrpc/api-reference" },
+          ],
+        },
+        {
           text: "UI",
           collapsed: true,
           items: [
