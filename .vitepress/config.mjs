@@ -1088,6 +1088,56 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Conversion",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/conversion/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/conversion/quick-start",
+            },
+            {
+              text: "Expected Results",
+              link: "/modules/conversion/expected-results",
+            },
+            {
+              text: "Errors",
+              link: "/modules/conversion/errors",
+            },
+            {
+              text: "Integers",
+              link: "/modules/conversion/integers",
+            },
+            {
+              text: "Floats",
+              link: "/modules/conversion/floats",
+            },
+            {
+              text: "Booleans",
+              link: "/modules/conversion/booleans",
+            },
+            {
+              text: "Enums",
+              link: "/modules/conversion/enums",
+            },
+            {
+              text: "To String",
+              link: "/modules/conversion/to-string",
+            },
+            {
+              text: "Generic Parse",
+              link: "/modules/conversion/generic-parse",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/conversion/api-reference",
+            },
+          ],
+        },
+        {
           text: "FS",
           collapsed: true,
           items: [
