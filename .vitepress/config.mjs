@@ -1138,6 +1138,56 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Validation",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/validation/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/validation/quick-start",
+            },
+            {
+              text: "Results",
+              link: "/modules/validation/results",
+            },
+            {
+              text: "Errors",
+              link: "/modules/validation/errors",
+            },
+            {
+              text: "Rules",
+              link: "/modules/validation/rules",
+            },
+            {
+              text: "Single Field Validation",
+              link: "/modules/validation/single-field-validation",
+            },
+            {
+              text: "Parsed Validation",
+              link: "/modules/validation/parsed-validation",
+            },
+            {
+              text: "Schemas",
+              link: "/modules/validation/schemas",
+            },
+            {
+              text: "Base Models",
+              link: "/modules/validation/base-models",
+            },
+            {
+              text: "Forms",
+              link: "/modules/validation/forms",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/validation/api-reference",
+            },
+          ],
+        },
+        {
           text: "FS",
           collapsed: true,
           items: [
