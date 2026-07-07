@@ -2160,6 +2160,33 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Cache",
+          collapsed: true,
+          items: [
+            { text: "Overview", link: "/modules/cache/" },
+            { text: "Quick Start", link: "/modules/cache/quick-start" },
+            { text: "Cache Entry", link: "/modules/cache/cache-entry" },
+            { text: "Cache Policy", link: "/modules/cache/cache-policy" },
+            { text: "Cache Context", link: "/modules/cache/cache-context" },
+            { text: "Cache Keys", link: "/modules/cache/cache-keys" },
+            { text: "Stores", link: "/modules/cache/stores" },
+            { text: "Memory Store", link: "/modules/cache/memory-store" },
+            {
+              text: "LRU Memory Store",
+              link: "/modules/cache/lru-memory-store",
+            },
+            { text: "File Store", link: "/modules/cache/file-store" },
+            {
+              text: "Offline and Network Errors",
+              link: "/modules/cache/offline-and-network-errors",
+            },
+            { text: "Pruning", link: "/modules/cache/pruning" },
+            { text: "Context Mapper", link: "/modules/cache/context-mapper" },
+            { text: "CMake", link: "/modules/cache/cmake" },
+            { text: "API Reference", link: "/modules/cache/api-reference" },
+          ],
+        },
+        {
           text: "Agent",
           collapsed: true,
           items: [

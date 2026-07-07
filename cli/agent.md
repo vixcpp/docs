@@ -1,39 +1,8 @@
 # vix agent
 
-`vix agent` runs the Vix AI agent from the CLI.
+`vix agent` runs the Vix AI agent from the command line. It gives a project a local-first assistant that can answer a prompt, analyze a workspace, or scan the files that would be visible to the agent runtime.
 
-Use it when you want to ask a local model a question, analyze a project workspace, or scan a workspace before deeper analysis.
-
-```bash
-vix agent ask "Explain Vix.cpp in simple words"
-```
-
-## Overview
-
-`vix agent` provides AI-assisted development workflows for Vix.cpp.
-
-It supports three commands:
-
-```txt
-vix agent ask
-vix agent analyze
-vix agent scan
-```
-
-The agent can:
-
-```txt
-answer questions
-analyze a local project
-scan workspace files
-read project files when allowed
-use a local model provider such as Ollama
-cache responses
-persist run history and memory
-optionally run safe local commands
-```
-
-The default provider comes from the environment or falls back to Ollama.
+The command is built on the same agent module used from C++. It uses a configured model provider, opens a workspace, applies the agent permissions, and returns a response with normal Vix CLI output. The default workflow is local and uses Ollama, so the command is useful for inspecting a project without sending the workspace to a remote model service.
 
 ## Usage
 
@@ -43,297 +12,191 @@ vix agent analyze [workspace] [prompt] [options]
 vix agent scan [workspace] [options]
 ```
 
-## Basic examples
+Use `ask` for a normal prompt, `analyze` when the agent should reason about a project directory, and `scan` when you only want to see what the agent can collect from the workspace before a model request is made.
+
+## Local setup
+
+The default provider is Ollama. Start Ollama before running the command:
 
 ```bash
-vix agent ask "Explain Vix.cpp in simple words"
-
-vix agent ask "Explain Vix.cpp" --timeout 120000
-
-vix agent ask "Explain this code" \
-  --model qwen2.5-coder:1.5b \
-  --timeout 120000
-
-vix agent analyze .
-
-vix agent scan .
-
-vix agent ask "Run vix tests if useful" --allow-process
+ollama serve
 ```
 
-## Subcommands
-
-| Command             | Purpose                                        |
-| ------------------- | ---------------------------------------------- |
-| `vix agent ask`     | Ask the agent a direct question.               |
-| `vix agent analyze` | Analyze a workspace and explain the project.   |
-| `vix agent scan`    | Scan workspace files and print a file summary. |
-
-## `vix agent ask`
-
-Use `ask` for direct prompts.
+In another terminal, pull a model:
 
 ```bash
-vix agent ask "Explain Vix.cpp in simple words"
+ollama pull llama3
 ```
 
-The prompt is required.
-
-Everything after `ask` becomes the input prompt unless it is an option.
-
-Example:
-
-```bash
-vix agent ask "What does this project do?"
-```
-
-With workspace:
-
-```bash
-vix agent ask "Explain this repository" --workspace .
-```
-
-With model and timeout:
-
-```bash
-vix agent ask "Explain this code" \
-  --model qwen2.5-coder:1.5b \
-  --timeout 120000
-```
-
-## `vix agent analyze`
-
-Use `analyze` when you want the agent to inspect a local project.
-
-```bash
-vix agent analyze .
-```
-
-If no prompt is given, Vix uses this default analysis prompt:
-
-```txt
-Analyze this project and explain the most important parts.
-```
-
-You can also pass a custom prompt after the workspace:
-
-```bash
-vix agent analyze . "Explain the build system and main modules"
-```
-
-Or use `--workspace`:
-
-```bash
-vix agent analyze --workspace . "Explain this project architecture"
-```
-
-## Analyze mode behavior
-
-Analyze mode gives the agent project-analysis context.
-
-It tells the agent to focus on:
-
-```txt
-local C++ project architecture
-modules
-folders
-build system
-CLI commands
-runtime components
-how the pieces fit together
-```
-
-It also tells the agent not to invent unrelated technologies.
-
-This makes `vix agent analyze` better suited for real project understanding than a generic chat prompt.
-
-## `vix agent scan`
-
-Use `scan` to inspect which files the agent can see in a workspace.
-
-```bash
-vix agent scan .
-```
-
-Output includes:
-
-```txt
-workspace path
-number of files
-number of skipped files
-whether scan was truncated
-file list with sizes
-```
-
-Example output shape:
-
-```txt
-Scanning agent
-  provider: ollama
-  model: llama3
-  timeout: 120000ms
-  workspace: .
-
-agent [============================] done
-✔ Scanned workspace
-
-summary:
-  workspace: .
-  files: 42
-  skipped: 8
-  truncated: no
-
-files:
-  • CMakeLists.txt (1200 bytes)
-  • src/main.cpp (900 bytes)
-  • include/vix/app.hpp (2400 bytes)
-```
-
-`scan` is useful before `analyze` when you want to confirm that the workspace is being read correctly.
-
-## Workspace
-
-The default workspace is:
-
-```txt
-.
-```
-
-You can set it with:
-
-```bash
-vix agent ask "Explain this project" --workspace .
-```
-
-or:
-
-```bash
-vix agent ask "Explain this project" -w .
-```
-
-For `analyze` and `scan`, you can also pass the workspace positionally:
-
-```bash
-vix agent analyze .
-vix agent scan .
-```
-
-## Provider
-
-Set the provider with:
-
-```bash
-vix agent ask "Explain Vix.cpp" --provider ollama
-```
-
-If not provided, Vix loads the provider from the environment.
-
-Default behavior:
-
-```txt
-VIX_AGENT_PROVIDER or ollama
-```
-
-## Model
-
-Set the model with:
-
-```bash
-vix agent ask "Explain Vix.cpp" --model llama3
-```
-
-For a lighter local demo:
+For smaller machines, a lighter model can be more practical:
 
 ```bash
 ollama pull qwen2.5-coder:1.5b
-
-vix agent ask "Explain Vix.cpp" \
-  --model qwen2.5-coder:1.5b \
-  --timeout 120000
 ```
 
-If not provided, Vix loads the model from the environment.
-
-Default behavior:
-
-```txt
-VIX_AGENT_MODEL or llama3
-```
-
-## Model URL
-
-Set the model endpoint with:
+Then run the agent command with that model:
 
 ```bash
-vix agent ask "Explain Vix.cpp" \
-  --model-url http://127.0.0.1:11434
+vix agent ask "Explain Vix.cpp" --model qwen2.5-coder:1.5b --timeout 120000
 ```
 
-If not provided, Vix loads the endpoint from:
+## Ask a question
 
-```txt
-VIX_AGENT_MODEL_URL
+`ask` sends a normal prompt to the agent.
+
+```bash
+vix agent ask "Explain Vix.cpp in simple words"
 ```
 
-When the endpoint is set, Vix prints it in the agent header.
+This mode is useful for direct questions that do not need a full project analysis. The command still uses the agent configuration, provider, timeout, cache, and memory settings.
+
+A prompt can contain several words without extra quoting rules beyond normal shell quoting:
+
+```bash
+vix agent ask "Explain what local-first software means"
+```
+
+When the prompt itself starts with a dash, use `--` before the prompt so the parser treats the rest as positional text:
+
+```bash
+vix agent ask -- "--version is a command-line flag. Explain this idea."
+```
+
+## Analyze a workspace
+
+`analyze` asks the agent to inspect and explain a workspace.
+
+```bash
+vix agent analyze .
+```
+
+If no prompt is provided, Vix uses a default analysis instruction:
+
+```text
+Analyze this project and explain the most important parts.
+```
+
+A custom prompt can be passed after the workspace:
+
+```bash
+vix agent analyze . "Explain the module layout and the build flow"
+```
+
+The analysis mode adds project-oriented context to the request. It asks the agent to focus on real repository structure, modules, folders, build system, CLI commands, runtime components, and how the pieces fit together.
+
+## Scan a workspace
+
+`scan` opens the workspace and applies the agent file scan policy without asking the model to generate an answer.
+
+```bash
+vix agent scan .
+```
+
+Use this command when you want to verify what the agent can see before running `analyze`. The scan output shows the workspace, the number of accepted files, how many entries were skipped, whether the result was truncated, and the accepted file list.
+
+Scan another project directory:
+
+```bash
+vix agent scan ./examples/demo
+```
+
+This is a good first diagnostic when an analysis result feels incomplete. It helps confirm that the command is using the workspace you intended.
+
+## Workspace
+
+The workspace is the directory the agent uses as its local boundary. By default, it is the current directory:
+
+```bash
+vix agent analyze .
+```
+
+You can also pass it with `--workspace` or `-w`:
+
+```bash
+vix agent ask "Explain this project" --workspace .
+vix agent ask "Explain this project" -w .
+```
+
+For `analyze` and `scan`, the workspace can also be the first positional argument:
+
+```bash
+vix agent analyze ./apps/api
+vix agent scan ./apps/api
+```
+
+Use an explicit workspace path when the command may be launched from a directory that is not the project root.
+
+## Provider, model, and endpoint
+
+The command loads agent configuration from the environment first, then applies command-line options on top of it.
+
+Select the provider:
+
+```bash
+vix agent ask "Explain this project" --provider ollama
+```
+
+Select the model:
+
+```bash
+vix agent ask "Explain this project" --model llama3
+```
+
+Use a lighter model:
+
+```bash
+vix agent ask "Explain this project" --model qwen2.5-coder:1.5b
+```
+
+Set the provider endpoint:
+
+```bash
+vix agent ask "Explain this project" --model-url http://127.0.0.1:11434
+```
+
+For Ollama, the endpoint should include the scheme:
+
+```text
+http://127.0.0.1:11434
+```
 
 ## Timeout
 
-Set the request timeout in milliseconds:
+Local models can be slow on the first request, especially when the model is loaded into memory. Use `--timeout` to give the model more time.
 
 ```bash
 vix agent ask "Explain Vix.cpp" --timeout 120000
 ```
 
-The timeout must be a positive integer value.
-
-Examples:
+The value is in milliseconds. For a slower CPU-only model, a larger value can be useful:
 
 ```bash
-vix agent ask "Explain this project" --timeout 60000
-vix agent analyze . --timeout 180000
-vix agent ask "Explain this code" --timeout 300000
-```
-
-For slow local CPU models, use a larger timeout:
-
-```bash
-vix agent ask "Explain this project" --timeout 300000
+vix agent analyze . --model qwen2.5-coder:1.5b --timeout 300000
 ```
 
 ## File reading
 
-By default, file reading is enabled.
+Workspace file reading is enabled by default for the command.
 
-```txt
-allow file read: yes
-```
-
-Disable workspace file reading with:
+Disable file reading for one run:
 
 ```bash
-vix agent ask "Explain this project" --no-file-read
+vix agent analyze . --no-file-read
 ```
 
-Use this when you want a pure prompt answer without letting the agent read files from the workspace.
+This is useful when you want the model to answer from the prompt and general context only. For project analysis, file reading is usually useful because the agent needs repository context to produce a grounded answer.
 
-## Process execution
+## Command execution
 
-By default, process execution is disabled.
-
-```txt
-allow process: no
-```
-
-Enable safe command execution with:
+Command execution is disabled by default. Enable it only when the task needs safe local command output.
 
 ```bash
 vix agent ask "Run vix tests if useful" --allow-process
 ```
 
-When enabled, Vix restricts allowed programs to:
+When process execution is allowed, the command configures a small allowed program list for the agent runtime:
 
-```txt
+```text
 vix
 cmake
 ninja
@@ -343,566 +206,244 @@ cat
 echo
 ```
 
-This allows the agent to use safe local command tools while keeping the command surface limited.
+The command still runs through the controlled `command.run` tool. The working directory must stay inside the workspace, and dangerous commands remain blocked by the runtime.
 
-## File writing
-
-File writing is disabled in the current command configuration.
-
-```txt
-allow file write: no
-```
-
-There is no CLI flag in the current implementation to enable file writing.
+Use this capability carefully. A normal explanation or project summary usually does not need process execution.
 
 ## Cache
 
-The agent cache is enabled by default.
+Cache is enabled by default.
 
-```txt
-use cache: yes
-```
-
-Disable it with:
+Disable cache for one run:
 
 ```bash
-vix agent ask "Explain Vix.cpp" --no-cache
+vix agent ask "Explain this project" --no-cache
 ```
 
-When a response comes from cache, Vix prints:
+This is useful when testing prompts, checking provider behavior, or debugging tool usage. A cache hit means the answer was reused from local cache, so disabling cache forces a fresh provider request.
 
-```txt
-details:
-  cache: hit
-```
+## Run history and memory
 
-Use `--no-cache` when you want a fresh model response.
+Run history and memory persistence are enabled by default.
 
-## Memory and run history
-
-Memory persistence is enabled by default.
-
-```txt
-persist memory: yes
-```
-
-Disable it with:
+Disable them for one run:
 
 ```bash
-vix agent ask "Explain Vix.cpp" --no-memory
+vix agent ask "Explain this project" --no-memory
 ```
 
-This disables run history and memory persistence for the request.
+When persistence is enabled, the agent can write local run data under the workspace agent directories, such as:
 
-## Details output
-
-After a successful agent request, Vix can print details such as:
-
-```txt
-run id
-cache hit
-tools used
+```text
+.vix/agent/runs/<run_id>/
 ```
 
-Example shape:
+This makes local debugging easier because a run can be inspected after the command finishes.
 
-```txt
-details:
-  run id: agent-run-id
-  cache: hit
-  tools: 2
-    ✔ file.read
-    ✔ command.run
+## Environment configuration
+
+`vix agent` uses the same environment configuration as the C++ agent runtime.
+
+Common variables include:
+
+```text
+VIX_AGENT_PROVIDER
+VIX_AGENT_MODEL
+VIX_AGENT_MODEL_URL
+VIX_AGENT_TIMEOUT_MS
+VIX_AGENT_ALLOW_PROCESS
+VIX_AGENT_ALLOW_FILE_READ
+VIX_AGENT_ALLOW_FILE_WRITE
+VIX_AGENT_USE_CACHE
+VIX_AGENT_PERSIST_MEMORY
 ```
-
-A run ID is useful when debugging agent behavior or looking at saved run history.
-
-## Tool output
-
-If tools are used, Vix prints the number of tools and their status.
 
 Example:
 
-```txt
-tools: 2
-  ✔ file.read
-  ✖ command.run
-```
-
-This makes agent behavior more transparent.
-
-## Ollama demo
-
-The simplest local demo uses Ollama.
-
-First, pull a small model:
-
 ```bash
-ollama pull qwen2.5-coder:1.5b
+export VIX_AGENT_PROVIDER=ollama
+export VIX_AGENT_MODEL=llama3
+export VIX_AGENT_MODEL_URL=http://127.0.0.1:11434
+export VIX_AGENT_TIMEOUT_MS=120000
 ```
 
 Then run:
 
 ```bash
-vix agent ask "Explain Vix.cpp" \
-  --model qwen2.5-coder:1.5b \
-  --timeout 120000
+vix agent ask "Explain local-first software"
 ```
 
-This is a good local setup for demos because the model is lighter than larger default models.
+Command-line options override the loaded environment values for the current run.
 
-## Slow model hint
+## Output behavior
 
-If an Ollama request fails because the model is slow, Vix prints hints like:
+`vix agent` prints a task-style header with the provider, model, timeout, workspace, and endpoint when available. During execution, it shows whether the task completed or failed.
 
-```txt
-If the model is slow on CPU, try a smaller prompt or `--timeout 300000`.
-For a lighter local demo, run `ollama pull qwen2.5-coder:1.5b`.
-Then use `--model qwen2.5-coder:1.5b`.
-```
+A successful request prints the model response. When metadata is available, it can also show details such as the run id, cache status, and tool count.
 
-Use:
-
-```bash
-vix agent ask "Explain Vix.cpp" \
-  --model qwen2.5-coder:1.5b \
-  --timeout 300000
-```
-
-## Environment-driven configuration
-
-`vix agent` loads base configuration from the environment.
-
-Important environment variables include:
-
-```txt
-VIX_AGENT_PROVIDER
-VIX_AGENT_MODEL
-VIX_AGENT_MODEL_URL
-```
-
-CLI options override environment values.
-
-Example:
-
-```bash
-VIX_AGENT_PROVIDER=ollama \
-VIX_AGENT_MODEL=qwen2.5-coder:1.5b \
-vix agent ask "Explain Vix.cpp" --timeout 120000
-```
-
-## Agent header
-
-When a request starts, Vix prints a task header with metadata.
-
-Example shape:
-
-```txt
-Asking agent
-  provider: ollama
-  model: qwen2.5-coder:1.5b
-  timeout: 120000ms
-  workspace: .
-  endpoint: http://127.0.0.1:11434
-```
-
-For analyze:
-
-```txt
-Analyzing agent
-```
-
-For scan:
-
-```txt
-Scanning agent
-```
-
-## Progress output
-
-Vix prints an agent progress line.
-
-Success:
-
-```txt
-agent [============================] done
-```
-
-Failure:
-
-```txt
-agent [============================] failed
-```
-
-Then it prints the final result or error.
+A failed request prints the agent error. If the provider is Ollama, the command can also show hints for common local model problems, such as increasing the timeout or trying a lighter model.
 
 ## Options
 
-| Option                   | Description                                                    |
-| ------------------------ | -------------------------------------------------------------- |
-| `-w, --workspace <path>` | Workspace directory. Default: `.`                              |
-| `--provider <name>`      | Model provider. Default from `VIX_AGENT_PROVIDER` or `ollama`. |
-| `--model <name>`         | Model name. Default from `VIX_AGENT_MODEL` or `llama3`.        |
-| `--model-url <url>`      | Model endpoint. Default from `VIX_AGENT_MODEL_URL`.            |
-| `--timeout <ms>`         | Model request timeout in milliseconds.                         |
-| `--allow-process`        | Allow the safe `command.run` tool.                             |
-| `--no-file-read`         | Disable workspace file reading.                                |
-| `--no-cache`             | Disable cache.                                                 |
-| `--no-memory`            | Disable run history and memory persistence.                    |
-| `-h, --help`             | Show command help.                                             |
+| Option                   | Description                                                   |
+| ------------------------ | ------------------------------------------------------------- |
+| `-w, --workspace <path>` | Workspace directory.                                          |
+| `--provider <name>`      | Model provider. Defaults to `VIX_AGENT_PROVIDER` or `ollama`. |
+| `--model <name>`         | Model name. Defaults to `VIX_AGENT_MODEL` or `llama3`.        |
+| `--model-url <url>`      | Model endpoint. Defaults to `VIX_AGENT_MODEL_URL`.            |
+| `--timeout <ms>`         | Model request timeout in milliseconds.                        |
+| `--allow-process`        | Allows the controlled `command.run` tool.                     |
+| `--no-file-read`         | Disables workspace file reading.                              |
+| `--no-cache`             | Disables local cache for the run.                             |
+| `--no-memory`            | Disables run history and memory persistence.                  |
+| `-h, --help`             | Shows command help.                                           |
 
-## Commands reference
+## Examples
 
-| Command                                             | Description                                 |
-| --------------------------------------------------- | ------------------------------------------- |
-| `vix agent ask "prompt"`                            | Ask a direct question.                      |
-| `vix agent analyze .`                               | Analyze the current project.                |
-| `vix agent scan .`                                  | Scan the current workspace.                 |
-| `vix agent ask "prompt" --timeout 120000`           | Run with a custom timeout.                  |
-| `vix agent ask "prompt" --model qwen2.5-coder:1.5b` | Use a specific model.                       |
-| `vix agent ask "prompt" --allow-process`            | Allow safe local command execution.         |
-| `vix agent ask "prompt" --no-cache`                 | Disable cached responses.                   |
-| `vix agent ask "prompt" --no-memory`                | Disable run history and memory persistence. |
-| `vix agent ask "prompt" --no-file-read`             | Disable workspace file reading.             |
-
-## Common workflows
-
-### Ask a simple question
+Ask a simple question:
 
 ```bash
 vix agent ask "Explain Vix.cpp in simple words"
 ```
 
-### Ask with a longer timeout
+Ask with a longer timeout:
 
 ```bash
-vix agent ask "Explain the Vix build system" --timeout 180000
+vix agent ask "Explain Vix.cpp" --timeout 120000
 ```
 
-### Use a lighter local model
+Use a lighter local model:
 
 ```bash
-ollama pull qwen2.5-coder:1.5b
-
-vix agent ask "Explain this project" \
-  --model qwen2.5-coder:1.5b \
-  --timeout 120000
+vix agent ask "Explain this code" --model qwen2.5-coder:1.5b --timeout 120000
 ```
 
-### Analyze a project
+Analyze the current project:
 
 ```bash
 vix agent analyze .
 ```
 
-### Analyze with a custom prompt
+Analyze another workspace:
 
 ```bash
-vix agent analyze . "Explain the modules, CLI commands, and build system"
+vix agent analyze ./apps/api
 ```
 
-### Scan a workspace
+Analyze with a custom prompt:
+
+```bash
+vix agent analyze . "Explain the build system and the main modules"
+```
+
+Scan the current workspace:
 
 ```bash
 vix agent scan .
 ```
 
-### Ask without reading files
+Scan another workspace:
 
 ```bash
-vix agent ask "Explain C++ RAII" --no-file-read
+vix agent scan ./examples/demo
 ```
 
-### Ask and allow safe commands
+Run with cache disabled:
 
 ```bash
-vix agent ask "Run vix tests if useful and explain failures" --allow-process
+vix agent analyze . --no-cache
 ```
 
-### Disable cache
+Run without file reading:
 
 ```bash
-vix agent ask "Explain this project again" --no-cache
+vix agent analyze . --no-file-read
 ```
 
-### Disable memory
-
-```bash
-vix agent ask "Give a fresh explanation" --no-memory
-```
-
-## Common mistakes
-
-### Running `ask` without a prompt
-
-Wrong:
-
-```bash
-vix agent ask
-```
-
-Correct:
-
-```bash
-vix agent ask "Explain Vix.cpp"
-```
-
-### Passing an unknown subcommand
-
-Wrong:
-
-```bash
-vix agent explain "Vix.cpp"
-```
-
-Correct:
-
-```bash
-vix agent ask "Explain Vix.cpp"
-```
-
-Supported subcommands:
-
-```txt
-ask
-analyze
-scan
-```
-
-### Expecting process execution by default
-
-By default, the agent cannot run commands.
-
-To allow safe commands:
+Allow safe command execution:
 
 ```bash
 vix agent ask "Run vix tests if useful" --allow-process
 ```
-
-### Expecting file writing
-
-The current CLI command does not enable file writing.
-
-The agent can read files by default, but file writing remains disabled.
-
-### Using too small a timeout
-
-Large local models can be slow on CPU.
-
-Use:
-
-```bash
-vix agent ask "Explain this project" --timeout 300000
-```
-
-or use a smaller model:
-
-```bash
-ollama pull qwen2.5-coder:1.5b
-```
-
-### Forgetting to run Ollama
-
-If using Ollama, make sure Ollama is installed and the model is available.
-
-Example:
-
-```bash
-ollama pull qwen2.5-coder:1.5b
-```
-
-Then:
-
-```bash
-vix agent ask "Explain Vix.cpp" --model qwen2.5-coder:1.5b
-```
-
-### Expecting scan to answer questions
-
-`vix agent scan` only scans and prints workspace file information.
-
-Use `analyze` for explanation:
-
-```bash
-vix agent analyze .
-```
-
-### Confusing workspace with prompt
-
-For `analyze`, the first positional value is the workspace.
-
-Example:
-
-```bash
-vix agent analyze . "Explain the architecture"
-```
-
-Here:
-
-```txt
-.                         workspace
-"Explain the architecture" prompt
-```
-
-For `ask`, all positional arguments form the prompt.
 
 ## Troubleshooting
 
-### `Agent config error`
+### Ollama is not available
 
-The agent configuration failed validation.
-
-Check:
-
-```txt
-provider
-model
-model URL
-timeout
-environment variables
-```
-
-Then try:
+Start Ollama:
 
 ```bash
-vix agent ask "Explain Vix.cpp" \
-  --provider ollama \
-  --model qwen2.5-coder:1.5b \
-  --timeout 120000
+ollama serve
 ```
 
-### `Agent workspace error`
-
-The workspace could not be opened.
-
-Check that the path exists:
+Make sure the selected model exists locally:
 
 ```bash
-ls .
+ollama pull llama3
 ```
 
-Then run:
+Then run the command again.
+
+### The model is slow
+
+Increase the timeout:
+
+```bash
+vix agent ask "Explain Vix.cpp" --timeout 300000
+```
+
+Use a lighter model when testing on a smaller machine:
+
+```bash
+ollama pull qwen2.5-coder:1.5b
+vix agent ask "Explain Vix.cpp" --model qwen2.5-coder:1.5b --timeout 120000
+```
+
+### The analysis does not see the expected files
+
+Run a scan first:
 
 ```bash
 vix agent scan .
 ```
 
-or:
+If the scan is using the wrong directory, pass the workspace explicitly:
 
 ```bash
-vix agent analyze --workspace .
+vix agent scan ./apps/api
+vix agent analyze ./apps/api
 ```
 
-### `Agent scan failed`
+### The answer looks reused
 
-The scanner failed while reading the workspace.
-
-Check:
-
-```txt
-workspace permissions
-ignored or inaccessible files
-very large project size
-file read settings
-```
-
-Try:
+Disable cache for the run:
 
 ```bash
-vix agent scan . --no-cache
+vix agent analyze . --no-cache
 ```
 
-### `Agent request failed`
+This forces the command to ask the provider again instead of reusing a cached response.
 
-The model request failed.
+### The model should not read files
 
-Common causes:
-
-```txt
-model provider is not running
-model is not pulled
-timeout is too small
-model endpoint is wrong
-workspace is too large
-```
-
-For Ollama:
+Disable file reading:
 
 ```bash
-ollama pull qwen2.5-coder:1.5b
-
-vix agent ask "Explain Vix.cpp" \
-  --model qwen2.5-coder:1.5b \
-  --timeout 300000
+vix agent analyze . --no-file-read
 ```
 
-### Cached answer is not what you want
+This keeps the request closer to a prompt-only answer.
 
-Disable cache:
+### A command was not executed
 
-```bash
-vix agent ask "Explain this again" --no-cache
-```
-
-### Agent cannot run tests
-
-Allow process execution:
+Command execution is disabled unless `--allow-process` is present.
 
 ```bash
 vix agent ask "Run vix tests if useful" --allow-process
 ```
 
-Only safe allowed programs are available when process execution is enabled.
-
-### Agent cannot read project files
-
-Make sure you did not pass:
-
-```bash
---no-file-read
-```
-
-Then run:
-
-```bash
-vix agent analyze .
-```
-
-## Best practices
-
-Use `vix agent scan .` first when debugging workspace visibility.
-
-Use `vix agent analyze .` for repository-level explanations.
-
-Use `vix agent ask` for direct questions.
-
-Use `--timeout 120000` or higher for local models.
-
-Use `qwen2.5-coder:1.5b` for lighter local demos.
-
-Keep file reading enabled for project analysis.
-
-Use `--allow-process` only when you want the agent to run safe commands.
-
-Use `--no-cache` when you need a fresh response.
-
-Use `--no-memory` when you do not want run history or memory persistence.
-
-Prefer small, focused prompts for faster local model responses.
-
-## Related commands
-
-| Command      | Purpose                                                         |
-| ------------ | --------------------------------------------------------------- |
-| `vix build`  | Build the project before asking the agent about build behavior. |
-| `vix check`  | Validate project health.                                        |
-| `vix tests`  | Run project tests.                                              |
-| `vix doctor` | Diagnose environment issues.                                    |
-| `vix info`   | Inspect Vix paths, caches, and local state.                     |
-| `vix dev`    | Run the project in development mode.                            |
+Even with this flag, the command must still be allowed by the runtime and must run inside the workspace.
 
 ## Next step
 
-Continue with project diagnostics.
-
-[Open the vix doctor guide](/cli/doctor)
+Use `vix agent scan` first to understand the workspace view, then use `vix agent analyze` when you want the model to explain the project with local context.
