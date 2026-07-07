@@ -1188,6 +1188,64 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Tests",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/tests/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/tests/quick-start",
+            },
+            {
+              text: "Assertions",
+              link: "/modules/tests/assertions",
+            },
+            {
+              text: "Test Cases",
+              link: "/modules/tests/test-cases",
+            },
+            {
+              text: "Test Suites",
+              link: "/modules/tests/test-suites",
+            },
+            {
+              text: "Registry",
+              link: "/modules/tests/registry",
+            },
+            {
+              text: "Runner",
+              link: "/modules/tests/runner",
+            },
+            {
+              text: "Summaries",
+              link: "/modules/tests/summaries",
+            },
+            {
+              text: "Colors and Output",
+              link: "/modules/tests/colors-and-output",
+            },
+            {
+              text: "Timers",
+              link: "/modules/tests/timers",
+            },
+            {
+              text: "CLI",
+              link: "/modules/tests/cli",
+            },
+            {
+              text: "CMake",
+              link: "/modules/tests/cmake",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/tests/api-reference",
+            },
+          ],
+        },
+        {
           text: "FS",
           collapsed: true,
           items: [
