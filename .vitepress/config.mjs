@@ -302,7 +302,7 @@ const conceptsSidebar = {
   items: [
     {
       text: "The Vix Book",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Introduction",
@@ -344,7 +344,7 @@ const conceptsSidebar = {
     },
     {
       text: "Foundations",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Vix.cpp vs CMake",
@@ -474,7 +474,7 @@ const advancedSidebar = {
   items: [
     {
       text: "Build Performance",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Fast Target Builds",
@@ -492,7 +492,7 @@ const advancedSidebar = {
     },
     {
       text: "Advanced vix.app",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Migrating from CMake",
@@ -510,7 +510,7 @@ const advancedSidebar = {
     },
     {
       text: "Internals",
-      collapsed: false,
+      collapsed: true,
       items: [
         {
           text: "Architecture",
