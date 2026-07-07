@@ -1246,6 +1246,76 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Crypto",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/crypto/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/crypto/quick-start",
+            },
+            {
+              text: "Results and Errors",
+              link: "/modules/crypto/results-and-errors",
+            },
+            {
+              text: "Random",
+              link: "/modules/crypto/random",
+            },
+            {
+              text: "Hashing",
+              link: "/modules/crypto/hashing",
+            },
+            {
+              text: "HMAC",
+              link: "/modules/crypto/hmac",
+            },
+            {
+              text: "Bytes and Hex",
+              link: "/modules/crypto/bytes-and-hex",
+            },
+            {
+              text: "Constant-Time Compare",
+              link: "/modules/crypto/constant-time-compare",
+            },
+            {
+              text: "Passwords",
+              link: "/modules/crypto/passwords",
+            },
+            {
+              text: "KDF",
+              link: "/modules/crypto/kdf",
+            },
+            {
+              text: "Keys",
+              link: "/modules/crypto/keys",
+            },
+            {
+              text: "AEAD",
+              link: "/modules/crypto/aead",
+            },
+            {
+              text: "Signatures",
+              link: "/modules/crypto/signatures",
+            },
+            {
+              text: "Certificates",
+              link: "/modules/crypto/certificates",
+            },
+            {
+              text: "CMake",
+              link: "/modules/crypto/cmake",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/crypto/api-reference",
+            },
+          ],
+        },
+        {
           text: "FS",
           collapsed: true,
           items: [
