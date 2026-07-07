@@ -2160,6 +2160,80 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Agent",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/agent/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/agent/quick-start",
+            },
+            {
+              text: "Public API",
+              link: "/modules/agent/public-api",
+            },
+            {
+              text: "Configuration",
+              link: "/modules/agent/configuration",
+            },
+            {
+              text: "Requests and Responses",
+              link: "/modules/agent/requests-and-responses",
+            },
+            {
+              text: "Workspace",
+              link: "/modules/agent/workspace",
+            },
+            {
+              text: "Project Scanning",
+              link: "/modules/agent/project-scanning",
+            },
+            {
+              text: "Model Providers",
+              link: "/modules/agent/model-providers",
+            },
+            {
+              text: "Ollama",
+              link: "/modules/agent/ollama",
+            },
+            {
+              text: "Tools",
+              link: "/modules/agent/tools",
+            },
+            {
+              text: "File Read Tool",
+              link: "/modules/agent/file-read-tool",
+            },
+            {
+              text: "Command Tool",
+              link: "/modules/agent/command-tool",
+            },
+            {
+              text: "Cache and Run History",
+              link: "/modules/agent/cache-and-run-history",
+            },
+            {
+              text: "Custom Providers",
+              link: "/modules/agent/custom-providers",
+            },
+            {
+              text: "Errors",
+              link: "/modules/agent/errors",
+            },
+            {
+              text: "CMake",
+              link: "/modules/agent/cmake",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/agent/api-reference",
+            },
+          ],
+        },
+        {
           text: "KV",
           collapsed: true,
           items: [
