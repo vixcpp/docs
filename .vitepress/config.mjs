@@ -1454,6 +1454,64 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Process",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/process/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/process/quick-start",
+            },
+            {
+              text: "Commands",
+              link: "/modules/process/commands",
+            },
+            {
+              text: "Options and Pipes",
+              link: "/modules/process/options-and-pipes",
+            },
+            {
+              text: "Spawn and Child",
+              link: "/modules/process/spawn-and-child",
+            },
+            {
+              text: "Output",
+              link: "/modules/process/output",
+            },
+            {
+              text: "Status and Wait",
+              link: "/modules/process/status-and-wait",
+            },
+            {
+              text: "Terminate and Kill",
+              link: "/modules/process/terminate-and-kill",
+            },
+            {
+              text: "Pipelines",
+              link: "/modules/process/pipelines",
+            },
+            {
+              text: "Async",
+              link: "/modules/process/async",
+            },
+            {
+              text: "Errors",
+              link: "/modules/process/errors",
+            },
+            {
+              text: "CMake",
+              link: "/modules/process/cmake",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/process/api-reference",
+            },
+          ],
+        },
+        {
           text: "IO",
           collapsed: true,
           items: [
