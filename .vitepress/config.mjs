@@ -2307,20 +2307,48 @@ const referenceSidebar = {
               link: "/modules/sync/",
             },
             {
-              text: "WAL",
-              link: "/modules/sync/wal",
+              text: "Quick Start",
+              link: "/modules/sync/quick-start",
+            },
+            {
+              text: "Offline-first Model",
+              link: "/modules/sync/offline-first-model",
+            },
+            {
+              text: "Operations",
+              link: "/modules/sync/operations",
             },
             {
               text: "Outbox",
               link: "/modules/sync/outbox",
             },
             {
+              text: "File Outbox Store",
+              link: "/modules/sync/file-outbox-store",
+            },
+            {
               text: "Retry Policy",
               link: "/modules/sync/retry-policy",
             },
             {
-              text: "Offline-first Model",
-              link: "/modules/sync/offline-first-model",
+              text: "Transports",
+              link: "/modules/sync/transports",
+            },
+            {
+              text: "Sync Engine",
+              link: "/modules/sync/sync-engine",
+            },
+            {
+              text: "In-flight Recovery",
+              link: "/modules/sync/inflight-recovery",
+            },
+            {
+              text: "WAL",
+              link: "/modules/sync/wal",
+            },
+            {
+              text: "CMake",
+              link: "/modules/sync/cmake",
             },
             {
               text: "API Reference",
