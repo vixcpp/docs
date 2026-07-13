@@ -101,7 +101,7 @@ main.cpp
 
 ## Backend template flow
 
-A generated backend uses `AppBootstrap` as the startup owner. The bootstrap creates the Vix application, loads configuration, mounts public files, registers middleware, registers the main application routes, then registers enabled modules.
+A generated backend uses `AppBootstrap` as the startup owner. The bootstrap creates the Vix application, loads configuration, mounts public files when the standard backend scaffold includes them, registers middleware, registers the main application routes, then registers enabled modules.
 
 ```txt
 main.cpp
@@ -164,6 +164,18 @@ depends = [
 ```
 
 This lets a project keep unfinished modules in the repository without making them part of the running application.
+
+Runtime WebSocket modules are handled separately from routed HTTP registration. A WebSocket module generated with `attached`, `standalone`, or `bridge` can provide a runtime `run(...)` entry point for the generated application. A module generated with the `client` workflow is ignored by runtime generation because it is support code and does not own startup.
+
+```ini
+[module.live_chat]
+enabled = true
+path = "modules/live_chat"
+kind = "websocket.attached"
+depends = []
+```
+
+The generated application currently supports one runtime application module at a time. Keep additional WebSocket modules as `websocket.client` or non-runtime support modules unless the application runtime is explicitly designed to compose them.
 
 ## Routed modules
 

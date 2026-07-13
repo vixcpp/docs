@@ -8,6 +8,12 @@ Use this template when the project is meant to become a backend service rather t
 vix new api --template backend
 ```
 
+For deployments where the frontend is hosted separately, generate the same backend shell without static files or templates:
+
+```bash
+vix new api --template backend --api-only
+```
+
 After creation, the normal first workflow is:
 
 ```bash
@@ -64,6 +70,7 @@ api/
   public/
   views/
   storage/
+  migrations/
   tests/
 
   .env.example
@@ -73,6 +80,8 @@ api/
 ```
 
 The important part is the separation of responsibilities. `main.cpp` starts the program, `AppBootstrap` owns startup, route and middleware registries keep HTTP wiring organized, and support helpers keep common response logic out of controllers.
+
+When the project is created with `--api-only`, the same backend source structure is generated, but `public/`, `views/`, and the generated static frontend files are omitted. The generated bootstrap also skips template setup, static directory setup, and static-file compression middleware.
 
 ## Entry point
 
@@ -92,7 +101,7 @@ This file should remain the process entry point, not the place where the backend
 
 ## AppBootstrap
 
-`AppBootstrap` owns the backend startup flow. It loads configuration from `.env`, creates the `vix::App`, configures templates and static files, registers middleware, registers application routes, connects generated modules, then starts the server.
+`AppBootstrap` owns the backend startup flow. It loads configuration from `.env`, creates the `vix::App`, configures templates and static files when the standard backend scaffold is used, registers middleware, registers application routes, connects generated modules, then starts the server.
 
 The generated flow is close to this:
 
@@ -101,8 +110,7 @@ main.cpp
   -> AppBootstrap
       -> vix::config::Config
       -> vix::App
-      -> public files
-      -> views
+      -> public files and views when generated
       -> MiddlewareRegistry
       -> RouteRegistry
       -> generated app modules
@@ -182,6 +190,8 @@ storage/
 
 `public/` is used for static files. `views/` can be used for templates when the backend needs to render files. `storage/` gives the application a local writable area for generated data, SQLite databases, uploads, logs, or other runtime files, depending on the project.
 
+API-only backends do not generate `public/` or `views/`. Their resource list keeps `.env` and `storage`, but omits frontend and template resources.
+
 These directories are also declared as resources in `vix.app`, so they are copied beside the built target.
 
 ```ini
@@ -193,7 +203,31 @@ resources = [
 ]
 ```
 
+In API-only mode, the generated resource list is smaller:
+
+```ini
+resources = [
+  ".env=.env",
+  "storage=storage",
+]
+```
+
 This matters because the executable runs from the build output, and the runtime files need to be available next to it.
+
+The generated static home page also includes a small WebSocket status panel. By default it probes the local development WebSocket endpoint from the browser and shows whether the connection is open. This is useful after adding a runtime WebSocket module.
+
+```bash
+vix modules init
+vix modules add live_chat --websocket --workflow attached
+vix build
+vix run
+```
+
+Use `--name` when the module name should be supplied as an option.
+
+```bash
+vix modules add --websocket --name notifications --workflow bridge
+```
 
 ## Manifest
 
@@ -299,15 +333,13 @@ Copy it before running the backend locally.
 cp .env.example .env
 ```
 
-The file documents runtime values such as server host, port, logging settings, public file settings, storage path, database settings, ORM values, WebSocket settings, and production diagnostics.
+The file documents runtime values such as server host, port, logging settings, storage path, database settings, ORM values, WebSocket settings, and production diagnostics. Standard backend projects also include public file and template settings. API-only backend projects omit those variables because they do not serve frontend files or views.
 
 ```dotenv
 APP_NAME=api
 APP_ENV=development
 SERVER_HOST=0.0.0.0
 SERVER_PORT=8080
-PUBLIC_PATH=public
-VIEWS_PATH=views
 DATABASE_ENGINE=sqlite
 DATABASE_SQLITE_PATH=storage/api.db
 ```
@@ -397,7 +429,7 @@ The backend template is API-oriented. It starts with JSON routes such as `/api`,
 
 The web template is page-oriented. It renders HTML from `views/`, serves assets from `public/`, and starts with browser-facing routes such as `/` and `/dashboard`.
 
-Use `backend` when the project is mainly an API or service. Use `web` when the project should render server-side HTML pages.
+Use `backend` when the project is mainly an API or service. Use `backend --api-only` when the C++ process should expose only API routes and another frontend app is hosted separately. Use `web` when the project should render server-side HTML pages.
 
 ## Recommended workflow
 
@@ -411,6 +443,18 @@ cp .env.example .env
 vix build
 vix run
 curl http://localhost:8080/health
+```
+
+For an API-only backend:
+
+```bash
+vix new api --template backend --api-only
+cd api
+
+cp .env.example .env
+vix build
+vix run
+curl http://localhost:8080/api/health
 ```
 
 When the backend starts using modules:

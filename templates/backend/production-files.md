@@ -11,8 +11,8 @@ The backend template keeps those responsibilities separated.
 .env          -> local runtime values and secrets
 vix.json      -> Vix project workflow and production metadata
 vix.app       -> C++ backend target manifest
-public/       -> static runtime files
-views/        -> template runtime files
+public/       -> static runtime files in the standard backend scaffold
+views/        -> template runtime files in the standard backend scaffold
 storage/      -> local runtime data
 ```
 
@@ -26,7 +26,7 @@ The generated backend includes an example environment file.
 
 This file documents the variables expected by the backend at runtime. It should be committed to the repository because it explains what a developer or deployment environment needs to provide.
 
-A generated backend environment file includes sections for the application, server, TLS, logging, public files, storage, database, ORM, WebSocket settings, and production diagnostics.
+A generated backend environment file includes sections for the application, server, TLS, logging, storage, database, ORM, WebSocket settings, and production diagnostics. Standard backend projects also include public file and template settings. API-only backend projects omit those frontend-serving variables.
 
 ```dotenv
 APP_NAME=api
@@ -37,15 +37,6 @@ SERVER_PORT=8080
 SERVER_REQUEST_TIMEOUT=5000
 SERVER_IO_THREADS=0
 SERVER_SESSION_TIMEOUT_SEC=20
-
-PUBLIC_PATH=public
-PUBLIC_MOUNT=/
-PUBLIC_INDEX=index.html
-PUBLIC_CACHE_CONTROL=public, max-age=3600
-PUBLIC_SPA_FALLBACK=false
-PUBLIC_COMPRESSION=false
-PUBLIC_COMPRESSION_MIN_SIZE=1024
-VIEWS_PATH=views
 
 STORAGE_PATH=storage
 
@@ -74,7 +65,7 @@ The `.env` file is the local runtime file. It can contain machine-specific value
 vix::config::Config cfg{".env"};
 ```
 
-The generated backend reads values from configuration when it starts. For example, it reads the template path, public path, public mount point, static cache settings, SPA fallback setting, and static compression settings.
+The generated backend reads values from configuration when it starts. Standard backend projects read the template path, public path, public mount point, static cache settings, SPA fallback setting, and static compression settings. API-only backend projects skip those settings because they do not configure templates or static file serving.
 
 ```cpp
 const std::string viewsPath = cfg.getString("templates.path", "views");
@@ -88,6 +79,8 @@ const bool publicSpaFallback =
 ```
 
 The backend should not hard-code local runtime values in `main.cpp` or in random source files. Keep those values in `.env`, document them in `.env.example`, and let the bootstrap read them through configuration.
+
+When generated with `--api-only`, the backend still reads server, storage, database, WebSocket, and diagnostics settings, but it does not read public file or view settings.
 
 ## `vix.json`
 
@@ -290,13 +283,6 @@ The generated production metadata can list required environment variables.
         "APP_NAME",
         "APP_ENV",
         "SERVER_PORT",
-        "PUBLIC_PATH",
-        "PUBLIC_MOUNT",
-        "PUBLIC_INDEX",
-        "PUBLIC_CACHE_CONTROL",
-        "PUBLIC_SPA_FALLBACK",
-        "PUBLIC_COMPRESSION",
-        "PUBLIC_COMPRESSION_MIN_SIZE",
         "DATABASE_ENGINE",
         "DATABASE_SQLITE_PATH"
       ]
@@ -305,7 +291,7 @@ The generated production metadata can list required environment variables.
 }
 ```
 
-This helps the project validate its runtime environment before deployment or production checks.
+This helps the project validate its runtime environment before deployment or production checks. Standard backend projects can also require public file variables. API-only backend projects do not require them.
 
 ```bash
 vix env check
@@ -394,6 +380,8 @@ views/
 storage/
 ```
 
+In API-only mode, only `storage/` is generated from that list because the backend does not serve static frontend files or templates.
+
 These directories are declared as resources in `vix.app`.
 
 ```ini
@@ -405,7 +393,16 @@ resources = [
 ]
 ```
 
-The resource declaration matters because the executable runs from the build output. The backend needs `.env`, public files, views, and storage to be available beside the built target.
+The resource declaration matters because the executable runs from the build output. The standard backend needs `.env`, public files, views, and storage to be available beside the built target.
+
+API-only backends use a smaller resource list:
+
+```ini
+resources = [
+  ".env=.env",
+  "storage=storage",
+]
+```
 
 A typical runtime output can look like this:
 
@@ -418,7 +415,7 @@ bin/
   storage/
 ```
 
-If the backend cannot find `.env`, `public/`, `views/`, or `storage/`, check the `resources` list first.
+If the backend cannot find `.env` or `storage/`, check the `resources` list first. In standard backend projects, also check `public/` and `views/`. In API-only projects, those directories are intentionally absent.
 
 ## Optional production config file
 
@@ -489,6 +486,15 @@ resources = [
   ".env=.env",
   "public=public",
   "views=views",
+  "storage=storage",
+]
+```
+
+API-only backends omit `public` and `views` from this list.
+
+```ini
+resources = [
+  ".env=.env",
   "storage=storage",
 ]
 ```
@@ -571,7 +577,7 @@ Another mistake is treating `vix.json` as the C++ target manifest. The backend e
 
 A third mistake is forgetting to copy `.env.example` to `.env` before running the backend. If the application cannot find configuration values or runtime paths, start by checking the local `.env` file.
 
-A fourth mistake is removing runtime directories from `resources`. If `public/`, `views/`, or `storage/` are needed at runtime, they must be copied beside the built target.
+A fourth mistake is removing runtime directories from `resources`. If `storage/` is needed at runtime, it must be copied beside the built target. In standard backend projects, the same applies to `public/` and `views/`; in API-only projects, those directories should not be added unless the project later starts serving files or templates.
 
 ## Recommended rule
 

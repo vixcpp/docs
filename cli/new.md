@@ -51,6 +51,9 @@ vix new .
 # Create a backend service
 vix new api --template backend
 
+# Create an API-only backend service
+vix new api --template backend --api-only
+
 # Create a server-rendered web project
 vix new blog --template web
 
@@ -80,6 +83,7 @@ vix new api --force
 | Application | `vix new api`                      | You want a small runnable C++ app.                      |
 | Application | `vix new api --app`                | You want to be explicit about the default app template. |
 | Backend     | `vix new api --template backend`   | You want a production-oriented API or backend service.  |
+| Backend     | `vix new api --template backend --api-only` | You want only the C++ API backend and will host the frontend separately. |
 | Web         | `vix new blog --template web`      | You want server-rendered HTML with Vix.                 |
 | Vue         | `vix new dashboard --template vue` | You want a Vue frontend with a Vix C++ backend.         |
 | Game        | `vix new mario --game`             | You want a Vix game project.                            |
@@ -192,6 +196,16 @@ Use the backend template when you need:
 - middleware-ready structure
 - database-ready structure
 - a stronger backend foundation than the default app template
+
+Use API-only mode when the C++ backend is deployed separately from the frontend:
+
+```bash
+vix new api --template backend --api-only
+```
+
+In API-only mode, the backend template still generates `src/main.cpp`, `AppBootstrap`, route and middleware registries, controllers, support helpers, storage, migrations, tests, `.env`, `.env.example`, `vix.app`, `vix.json`, and a README. It does not generate `public/` or `views/`, does not create static frontend files, and does not configure `app.templates(...)`, `app.static_dir(...)`, or static-file compression middleware.
+
+Use this when the frontend is hosted separately, for example as a Vue, React, Next.js, or static frontend application.
 
 ## Web template
 

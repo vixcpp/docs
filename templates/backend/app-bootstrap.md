@@ -2,14 +2,14 @@
 
 The backend template keeps `main.cpp` small and moves the startup sequence into `AppBootstrap`. This file is the place where the backend is assembled before it starts listening for requests.
 
-`AppBootstrap` does not own every feature in the backend. Its job is to create the application, load runtime configuration, configure shared runtime paths, register middleware, register base routes, connect generated modules, and start the server. That makes the backend startup path visible without turning the entry point into a large file.
+`AppBootstrap` does not own every feature in the backend. Its job is to create the application, load runtime configuration, configure shared runtime paths when the scaffold includes them, register middleware, register base routes, connect generated modules, and start the server. That makes the backend startup path visible without turning the entry point into a large file.
 
 ```txt
 src/main.cpp
   -> AppBootstrap
       -> configuration
       -> vix::App
-      -> public files and views
+      -> public files and views when generated
       -> middleware
       -> routes
       -> generated modules
@@ -30,7 +30,7 @@ int main()
 }
 ```
 
-This keeps the process entry point stable. The main function starts the backend, but it does not need to know how middleware, routes, static files, views, or modules are wired.
+This keeps the process entry point stable. The main function starts the backend, but it does not need to know how middleware, routes, optional static files, optional views, or modules are wired.
 
 ## Bootstrap declaration
 
@@ -109,11 +109,11 @@ A normal local workflow starts by copying the example file.
 cp .env.example .env
 ```
 
-The backend then reads values such as the server port, public directory, templates directory, static cache settings, compression settings, storage path, database defaults, and production diagnostics.
+The backend then reads values such as the server port, storage path, database defaults, and production diagnostics. Standard backend projects also read public directory, templates directory, static cache settings, and compression settings. API-only backend projects omit those frontend-serving settings.
 
 ## Public files and views
 
-The generated bootstrap reads public file and template settings from configuration.
+The standard backend scaffold reads public file and template settings from configuration.
 
 ```cpp
 const std::string viewsPath = cfg.getString("templates.path", "views");
@@ -152,9 +152,18 @@ resources = [
 ]
 ```
 
+When generated with `--api-only`, the backend skips this section entirely: it does not call `app.templates(...)`, does not call `app.static_dir(...)`, and does not include `public` or `views` in `vix.app` resources.
+
+```ini
+resources = [
+  ".env=.env",
+  "storage=storage",
+]
+```
+
 ## Static compression
 
-The generated backend can enable compression for static responses through configuration.
+The standard backend scaffold can enable compression for static responses through configuration.
 
 ```cpp
 const bool publicCompression = cfg.getBool("public.compression", false);
@@ -189,7 +198,7 @@ PUBLIC_COMPRESSION=false
 PUBLIC_COMPRESSION_MIN_SIZE=1024
 ```
 
-This gives the project a production-ready path without forcing compression during the first local run.
+This gives the project a production-ready path without forcing compression during the first local run. API-only backends do not include this static-file compression setup because they do not serve generated static frontend files.
 
 ## Middleware registration
 
@@ -323,8 +332,8 @@ Good responsibilities include:
 ```txt
 loading configuration
 creating vix::App
-configuring public files
-configuring templates
+configuring public files when the scaffold includes them
+configuring templates when the scaffold includes them
 registering middleware registry
 registering route registry
 registering generated modules
@@ -365,7 +374,7 @@ The bootstrap should not become the place where every feature is implemented. It
 
 ## Editing the bootstrap
 
-Edit `AppBootstrap.cpp` when the application startup flow changes. Good reasons include changing how configuration is loaded, adding a global middleware registry step, changing static file mounting, changing template setup, or adding a new application-level startup phase.
+Edit `AppBootstrap.cpp` when the application startup flow changes. Good reasons include changing how configuration is loaded, adding a global middleware registry step, changing static file mounting or template setup in standard backend projects, or adding a new application-level startup phase.
 
 Do not edit it every time a feature adds a route. Feature routes should live in controllers or modules.
 
@@ -422,11 +431,11 @@ The most common mistake is adding feature routes directly to `AppBootstrap.cpp`.
 
 Another mistake is editing generated module registration files instead of changing `vix.app`. The generated bridge is output. The manifest is the source of truth.
 
-A third mistake is forgetting that runtime files must be available beside the built target. If the backend cannot find `.env`, `public/`, `views/`, or `storage/`, check the `resources` list in `vix.app`.
+A third mistake is forgetting that runtime files must be available beside the built target. If the backend cannot find `.env` or `storage/`, check the `resources` list in `vix.app`. In standard backend projects, also check `public/` and `views/`. In API-only projects, those directories are intentionally absent.
 
 ## Recommended rule
 
-Keep `AppBootstrap` focused on the startup sequence. It should explain how the backend is assembled, not contain the implementation of every feature. Configuration, runtime paths, middleware, routes, generated modules, and server startup belong there. Feature behavior belongs in controllers, support files, or app modules.
+Keep `AppBootstrap` focused on the startup sequence. It should explain how the backend is assembled, not contain the implementation of every feature. Configuration, runtime paths that exist in the generated scaffold, middleware, routes, generated modules, and server startup belong there. Feature behavior belongs in controllers, support files, or app modules.
 
 ## Next step
 

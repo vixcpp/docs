@@ -79,6 +79,30 @@ vix build
 
 This workflow keeps the file structure, manifest declaration, and generated build wiring aligned.
 
+WebSocket modules use the same manifest flow.
+
+```bash
+vix modules add live_chat --websocket --workflow attached
+```
+
+The module name can be positional or explicit.
+
+```bash
+vix modules add live_chat --websocket
+vix modules add --websocket --name live_chat
+```
+
+Both forms declare the same module in `vix.app`.
+
+```ini
+[module.live_chat]
+enabled = true
+path = modules/live_chat
+kind = websocket.attached
+```
+
+Runtime WebSocket workflows such as `attached`, `standalone`, and `bridge` can provide the generated application runtime. The `websocket.client` workflow is different: it generates client/helper code and does not expose a runtime `run(...)` entry point.
+
 ## Enabled modules
 
 The `enabled` field controls whether a module participates in the generated application target.
@@ -170,6 +194,17 @@ A regular application may use service-style modules when the module is routed bu
 ```ini
 kind = "service"
 ```
+
+Generated WebSocket modules use a more specific kind.
+
+```ini
+kind = "websocket.attached"
+kind = "websocket.standalone"
+kind = "websocket.bridge"
+kind = "websocket.client"
+```
+
+The suffix matches the selected WebSocket workflow. Runtime workflows participate in generated application startup. `websocket.client` is intentionally treated as non-runtime support code.
 
 Simple internal code modules may use:
 
@@ -321,7 +356,7 @@ This gives simple applications one stable place where internal modules are conne
 
 ## Backend template integration
 
-A generated backend uses `AppBootstrap` as the startup owner. The bootstrap creates the Vix app, loads configuration, mounts public files, registers middleware, registers the main routes, then registers enabled modules.
+A generated backend uses `AppBootstrap` as the startup owner. The bootstrap creates the Vix app, loads configuration, mounts public files when the standard backend scaffold includes them, registers middleware, registers the main routes, then registers enabled modules.
 
 ```txt
 main.cpp

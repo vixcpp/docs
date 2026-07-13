@@ -71,6 +71,15 @@ modules/auth/
 
 The exact skeleton depends on the project Vix detects. A backend `vix.app` project receives backend modules. A regular application can receive routed service modules. A classic CMake project can receive plain C++ modules that expose an alias target such as `api::auth`.
 
+WebSocket modules are generated with the same command group.
+
+```bash
+vix modules add live_chat --websocket --workflow attached
+vix modules add --websocket --name notifications --workflow bridge
+```
+
+The module name can be positional or provided through `--name`. WebSocket workflows include `attached`, `standalone`, `bridge`, and `client`; only `client` is non-runtime support code.
+
 ## Modules in vix.app projects
 
 In a `vix.app` project, modules are declared in the application manifest with `[module.<name>]` sections.

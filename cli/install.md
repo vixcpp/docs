@@ -52,6 +52,110 @@ vix install -g <package>
 vix install --global <package>
 ```
 
+## Quick Git Workflows
+
+### Try One File
+
+For a temporary experiment, pass a Git dependency directly to `vix run`:
+
+```bash
+vix run main.cpp --dep https://github.com/fmtlib/fmt
+```
+
+Vix creates a temporary dependency environment, resolves the latest stable Git tag, detects the main CMake target, builds and runs the file, then removes the temporary project files. The current directory is not modified.
+
+A compact version can be written with `@`:
+
+```bash
+vix run main.cpp --dep https://github.com/fmtlib/fmt@11.2.0
+```
+
+For advanced cases use a structured dependency spec:
+
+```bash
+vix run main.cpp \
+  --dep "git=https://github.com/fmtlib/fmt;tag=11.2.0;target=fmt::fmt"
+```
+
+Use `--save` to turn the temporary dependency into a project dependency:
+
+```bash
+vix run main.cpp --dep https://github.com/fmtlib/fmt --save
+```
+
+### Initialize an Existing Folder
+
+`vix init` makes the current directory a minimal Vix project. It does not create a full template like `vix new`.
+
+```bash
+mkdir fmt-test
+cd fmt-test
+cat > main.cpp <<'CPP'
+#include <fmt/format.h>
+
+int main()
+{
+  fmt::print("Hello from fmt!\n");
+}
+CPP
+
+vix init
+vix install https://github.com/fmtlib/fmt
+vix run main.cpp
+```
+
+A generated `vix.app` looks like this:
+
+```toml
+name = "fmt-test"
+type = "executable"
+standard = "c++20"
+sources = ["main.cpp"]
+```
+
+Useful options:
+
+```bash
+vix init --name hello
+vix init --lib
+vix init --standard c++23
+vix init --force
+```
+
+### Git Dependency Autodetection
+
+For common CMake and header-only repositories, this is enough:
+
+```bash
+vix install https://github.com/fmtlib/fmt
+```
+
+When no revision is provided, Vix reads Git tags, keeps SemVer-compatible stable tags, ignores prereleases by default, and chooses the newest stable version. The lockfile stores the exact commit, so later `vix build` and `vix run` do not move to a newer tag automatically.
+
+Vix also tries to detect the main CMake target. For `fmt`, it selects:
+
+```toml
+target = "fmt::fmt"
+```
+
+Explicit options still win when autodetection is ambiguous or when you want another target:
+
+```bash
+vix install https://github.com/fmtlib/fmt \
+  --tag 11.2.0 \
+  --target fmt::fmt-header-only
+```
+
+Header-only repositories without CMake can be detected when they expose one clear include root such as `include/` or `single_include/`. Otherwise declare it explicitly:
+
+```bash
+vix install https://github.com/example/headers \
+  --header-only \
+  --include include
+```
+
+Git dependencies currently support CMake and header-only repositories. Other build systems are not configured automatically.
+
 ## Basic examples
 
 ```bash
@@ -147,16 +251,24 @@ or:
 vix install --global gk/jwt
 ```
 
-Global mode resolves one package from the registry, fetches it, stores it globally, and records it in the global installed manifest.
+Global mode resolves one package from the registry, fetches it, prepares its Vix dependencies, builds it with CMake when needed, runs CMake install rules when they exist, and records installed files in the global manifest.
 
-Typical outputs:
+Typical Linux/macOS layout:
 
 ```txt
-~/.vix/global/packages/
-~/.vix/global/installed.json
+~/.vix/global/
+├── bin/
+├── include/
+├── lib/
+├── share/
+├── build/
+├── tmp/
+└── installed.json
 ```
 
-Global install is useful when you want a package available outside one specific project.
+On Windows the same layout is used under the Vix user root unless `VIX_GLOBAL_PREFIX` is set. Global install does not use `/usr/local` by default and does not require `sudo`.
+
+Global install is useful when you want a package available outside one specific project, including CLI packages installed similarly to npm global commands.
 
 ## Global install syntax
 
@@ -180,6 +292,76 @@ vix install -g gk/jwt@^1.0.0
 vix install -g @gk/jwt
 vix install -g @gk/jwt@~1.2.0
 ```
+
+## Global executables
+
+If a package installs executables into `bin` through CMake, those files are recorded as global commands. Example:
+
+```bash
+vix install -g vixcpp/ovi
+ovi --version
+ovi --help
+ovi greet Gaspard
+```
+
+Vix installs the real executable under `~/.vix/global/bin`. If that directory is not already in `PATH`, Vix updates the user shell configuration for Bash, Zsh, or Fish. When a user bin directory such as `~/.local/bin` is already in the current `PATH`, Vix also creates a command shim there so the command is available immediately in the current terminal. On Windows, Vix updates the user PATH and handles `.exe`, `.cmd`, and `.bat`.
+
+## CMake install and Vix fallback
+
+Global install prefers the package's CMake install rules:
+
+```bash
+cmake -S <source> -B <build> \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=<temporary-stage-prefix>
+cmake --build <build> --config Release
+cmake --install <build> --config Release
+```
+
+If a Vix package has dependencies, Vix prepares the package checkout with `.vix/deps` and `.vix/vix_deps.cmake` before configuring it, the same integration used by `vix build`. If CMake install produces no files for a header-only package, Vix falls back to installing headers and keeps the source checkout recorded so `vix run` and `vix build` can use the package's source CMake integration.
+
+A package that provides a CLI should still declare CMake install rules for its executables:
+
+```cmake
+add_executable(ovi_cli src/main.cpp)
+set_target_properties(ovi_cli PROPERTIES OUTPUT_NAME ovi)
+install(TARGETS ovi_cli RUNTIME DESTINATION bin)
+```
+
+## Declaring commands
+
+A package may document and validate expected commands in `vix.json` using `bin`:
+
+```json
+{
+  "bin": {
+    "ovi": "ovi_cli",
+    "ovi-doctor": "ovi_doctor_cli"
+  }
+}
+```
+
+The keys are command names exposed in `bin`; the values are CMake target names for documentation. This field is optional. CMake `install()` still decides what is installed. If `bin` is present, Vix verifies that every declared command was installed. Command names must be plain file names, not paths.
+
+The older explicit form is also accepted:
+
+```json
+{
+  "executables": [
+    { "name": "ovi", "target": "ovi_cli" }
+  ]
+}
+```
+
+## Listing and uninstalling globals
+
+```bash
+vix list -g
+vix uninstall -g vixcpp/ovi
+vix uninstall -g @vixcpp/ovi
+```
+
+Global install and uninstall print a short npm-style result with elapsed time, for example `vixcpp/ovi@0.1.0 installed globally in 1.2s` or `removed vixcpp/ovi@0.1.0 in 90ms`. Uninstall removes only the files and command shims recorded for that package and then removes empty directories left behind. It does not remove unmanaged files from the global prefix.
 
 ## Version resolution
 
@@ -337,6 +519,106 @@ The project then receives links or copies under:
 ```
 
 This keeps project installs fast while keeping dependency state reproducible.
+
+## Git dependencies
+
+Vix can install a dependency directly from a Git repository when the project uses `vix.app`.
+
+```bash
+vix install https://github.com/fmtlib/fmt --tag 11.2.0 --target fmt::fmt
+vix install https://github.com/nlohmann/json.git --tag v3.12.0 --target nlohmann_json::nlohmann_json
+```
+
+The command adds a structured dependency block to `vix.app`, resolves the requested revision to an exact commit, writes `vix.lock`, fetches the repository into the Git cache, links it into `.vix/deps/`, and regenerates `.vix/vix_deps.cmake`.
+
+Supported revision fields are exclusive:
+
+```toml
+[dependencies.fmt]
+git = "https://github.com/fmtlib/fmt"
+tag = "11.2.0"
+target = "fmt::fmt"
+```
+
+```toml
+[dependencies.library]
+git = "https://github.com/example/library"
+branch = "main"
+target = "library::library"
+```
+
+```toml
+[dependencies.library]
+git = "https://github.com/example/library"
+rev = "a1b2c3d4e5f6"
+target = "library::library"
+```
+
+For monorepos, select a subdirectory:
+
+```toml
+[dependencies.parser]
+git = "https://github.com/company/monorepo"
+tag = "v2.0.0"
+subdirectory = "libs/parser"
+target = "company::parser"
+```
+
+For header-only repositories without CMake:
+
+```toml
+[dependencies.sample]
+git = "https://github.com/example/sample-headers"
+tag = "v1.0.0"
+header_only = true
+include = "include"
+```
+
+Multiple include directories are written as:
+
+```toml
+includes = ["include", "single_include"]
+```
+
+CMake options use the nested table form:
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+
+[dependencies.spdlog.cmake]
+SPDLOG_BUILD_TESTS = false
+SPDLOG_BUILD_EXAMPLE = false
+SPDLOG_BUILD_BENCH = false
+```
+
+Git dependencies currently support CMake projects and header-only repositories. Vix does not claim universal support for Bazel, Meson, Autotools, Premake, or custom Makefiles.
+
+Git dependencies are untrusted code: CMake configure and build scripts may execute code on the machine. Review the repository before adding it.
+
+### Git lockfile entries
+
+A Git dependency is stored in `vix.lock` with `source = "git"` data in JSON form. The lock records the normalized URL, requested revision, resolved commit, targets, include directories, subdirectory, CMake options, and content hash. Branches are resolved to a commit and are not updated by `vix build`.
+
+### Git cache
+
+Registry packages use `~/.vix/store/git/`. Direct Git dependencies use:
+
+```txt
+~/.vix/cache/git/
+```
+
+The cache identity includes the repository URL and resolved commit. The project receives a link or copy under `.vix/deps/<name>/`, so normal builds can run offline after `vix install` or `vix deps` has completed.
+
+### Removing a Git dependency
+
+```bash
+vix uninstall sample
+```
+
+This removes the `[dependencies.sample]` block from `vix.app`, removes the lock entry, removes `.vix/deps/sample`, and leaves the shared Git cache intact.
 
 ## Integrity checks
 

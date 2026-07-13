@@ -101,6 +101,51 @@ app.get("/api/auth", [](vix::Request &req, vix::Response &res)
 
 The prefix does not replace route registration. Routes are still registered by module code. The prefix gives the module a declared route ownership area and lets the module checker detect conflicts between modules.
 
+## WebSocket module shape
+
+A generated WebSocket module stores its workflow in `vix.module`.
+
+```ini
+name = "live_chat"
+kind = "websocket.attached"
+runtime = true
+
+[websocket]
+workflow = "attached"
+
+[tests]
+enabled = true
+```
+
+The `kind` value identifies the module as a WebSocket module and records the selected workflow. The supported workflow suffixes are:
+
+```txt
+websocket.attached
+websocket.standalone
+websocket.bridge
+websocket.client
+```
+
+`attached`, `standalone`, and `bridge` are runtime workflows. They generate a module entry point that can take ownership of the application runtime. `client` is support code only and does not generate a runtime `run(...)` entry point.
+
+The generated layout follows the module name.
+
+```txt
+modules/live_chat/
+  include/live_chat/LiveChatModule.hpp
+  src/LiveChatModule.cpp
+  tests/test_live_chat.cpp
+  CMakeLists.txt
+  vix.module
+```
+
+Create one with the CLI.
+
+```bash
+vix modules add live_chat --websocket --workflow attached
+vix modules add --websocket --name notifications --workflow bridge
+```
+
 ## `name`
 
 The `name` field is the stable module name.
@@ -150,6 +195,14 @@ A routed module in a non-backend application may use:
 ```ini
 kind = "service"
 ```
+
+A generated WebSocket module uses:
+
+```ini
+kind = "websocket.attached"
+```
+
+The exact suffix matches the WebSocket workflow. Use `websocket.client` only for non-runtime client/helper modules.
 
 The value should describe what the module does in the application. A module that owns HTTP backend routes should use `backend`. A module that only exposes reusable internal C++ code can use `module`.
 

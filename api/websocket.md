@@ -21,6 +21,25 @@ WebSocket → bidirectional live connection
 Config → RuntimeExecutor → App + WebSocket Server → run_http_and_ws(...)
 ```
 
+## Generate a WebSocket app module
+
+For a `vix.app` project, the CLI can generate the WebSocket module skeleton and register it in the application manifest.
+
+```bash
+vix modules init
+vix modules add live_chat --websocket --workflow attached
+```
+
+The module name can also be passed explicitly with `--name`.
+
+```bash
+vix modules add --websocket --name notifications --workflow bridge
+```
+
+Supported workflows are `attached`, `standalone`, `bridge`, and `client`. The first three are runtime workflows and generate a module `run(...)` entry point. `client` generates support code only.
+
+Backend templates include a static WebSocket status panel on the generated home page, so running a backend with a runtime WebSocket module gives an immediate browser-side connection check.
+
 ## Minimal HTTP + WebSocket app
 
 ```cpp

@@ -38,10 +38,13 @@ check                Validate module structure and dependencies
 ```txt
 -d, --dir <path>         Project root. Defaults to the current directory.
 --project <name>         Override the detected project name.
+--name <name>            Explicit module name, useful with generator flags.
 --no-patch               Do not patch the root CMakeLists.txt during init.
 --patch                  Patch the root CMakeLists.txt during init.
 --no-link                Do not auto-link a new module into the main target.
 --link                   Auto-link a new module into the main target.
+--websocket              Generate a WebSocket application module.
+--workflow <name>        WebSocket workflow: attached, standalone, bridge, client.
 -h, --help               Show command help.
 ```
 
@@ -125,6 +128,59 @@ Module names may contain letters, numbers, underscores, and hyphens. Hyphens are
 ```txt
 user-profile -> user_profile
 ```
+
+When a generator flag would otherwise use a default name, pass the module name explicitly.
+
+```bash
+vix modules add live_chat --websocket
+vix modules add --websocket --name live_chat
+```
+
+Both commands create `modules/live_chat/`. The positional name is the shortest form; `--name` is useful in scripts where generator options are assembled first.
+
+## Add a WebSocket module
+
+`vix modules add <name> --websocket` creates a WebSocket application module. The generated module is declared in `vix.app`, gets its own `vix.module` metadata, and can be built through the normal application workflow.
+
+```bash
+vix modules init
+vix modules add live_chat --websocket --workflow attached
+vix build
+vix run
+```
+
+The generated files follow the chosen module name.
+
+```txt
+modules/live_chat/
+  include/live_chat/LiveChatModule.hpp
+  src/LiveChatModule.cpp
+  tests/test_live_chat.cpp
+  CMakeLists.txt
+  vix.module
+```
+
+The WebSocket workflow controls what the module generates.
+
+| Workflow     | Use case                                      | Runtime module |
+| ------------ | --------------------------------------------- | -------------- |
+| `attached`   | Run HTTP and WebSocket together in one app.   | yes            |
+| `standalone` | Run a WebSocket server owned by the module.   | yes            |
+| `bridge`     | Bridge application setup to WebSocket setup.  | yes            |
+| `client`     | Generate client/helper code without runtime.  | no             |
+
+The server workflows generate a module `run(...)` entry point and use the Vix WebSocket runtime headers. The `client` workflow intentionally does not generate a runtime `run(...)` entry point, so it can be enabled without replacing the application runtime.
+
+```ini
+name = "live_chat"
+kind = "websocket.attached"
+runtime = true
+
+[websocket]
+workflow = "attached"
+```
+
+For backend templates, the generated static home page includes a browser-side WebSocket status panel. It attempts to connect to the development WebSocket endpoint, shows connected or disconnected state, and gives a quick visual check that the generated WebSocket module is running.
 
 ## Add without linking
 

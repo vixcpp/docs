@@ -95,6 +95,51 @@ modules/auth/
 
 Module names are normalized before files are written. A name such as `user-profile` becomes `user_profile`, which keeps namespaces, include paths, and CMake target names stable.
 
+Generator flags can also receive the module name through `--name`.
+
+```bash
+vix modules add live_chat --websocket
+vix modules add --websocket --name live_chat
+```
+
+Both forms create a module named `live_chat`. The positional name is usually clearer for humans; `--name` is useful for generated scripts and option-driven templates.
+
+## Add a WebSocket module
+
+Use `--websocket` to generate a WebSocket application module.
+
+```bash
+vix modules add live_chat --websocket --workflow attached
+```
+
+The generated module is registered in `vix.app`, placed under `modules/live_chat/`, and built by the normal `vix build` workflow.
+
+```txt
+modules/live_chat/
+  include/live_chat/LiveChatModule.hpp
+  src/LiveChatModule.cpp
+  tests/test_live_chat.cpp
+  CMakeLists.txt
+  vix.module
+```
+
+WebSocket modules support these workflows.
+
+| Workflow     | Description                                  |
+| ------------ | -------------------------------------------- |
+| `attached`   | Runs HTTP and WebSocket together.            |
+| `standalone` | Runs a WebSocket server owned by the module. |
+| `bridge`     | Bridges app setup and WebSocket setup.       |
+| `client`     | Generates client/helper code only.           |
+
+`attached`, `standalone`, and `bridge` are runtime workflows. They generate a module `run(...)` entry point. `client` does not generate a runtime entry point and can be used for code that supports a WebSocket client without taking ownership of application startup.
+
+```bash
+vix modules add --websocket --name notifications --workflow bridge
+```
+
+Backend templates also include a static WebSocket status panel on the generated home page. When a runtime WebSocket module is running, the panel connects from the browser and shows the live connection state.
+
 ## Automatic registration
 
 When the project has a `vix.app` file, `vix modules add <name>` registers the new module in the application manifest.

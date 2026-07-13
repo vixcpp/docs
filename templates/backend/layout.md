@@ -40,6 +40,7 @@ api/
   public/
   views/
   storage/
+  migrations/
   tests/
     test_basic.cpp
     vix.app
@@ -49,6 +50,8 @@ api/
   vix.app
   vix.json
 ```
+
+When generated with `--api-only`, the layout keeps the backend source tree, storage, migrations, tests, `.env`, `.env.example`, `vix.app`, `vix.json`, and README, but omits `public/` and `views/`.
 
 Some generated versions may also include additional configuration files such as `config/production.json`. The core backend layout stays the same: the root `vix.app` describes the backend executable, `vix.json` describes project workflow and production metadata, and the source tree keeps backend responsibilities separated.
 
@@ -72,7 +75,7 @@ int main()
 }
 ```
 
-This file should stay boring. It starts the process and hands control to the backend bootstrap. Routes, middleware, configuration, static files, module registration, and server startup belong elsewhere.
+This file should stay boring. It starts the process and hands control to the backend bootstrap. Routes, middleware, configuration, optional static files, module registration, and server startup belong elsewhere.
 
 ## `include/<project>/app/AppBootstrap.hpp`
 
@@ -98,7 +101,7 @@ The bootstrap implementation is the center of the generated backend startup flow
 src/api/app/AppBootstrap.cpp
 ```
 
-It loads runtime configuration from `.env`, creates the `vix::App`, configures public files and views, registers middleware, registers base application routes, connects generated application modules, and finally starts the server.
+It loads runtime configuration from `.env`, creates the `vix::App`, configures public files and views for the standard backend scaffold, registers middleware, registers base application routes, connects generated application modules, and finally starts the server.
 
 The generated flow is:
 
@@ -106,7 +109,7 @@ The generated flow is:
 AppBootstrap::run()
   -> vix::config::Config cfg{".env"}
   -> vix::App app
-  -> configure static files and views
+  -> configure static files and views when generated
   -> MiddlewareRegistry::register_all(app)
   -> RouteRegistry::register_all(app)
   -> vix::app_generated::register_app_modules(app)
@@ -201,7 +204,7 @@ This file is not meant to contain all application logic. It is a small shared su
 
 ## `public/`
 
-The `public/` directory is for static files.
+The standard backend scaffold includes `public/` for static files.
 
 ```txt
 public/
@@ -219,9 +222,11 @@ resources = [
 
 This allows the built backend to find the directory beside the executable.
 
+API-only backends do not generate `public/`, do not write static files such as `index.html`, `app.css`, `app.js`, `status.html`, `status.css`, or `status.js`, and do not call `app.static_dir(...)`.
+
 ## `views/`
 
-The `views/` directory is available for templates.
+The standard backend scaffold includes `views/` for templates.
 
 ```txt
 views/
@@ -230,6 +235,8 @@ views/
 The backend template is API-oriented, but it still provides a place for views because some backend services need simple HTML pages, error views, diagnostics, admin pages, or generated documentation.
 
 For a project whose main purpose is server-rendered HTML, the `web` template is usually a better fit.
+
+API-only backends do not generate `views/` and do not call `app.templates(...)`.
 
 ## `storage/`
 
@@ -317,15 +324,13 @@ Copy it before running the backend locally.
 cp .env.example .env
 ```
 
-The file documents the expected runtime values: application name, environment, server host and port, TLS options, logging settings, public file settings, storage path, database settings, ORM values, WebSocket settings, and production diagnostics.
+The file documents the expected runtime values: application name, environment, server host and port, TLS options, logging settings, storage path, database settings, ORM values, WebSocket settings, and production diagnostics. Standard backend projects also include public file and template settings. API-only backend projects omit those variables.
 
 ```dotenv
 APP_NAME=api
 APP_ENV=development
 SERVER_HOST=0.0.0.0
 SERVER_PORT=8080
-PUBLIC_PATH=public
-VIEWS_PATH=views
 DATABASE_ENGINE=sqlite
 DATABASE_SQLITE_PATH=storage/api.db
 ```
@@ -380,6 +385,15 @@ resources = [
   ".env=.env",
   "public=public",
   "views=views",
+  "storage=storage",
+]
+```
+
+API-only backends omit frontend/template resources:
+
+```ini
+resources = [
+  ".env=.env",
   "storage=storage",
 ]
 ```
@@ -461,8 +475,7 @@ src/main.cpp
   -> AppBootstrap
       -> Config
       -> vix::App
-      -> public/
-      -> views/
+      -> public/ and views/ when generated
       -> MiddlewareRegistry
       -> RouteRegistry
       -> generated app modules
@@ -479,9 +492,10 @@ RouteRegistry                 base application routes
 HomeController                default API route
 HealthController              health routes
 HttpResponses                 shared JSON response helpers
-public/                       static files
-views/                        templates
+public/                       static files in the standard backend scaffold
+views/                        templates in the standard backend scaffold
 storage/                      runtime data
+migrations/                   database migration space
 tests/                        generated test target
 vix.app                       backend executable manifest
 vix.json                      project workflow and production metadata
