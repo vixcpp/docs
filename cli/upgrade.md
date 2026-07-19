@@ -269,6 +269,16 @@ vix upgrade --sdk web,data,desktop
 
 This is useful when one development machine is used for several kinds of projects. For example, the same machine may build a backend API with the `web` profile and a database tool with the `data` profile.
 
+When a single project uses modules from multiple profiles, install the exact profiles that provide those modules. For example, a backend that links both `vix::db` and `vix::websocket` should install `data` and `web`.
+
+```bash id="sdk-web-data-project"
+vix upgrade --sdk web data
+```
+
+During `vix build`, Vix detects the required `vix::*` targets, selects the installed provider profiles, and generates a composed SDK package for the project. The project does not need to install the heavier `all` profile just to combine `web` and `data`.
+
+Profiles composed for one build must have the same Vix version. Upgrade them together when the project depends on more than one profile.
+
 Install multiple profiles for a specific version:
 
 ```bash id="kgnex2"

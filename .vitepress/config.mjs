@@ -668,6 +668,32 @@ const referenceSidebar = {
           ],
         },
         {
+          text: "Package Registry",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/registry/",
+            },
+            {
+              text: "Package Metadata",
+              link: "/registry/package-metadata",
+            },
+            {
+              text: "vix.json Reference",
+              link: "/registry/vix-json",
+            },
+            {
+              text: "Publishing Packages",
+              link: "/registry/publishing",
+            },
+            {
+              text: "Extensions",
+              link: "/registry/extensions",
+            },
+          ],
+        },
+        {
           text: "Registry and Packages",
           collapsed: true,
           items: [
@@ -2198,6 +2224,26 @@ const referenceSidebar = {
             {
               text: "Runtime",
               link: "/modules/note/runtime",
+            },
+            {
+              text: "Creating Extensions",
+              link: "/modules/note/extensions",
+            },
+            {
+              text: "Extension Manifest",
+              link: "/modules/note/extension-manifest",
+            },
+            {
+              text: "Extension Requirements",
+              link: "/modules/note/extension-requirements",
+            },
+            {
+              text: "Extension Protocol",
+              link: "/modules/note/extension-protocol",
+            },
+            {
+              text: "Pyrelune Tutorial",
+              link: "/modules/note/extension-tutorial-pyrelune",
             },
             {
               text: "Project Context",

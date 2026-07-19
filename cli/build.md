@@ -133,6 +133,38 @@ Use verbose mode for more details:
 vix build -v
 ```
 
+## SDK profile composition
+
+Before configuring CMake, `vix build` scans project build files for known `vix::*` targets and resolves the SDK profiles that provide those modules. If the project links modules from more than one installed profile, Vix composes those profiles into a deterministic local CMake package and passes it through `Vix_DIR`.
+
+Example:
+
+```txt id="sdk-compose-required"
+required targets: vix::db, vix::websocket
+selected profiles: data, web
+```
+
+This lets one project use modules from `web` and `data` after installing only those profiles.
+
+```bash id="sdk-compose-install"
+vix upgrade --sdk web data
+vix build --preset release
+```
+
+The composed package avoids the CMake package collision caused by each profile exporting its own `VixConfig.cmake`. Vix does not rely on CMake merging multiple `find_package(Vix)` results.
+
+Installed profiles used together must have the same Vix version. If versions differ, Vix refuses to mix them and asks for a coherent SDK set.
+
+If a known Vix module is missing, Vix reports the provider profile before CMake configuration starts. For example, a project requiring `vix::websocket` with only `data` installed reports:
+
+```txt id="sdk-compose-missing"
+Missing SDK modules:
+  vix::websocket  provider profile: web
+install command: vix upgrade --sdk web
+```
+
+The `all` profile remains useful for maintainer workflows, complete platform testing, and projects that intentionally use the whole platform. It is not required for a normal `web + data` project.
+
 ## Project types
 
 `vix build` supports two project models:

@@ -347,9 +347,7 @@ The older explicit form is also accepted:
 
 ```json
 {
-  "executables": [
-    { "name": "ovi", "target": "ovi_cli" }
-  ]
+  "executables": [{ "name": "ovi", "target": "ovi_cli" }]
 }
 ```
 
@@ -1446,3 +1444,31 @@ Keep project installs reproducible with `vix.lock`.
 Update dependency versions intentionally.
 
 [Open the vix update guide](/cli/update)
+
+## Global Note extensions
+
+`vix install -g` is also the installation path for Vix Note extensions.
+
+```bash
+vix install -g softadastra/pyrelune
+```
+
+The package is resolved from the registry like any other global package. Vix fetches the resolved commit, builds it when needed, runs CMake install rules, copies installed files into the global prefix, and records the package in:
+
+```txt
+~/.vix/global/installed.json
+```
+
+If the resolved registry version contains `extensions.note`, Vix preserves that version-level metadata in the installed manifest. Vix Note reads that installed metadata during global extension discovery.
+
+For executable extensions, the package should install its runtime command under the global `bin/` directory and declare it in `bin`:
+
+```json
+{
+  "bin": {
+    "pyrelune": "pyrelune"
+  }
+}
+```
+
+CMake install rules remain authoritative. If the package declares an executable command but CMake does not install it, global install fails rather than recording a broken command as installed.

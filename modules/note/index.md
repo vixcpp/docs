@@ -72,11 +72,11 @@ int main()
 
 ````
 
-The metadata comments preserve stable cell ids across save and load cycles. They also let the local UI know whether a cell is Markdown, C++, Reply, or HTML. The file remains readable as text, which matters for source control and long-term maintenance.
+The metadata comments preserve stable cell ids and cell type ids across save and load cycles. Built-in documents commonly use Markdown, C++, Reply, and HTML, but extension packages can add additional text-based cell types such as Python. The file remains readable as text, which matters for source control and long-term maintenance.
 
 ## Cell types
 
-Vix Note uses four main cell types.
+Vix Note ships with four built-in cell types.
 
 ```txt id="plaf63"
 markdown   explanation and normal documentation
@@ -85,7 +85,9 @@ reply      small Reply expressions evaluated by the embedded Reply runtime
 html       raw HTML rendered inside the note UI
 ````
 
-Markdown and HTML cells are rendered by the UI. C++ and Reply cells are executable. When executable cells run, Vix Note stores their outputs in the current runtime session so the UI can display stdout, errors, compiler diagnostics, hints, debug information, or raw logs near the cell.
+Extension packages can add more cell types through `extensions.note` metadata. A Python runtime, for example, can contribute a `python` cell type after it is installed globally with `vix install -g`.
+
+Markdown and HTML cells are rendered by the UI. C++ and Reply cells are executable. Extension cell types are executable when their descriptor declares `executable: true` and their runtime is available. When executable cells run, Vix Note stores their outputs in the current runtime session so the UI can display stdout, errors, compiler diagnostics, hints, debug information, or raw logs near the cell.
 
 ## C++ cells
 

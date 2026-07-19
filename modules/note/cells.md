@@ -10,9 +10,9 @@ vix note lessons/cpp-basics.vixnote
 
 Cells are not only a UI detail. They are the structure that connects the document format, the parser, the runtime, the local server, and the exporter.
 
-## Cell kinds
+## Cell types
 
-Vix Note currently uses four main cell kinds.
+Vix Note ships with four built-in cell types.
 
 ```txt id="jv1bva"
 markdown
@@ -23,7 +23,9 @@ html
 
 Markdown cells are used for explanation. C++ cells are executed through the normal Vix runtime by delegating to `vix run`. Reply cells are evaluated through the embedded Reply runtime. HTML cells are rendered by the UI and the exporter.
 
-Only `cpp` and `reply` cells are executable. Markdown and HTML cells are rendered, but they are not run by the execution kernel.
+The document model now treats the cell type as text. Extension packages can contribute additional ids such as `python` through `extensions.note`. Vix Note preserves unknown type ids instead of converting them to C++ or Markdown.
+
+Only executable descriptors are run by the execution kernel. The built-in executable types are `cpp` and `reply`; extension types are executable only when their descriptor declares `executable: true` and a runtime is available.
 
 ## Markdown cells
 
@@ -98,10 +100,11 @@ HTML cells are useful for small visual explanations. They should remain focused 
 The runtime only executes cells that can produce runtime output.
 
 ```txt id="j3jott"
-cpp      executable
-reply    executable
-markdown rendered only
-html     rendered only
+cpp          executable
+reply        executable
+markdown     rendered only
+html         rendered only
+extension    executable when its descriptor and runtime allow it
 ```
 
 When an executable cell runs, the result is attached to that cell in the active notebook session. The cell receives an execution count and a list of outputs. The UI can then render the output directly under the cell that produced it.

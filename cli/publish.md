@@ -182,3 +182,26 @@ Get machine-readable dry-run output:
 ```bash
 vix publish 0.1.0 --dry-run --json
 ```
+
+## Note extension packages
+
+`vix publish` validates `extensions.note` when the manifest declares a Vix Note extension.
+
+A Note extension is still a normal package. The package type remains one of the supported Vix package types, usually `executable` for an external runtime. The extra metadata only tells Vix Note which cell types and runtime protocol the package contributes.
+
+During publish, Vix validates the same package fields as any other package, then validates the Note extension declaration:
+
+```txt
+extensions must be an object
+extensions.note must be an object
+extensions.note.api must be "1"
+extensions.note.cellTypes must be an array
+external cell type ids cannot be markdown, html, cpp, or reply
+runtime.protocol must be vix-note-extension-1
+runtime.mode must be oneshot
+runtime.command must be a command name, not a path
+```
+
+The registry entry stores a compact extension summary for search and stores the exact extension declaration under the published version. Installation uses the version-level declaration.
+
+See [Publishing Packages](/registry/publishing) and [Extension Manifest](/modules/note/extension-manifest) for the full manifest shape.

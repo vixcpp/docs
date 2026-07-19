@@ -786,3 +786,49 @@ Commit `vix.json` and `vix.lock` after dependency changes.
 Add a package to your project.
 
 [Open the vix add guide](/cli/add)
+
+## Extension filters
+
+`vix search` can filter packages by extension metadata stored in the local registry index.
+
+```bash
+vix search --extension note
+vix search python --extension note
+vix search --extension note --capability mime-output
+vix search --extension note --type executable
+vix search python --extension note --json
+```
+
+The query is optional when at least one filter is present. Filters are applied before scoring. If the query is empty, matching packages receive a base score so filtered discovery still returns results.
+
+`--extension note` selects packages whose registry entry contains `extensions.note`. `--capability` checks the selected extension's `capabilities` array. `--type` filters the package `type` field.
+
+JSON output contains the package id, latest version, type, description, extension host, capabilities, and contributed cell type ids:
+
+```json
+{
+  "query": "python",
+  "page": 1,
+  "limit": 20,
+  "total": 1,
+  "items": [
+    {
+      "id": "softadastra/pyrelune",
+      "version": "0.1.1",
+      "type": "executable",
+      "description": "Python execution kernel for Vix Note.",
+      "extension": "note",
+      "capabilities": [
+        "execute",
+        "stdout",
+        "stderr",
+        "mime-output",
+        "diagnostics"
+      ],
+      "cellTypes": ["python"]
+    }
+  ]
+}
+```
+
+Search remains offline. Run `vix registry sync` when extension results are missing or stale.

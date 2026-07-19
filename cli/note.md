@@ -373,3 +373,40 @@ cmake --build build -j
 | `vix desktop` | Run a Vix web UI inside a desktop shell |
 | `vix mobile`  | Generate and run a mobile WebView shell |
 | `vix dev`     | Run a development server with reload    |
+
+## Extension options
+
+Vix Note discovers built-in, global, and project extensions when the workspace starts.
+
+List detected extensions and exit:
+
+```bash
+vix note --list-extensions
+```
+
+Disable external extensions while keeping built-in cell types:
+
+```bash
+vix note --no-extensions
+```
+
+The built-in cell types are always available:
+
+```txt
+markdown
+html
+cpp
+reply
+```
+
+Global extensions are read from `~/.vix/global/installed.json` or from `$VIX_GLOBAL_PREFIX/installed.json` when `VIX_GLOBAL_PREFIX` is set. Project extensions are discovered under `<project>/.vix/deps/`.
+
+The local server exposes extension metadata to the UI through:
+
+```txt
+/api/extensions
+```
+
+This route is used by the browser to build the dynamic cell type picker. A document can keep a cell type such as `python` even when the extension is not currently available; Vix Note reports the runtime as unavailable instead of converting the cell to another type.
+
+See [Creating Note Extensions](/modules/note/extensions) for the package author workflow.
