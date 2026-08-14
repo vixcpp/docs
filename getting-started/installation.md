@@ -122,25 +122,25 @@ This is useful when one machine is used for different kinds of Vix projects.
 Install a specific CLI release:
 
 ```bash
-vix upgrade v2.7.0
+vix upgrade v2.8.4
 ```
 
 Or:
 
 ```bash
-vix upgrade --version v2.7.0
+vix upgrade --version v2.8.4
 ```
 
 Install a specific SDK profile version:
 
 ```bash
-vix upgrade --sdk web --version v2.7.0
+vix upgrade --sdk web --version v2.8.4
 ```
 
 Install multiple profiles for a specific version:
 
 ```bash
-vix upgrade --sdk web data --version v2.7.0
+vix upgrade --sdk web data --version v2.8.4
 ```
 
 ## Verify the CLI
@@ -364,7 +364,7 @@ vix upgrade --sdk web
 Update or install a specific SDK profile version:
 
 ```bash
-vix upgrade --sdk web --version v2.7.0
+vix upgrade --sdk web --version v2.8.4
 ```
 
 ## CLI upgrade vs SDK upgrade

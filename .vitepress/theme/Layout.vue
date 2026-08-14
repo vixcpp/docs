@@ -11,20 +11,114 @@ const showBanner = ref(true);
 const isDark = ref(true);
 
 const navLinks = [
-  { text: "Guides", href: "/guides/build-rest-api" },
-  { text: "Templates", href: "/templates/" },
-  { text: "API", href: "/api/index" },
-  { text: "Modules", href: "/modules/core/" },
-  { text: "Registry", href: "https://registry.vixcpp.com" },
+  {
+    text: "Start Here",
+    href: "/getting-started/",
+    activePaths: ["/getting-started"],
+  },
+  {
+    text: "Understand Vix",
+    href: "/book/01-introduction",
+    activePaths: [
+      "/book",
+      "/guides/vix-vs-cmake",
+      "/guides/cpp-runtime",
+      "/guides/cpp-developer-toolkit",
+    ],
+  },
+  {
+    text: "Build Applications",
+    href: "/guides/vix-app/",
+    activePaths: [
+      "/guides/vix-app",
+      "/app-modules",
+      "/templates",
+      "/examples",
+      "/guides/build-rest-api",
+      "/guides/websocket-chat",
+      "/guides/static-files",
+      "/guides/templates",
+      "/guides/game",
+      "/guides/validation",
+      "/guides/authentication",
+      "/guides/sessions",
+      "/guides/cors",
+      "/guides/rate-limiting",
+      "/guides/json",
+      "/guides/database",
+      "/guides/orm",
+      "/guides/production-files",
+      "/guides/production-nginx-systemd",
+    ],
+  },
+  {
+    text: "Vix Modules",
+    href: "/modules/core/",
+    activePaths: ["/modules"],
+  },
+  {
+    text: "Tooling",
+    href: "/cli/",
+    activePaths: [
+      "/cli",
+      "/sdks",
+      "/registry",
+      "/guides/replay",
+      "/guides/runtime-arguments",
+      "/guides/diagnostics",
+      "/guides/fast-target-builds",
+      "/guides/object-cache",
+      "/guides/artifact-cache",
+    ],
+  },
+  {
+    text: "Reference",
+    href: "/api/index",
+    activePaths: ["/api"],
+  },
 ];
 
 const footerLinks = [
-  { text: "Docs", href: "/" },
-  { text: "Guides", href: "/guides/build-rest-api" },
-  { text: "API", href: "/api/index" },
-  { text: "Modules", href: "/modules/core/" },
-  { text: "Registry", href: "https://registry.vixcpp.com" },
-  { text: "GitHub", href: "https://github.com/vixcpp/vix" },
+  {
+    text: "Start Here",
+    href: "/getting-started/",
+  },
+  {
+    text: "Understand Vix",
+    href: "/book/01-introduction",
+  },
+  {
+    text: "Build Applications",
+    href: "/guides/vix-app/",
+  },
+  {
+    text: "Vix Modules",
+    href: "/modules/core/",
+  },
+  {
+    text: "Tooling",
+    href: "/cli/",
+  },
+  {
+    text: "Reference",
+    href: "/api/index",
+  },
+  {
+    text: "Internals",
+    href: "/internals/architecture",
+  },
+  {
+    text: "Contributing",
+    href: "/contributing",
+  },
+  {
+    text: "Registry",
+    href: "https://registry.vixcpp.com",
+  },
+  {
+    text: "GitHub",
+    href: "https://github.com/vixcpp/vix",
+  },
 ];
 
 const socials = [
@@ -42,37 +136,68 @@ const socials = [
 
 const normalizePath = (path) => {
   if (!path) return "/";
+
   const clean = path.split("#")[0].split("?")[0];
-  if (clean.length > 1 && clean.endsWith("/")) return clean.slice(0, -1);
+
+  if (clean.length > 1 && clean.endsWith("/")) {
+    return clean.slice(0, -1);
+  }
+
   return clean;
 };
 
-const isActiveLink = (href) => {
-  if (!href || href.startsWith("http")) return false;
+const pathMatches = (currentPath, targetPath) => {
+  const current = normalizePath(currentPath);
+  const target = normalizePath(targetPath);
+
+  if (target === "/") {
+    return current === "/";
+  }
+
+  return current === target || current.startsWith(`${target}/`);
+};
+
+const isActiveLink = (link) => {
+  if (!link || !link.href || link.href.startsWith("http")) {
+    return false;
+  }
+
   const currentPath = normalizePath(route.path);
-  const targetPath = normalizePath(href);
-  if (targetPath === "/") return currentPath === "/";
-  return currentPath === targetPath || currentPath.startsWith(`${targetPath}/`);
+
+  if (link.activePaths?.length) {
+    return link.activePaths.some((path) => pathMatches(currentPath, path));
+  }
+
+  return pathMatches(currentPath, link.href);
 };
 
 const openSearch = () => {
-  const btn = document.querySelector(
+  const button = document.querySelector(
     ".DocSearch-Button, .VPNavBarSearchButton, .VPLocalSearchBox button",
   );
-  if (btn instanceof HTMLElement) btn.click();
+
+  if (button instanceof HTMLElement) {
+    button.click();
+  }
 };
 
 const applyTheme = (dark) => {
   isDark.value = dark;
+
   document.documentElement.classList.toggle("dark", dark);
+
   localStorage.setItem("vitepress-theme-appearance", dark ? "dark" : "light");
 };
 
-const toggleTheme = () => applyTheme(!isDark.value);
+const toggleTheme = () => {
+  applyTheme(!isDark.value);
+};
 
 const syncBannerState = async () => {
   await nextTick();
+
   document.body.classList.toggle("vix-banner-visible", showBanner.value);
+
   document.body.classList.toggle("vix-banner-hidden", !showBanner.value);
 };
 
@@ -84,9 +209,14 @@ watch(showBanner, syncBannerState);
 
 onMounted(() => {
   const savedTheme = localStorage.getItem("vitepress-theme-appearance");
-  if (savedTheme === "dark") applyTheme(true);
-  else if (savedTheme === "light") applyTheme(false);
-  else isDark.value = document.documentElement.classList.contains("dark");
+
+  if (savedTheme === "dark") {
+    applyTheme(true);
+  } else if (savedTheme === "light") {
+    applyTheme(false);
+  } else {
+    isDark.value = document.documentElement.classList.contains("dark");
+  }
 
   syncBannerState();
 });
@@ -144,7 +274,7 @@ onBeforeUnmount(() => {
           />
         </svg>
       </span>
-      <span class="vix-nav__banner-text">Vix.cpp v2.7.0 is here</span>
+      <span class="vix-nav__banner-text">Vix.cpp v2.8.4 is here</span>
       <a
         href="https://blog.vixcpp.com/"
         target="_blank"

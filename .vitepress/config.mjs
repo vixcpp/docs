@@ -13,11 +13,11 @@ const nav = [
 ];
 
 /* ========================================================================
- * 1. GET STARTED
+ * 1. START HERE
  * ===================================================================== */
 
-const getStartedSidebar = {
-  text: "Get Started",
+const startHereSidebar = {
+  text: "Start Here",
   collapsed: false,
   items: [
     {
@@ -52,256 +52,15 @@ const getStartedSidebar = {
 };
 
 /* ========================================================================
- * 2. GUIDES  —  practical learning pages
+ * 2. UNDERSTAND VIX
  * ===================================================================== */
 
-const guidesSidebar = {
-  text: "Guides",
-  collapsed: false,
+const understandVixSidebar = {
+  text: "Understand Vix",
+  collapsed: true,
   items: [
     {
-      text: "Application Workflows",
-      collapsed: true,
-      items: [
-        {
-          text: "Build a REST API",
-          link: "/guides/build-rest-api",
-        },
-        {
-          text: "WebSocket Chat",
-          link: "/guides/websocket-chat",
-        },
-        {
-          text: "Static Files",
-          link: "/guides/static-files",
-        },
-        {
-          text: "Templates",
-          link: "/guides/templates",
-        },
-        {
-          text: "Game",
-          link: "/guides/game",
-        },
-      ],
-    },
-    {
-      text: "Backend Essentials",
-      collapsed: true,
-      items: [
-        {
-          text: "Validation",
-          link: "/guides/validation",
-        },
-        {
-          text: "Authentication",
-          link: "/guides/authentication",
-        },
-        {
-          text: "Sessions",
-          link: "/guides/sessions",
-        },
-        {
-          text: "CORS",
-          link: "/guides/cors",
-        },
-        {
-          text: "Rate Limiting",
-          link: "/guides/rate-limiting",
-        },
-      ],
-    },
-    {
-      text: "Data",
-      collapsed: true,
-      items: [
-        {
-          text: "JSON",
-          link: "/guides/json/",
-        },
-        {
-          text: "Quick Start",
-          link: "/guides/json/quick-start",
-        },
-        {
-          text: "Build JSON",
-          link: "/guides/json/build-json",
-        },
-        {
-          text: "Parse JSON",
-          link: "/guides/json/parse-json",
-        },
-        {
-          text: "Write JSON",
-          link: "/guides/json/write-json",
-        },
-        {
-          text: "Safe Access",
-          link: "/guides/json/safe-access",
-        },
-        {
-          text: "JPath",
-          link: "/guides/json/jpath",
-        },
-        {
-          text: "Simple Token",
-          link: "/guides/json/simple-token",
-        },
-        {
-          text: "JSON with HTTP",
-          link: "/guides/json/http",
-        },
-      ],
-    },
-    {
-      text: "Database",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/guides/database/",
-        },
-        {
-          text: "Quick Start",
-          link: "/guides/database/quick-start",
-        },
-        {
-          text: "Configuration",
-          link: "/guides/database/configuration",
-        },
-        {
-          text: "SQLite",
-          link: "/guides/database/sqlite",
-        },
-        {
-          text: "MySQL",
-          link: "/guides/database/mysql",
-        },
-        {
-          text: "Queries",
-          link: "/guides/database/queries",
-        },
-        {
-          text: "Connection Pool",
-          link: "/guides/database/connection-pool",
-        },
-        {
-          text: "Transactions",
-          link: "/guides/database/transactions",
-        },
-        {
-          text: "Migrations",
-          link: "/guides/database/migrations",
-        },
-        {
-          text: "Schema Snapshots",
-          link: "/guides/database/schema-snapshots",
-        },
-        {
-          text: "CLI",
-          link: "/guides/database/cli",
-        },
-      ],
-    },
-    {
-      text: "ORM",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/guides/orm/",
-        },
-        {
-          text: "Quick Start",
-          link: "/guides/orm/quick-start",
-        },
-        {
-          text: "Entities",
-          link: "/guides/orm/entities",
-        },
-        {
-          text: "Mappers",
-          link: "/guides/orm/mappers",
-        },
-        {
-          text: "Repositories",
-          link: "/guides/orm/repositories",
-        },
-        {
-          text: "Query Builder",
-          link: "/guides/orm/query-builder",
-        },
-        {
-          text: "Unit of Work",
-          link: "/guides/orm/unit-of-work",
-        },
-        {
-          text: "With vix::db",
-          link: "/guides/orm/with-vix-db",
-        },
-      ],
-    },
-    {
-      text: "Production Files",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/guides/production-files/",
-        },
-        {
-          text: "Service",
-          link: "/guides/production-files/service",
-        },
-        {
-          text: "Proxy",
-          link: "/guides/production-files/proxy",
-        },
-        {
-          text: "Deploy",
-          link: "/guides/production-files/deploy",
-        },
-        {
-          text: "Environment",
-          link: "/guides/production-files/environment",
-        },
-        {
-          text: "Database",
-          link: "/guides/production-files/database",
-        },
-        {
-          text: "WebSocket",
-          link: "/guides/production-files/websocket",
-        },
-        {
-          text: "Existing C++ Projects",
-          link: "/guides/production-files/existing-cpp-projects",
-        },
-      ],
-    },
-    {
-      text: "Production",
-      collapsed: true,
-      items: [
-        {
-          text: "Nginx + systemd",
-          link: "/guides/production-nginx-systemd",
-        },
-      ],
-    },
-  ],
-};
-
-/* ========================================================================
- * 3. CONCEPTS  —  conceptual material
- * ===================================================================== */
-
-const conceptsSidebar = {
-  text: "Concepts",
-  collapsed: false,
-  items: [
-    {
-      text: "The Vix Book",
+      text: "Foundations",
       collapsed: true,
       items: [
         {
@@ -316,513 +75,75 @@ const conceptsSidebar = {
           text: "Mental Model",
           link: "/book/03-mental-model",
         },
+      ],
+    },
+    {
+      text: "Workflow",
+      collapsed: true,
+      items: [
         {
-          text: "Application Model",
-          link: "/book/04-application-model",
-        },
-        {
-          text: "Runtime Workflow",
-          link: "/book/05-runtime-workflow",
+          text: "C++ Developer Toolkit",
+          link: "/guides/cpp-developer-toolkit",
         },
         {
           text: "Build Workflow",
           link: "/book/06-build-workflow",
         },
         {
-          text: "Modules and Composition",
-          link: "/book/07-modules-and-composition",
-        },
-        {
           text: "From Local to Production",
           link: "/book/08-local-to-production",
-        },
-        {
-          text: "Next Steps",
-          link: "/book/09-next-steps",
         },
       ],
     },
     {
-      text: "Foundations",
+      text: "Project Model",
       collapsed: true,
       items: [
+        {
+          text: "Application Model",
+          link: "/book/04-application-model",
+        },
         {
           text: "Vix.cpp vs CMake",
           link: "/guides/vix-vs-cmake",
         },
+      ],
+    },
+    {
+      text: "Runtime",
+      collapsed: true,
+      items: [
         {
           text: "C++ Runtime",
           link: "/guides/cpp-runtime",
         },
         {
-          text: "C++ Developer Toolkit",
-          link: "/guides/cpp-developer-toolkit",
+          text: "Runtime Workflow",
+          link: "/book/05-runtime-workflow",
         },
         {
-          text: "Why Modules Exist",
-          link: "/app-modules/why-modules",
+          text: "Modules and Composition",
+          link: "/book/07-modules-and-composition",
         },
       ],
     },
     {
-      text: "SDK Profiles",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/sdks/",
-        },
-        {
-          text: "Default SDK",
-          link: "/sdks/default",
-        },
-        {
-          text: "Web SDK",
-          link: "/sdks/web",
-        },
-        {
-          text: "Data SDK",
-          link: "/sdks/data",
-        },
-        {
-          text: "Desktop SDK",
-          link: "/sdks/desktop",
-        },
-        {
-          text: "P2P SDK",
-          link: "/sdks/p2p",
-        },
-        {
-          text: "Game SDK",
-          link: "/sdks/game",
-        },
-        {
-          text: "Agent SDK",
-          link: "/sdks/agent",
-        },
-        {
-          text: "Full SDK",
-          link: "/sdks/all",
-        },
-      ],
+      text: "Next Steps",
+      link: "/book/09-next-steps",
     },
   ],
 };
 
 /* ========================================================================
- * 4. DIAGNOSTICS  —  diagnostic / troubleshooting pages only
+ * 3. BUILD APPLICATIONS
  * ===================================================================== */
 
-const diagnosticsSidebar = {
-  text: "Diagnostics",
-  collapsed: false,
+const buildApplicationsSidebar = {
+  text: "Build Applications",
+  collapsed: true,
   items: [
     {
-      text: "Inspect and Debug",
-      collapsed: false,
-      items: [
-        {
-          text: "Replay a Run",
-          link: "/guides/replay",
-        },
-        {
-          text: "Runtime Arguments",
-          link: "/guides/runtime-arguments",
-        },
-        {
-          text: "Diagnostics",
-          link: "/guides/diagnostics",
-        },
-        {
-          text: "Logs",
-          link: "/guides/production-files/logs",
-        },
-        {
-          text: "Health Checks",
-          link: "/guides/production-files/health",
-        },
-      ],
-    },
-    {
-      text: "Troubleshooting",
-      collapsed: false,
-      items: [
-        {
-          text: "vix.app Troubleshooting",
-          link: "/guides/vix-app/troubleshooting",
-        },
-        {
-          text: "Application Modules Troubleshooting",
-          link: "/app-modules/troubleshooting",
-        },
-        {
-          text: "Internals Error Diagnostics",
-          link: "/internals/error-diagnostics",
-        },
-      ],
-    },
-  ],
-};
-
-/* ========================================================================
- * 5. ADVANCED  —  deeper technical material
- * ===================================================================== */
-
-const advancedSidebar = {
-  text: "Advanced",
-  collapsed: false,
-  items: [
-    {
-      text: "Build Performance",
-      collapsed: true,
-      items: [
-        {
-          text: "Fast Target Builds",
-          link: "/guides/fast-target-builds",
-        },
-        {
-          text: "Object Cache",
-          link: "/guides/object-cache",
-        },
-        {
-          text: "Artifact Cache",
-          link: "/guides/artifact-cache",
-        },
-      ],
-    },
-    {
-      text: "Advanced vix.app",
-      collapsed: true,
-      items: [
-        {
-          text: "Migrating from CMake",
-          link: "/guides/vix-app/migration-from-cmake",
-        },
-        {
-          text: "CMake Fallback",
-          link: "/guides/vix-app/cmake-fallback",
-        },
-        {
-          text: "Best Practices",
-          link: "/guides/vix-app/best-practices",
-        },
-      ],
-    },
-    {
-      text: "Internals",
-      collapsed: true,
-      items: [
-        {
-          text: "Architecture",
-          link: "/internals/architecture",
-        },
-        {
-          text: "Runtime Model",
-          link: "/internals/runtime-model",
-        },
-        {
-          text: "Direct Compile",
-          link: "/internals/direct-compile",
-        },
-        {
-          text: "Cache System",
-          link: "/internals/cache-system",
-        },
-        {
-          text: "Performance",
-          link: "/internals/performance",
-        },
-        {
-          text: "Design Decisions",
-          link: "/internals/design-decisions",
-        },
-      ],
-    },
-  ],
-};
-
-/* ========================================================================
- * 6. REFERENCE  —  exact lookup material
- * ===================================================================== */
-
-const referenceSidebar = {
-  text: "Reference",
-  collapsed: false,
-  items: [
-    {
-      text: "CLI",
-      collapsed: true,
-      items: [
-        {
-          text: "Overview",
-          link: "/cli/",
-        },
-        {
-          text: "All Commands",
-          link: "/cli/commands",
-        },
-        {
-          text: "Core Workflow",
-          collapsed: true,
-          items: [
-            {
-              text: "vix repl",
-              link: "/cli/repl",
-            },
-            {
-              text: "vix note",
-              link: "/cli/note",
-            },
-            {
-              text: "vix new",
-              link: "/cli/new",
-            },
-            {
-              text: "vix make",
-              link: "/cli/make",
-            },
-            {
-              text: "vix modules",
-              link: "/cli/modules",
-            },
-            {
-              text: "vix run",
-              link: "/cli/run",
-            },
-            {
-              text: "vix dev",
-              link: "/cli/dev",
-            },
-            {
-              text: "vix build",
-              link: "/cli/build",
-            },
-            {
-              text: "vix check",
-              link: "/cli/check",
-            },
-            {
-              text: "vix tests",
-              link: "/cli/tests",
-            },
-            {
-              text: "vix fmt",
-              link: "/cli/fmt",
-            },
-          ],
-        },
-        {
-          text: "Project State",
-          collapsed: true,
-          items: [
-            {
-              text: "vix clean",
-              link: "/cli/clean",
-            },
-            {
-              text: "vix reset",
-              link: "/cli/reset",
-            },
-            {
-              text: "vix replay",
-              link: "/cli/replay",
-            },
-            {
-              text: "vix task",
-              link: "/cli/task",
-            },
-          ],
-        },
-        {
-          text: "Dependencies",
-          collapsed: true,
-          items: [
-            {
-              text: "vix search",
-              link: "/cli/search",
-            },
-            {
-              text: "vix add",
-              link: "/cli/add",
-            },
-            {
-              text: "vix install",
-              link: "/cli/install",
-            },
-            {
-              text: "vix update",
-              link: "/cli/update",
-            },
-            {
-              text: "vix outdated",
-              link: "/cli/outdated",
-            },
-            {
-              text: "vix remove",
-              link: "/cli/remove",
-            },
-            {
-              text: "vix list",
-              link: "/cli/list",
-            },
-          ],
-        },
-        {
-          text: "Package Registry",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/registry/",
-            },
-            {
-              text: "Package Metadata",
-              link: "/registry/package-metadata",
-            },
-            {
-              text: "vix.json Reference",
-              link: "/registry/vix-json",
-            },
-            {
-              text: "Publishing Packages",
-              link: "/registry/publishing",
-            },
-            {
-              text: "Extensions",
-              link: "/registry/extensions",
-            },
-          ],
-        },
-        {
-          text: "Registry and Packages",
-          collapsed: true,
-          items: [
-            {
-              text: "vix registry",
-              link: "/cli/registry",
-            },
-            {
-              text: "vix store",
-              link: "/cli/store",
-            },
-            {
-              text: "vix pack",
-              link: "/cli/pack",
-            },
-            {
-              text: "vix verify",
-              link: "/cli/verify",
-            },
-            {
-              text: "vix cache",
-              link: "/cli/cache",
-            },
-            {
-              text: "vix publish",
-              link: "/cli/publish",
-            },
-            {
-              text: "vix unpublish",
-              link: "/cli/unpublish",
-            },
-          ],
-        },
-        {
-          text: "Runtime and Production",
-          collapsed: true,
-          items: [
-            {
-              text: "vix env",
-              link: "/cli/env",
-            },
-            {
-              text: "vix service",
-              link: "/cli/service",
-            },
-            {
-              text: "vix proxy",
-              link: "/cli/proxy",
-            },
-            {
-              text: "vix deploy",
-              link: "/cli/deploy",
-            },
-            {
-              text: "vix health",
-              link: "/cli/health",
-            },
-            {
-              text: "vix logs",
-              link: "/cli/logs",
-            },
-            {
-              text: "vix ws",
-              link: "/cli/ws",
-            },
-          ],
-        },
-        {
-          text: "Data",
-          collapsed: true,
-          items: [
-            {
-              text: "vix db",
-              link: "/cli/db",
-            },
-            {
-              text: "vix orm",
-              link: "/cli/orm",
-            },
-          ],
-        },
-        {
-          text: "Advanced Runtime",
-          collapsed: true,
-          items: [
-            {
-              text: "vix p2p",
-              link: "/cli/p2p",
-            },
-            {
-              text: "vix game",
-              link: "/cli/game",
-            },
-            {
-              text: "vix agent",
-              link: "/cli/agent",
-            },
-          ],
-        },
-        {
-          text: "System",
-          collapsed: true,
-          items: [
-            {
-              text: "vix info",
-              link: "/cli/info",
-            },
-            {
-              text: "vix doctor",
-              link: "/cli/doctor",
-            },
-            {
-              text: "vix upgrade",
-              link: "/cli/upgrade",
-            },
-            {
-              text: "vix uninstall",
-              link: "/cli/uninstall",
-            },
-            {
-              text: "vix completion",
-              link: "/cli/completion",
-            },
-          ],
-        },
-      ],
-    },
-    {
-      text: "vix.app",
+      text: "Project Model",
       collapsed: true,
       items: [
         {
@@ -836,10 +157,6 @@ const referenceSidebar = {
         {
           text: "Project Types",
           link: "/guides/vix-app/project-types",
-        },
-        {
-          text: "Manifest Reference",
-          link: "/guides/vix-app/manifest-reference",
         },
         {
           text: "Sources and Includes",
@@ -876,6 +193,84 @@ const referenceSidebar = {
         {
           text: "Examples",
           link: "/guides/vix-app/examples",
+        },
+        {
+          text: "Migrating from CMake",
+          link: "/guides/vix-app/migration-from-cmake",
+        },
+        {
+          text: "CMake Fallback",
+          link: "/guides/vix-app/cmake-fallback",
+        },
+        {
+          text: "Best Practices",
+          link: "/guides/vix-app/best-practices",
+        },
+        {
+          text: "Troubleshooting",
+          link: "/guides/vix-app/troubleshooting",
+        },
+      ],
+    },
+    {
+      text: "Application Modules",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/app-modules/",
+        },
+        {
+          text: "Why Application Modules",
+          link: "/app-modules/why-modules",
+        },
+        {
+          text: "Getting Started",
+          link: "/app-modules/getting-started",
+        },
+        {
+          text: "Module Layout",
+          link: "/app-modules/module-layout",
+        },
+        {
+          text: "Module Manifest",
+          link: "/app-modules/module-manifest",
+        },
+        {
+          text: "CLI Workflow",
+          link: "/app-modules/cli-workflow",
+        },
+        {
+          text: "Dependencies and Checks",
+          link: "/app-modules/dependencies-and-checks",
+        },
+        {
+          text: "Tests",
+          link: "/app-modules/tests",
+        },
+        {
+          text: "Generated Registration",
+          link: "/app-modules/generated-registration",
+        },
+        {
+          text: "Backend Modules",
+          link: "/app-modules/backend-modules",
+        },
+        {
+          text: "Using with vix.app",
+          link: "/app-modules/with-vix-app",
+        },
+        {
+          text: "Using with CMake",
+          link: "/app-modules/with-cmake",
+        },
+        {
+          text: "Best Practices",
+          link: "/app-modules/best-practices",
+        },
+        {
+          text: "Troubleshooting",
+          link: "/app-modules/troubleshooting",
         },
       ],
     },
@@ -1038,47 +433,482 @@ const referenceSidebar = {
       ],
     },
     {
-      text: "Application Modules",
+      text: "Application Workflows",
       collapsed: true,
       items: [
         {
-          text: "Overview",
-          link: "/app-modules/",
+          text: "Build a REST API",
+          link: "/guides/build-rest-api",
         },
         {
-          text: "CLI Workflow",
-          link: "/app-modules/cli-workflow",
+          text: "WebSocket Chat",
+          link: "/guides/websocket-chat",
         },
         {
-          text: "Module Layout",
-          link: "/app-modules/module-layout",
+          text: "Static Files",
+          link: "/guides/static-files",
         },
         {
-          text: "Backend Modules",
-          link: "/app-modules/backend-modules",
+          text: "Templates",
+          link: "/guides/templates",
         },
         {
-          text: "Using with vix.app",
-          link: "/app-modules/with-vix-app",
-        },
-        {
-          text: "Using with CMake",
-          link: "/app-modules/with-cmake",
-        },
-        {
-          text: "Dependencies and Checks",
-          link: "/app-modules/dependencies-and-checks",
-        },
-        {
-          text: "Generated Registration",
-          link: "/app-modules/generated-registration",
+          text: "Game",
+          link: "/guides/game",
         },
       ],
     },
     {
-      text: "Modules",
-      collapsed: false,
+      text: "Backend Essentials",
+      collapsed: true,
       items: [
+        {
+          text: "Validation",
+          link: "/guides/validation",
+        },
+        {
+          text: "Authentication",
+          link: "/guides/authentication",
+        },
+        {
+          text: "Sessions",
+          link: "/guides/sessions",
+        },
+        {
+          text: "CORS",
+          link: "/guides/cors",
+        },
+        {
+          text: "Rate Limiting",
+          link: "/guides/rate-limiting",
+        },
+      ],
+    },
+    {
+      text: "JSON",
+      collapsed: true,
+      items: [
+        {
+          text: "JSON",
+          link: "/guides/json/",
+        },
+        {
+          text: "Quick Start",
+          link: "/guides/json/quick-start",
+        },
+        {
+          text: "Build JSON",
+          link: "/guides/json/build-json",
+        },
+        {
+          text: "Parse JSON",
+          link: "/guides/json/parse-json",
+        },
+        {
+          text: "Write JSON",
+          link: "/guides/json/write-json",
+        },
+        {
+          text: "Safe Access",
+          link: "/guides/json/safe-access",
+        },
+        {
+          text: "JPath",
+          link: "/guides/json/jpath",
+        },
+        {
+          text: "Simple Token",
+          link: "/guides/json/simple-token",
+        },
+        {
+          text: "JSON with HTTP",
+          link: "/guides/json/http",
+        },
+      ],
+    },
+    {
+      text: "Database",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/guides/database/",
+        },
+        {
+          text: "Quick Start",
+          link: "/guides/database/quick-start",
+        },
+        {
+          text: "Configuration",
+          link: "/guides/database/configuration",
+        },
+        {
+          text: "SQLite",
+          link: "/guides/database/sqlite",
+        },
+        {
+          text: "MySQL",
+          link: "/guides/database/mysql",
+        },
+        {
+          text: "Queries",
+          link: "/guides/database/queries",
+        },
+        {
+          text: "Connection Pool",
+          link: "/guides/database/connection-pool",
+        },
+        {
+          text: "Transactions",
+          link: "/guides/database/transactions",
+        },
+        {
+          text: "Migrations",
+          link: "/guides/database/migrations",
+        },
+        {
+          text: "Schema Snapshots",
+          link: "/guides/database/schema-snapshots",
+        },
+        {
+          text: "CLI",
+          link: "/guides/database/cli",
+        },
+      ],
+    },
+    {
+      text: "ORM",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/guides/orm/",
+        },
+        {
+          text: "Quick Start",
+          link: "/guides/orm/quick-start",
+        },
+        {
+          text: "Entities",
+          link: "/guides/orm/entities",
+        },
+        {
+          text: "Mappers",
+          link: "/guides/orm/mappers",
+        },
+        {
+          text: "Repositories",
+          link: "/guides/orm/repositories",
+        },
+        {
+          text: "Query Builder",
+          link: "/guides/orm/query-builder",
+        },
+        {
+          text: "Unit of Work",
+          link: "/guides/orm/unit-of-work",
+        },
+        {
+          text: "With vix::db",
+          link: "/guides/orm/with-vix-db",
+        },
+      ],
+    },
+    {
+      text: "Production",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/guides/production-files/",
+        },
+        {
+          text: "Service",
+          link: "/guides/production-files/service",
+        },
+        {
+          text: "Proxy",
+          link: "/guides/production-files/proxy",
+        },
+        {
+          text: "Deploy",
+          link: "/guides/production-files/deploy",
+        },
+        {
+          text: "Environment",
+          link: "/guides/production-files/environment",
+        },
+        {
+          text: "Database",
+          link: "/guides/production-files/database",
+        },
+        {
+          text: "WebSocket",
+          link: "/guides/production-files/websocket",
+        },
+        {
+          text: "Existing C++ Projects",
+          link: "/guides/production-files/existing-cpp-projects",
+        },
+        {
+          text: "Nginx + systemd",
+          link: "/guides/production-nginx-systemd",
+        },
+      ],
+    },
+    {
+      text: "Examples",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/examples/",
+        },
+        {
+          text: "Getting Started",
+          collapsed: true,
+          items: [
+            {
+              text: "Hello App",
+              link: "/examples/hello-app",
+            },
+            {
+              text: "JSON API",
+              link: "/examples/json-api",
+            },
+            {
+              text: "Production Bootstrap",
+              link: "/examples/production-bootstrap",
+            },
+          ],
+        },
+        {
+          text: "Middleware",
+          collapsed: true,
+          items: [
+            {
+              text: "Middleware API",
+              link: "/examples/middleware-api",
+            },
+            {
+              text: "HTTP Cache",
+              link: "/examples/http-cache",
+            },
+          ],
+        },
+        {
+          text: "Request Parsing",
+          collapsed: true,
+          items: [
+            {
+              text: "Multipart Upload",
+              link: "/examples/multipart-upload",
+            },
+            {
+              text: "Form Parser",
+              link: "/examples/form-parser",
+            },
+          ],
+        },
+        {
+          text: "Sessions and Cookies",
+          collapsed: true,
+          items: [
+            {
+              text: "Cookies",
+              link: "/examples/cookies",
+            },
+            {
+              text: "Session Counter",
+              link: "/examples/session-counter",
+            },
+          ],
+        },
+        {
+          text: "Authentication",
+          collapsed: true,
+          items: [
+            {
+              text: "API Key Auth",
+              link: "/examples/auth-api-key",
+            },
+            {
+              text: "JWT Auth",
+              link: "/examples/auth-jwt",
+            },
+            {
+              text: "RBAC",
+              link: "/examples/auth-rbac",
+            },
+          ],
+        },
+        {
+          text: "Static Files",
+          collapsed: true,
+          items: [
+            {
+              text: "Static Site",
+              link: "/examples/static-site",
+            },
+          ],
+        },
+        {
+          text: "Realtime",
+          collapsed: true,
+          items: [
+            {
+              text: "WebSocket Chat",
+              link: "/examples/websocket-chat",
+            },
+          ],
+        },
+        {
+          text: "Database",
+          collapsed: true,
+          items: [
+            {
+              text: "SQLite API",
+              link: "/examples/sqlite-api",
+            },
+          ],
+        },
+        {
+          text: "Async",
+          collapsed: true,
+          items: [
+            {
+              text: "Background Task",
+              link: "/examples/background-task",
+            },
+            {
+              text: "Async App",
+              link: "/examples/async-app",
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+/* ========================================================================
+ * 4. VIX MODULES
+ * ===================================================================== */
+
+const vixModulesSidebar = {
+  text: "Vix Modules",
+  collapsed: true,
+  items: [
+    {
+      text: "Foundations",
+      collapsed: true,
+      items: [
+        {
+          text: "Core",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/core/",
+            },
+            {
+              text: "App",
+              link: "/modules/core/app",
+            },
+            {
+              text: "Architecture",
+              link: "/modules/core/architecture",
+            },
+            {
+              text: "Routing",
+              link: "/modules/core/routing",
+            },
+            {
+              text: "Handlers",
+              link: "/modules/core/handlers",
+            },
+            {
+              text: "Middleware",
+              link: "/modules/core/middleware",
+            },
+            {
+              text: "Request",
+              link: "/modules/core/request",
+            },
+            {
+              text: "Response",
+              link: "/modules/core/response",
+            },
+            {
+              text: "Static files",
+              link: "/modules/core/static-files",
+            },
+            {
+              text: "Templates",
+              link: "/modules/core/templates",
+            },
+            {
+              text: "HTTP server",
+              link: "/modules/core/http-server",
+            },
+            {
+              text: "Sessions",
+              link: "/modules/core/sessions",
+            },
+            {
+              text: "Transports",
+              link: "/modules/core/transports",
+            },
+            {
+              text: "TLS",
+              link: "/modules/core/tls",
+            },
+            {
+              text: "Runtime executor",
+              link: "/modules/core/runtime-executor",
+            },
+            {
+              text: "Async and runtime",
+              link: "/modules/core/async-and-runtime",
+            },
+            {
+              text: "Configuration",
+              link: "/modules/core/configuration",
+            },
+            {
+              text: "Print",
+              link: "/modules/core/print",
+            },
+            {
+              text: "Format",
+              link: "/modules/core/format",
+            },
+            {
+              text: "Console",
+              link: "/modules/core/console",
+            },
+            {
+              text: "Input",
+              link: "/modules/core/input",
+            },
+            {
+              text: "Inspect",
+              link: "/modules/core/inspect",
+            },
+            {
+              text: "OpenAPI",
+              link: "/modules/core/openapi",
+            },
+            {
+              text: "Attached runtime",
+              link: "/modules/core/attached-runtime",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/core/api-reference",
+            },
+          ],
+        },
         {
           text: "Error",
           collapsed: true,
@@ -1213,134 +1043,12 @@ const referenceSidebar = {
             },
           ],
         },
-        {
-          text: "Tests",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/modules/tests/",
-            },
-            {
-              text: "Quick Start",
-              link: "/modules/tests/quick-start",
-            },
-            {
-              text: "Assertions",
-              link: "/modules/tests/assertions",
-            },
-            {
-              text: "Test Cases",
-              link: "/modules/tests/test-cases",
-            },
-            {
-              text: "Test Suites",
-              link: "/modules/tests/test-suites",
-            },
-            {
-              text: "Registry",
-              link: "/modules/tests/registry",
-            },
-            {
-              text: "Runner",
-              link: "/modules/tests/runner",
-            },
-            {
-              text: "Summaries",
-              link: "/modules/tests/summaries",
-            },
-            {
-              text: "Colors and Output",
-              link: "/modules/tests/colors-and-output",
-            },
-            {
-              text: "Timers",
-              link: "/modules/tests/timers",
-            },
-            {
-              text: "CLI",
-              link: "/modules/tests/cli",
-            },
-            {
-              text: "CMake",
-              link: "/modules/tests/cmake",
-            },
-            {
-              text: "API Reference",
-              link: "/modules/tests/api-reference",
-            },
-          ],
-        },
-        {
-          text: "Crypto",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/modules/crypto/",
-            },
-            {
-              text: "Quick Start",
-              link: "/modules/crypto/quick-start",
-            },
-            {
-              text: "Results and Errors",
-              link: "/modules/crypto/results-and-errors",
-            },
-            {
-              text: "Random",
-              link: "/modules/crypto/random",
-            },
-            {
-              text: "Hashing",
-              link: "/modules/crypto/hashing",
-            },
-            {
-              text: "HMAC",
-              link: "/modules/crypto/hmac",
-            },
-            {
-              text: "Bytes and Hex",
-              link: "/modules/crypto/bytes-and-hex",
-            },
-            {
-              text: "Constant-Time Compare",
-              link: "/modules/crypto/constant-time-compare",
-            },
-            {
-              text: "Passwords",
-              link: "/modules/crypto/passwords",
-            },
-            {
-              text: "KDF",
-              link: "/modules/crypto/kdf",
-            },
-            {
-              text: "Keys",
-              link: "/modules/crypto/keys",
-            },
-            {
-              text: "AEAD",
-              link: "/modules/crypto/aead",
-            },
-            {
-              text: "Signatures",
-              link: "/modules/crypto/signatures",
-            },
-            {
-              text: "Certificates",
-              link: "/modules/crypto/certificates",
-            },
-            {
-              text: "CMake",
-              link: "/modules/crypto/cmake",
-            },
-            {
-              text: "API Reference",
-              link: "/modules/crypto/api-reference",
-            },
-          ],
-        },
+      ],
+    },
+    {
+      text: "System",
+      collapsed: true,
+      items: [
         {
           text: "FS",
           collapsed: true,
@@ -1683,112 +1391,12 @@ const referenceSidebar = {
             },
           ],
         },
-        {
-          text: "Core",
-          collapsed: true,
-          items: [
-            {
-              text: "Overview",
-              link: "/modules/core/",
-            },
-            {
-              text: "App",
-              link: "/modules/core/app",
-            },
-            {
-              text: "Architecture",
-              link: "/modules/core/architecture",
-            },
-            {
-              text: "Routing",
-              link: "/modules/core/routing",
-            },
-            {
-              text: "Handlers",
-              link: "/modules/core/handlers",
-            },
-            {
-              text: "Middleware",
-              link: "/modules/core/middleware",
-            },
-            {
-              text: "Request",
-              link: "/modules/core/request",
-            },
-            {
-              text: "Response",
-              link: "/modules/core/response",
-            },
-            {
-              text: "Static files",
-              link: "/modules/core/static-files",
-            },
-            {
-              text: "Templates",
-              link: "/modules/core/templates",
-            },
-            {
-              text: "HTTP server",
-              link: "/modules/core/http-server",
-            },
-            {
-              text: "Sessions",
-              link: "/modules/core/sessions",
-            },
-            {
-              text: "Transports",
-              link: "/modules/core/transports",
-            },
-            {
-              text: "TLS",
-              link: "/modules/core/tls",
-            },
-            {
-              text: "Runtime executor",
-              link: "/modules/core/runtime-executor",
-            },
-            {
-              text: "Async and runtime",
-              link: "/modules/core/async-and-runtime",
-            },
-            {
-              text: "Configuration",
-              link: "/modules/core/configuration",
-            },
-            {
-              text: "Print",
-              link: "/modules/core/print",
-            },
-            {
-              text: "Format",
-              link: "/modules/core/format",
-            },
-            {
-              text: "Console",
-              link: "/modules/core/console",
-            },
-            {
-              text: "Input",
-              link: "/modules/core/input",
-            },
-            {
-              text: "Inspect",
-              link: "/modules/core/inspect",
-            },
-            {
-              text: "OpenAPI",
-              link: "/modules/core/openapi",
-            },
-            {
-              text: "Attached runtime",
-              link: "/modules/core/attached-runtime",
-            },
-            {
-              text: "API Reference",
-              link: "/modules/core/api-reference",
-            },
-          ],
-        },
+      ],
+    },
+    {
+      text: "Concurrency",
+      collapsed: true,
+      items: [
         {
           text: "Async",
           collapsed: true,
@@ -1925,6 +1533,12 @@ const referenceSidebar = {
             },
           ],
         },
+      ],
+    },
+    {
+      text: "Web and Networking",
+      collapsed: true,
+      items: [
         {
           text: "Middleware",
           collapsed: true,
@@ -2123,20 +1737,406 @@ const referenceSidebar = {
           text: "WebRPC",
           collapsed: true,
           items: [
-            { text: "Overview", link: "/modules/webrpc/" },
-            { text: "Quick Start", link: "/modules/webrpc/quick-start" },
-            { text: "Requests", link: "/modules/webrpc/requests" },
-            { text: "Responses", link: "/modules/webrpc/responses" },
-            { text: "Errors", link: "/modules/webrpc/errors" },
-            { text: "Context", link: "/modules/webrpc/context" },
-            { text: "Router", link: "/modules/webrpc/router" },
-            { text: "Dispatcher", link: "/modules/webrpc/dispatcher" },
+            {
+              text: "Overview",
+              link: "/modules/webrpc/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/webrpc/quick-start",
+            },
+            {
+              text: "Requests",
+              link: "/modules/webrpc/requests",
+            },
+            {
+              text: "Responses",
+              link: "/modules/webrpc/responses",
+            },
+            {
+              text: "Errors",
+              link: "/modules/webrpc/errors",
+            },
+            {
+              text: "Context",
+              link: "/modules/webrpc/context",
+            },
+            {
+              text: "Router",
+              link: "/modules/webrpc/router",
+            },
+            {
+              text: "Dispatcher",
+              link: "/modules/webrpc/dispatcher",
+            },
             {
               text: "Batches and Notifications",
               link: "/modules/webrpc/batches-and-notifications",
             },
-            { text: "Metadata", link: "/modules/webrpc/metadata" },
-            { text: "API Reference", link: "/modules/webrpc/api-reference" },
+            {
+              text: "Metadata",
+              link: "/modules/webrpc/metadata",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/webrpc/api-reference",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      text: "Data and State",
+      collapsed: true,
+      items: [
+        {
+          text: "Cache",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/cache/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/cache/quick-start",
+            },
+            {
+              text: "Cache Entry",
+              link: "/modules/cache/cache-entry",
+            },
+            {
+              text: "Cache Policy",
+              link: "/modules/cache/cache-policy",
+            },
+            {
+              text: "Cache Context",
+              link: "/modules/cache/cache-context",
+            },
+            {
+              text: "Cache Keys",
+              link: "/modules/cache/cache-keys",
+            },
+            {
+              text: "Stores",
+              link: "/modules/cache/stores",
+            },
+            {
+              text: "Memory Store",
+              link: "/modules/cache/memory-store",
+            },
+            {
+              text: "LRU Memory Store",
+              link: "/modules/cache/lru-memory-store",
+            },
+            {
+              text: "File Store",
+              link: "/modules/cache/file-store",
+            },
+            {
+              text: "Offline and Network Errors",
+              link: "/modules/cache/offline-and-network-errors",
+            },
+            {
+              text: "Pruning",
+              link: "/modules/cache/pruning",
+            },
+            {
+              text: "Context Mapper",
+              link: "/modules/cache/context-mapper",
+            },
+            {
+              text: "CMake",
+              link: "/modules/cache/cmake",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/cache/api-reference",
+            },
+          ],
+        },
+        {
+          text: "KV",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/kv/",
+            },
+            {
+              text: "Opening a database",
+              link: "/modules/kv/opening",
+            },
+            {
+              text: "Keys",
+              link: "/modules/kv/keys",
+            },
+            {
+              text: "Values",
+              link: "/modules/kv/values",
+            },
+            {
+              text: "Persistence",
+              link: "/modules/kv/persistence",
+            },
+            {
+              text: "Recovery",
+              link: "/modules/kv/recovery",
+            },
+            {
+              text: "Stats",
+              link: "/modules/kv/stats",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/kv/api-reference",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      text: "Distributed",
+      collapsed: true,
+      items: [
+        {
+          text: "Sync",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/sync/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/sync/quick-start",
+            },
+            {
+              text: "Offline-first Model",
+              link: "/modules/sync/offline-first-model",
+            },
+            {
+              text: "Operations",
+              link: "/modules/sync/operations",
+            },
+            {
+              text: "Outbox",
+              link: "/modules/sync/outbox",
+            },
+            {
+              text: "File Outbox Store",
+              link: "/modules/sync/file-outbox-store",
+            },
+            {
+              text: "Retry Policy",
+              link: "/modules/sync/retry-policy",
+            },
+            {
+              text: "Transports",
+              link: "/modules/sync/transports",
+            },
+            {
+              text: "Sync Engine",
+              link: "/modules/sync/sync-engine",
+            },
+            {
+              text: "In-flight Recovery",
+              link: "/modules/sync/inflight-recovery",
+            },
+            {
+              text: "WAL",
+              link: "/modules/sync/wal",
+            },
+            {
+              text: "CMake",
+              link: "/modules/sync/cmake",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/sync/api-reference",
+            },
+          ],
+        },
+        {
+          text: "P2P",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/p2p/",
+            },
+            {
+              text: "Node",
+              link: "/modules/p2p/node",
+            },
+            {
+              text: "Discovery",
+              link: "/modules/p2p/discovery",
+            },
+            {
+              text: "Bootstrap",
+              link: "/modules/p2p/bootstrap",
+            },
+            {
+              text: "Router",
+              link: "/modules/p2p/router",
+            },
+            {
+              text: "Protocol",
+              link: "/modules/p2p/protocol",
+            },
+            {
+              text: "WAL Replication",
+              link: "/modules/p2p/wal-replication",
+            },
+            {
+              text: "HTTP Control",
+              link: "/modules/p2p/http-control",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/p2p/api-reference",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      text: "Security",
+      collapsed: true,
+      items: [
+        {
+          text: "Crypto",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/crypto/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/crypto/quick-start",
+            },
+            {
+              text: "Results and Errors",
+              link: "/modules/crypto/results-and-errors",
+            },
+            {
+              text: "Random",
+              link: "/modules/crypto/random",
+            },
+            {
+              text: "Hashing",
+              link: "/modules/crypto/hashing",
+            },
+            {
+              text: "HMAC",
+              link: "/modules/crypto/hmac",
+            },
+            {
+              text: "Bytes and Hex",
+              link: "/modules/crypto/bytes-and-hex",
+            },
+            {
+              text: "Constant-Time Compare",
+              link: "/modules/crypto/constant-time-compare",
+            },
+            {
+              text: "Passwords",
+              link: "/modules/crypto/passwords",
+            },
+            {
+              text: "KDF",
+              link: "/modules/crypto/kdf",
+            },
+            {
+              text: "Keys",
+              link: "/modules/crypto/keys",
+            },
+            {
+              text: "AEAD",
+              link: "/modules/crypto/aead",
+            },
+            {
+              text: "Signatures",
+              link: "/modules/crypto/signatures",
+            },
+            {
+              text: "Certificates",
+              link: "/modules/crypto/certificates",
+            },
+            {
+              text: "CMake",
+              link: "/modules/crypto/cmake",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/crypto/api-reference",
+            },
+          ],
+        },
+      ],
+    },
+    {
+      text: "Development and Application",
+      collapsed: true,
+      items: [
+        {
+          text: "Tests",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/tests/",
+            },
+            {
+              text: "Quick Start",
+              link: "/modules/tests/quick-start",
+            },
+            {
+              text: "Assertions",
+              link: "/modules/tests/assertions",
+            },
+            {
+              text: "Test Cases",
+              link: "/modules/tests/test-cases",
+            },
+            {
+              text: "Test Suites",
+              link: "/modules/tests/test-suites",
+            },
+            {
+              text: "Registry",
+              link: "/modules/tests/registry",
+            },
+            {
+              text: "Runner",
+              link: "/modules/tests/runner",
+            },
+            {
+              text: "Summaries",
+              link: "/modules/tests/summaries",
+            },
+            {
+              text: "Colors and Output",
+              link: "/modules/tests/colors-and-output",
+            },
+            {
+              text: "Timers",
+              link: "/modules/tests/timers",
+            },
+            {
+              text: "CLI",
+              link: "/modules/tests/cli",
+            },
+            {
+              text: "CMake",
+              link: "/modules/tests/cmake",
+            },
+            {
+              text: "API Reference",
+              link: "/modules/tests/api-reference",
+            },
           ],
         },
         {
@@ -2264,33 +2264,6 @@ const referenceSidebar = {
           ],
         },
         {
-          text: "Cache",
-          collapsed: true,
-          items: [
-            { text: "Overview", link: "/modules/cache/" },
-            { text: "Quick Start", link: "/modules/cache/quick-start" },
-            { text: "Cache Entry", link: "/modules/cache/cache-entry" },
-            { text: "Cache Policy", link: "/modules/cache/cache-policy" },
-            { text: "Cache Context", link: "/modules/cache/cache-context" },
-            { text: "Cache Keys", link: "/modules/cache/cache-keys" },
-            { text: "Stores", link: "/modules/cache/stores" },
-            { text: "Memory Store", link: "/modules/cache/memory-store" },
-            {
-              text: "LRU Memory Store",
-              link: "/modules/cache/lru-memory-store",
-            },
-            { text: "File Store", link: "/modules/cache/file-store" },
-            {
-              text: "Offline and Network Errors",
-              link: "/modules/cache/offline-and-network-errors",
-            },
-            { text: "Pruning", link: "/modules/cache/pruning" },
-            { text: "Context Mapper", link: "/modules/cache/context-mapper" },
-            { text: "CMake", link: "/modules/cache/cmake" },
-            { text: "API Reference", link: "/modules/cache/api-reference" },
-          ],
-        },
-        {
           text: "Agent",
           collapsed: true,
           items: [
@@ -2364,275 +2337,401 @@ const referenceSidebar = {
             },
           ],
         },
+      ],
+    },
+  ],
+};
+
+/* ========================================================================
+ * 5. TOOLING
+ * ===================================================================== */
+
+const toolingSidebar = {
+  text: "Tooling",
+  collapsed: true,
+  items: [
+    {
+      text: "CLI",
+      link: "/cli/",
+    },
+    {
+      text: "SDK Profiles",
+      collapsed: true,
+      items: [
         {
-          text: "KV",
+          text: "Overview",
+          link: "/sdks/",
+        },
+        {
+          text: "Default SDK",
+          link: "/sdks/default",
+        },
+        {
+          text: "Web SDK",
+          link: "/sdks/web",
+        },
+        {
+          text: "Data SDK",
+          link: "/sdks/data",
+        },
+        {
+          text: "Desktop SDK",
+          link: "/sdks/desktop",
+        },
+        {
+          text: "P2P SDK",
+          link: "/sdks/p2p",
+        },
+        {
+          text: "Game SDK",
+          link: "/sdks/game",
+        },
+        {
+          text: "Agent SDK",
+          link: "/sdks/agent",
+        },
+        {
+          text: "Full SDK",
+          link: "/sdks/all",
+        },
+      ],
+    },
+    {
+      text: "Build and Cache",
+      collapsed: true,
+      items: [
+        {
+          text: "Fast Target Builds",
+          link: "/guides/fast-target-builds",
+        },
+        {
+          text: "Object Cache",
+          link: "/guides/object-cache",
+        },
+        {
+          text: "Artifact Cache",
+          link: "/guides/artifact-cache",
+        },
+      ],
+    },
+    {
+      text: "Diagnostics",
+      collapsed: true,
+      items: [
+        {
+          text: "Replay a Run",
+          link: "/guides/replay",
+        },
+        {
+          text: "Runtime Arguments",
+          link: "/guides/runtime-arguments",
+        },
+        {
+          text: "Diagnostics",
+          link: "/guides/diagnostics",
+        },
+        {
+          text: "Logs",
+          link: "/guides/production-files/logs",
+        },
+        {
+          text: "Health Checks",
+          link: "/guides/production-files/health",
+        },
+      ],
+    },
+    {
+      text: "Registry",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/registry/",
+        },
+        {
+          text: "Publishing Packages",
+          link: "/registry/publishing",
+        },
+      ],
+    },
+  ],
+};
+
+/* ========================================================================
+ * 6. REFERENCE
+ * ===================================================================== */
+
+const referenceSidebar = {
+  text: "Reference",
+  collapsed: true,
+  items: [
+    {
+      text: "CLI Reference",
+      collapsed: true,
+      items: [
+        {
+          text: "All Commands",
+          link: "/cli/commands",
+        },
+        {
+          text: "Core Workflow",
           collapsed: true,
           items: [
             {
-              text: "Overview",
-              link: "/modules/kv/",
+              text: "vix repl",
+              link: "/cli/repl",
             },
             {
-              text: "Opening a database",
-              link: "/modules/kv/opening",
+              text: "vix note",
+              link: "/cli/note",
             },
             {
-              text: "Keys",
-              link: "/modules/kv/keys",
+              text: "vix new",
+              link: "/cli/new",
             },
             {
-              text: "Values",
-              link: "/modules/kv/values",
+              text: "vix make",
+              link: "/cli/make",
             },
             {
-              text: "Persistence",
-              link: "/modules/kv/persistence",
+              text: "vix modules",
+              link: "/cli/modules",
             },
             {
-              text: "Recovery",
-              link: "/modules/kv/recovery",
+              text: "vix run",
+              link: "/cli/run",
             },
             {
-              text: "Stats",
-              link: "/modules/kv/stats",
+              text: "vix dev",
+              link: "/cli/dev",
             },
             {
-              text: "API Reference",
-              link: "/modules/kv/api-reference",
+              text: "vix build",
+              link: "/cli/build",
+            },
+            {
+              text: "vix check",
+              link: "/cli/check",
+            },
+            {
+              text: "vix tests",
+              link: "/cli/tests",
+            },
+            {
+              text: "vix fmt",
+              link: "/cli/fmt",
             },
           ],
         },
         {
-          text: "Sync",
+          text: "Project State",
           collapsed: true,
           items: [
             {
-              text: "Overview",
-              link: "/modules/sync/",
+              text: "vix clean",
+              link: "/cli/clean",
             },
             {
-              text: "Quick Start",
-              link: "/modules/sync/quick-start",
+              text: "vix reset",
+              link: "/cli/reset",
             },
             {
-              text: "Offline-first Model",
-              link: "/modules/sync/offline-first-model",
+              text: "vix replay",
+              link: "/cli/replay",
             },
             {
-              text: "Operations",
-              link: "/modules/sync/operations",
-            },
-            {
-              text: "Outbox",
-              link: "/modules/sync/outbox",
-            },
-            {
-              text: "File Outbox Store",
-              link: "/modules/sync/file-outbox-store",
-            },
-            {
-              text: "Retry Policy",
-              link: "/modules/sync/retry-policy",
-            },
-            {
-              text: "Transports",
-              link: "/modules/sync/transports",
-            },
-            {
-              text: "Sync Engine",
-              link: "/modules/sync/sync-engine",
-            },
-            {
-              text: "In-flight Recovery",
-              link: "/modules/sync/inflight-recovery",
-            },
-            {
-              text: "WAL",
-              link: "/modules/sync/wal",
-            },
-            {
-              text: "CMake",
-              link: "/modules/sync/cmake",
-            },
-            {
-              text: "API Reference",
-              link: "/modules/sync/api-reference",
+              text: "vix task",
+              link: "/cli/task",
             },
           ],
         },
         {
-          text: "P2P",
+          text: "Dependencies",
           collapsed: true,
           items: [
             {
-              text: "Overview",
-              link: "/modules/p2p/",
+              text: "vix search",
+              link: "/cli/search",
             },
             {
-              text: "Node",
-              link: "/modules/p2p/node",
+              text: "vix add",
+              link: "/cli/add",
             },
             {
-              text: "Discovery",
-              link: "/modules/p2p/discovery",
+              text: "vix install",
+              link: "/cli/install",
             },
             {
-              text: "Bootstrap",
-              link: "/modules/p2p/bootstrap",
+              text: "vix update",
+              link: "/cli/update",
             },
             {
-              text: "Router",
-              link: "/modules/p2p/router",
+              text: "vix outdated",
+              link: "/cli/outdated",
             },
             {
-              text: "Protocol",
-              link: "/modules/p2p/protocol",
+              text: "vix remove",
+              link: "/cli/remove",
             },
             {
-              text: "WAL Replication",
-              link: "/modules/p2p/wal-replication",
+              text: "vix list",
+              link: "/cli/list",
+            },
+          ],
+        },
+        {
+          text: "Registry and Packages",
+          collapsed: true,
+          items: [
+            {
+              text: "vix registry",
+              link: "/cli/registry",
             },
             {
-              text: "HTTP Control",
-              link: "/modules/p2p/http-control",
+              text: "vix store",
+              link: "/cli/store",
             },
             {
-              text: "API Reference",
-              link: "/modules/p2p/api-reference",
+              text: "vix pack",
+              link: "/cli/pack",
+            },
+            {
+              text: "vix verify",
+              link: "/cli/verify",
+            },
+            {
+              text: "vix cache",
+              link: "/cli/cache",
+            },
+            {
+              text: "vix publish",
+              link: "/cli/publish",
+            },
+            {
+              text: "vix unpublish",
+              link: "/cli/unpublish",
+            },
+          ],
+        },
+        {
+          text: "Runtime and Production",
+          collapsed: true,
+          items: [
+            {
+              text: "vix env",
+              link: "/cli/env",
+            },
+            {
+              text: "vix service",
+              link: "/cli/service",
+            },
+            {
+              text: "vix proxy",
+              link: "/cli/proxy",
+            },
+            {
+              text: "vix deploy",
+              link: "/cli/deploy",
+            },
+            {
+              text: "vix health",
+              link: "/cli/health",
+            },
+            {
+              text: "vix logs",
+              link: "/cli/logs",
+            },
+            {
+              text: "vix ws",
+              link: "/cli/ws",
+            },
+          ],
+        },
+        {
+          text: "Data",
+          collapsed: true,
+          items: [
+            {
+              text: "vix db",
+              link: "/cli/db",
+            },
+            {
+              text: "vix orm",
+              link: "/cli/orm",
+            },
+          ],
+        },
+        {
+          text: "Advanced Runtime",
+          collapsed: true,
+          items: [
+            {
+              text: "vix p2p",
+              link: "/cli/p2p",
+            },
+            {
+              text: "vix game",
+              link: "/cli/game",
+            },
+            {
+              text: "vix agent",
+              link: "/cli/agent",
+            },
+          ],
+        },
+        {
+          text: "System",
+          collapsed: true,
+          items: [
+            {
+              text: "vix info",
+              link: "/cli/info",
+            },
+            {
+              text: "vix doctor",
+              link: "/cli/doctor",
+            },
+            {
+              text: "vix upgrade",
+              link: "/cli/upgrade",
+            },
+            {
+              text: "vix uninstall",
+              link: "/cli/uninstall",
+            },
+            {
+              text: "vix completion",
+              link: "/cli/completion",
             },
           ],
         },
       ],
     },
     {
-      text: "Examples",
+      text: "vix.app Reference",
       collapsed: true,
       items: [
         {
-          text: "Overview",
-          link: "/examples/",
+          text: "Manifest Reference",
+          link: "/guides/vix-app/manifest-reference",
+        },
+      ],
+    },
+    {
+      text: "Registry Reference",
+      collapsed: true,
+      items: [
+        {
+          text: "Package Metadata",
+          link: "/registry/package-metadata",
         },
         {
-          text: "Getting Started",
-          collapsed: true,
-          items: [
-            {
-              text: "Hello App",
-              link: "/examples/hello-app",
-            },
-            {
-              text: "JSON API",
-              link: "/examples/json-api",
-            },
-            {
-              text: "Production Bootstrap",
-              link: "/examples/production-bootstrap",
-            },
-          ],
+          text: "vix.json Reference",
+          link: "/registry/vix-json",
         },
         {
-          text: "Middleware",
-          collapsed: true,
-          items: [
-            {
-              text: "Middleware API",
-              link: "/examples/middleware-api",
-            },
-            {
-              text: "HTTP Cache",
-              link: "/examples/http-cache",
-            },
-          ],
-        },
-        {
-          text: "Request Parsing",
-          collapsed: true,
-          items: [
-            {
-              text: "Multipart Upload",
-              link: "/examples/multipart-upload",
-            },
-            {
-              text: "Form Parser",
-              link: "/examples/form-parser",
-            },
-          ],
-        },
-        {
-          text: "Sessions and Cookies",
-          collapsed: true,
-          items: [
-            {
-              text: "Cookies",
-              link: "/examples/cookies",
-            },
-            {
-              text: "Session Counter",
-              link: "/examples/session-counter",
-            },
-          ],
-        },
-        {
-          text: "Authentication",
-          collapsed: true,
-          items: [
-            {
-              text: "API Key Auth",
-              link: "/examples/auth-api-key",
-            },
-            {
-              text: "JWT Auth",
-              link: "/examples/auth-jwt",
-            },
-            {
-              text: "RBAC",
-              link: "/examples/auth-rbac",
-            },
-          ],
-        },
-        {
-          text: "Static Files",
-          collapsed: true,
-          items: [
-            {
-              text: "Static Site",
-              link: "/examples/static-site",
-            },
-          ],
-        },
-        {
-          text: "Realtime",
-          collapsed: true,
-          items: [
-            {
-              text: "WebSocket Chat",
-              link: "/examples/websocket-chat",
-            },
-          ],
-        },
-        {
-          text: "Database",
-          collapsed: true,
-          items: [
-            {
-              text: "SQLite API",
-              link: "/examples/sqlite-api",
-            },
-          ],
-        },
-        {
-          text: "Async",
-          collapsed: true,
-          items: [
-            {
-              text: "Background Task",
-              link: "/examples/background-task",
-            },
-            {
-              text: "Async App",
-              link: "/examples/async-app",
-            },
-          ],
+          text: "Extensions",
+          link: "/registry/extensions",
         },
       ],
     },
@@ -2744,12 +2843,51 @@ const referenceSidebar = {
 };
 
 /* ========================================================================
- * 7. CONTRIBUTING
+ * 7. INTERNALS
+ * ===================================================================== */
+
+const internalsSidebar = {
+  text: "Internals",
+  collapsed: true,
+  items: [
+    {
+      text: "Architecture",
+      link: "/internals/architecture",
+    },
+    {
+      text: "Runtime Model",
+      link: "/internals/runtime-model",
+    },
+    {
+      text: "Internals Error Diagnostics",
+      link: "/internals/error-diagnostics",
+    },
+    {
+      text: "Direct Compile",
+      link: "/internals/direct-compile",
+    },
+    {
+      text: "Cache System",
+      link: "/internals/cache-system",
+    },
+    {
+      text: "Performance",
+      link: "/internals/performance",
+    },
+    {
+      text: "Design Decisions",
+      link: "/internals/design-decisions",
+    },
+  ],
+};
+
+/* ========================================================================
+ * 8. CONTRIBUTING
  * ===================================================================== */
 
 const contributingSidebar = {
   text: "Contributing",
-  collapsed: false,
+  collapsed: true,
   items: [
     {
       text: "Contribution",
@@ -2771,12 +2909,13 @@ const contributingSidebar = {
 };
 
 const sidebar = [
-  getStartedSidebar,
-  guidesSidebar,
-  conceptsSidebar,
-  diagnosticsSidebar,
+  startHereSidebar,
+  understandVixSidebar,
+  buildApplicationsSidebar,
+  vixModulesSidebar,
+  toolingSidebar,
   referenceSidebar,
-  advancedSidebar,
+  internalsSidebar,
   contributingSidebar,
 ];
 
@@ -2785,7 +2924,7 @@ export default defineConfig({
 
   title: "Vix.cpp Documentation",
   description:
-    "Vix.cpp is a modern C++ runtime and developer toolkit for building, running, testing, formatting, and packaging C++ applications.",
+    "Vix.cpp is a C++ developer platform for building native applications with a coherent development workflow.",
 
   base: "/",
 
@@ -2844,8 +2983,7 @@ export default defineConfig({
       "meta",
       {
         property: "og:description",
-        content:
-          "Learn how to build fast and reliable C++ applications with Vix.cpp.",
+        content: "Learn how to build native C++ applications with Vix.cpp.",
       },
     ],
     ["meta", { property: "og:site_name", content: "Vix.cpp Documentation" }],
@@ -2856,8 +2994,7 @@ export default defineConfig({
       "meta",
       {
         name: "twitter:description",
-        content:
-          "Learn how to build fast and reliable C++ applications with Vix.cpp.",
+        content: "Learn how to build native C++ applications with Vix.cpp.",
       },
     ],
 
