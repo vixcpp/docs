@@ -1,806 +1,430 @@
-# vix run
+# `vix run`
 
-`vix run` builds and runs something with Vix.
+`vix run` is the execution side of Vix.
 
-It can run a Vix project, a single C++ file, a `.vix` manifest, a compiled binary, a container image, an SSH target, or an HTTP target.
-
-Use it when you want one command that prepares a target and starts it immediately.
-
-```bash
-vix run
-```
-
-## Overview
-
-`vix run` is the general execution command in Vix.
-
-It is not limited to web applications.
-
-It can run:
-
-- the current project
-- a named project or target
-- a `vix.app` project
-- a CMake project
-- a single C++ file
-- a `.vix` manifest
-- a compiled binary
-- a Docker image
-- a container image
-- an SSH target
-- an HTTP or HTTPS target
-- Vix umbrella examples
-
-It is useful when you want to start something manually without entering the continuous development loop of `vix dev`.
-
-For active development with automatic reload, use `vix dev` or `vix run --watch`.
-
-## Usage
-
-```bash
-vix run [target] [options] [-- compiler/linker flags] [--run <args...>]
-```
-
-The target is optional.
-
-If no target is provided, Vix tries to run the current project.
-
-```bash
-vix run
-```
-
-## Supported targets
-
-| Target                           | Mode            | Example                       |
-| -------------------------------- | --------------- | ----------------------------- |
-| No target                        | Current project | `vix run`                     |
-| Project directory or target name | Project mode    | `vix run api`                 |
-| Single C++ file                  | Script mode     | `vix run main.cpp`            |
-| `.vix` manifest                  | Manifest mode   | `vix run app.vix`             |
-| Binary                           | Binary mode     | `vix run ./app`               |
-| Docker image                     | Runtime target  | `vix run docker://nginx`      |
-| Container image                  | Runtime target  | `vix run container://nginx`   |
-| SSH target                       | Runtime target  | `vix run ssh://user@host`     |
-| HTTP target                      | Runtime target  | `vix run https://example.com` |
-| Vix umbrella example             | Example mode    | `vix run example main`        |
-
-## Basic examples
-
-```bash
-# Run the current project
-vix run
-
-# Run a named project or target
-vix run api
-
-# Run a project from another directory
-vix run --dir ./examples/blog
-
-# Run a single C++ file
-vix run main.cpp
-
-# Run a .vix manifest
-vix run app.vix
-
-# Run a compiled binary
-vix run ./app
-
-# Run a Docker image
-vix run docker://nginx -p 8080:80
-
-# Run a container image
-vix run container://nginx -p 8080:80
-
-# Run a remote SSH command
-vix run ssh://localhost echo hello
-
-# Fetch an HTTP target
-vix run https://example.com
-```
-
-## What `vix run` does
-
-When you run:
-
-```bash
-vix run
-```
-
-Vix performs the needed steps:
-
-1. Parse the command.
-2. Detect the target type.
-3. Resolve the project, file, manifest, binary, or runtime target.
-4. Configure the project when needed.
-5. Build the target when needed.
-6. Resolve the executable when needed.
-7. Apply runtime environment variables.
-8. Start the target.
-9. Stream output live.
-10. Capture build or runtime failures.
-11. Print Vix diagnostics when possible.
-
-The goal is simple:
-
-```txt
-one command
-correct target resolution
-clear runtime behavior
-better diagnostics when something fails
-```
-
-## Target resolution
-
-`vix run` resolves targets in a practical order.
-
-If a target is provided and starts with one of these prefixes, Vix treats it as a runtime target:
-
-```txt
-docker://
-container://
-ssh://
-http://
-https://
-```
-
-If a target is a file, Vix checks whether it is:
-
-- a `.cpp` file
-- an executable binary
-- a `.vix` manifest
-
-If a target is a directory, Vix treats it as a project directory.
-
-If no target is provided, Vix tries to use:
-
-```txt
-.vix/meta.json last_binary
-CMakeLists.txt
-vix.app
-local executable in the current folder
-```
-
-If none of these can be resolved, Vix reports that it cannot determine what to run.
-
-## Project mode
-
-Project mode is used when Vix runs a project.
-
-A project can be based on:
-
-```txt
-CMakeLists.txt
-vix.app
-```
-
-Run the current project:
-
-```bash
-vix run
-```
-
-Run a named target or project:
-
-```bash
-vix run api
-```
-
-Run from another directory:
-
-```bash
-vix run --dir ./apps/api
-```
-
-Project mode can:
-
-- resolve the project root
-- detect `CMakeLists.txt` or `vix.app`
-- configure the project when needed
-- build the selected target
-- find the resulting executable
-- run it with runtime arguments and environment variables
-
-## CMake and vix.app project resolution
-
-Vix respects this project resolution order:
-
-```txt
-1. CMakeLists.txt
-2. vix.app
-```
-
-If both files exist, Vix uses `CMakeLists.txt`.
-
-That keeps full CMake projects in control.
-
-If no `CMakeLists.txt` exists but `vix.app` exists, Vix uses the `vix.app` project.
-
-For `vix.app`, Vix can generate an internal CMake project and then build it.
-
-The user still runs:
-
-```bash
-vix run
-```
-
-## Preset-based project runs
-
-For projects with CMake presets, Vix can use the preset flow.
-
-```bash
-vix run api --preset dev-ninja
-vix run api --preset release
-```
-
-You can also select a run preset:
-
-```bash
-vix run api --run-preset run-dev-ninja
-```
-
-## Clean project run
-
-Use `--clean` when you want to clean or reconfigure before running.
-
-```bash
-vix run --clean
-vix run api --clean
-```
-
-## Parallel build jobs
-
-Use `-j` or `--jobs` to control build parallelism.
-
-```bash
-vix run api -j 8
-vix run api --jobs 16
-```
-
-## Script mode
-
-Script mode is used when the target is a single `.cpp` file.
+With a C++ source file, Vix can compile and run the program in one command. With a project, it runs the executable recorded by the most recent successful `vix build`. It can also run an existing executable directly.
 
 ```bash
 vix run main.cpp
 ```
 
-Vix treats the file as a runnable C++ script.
+## Run a C++ file
 
-This is useful for:
+A standalone C++ file does not need a project just to be executed.
 
-- quick experiments
-- small examples
-- learning
-- temporary tools
-- small HTTP servers
-- local scripts
-- testing Vix APIs without creating a full project
+```cpp
+#include <iostream>
 
-## Direct script compilation
+int main()
+{
+  std::cout << "Hello, world\n";
+  return 0;
+}
+```
 
-For simple scripts, Vix can use direct compilation.
+Run it with:
 
 ```bash
 vix run main.cpp
 ```
 
-The idea is:
-
-```txt
-main.cpp
-  -> compile
-  -> link
-  -> run
+```text
+Hello, world
 ```
 
-The user does not need to create:
+Vix accepts `.cpp`, `.cc`, and `.cxx` source files.
 
-```txt
-CMakeLists.txt
-vix.app
-```
+For direct single-file compilation, Vix uses `CXX` when that environment variable is set. Otherwise it uses `c++` on Unix-like systems and `g++` on Windows. C++20 is used when no `-std=` flag is provided.
 
-## CMake fallback for scripts
-
-Some scripts need more than direct compilation, for example scripts that use Vix runtime features, special dependencies, database support, or sanitizer modes.
-
-Vix handles this automatically. You still run the same command:
+To choose another language mode:
 
 ```bash
-vix run server.cpp
+vix run main.cpp -- -std=c++23
 ```
 
-Vix decides whether to use direct compilation or CMake fallback.
+## How single-file execution works
+
+Not every C++ file has the same build requirements. Vix inspects the source, its resolved dependencies, and the compiler and linker options before deciding how to build it.
+
+Simple files can be compiled directly. When the source needs build-system features such as compiled dependencies, database integration, explicit libraries, or CMake targets, Vix switches to a generated CMake build automatically.
+
+The command stays the same:
+
+```bash
+vix run main.cpp
+```
+
+This keeps the common case small without limiting files that need a richer C++ build.
 
 ## Script cache
 
-Vix can cache script builds.
+Single-file builds are cached so an unchanged program does not need to be compiled on every run.
 
-If nothing relevant changed, repeated runs can reuse the previous result.
+The normal direct cache lives under:
 
-Use local script cache when you want the cache to stay local to the current working directory:
+```text
+~/.vix/cache/scripts/<key>/
+```
+
+A cache decision is based on more than the source timestamp. Vix fingerprints the source contents, compiler, C++ standard, relevant compile and link options, dependencies, sanitizer mode, and the headers that participate in the build.
+
+A change in one of those inputs can trigger a rebuild even when `main.cpp` itself has not changed.
+
+### See why Vix rebuilt
+
+Use `--trace-cache` when you want to inspect the decision:
+
+```bash
+vix run main.cpp --trace-cache
+```
+
+Example:
+
+```text
+script strategy: direct
+cache key: 7b347a95a6844aa6
+cache dir: /home/softadastra/.vix/cache/scripts/7b347a95a6844aa6
+binary exists: yes
+metadata exists: yes
+cached failure: no
+cache key match: yes
+source mtime match: yes
+source content hash match: yes
+fingerprint match: yes
+direct PCH: unavailable
+rebuild reason: cache hit
+Hello, world
+```
+
+The important line is the rebuild reason. In this case the existing executable still represents the current build inputs, so Vix runs it directly.
+
+`--verbose` also exposes the direct cache trace.
+
+### Compiler fingerprint
+
+The default compiler fingerprint mode is `fast`:
+
+```bash
+vix run main.cpp --compiler-fingerprint fast
+```
+
+`fast` avoids extra compiler identity queries during startup.
+
+For a stricter toolchain boundary:
+
+```bash
+vix run main.cpp --compiler-fingerprint strict
+```
+
+On supported Unix-like toolchains, `strict` also queries the compiler version and target triple and includes them in the cache fingerprint.
+
+Use `strict` when a compiler change must be reflected more explicitly in cache validation.
+
+### Local cache
+
+Use:
 
 ```bash
 vix run main.cpp --local-cache
 ```
 
-## Auto dependencies
+to keep single-file cache artifacts in the current directory:
 
-Use `--auto-deps` to add include paths from installed local Vix dependencies.
+```text
+.vix-scripts/
+```
+
+This applies to both direct single-file builds and the generated CMake fallback.
+
+## Dependencies
+
+Single-file programs can use packages managed by Vix without manually assembling include paths and linker flags.
+
+For example:
+
+```cpp
+#include <rix.hpp>
+
+int main()
+{
+  rix.debug.print("Hello", "Rix");
+
+  auto table = rix.csv.parse("name,language\nAda,C++\n");
+  rix.debug.log("loaded {} rows", table.size());
+
+  return 0;
+}
+```
+
+Add the package through the normal dependency workflow:
 
 ```bash
-vix run main.cpp --auto-deps
+vix add @rix/rix
+vix install
 ```
 
-Equivalent local form:
+Then run the file normally:
 
 ```bash
-vix run main.cpp --auto-deps=local
+vix run main.cpp
 ```
 
-Search dependencies in parent folders too:
+```text
+Hello Rix
+[debug] loaded 2 rows
+```
+
+A small source directory can remain as simple as:
+
+```text
+main.cpp
+vix.json
+vix.lock
+```
+
+For a single C++ file, Vix searches the local dependency context and adds matching dependency include paths automatically. If the file appears to use a declared registry dependency that has not been installed yet, Vix can prepare the declared dependency set before compiling.
+
+When the relevant dependency context is located in a parent directory, extend the search with:
 
 ```bash
-vix run main.cpp --auto-deps=up
+vix run src/tool.cpp --auto-deps=up
 ```
 
-This is useful when a script depends on packages installed under `.vix/deps`.
+The normal package workflow remains `vix add`, `vix install`, and `vix run`.
 
-## Script compiler and linker flags
+## Compiler flags and program arguments
 
-In script mode, everything after `--` is treated as compiler or linker flags.
+Compiler options and program arguments use different paths.
+
+Everything after `--` is a compiler or linker flag when the target is a C++ source file:
 
 ```bash
-vix run main.cpp -- -O2 -DNDEBUG
+vix run main.cpp -- -std=c++23 -O2
 ```
 
-Add include paths:
+Use `--run` when the remaining values belong to the program:
 
 ```bash
-vix run main.cpp -- -I./include
+vix run main.cpp --run input.txt --verbose
 ```
 
-Add library paths:
+You can also add runtime arguments one at a time:
 
 ```bash
-vix run main.cpp -- -L./lib
+vix run main.cpp --args input.txt --args --verbose
 ```
 
-Link libraries:
+For an explicit target, ordinary positional arguments after the target are runtime arguments:
 
 ```bash
-vix run main.cpp -- -lssl -lcrypto
+vix run ./app input.txt
 ```
 
-Combine flags:
+If a Vix option is placed after `--`, Vix treats it as a compiler or linker flag rather than as a Vix option.
+
+## Runtime environment and working directory
+
+Use `--env` to add or override an environment value for the launched program:
 
 ```bash
-vix run main.cpp -- -O2 -I./include -L./lib -lmylib
+vix run main.cpp --env APP_ENV=development
 ```
 
-## Runtime arguments
-
-Runtime arguments are arguments passed to the program being executed.
-
-For project mode, use repeated `--args`:
+The option is repeatable:
 
 ```bash
-vix run api --args --port --args 8080
+vix run main.cpp \
+  --env APP_ENV=development \
+  --env PORT=8080
 ```
 
-For script mode, prefer `--run`:
+Use `--cwd` to choose the working directory seen by the program:
 
 ```bash
-vix run main.cpp --run --port 8080
+vix run main.cpp --cwd ./runtime-data
 ```
 
-You can also use repeated `--args` in script mode:
+## Run a project
+
+A normal project keeps build and execution explicit.
 
 ```bash
-vix run main.cpp --args input.txt --args output.txt
+vix build
+vix run
 ```
 
-## Important script argument rule
+`vix build` records the successful executable in `.vix/meta.json`. `vix run` reads that metadata and executes the recorded binary.
 
-In script mode, `--` is for compiler or linker flags.
+If the project has not been built successfully yet:
 
-Do not use it for runtime arguments.
+```text
+error: No successful build found for this project.
+hint: Run: vix build
+```
 
-Wrong:
+If the recorded executable no longer exists or is not executable, Vix asks for a new build rather than guessing another target.
+
+You can run another project directory directly:
 
 ```bash
-vix run main.cpp -- --port 8080
+vix run ./shop
 ```
 
-Correct:
+or:
 
 ```bash
-vix run main.cpp --run --port 8080
+vix run --dir ./shop
 ```
 
-Or:
+### Build without running
+
+`--check` runs the project build flow and stops before execution:
 
 ```bash
-vix run main.cpp --args --port --args 8080
+vix run --check
 ```
 
-## Compiler flags and runtime args together
+The project options `--preset`, `--jobs`, and `--clean` apply to this build-only path.
 
-Use `--` for compiler or linker flags, then `--run` for program arguments.
+For normal builds, prefer the dedicated command:
 
 ```bash
-vix run main.cpp -- -O2 -DNDEBUG --run hello 123
+vix build
 ```
 
-Here:
+## Run an existing executable
 
-```txt
--O2 -DNDEBUG
-```
-
-go to the compiler.
-
-```txt
-hello 123
-```
-
-go to the program.
-
-## Manifest mode
-
-Manifest mode is used when the target is a `.vix` manifest.
-
-```bash
-vix run app.vix
-```
-
-The manifest is loaded first.
-
-Then command-line options are merged on top.
-
-Depending on the manifest, Vix may behave like script mode or project mode.
-
-Examples:
-
-```bash
-vix run app.vix
-vix run app.vix --env APP_ENV=dev
-vix run app.vix --args --port --args 8080
-```
-
-## Binary mode
-
-If the target is an executable binary, Vix can run it directly.
+An existing executable can be passed directly:
 
 ```bash
 vix run ./app
 ```
 
-You can pass runtime arguments:
+Runtime arguments, `--cwd`, `--env`, replay capture, signal handling, and runtime diagnostics remain available through this path.
+
+## Watch and reload
+
+Use watch mode when a program should rebuild and restart as files change:
 
 ```bash
-vix run ./app --args --port --args 8080
+vix run main.cpp --watch
 ```
 
-You can pass environment variables:
+`--reload` is an alias:
 
 ```bash
-vix run ./app --env APP_ENV=dev
+vix run main.cpp --reload
 ```
 
-You can set the working directory:
+Single-file watch follows the script build inputs and restarts the process after a successful rebuild.
+
+Project watch is implemented on POSIX systems. On Windows, Vix reports that project watch is not yet available and falls back to a one-shot run.
+
+For the broader development workflow, see [`vix dev`](./dev.md).
+
+### Script or server behavior
+
+A short-lived command and a server do not behave the same way during process supervision.
+
+Use:
 
 ```bash
-vix run ./app --cwd ./runtime
+vix run main.cpp --force-script
 ```
 
-Vix still applies its runtime environment handling and diagnostics where possible.
-
-## Docker and container targets
-
-`vix run` can run container targets on supported Unix-like systems.
-
-Docker image:
-
-```bash
-vix run docker://nginx
-```
-
-Container image:
-
-```bash
-vix run container://nginx
-```
-
-Pass Docker runtime arguments after the target:
-
-```bash
-vix run docker://nginx -p 8080:80
-```
-
-This maps to a Docker run flow similar to:
-
-```bash
-docker run -it --rm -p 8080:80 nginx
-```
-
-Container runtime targets are not supported on Windows yet.
-
-## SSH targets
-
-`vix run` can execute an SSH target.
-
-```bash
-vix run ssh://user@host
-```
-
-Pass a remote command:
-
-```bash
-vix run ssh://localhost echo hello
-```
-
-This maps to an SSH command similar to:
-
-```bash
-ssh localhost echo hello
-```
-
-Use this when you want Vix to dispatch a simple runtime target through SSH.
-
-## HTTP and HTTPS targets
-
-`vix run` can run an HTTP or HTTPS target.
-
-```bash
-vix run http://example.com
-vix run https://example.com
-```
-
-On supported systems, this uses a `curl -L` style request.
-
-You can pass additional arguments:
-
-```bash
-vix run https://example.com -I
-```
-
-This is useful for quick HTTP checks from the same runtime command surface.
-
-## Vix umbrella examples
-
-Inside the Vix umbrella repository, examples can be run with:
-
-```bash
-vix run example main
-vix run example now_server
-```
-
-If the example binary exists in the build directory, Vix runs it.
-
-If it does not exist, Vix reports that the example binary was not found and tells you to make sure the example is enabled and built.
-
-## Library projects and test binaries
-
-Some projects are libraries and do not produce a main executable.
-
-When Vix cannot find a main executable, it can detect a single test binary in the build directory and run it.
-
-This allows a library project to still have a useful `vix run` behavior when a single test binary is available.
-
-## Working directory
-
-Use `--cwd` to run the program from a specific working directory.
-
-```bash
-vix run api --cwd ./runtime
-vix run main.cpp --cwd ./data
-vix run ./app --cwd ./runtime
-```
-
-This is useful when your program expects files relative to a specific runtime folder.
-
-## Environment variables
-
-Use `--env` to add or override environment variables for the running program.
-
-```bash
-vix run api --env APP_ENV=dev
-vix run api --env APP_ENV=dev --env PORT=8080
-vix run server.cpp --env PORT=8080
-```
-
-Each `--env` accepts one `KEY=value` pair.
-
-## Watch mode
-
-Use `--watch` to rebuild and restart when files change.
-
-```bash
-vix run api --watch
-vix run server.cpp --watch
-```
-
-`--reload` is an alias-style flag for watch behavior:
-
-```bash
-vix run api --reload
-```
-
-Force server behavior:
-
-```bash
-vix run server.cpp --force-server --watch
-```
-
-Force script behavior:
-
-```bash
-vix run tool.cpp --force-script
-```
-
-For active development, prefer:
-
-```bash
-vix dev
-```
-
-`vix dev` is optimized for the development loop.
-
-## Server and script classification
-
-Vix tries to decide whether a program is a long-running server or a short-lived script.
-
-You can force the classification.
-
-Treat the program as a server:
+for a short-lived program, or:
 
 ```bash
 vix run server.cpp --force-server
 ```
 
-Treat the program as a short-lived script:
+for a long-running process.
 
-```bash
-vix run tool.cpp --force-script
+If both are provided, server behavior wins.
+
+## Compiler and runtime diagnostics
+
+When a source file does not compile, `vix run` uses the same compiler diagnostic pipeline as the Vix build workflow. It extracts the useful compiler error, shows the relevant source location, and keeps secondary compiler cascades out of the default output.
+
+Runtime failures are inspected separately.
+
+For example, a program that lets a joinable `std::thread` reach destruction can produce:
+
+```text
+runtime error: joinable std::thread destroyed
+--> /home/softadastra/tmp/vix/errors.cpp:19:15
+code:
+  18 |   std::thread t1(appendA);
+  19 |   std::thread t2(appendB);
+                     ^
+  20 |
+  21 |   t1.join();
+hint: call t2.join() or t2.detach() before leaving the scope
+hint: prefer std::jthread for RAII thread shutdown when possible
+at: /home/softadastra/tmp/vix/errors.cpp:19
 ```
 
-This matters for watch mode, restart behavior, and runtime output handling.
+Vix also recognizes sanitizer reports, signals, uncaught termination, and several common C++ runtime failure patterns. If no specialized diagnostic applies, the underlying process failure is still reported.
 
 ## Sanitizers
 
-Vix can run script builds with sanitizers.
-
-Enable AddressSanitizer and UBSan:
+Enable AddressSanitizer and UndefinedBehaviorSanitizer together:
 
 ```bash
 vix run main.cpp --san
 ```
 
-Enable UBSan only:
+Use only UndefinedBehaviorSanitizer:
 
 ```bash
 vix run main.cpp --ubsan
 ```
 
-Enable ThreadSanitizer:
+Use ThreadSanitizer:
 
 ```bash
 vix run main.cpp --tsan
 ```
 
-Sanitizers are useful for detecting memory errors, undefined behavior, and threading issues.
-
-## Database support in script mode
-
-Enable SQLite support:
+Clear the sanitizer selection with:
 
 ```bash
-vix run main.cpp --with-sqlite
+vix run main.cpp --no-san
 ```
 
-Enable MySQL support:
+The sanitizer mode participates in single-file build configuration and cache validation.
+
+On POSIX systems, Vix also prepares the sanitizer runtime environment so reports can be captured and interpreted consistently.
+
+## Replay
+
+Record a supported local run with:
 
 ```bash
-vix run main.cpp --with-mysql
-```
-
-These options are useful when a single-file script needs database-related Vix support.
-
-## OpenAPI docs mode
-
-`vix run` keeps OpenAPI/docs disabled by default.
-
-```bash
-vix run api
-```
-
-This sets:
-
-```bash
-VIX_DOCS=0
-```
-
-Enable docs for one run:
-
-```bash
-vix run api --docs
-```
-
-This sets:
-
-```bash
-VIX_DOCS=1
-```
-
-Disable docs explicitly:
-
-```bash
-vix run api --no-docs
-```
-
-You can also pass an explicit value:
-
-```bash
-vix run api --docs=true
-vix run api --docs=false
-vix run api --docs=1
-vix run api --docs=0
-```
-
-The CLI option is preferred because it makes the current run explicit.
-
-You can also use the environment variable:
-
-```bash
-VIX_DOCS=1 vix run api
-VIX_DOCS=0 vix run api
-```
-
-## Replay recording
-
-Use `--replay` to record a run under `.vix/runs/`.
-
-```bash
-vix run api --replay
-vix run main.cpp --replay
 vix run ./app --replay
 ```
 
-Recorded runs can later be inspected or replayed with:
+Run records are stored under:
 
-```bash
-vix replay list
-vix replay last
-vix replay show <id>
-vix replay failed
+```text
+.vix/runs/
 ```
 
-Use replay when you want to reproduce a failed, crashed, or unexpected execution without guessing the original command.
+Replay captures execution context and process results so the run can be inspected later with the Vix replay workflow.
 
-## Logging
+See [`vix replay`](./replay.md).
 
-Set the log level:
+## Logging and output
 
-```bash
-vix run api --log-level debug
-```
-
-Use verbose mode:
+Set the application log level for a run:
 
 ```bash
-vix run api --verbose
+vix run main.cpp --log-level debug
 ```
 
-Use quiet mode:
+Supported levels are:
 
-```bash
-vix run api --quiet
-```
-
-Supported log levels:
-
-```txt
+```text
 trace
 debug
 info
@@ -810,662 +434,236 @@ critical
 off
 ```
 
-`--verbose` is an alias for debug-style output.
-
-`--quiet` reduces output to warnings and errors.
-
-## Log format
-
-Set the log format:
+`--verbose` is the debug-level shortcut:
 
 ```bash
-vix run api --log-format kv
-vix run api --log-format json
-vix run api --log-format json-pretty
+vix run main.cpp --verbose
 ```
 
-## Log color
-
-Control colored output:
+`--quiet` uses warning-level logging:
 
 ```bash
-vix run api --log-color auto
-vix run api --log-color always
-vix run api --log-color never
+vix run main.cpp --quiet
 ```
 
-Disable colors:
+Choose the log format with:
 
 ```bash
-vix run api --no-color
+vix run main.cpp --log-format kv
+vix run main.cpp --log-format json
+vix run main.cpp --log-format json-pretty
 ```
 
-`--no-color` is an alias for:
+Color handling can be controlled with:
 
 ```bash
---log-color=never
+vix run main.cpp --log-color auto
+vix run main.cpp --log-color always
+vix run main.cpp --log-color never
 ```
 
-## Terminal clearing
-
-Control terminal clearing:
+or:
 
 ```bash
-vix run api --clear=auto
-vix run api --clear=always
-vix run api --clear=never
+vix run main.cpp --no-color
 ```
 
-Disable clearing:
+## Application docs
+
+For applications that expose Vix OpenAPI or documentation support:
 
 ```bash
-vix run api --no-clear
+vix run --docs
 ```
 
-`--no-clear` is equivalent to:
+Disable it with:
 
 ```bash
---clear=never
+vix run --no-docs
 ```
 
-## Output behavior
+`--docs=true`, `--docs=false`, `--docs=1`, and `--docs=0` are also accepted.
 
-`vix run` streams program output live.
-
-When possible, it also improves errors from:
-
-- compiler failures
-- linker failures
-- CMake configure failures
-- runtime crashes
-- sanitizer reports
-- uncaught exceptions
-- memory errors
-- thread errors
-- known C++ runtime mistakes
-
-Instead of showing only raw logs, Vix tries to show:
-
-```txt
-what failed
-where it failed
-the relevant code frame
-a focused hint
-the original output when needed
-```
-
-## Runtime diagnostics
-
-When a program fails at runtime, Vix can detect common failure families such as:
-
-- segmentation faults
-- aborts
-- uncaught exceptions
-- double free
-- invalid free
-- use after free
-- buffer overflow
-- null pointer errors
-- out-of-range access
-- iterator invalidation
-- mutex errors
-- condition variable errors
-- thread lifecycle errors
-- `string_view` lifetime issues
-- span access issues
-- sanitizer reports
-
-The goal is not to hide C++.
-
-The goal is to make C++ failures easier to understand.
-
-## Build diagnostics
-
-When compilation fails, Vix tries to format the error clearly.
-
-Example shape:
-
-```txt
-✖ Build failed
-
-location:
-  /path/to/file.cpp:line:column
-
-error:
-  message
-
-code:
-  line | source code
-       | marker
-
-hint:
-  focused suggestion
-```
-
-If Vix cannot classify the error, it still shows the raw compiler or build output.
+The current run path writes `VIX_DOCS` for the child process. When no docs option is selected, it writes `VIX_DOCS=0`. If you need docs enabled for a run, use `--docs` rather than relying on a pre-existing `VIX_DOCS=1`.
 
 ## Environment variables
 
-| Variable            | Description                                                                   |
-| ------------------- | ----------------------------------------------------------------------------- |
-| `VIX_DOCS`          | Enables or disables OpenAPI/docs mode.                                        |
-| `VIX_LOG_LEVEL`     | Runtime log level.                                                            |
-| `VIX_LOG_FORMAT`    | Runtime log format.                                                           |
-| `VIX_COLOR`         | Color mode.                                                                   |
-| `NO_COLOR`          | Disables colors.                                                              |
-| `VIX_STDOUT_MODE`   | Used by Vix for smoother live output.                                         |
-| `VIX_CLI_CLEAR`     | Terminal clear behavior.                                                      |
-| `VIX_MODE`          | Runtime mode set by Vix when not already set.                                 |
-| `VIX_SHOW_ENV_HINT` | When set to `1`, shows a hint if `.env.example` exists but `.env` is missing. |
-| `VIX_RUN_UI`        | Enables the run progress UI when set.                                         |
+A few environment variables are meaningful inputs to `vix run`.
 
-## Options
+| Variable               | Behavior                                                                |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `CXX`                  | Selects the compiler used by direct single-file compilation.            |
+| `PATH`                 | Used to resolve the compiler and external tools.                        |
+| `HOME` / `USERPROFILE` | Used to locate the Vix installation and global cache.                   |
+| `VIX_LOG_LEVEL`        | Existing value is preserved unless a CLI log-level option overrides it. |
+| `VIX_LOG_FORMAT`       | Existing value is preserved unless `--log-format` overrides it.         |
+| `VIX_COLOR`            | Existing value is preserved unless a CLI color option overrides it.     |
+| `VIX_MODE`             | Existing value is preserved. Otherwise Vix sets `run` or `dev`.         |
 
-| Option                          | Description                                                |
-| ------------------------------- | ---------------------------------------------------------- |
-| `-d, --dir <path>`              | Project directory.                                         |
-| `--dir=<path>`                  | Same as `--dir <path>`.                                    |
-| `--preset <name>`               | Configure or build preset. Default is usually `dev-ninja`. |
-| `--preset=<name>`               | Same as `--preset <name>`.                                 |
-| `--run-preset <name>`           | Run preset name.                                           |
-| `--run-preset=<name>`           | Same as `--run-preset <name>`.                             |
-| `-j, --jobs <n>`                | Number of parallel build jobs.                             |
-| `--jobs=<n>`                    | Same as `--jobs <n>`.                                      |
-| `--clean`                       | Clean or reconfigure before running.                       |
-| `--replay`                      | Record this run under `.vix/runs/`.                        |
-| `--cwd <path>`                  | Run the program from this working directory.               |
-| `--cwd=<path>`                  | Same as `--cwd <path>`.                                    |
-| `--env <K=V>`                   | Add or override one environment variable. Repeatable.      |
-| `--env=<K=V>`                   | Same as `--env <K=V>`.                                     |
-| `--args <value>`                | Add one runtime argument. Repeatable.                      |
-| `--args=<value>`                | Same as `--args <value>`.                                  |
-| `--run <args...>`               | Runtime arguments for script mode.                         |
-| `--watch`                       | Rebuild and restart on file changes.                       |
-| `--reload`                      | Alias-style flag for watch behavior.                       |
-| `--force-server`                | Treat the program as a long-running server.                |
-| `--force-script`                | Treat the program as a short-lived script.                 |
-| `--auto-deps`                   | Auto-add includes from `.vix/deps/*/include`.              |
-| `--auto-deps=local`             | Same as `--auto-deps`.                                     |
-| `--auto-deps=up`                | Search dependencies in parent folders too.                 |
-| `--san`                         | Enable AddressSanitizer and UBSan where supported.         |
-| `--ubsan`                       | Enable UBSan only where supported.                         |
-| `--tsan`                        | Enable ThreadSanitizer where supported.                    |
-| `--with-sqlite`                 | Enable SQLite support for script mode.                     |
-| `--with-mysql`                  | Enable MySQL support for script mode.                      |
-| `--local-cache`                 | Use local script cache.                                    |
-| `--docs`                        | Enable OpenAPI/docs for this run.                          |
-| `--no-docs`                     | Disable OpenAPI/docs for this run.                         |
-| `--docs=<0\|1\|true\|false>`    | Explicitly control OpenAPI/docs mode.                      |
-| `--clear <auto\|always\|never>` | Clear terminal before runtime output.                      |
-| `--clear=<auto\|always\|never>` | Same as `--clear <mode>`.                                  |
-| `--no-clear`                    | Alias for `--clear=never`.                                 |
-| `--log-level <level>`           | Set log level.                                             |
-| `--log-level=<level>`           | Same as `--log-level <level>`.                             |
-| `--verbose`                     | Alias for debug logging.                                   |
-| `-q, --quiet`                   | Reduce output to warnings and errors.                      |
-| `--log-format <format>`         | Set log format: `kv`, `json`, or `json-pretty`.            |
-| `--log-format=<format>`         | Same as `--log-format <format>`.                           |
-| `--log-color <mode>`            | Set color mode: `auto`, `always`, or `never`.              |
-| `--log-color=<mode>`            | Same as `--log-color <mode>`.                              |
-| `--no-color`                    | Alias for `--log-color=never`.                             |
-| `-h, --help`                    | Show command help.                                         |
-| `-- <flags...>`                 | In script mode, pass compiler or linker flags.             |
+Some variables are written by Vix for the child process rather than treated as user configuration.
 
-## Project examples
+| Variable          | Behavior                                                  |
+| ----------------- | --------------------------------------------------------- |
+| `VIX_DOCS`        | Written from the docs option. The current default is `0`. |
+| `VIX_STDOUT_MODE` | Set to line-oriented output on POSIX run paths.           |
+| `VIX_CLI_CLEAR`   | Written from the current `--clear` mode.                  |
+| `ASAN_OPTIONS`    | Prepared when AddressSanitizer is active.                 |
+| `UBSAN_OPTIONS`   | Prepared when UndefinedBehaviorSanitizer is active.       |
+| `TSAN_OPTIONS`    | Prepared when ThreadSanitizer is active.                  |
 
-```bash
-# Run current project
-vix run
+Advanced diagnostics also recognize variables such as:
 
-# Run named target
-vix run api
-
-# Run with project directory
-vix run --dir ./apps/api
-
-# Run with preset
-vix run api --preset release
-
-# Run with clean configure/build
-vix run api --clean
-
-# Run with parallel jobs
-vix run api -j 8
-
-# Run with runtime arguments
-vix run api --args --port --args 8080
-
-# Run with environment variables
-vix run api --env APP_ENV=dev --env PORT=8080
-
-# Run from a specific working directory
-vix run api --cwd ./runtime
-
-# Run with watch mode
-vix run api --watch
-
-# Record the run
-vix run api --replay
+```text
+VIX_PERF_TRACE
+VIX_PROCESS_DEBUG
+VIX_RUN_HEARTBEAT
+VIX_BUILD_HEARTBEAT
 ```
 
-## Script examples
+These are useful when investigating the CLI itself or a slow script build, and are not required for ordinary application configuration.
+
+For example:
 
 ```bash
-# Run a single C++ file
-vix run main.cpp
-
-# Run with runtime arguments
-vix run main.cpp --run input.txt output.txt
-
-# Run with repeatable runtime arguments
-vix run main.cpp --args input.txt --args output.txt
-
-# Run with compiler flags
-vix run main.cpp -- -O2 -DNDEBUG
-
-# Run with include path
-vix run main.cpp -- -I./include
-
-# Run with linked libraries
-vix run main.cpp -- -lssl -lcrypto
-
-# Run with auto dependencies
-vix run main.cpp --auto-deps
-
-# Run with local cache
-vix run main.cpp --local-cache
-
-# Run with sanitizers
-vix run main.cpp --san
-vix run main.cpp --ubsan
-vix run main.cpp --tsan
-
-# Run with database support
-vix run main.cpp --with-sqlite
-vix run main.cpp --with-mysql
-
-# Run as a server
-vix run server.cpp --force-server
-
-# Run as a server with watch mode
-vix run server.cpp --force-server --watch
-
-# Run as a short-lived script
-vix run tool.cpp --force-script
+VIX_PERF_TRACE=1 vix run main.cpp
 ```
 
-## Manifest examples
+prints timing information for stages of the direct single-file path.
+
+## Other targets
+
+`vix run` also accepts a few delegated runtime targets on non-Windows platforms.
+
+Docker:
 
 ```bash
-# Run manifest
-vix run app.vix
-
-# Run manifest with environment
-vix run app.vix --env APP_ENV=dev
-
-# Run manifest with runtime args
-vix run app.vix --args --port --args 8080
+vix run docker://ubuntu:latest
 ```
 
-## Binary examples
+Container alias:
 
 ```bash
-# Run a binary
-vix run ./app
-
-# Run a binary with arguments
-vix run ./app --args --port --args 8080
-
-# Run a binary with environment
-vix run ./app --env APP_ENV=dev
+vix run container://ubuntu:latest
 ```
 
-## Runtime target examples
+SSH:
 
 ```bash
-# Run Docker image
-vix run docker://nginx
+vix run ssh://user@example.com
+```
 
-# Run Docker image with port mapping
-vix run docker://nginx -p 8080:80
+HTTP:
 
-# Run container image
-vix run container://nginx
-
-# Run SSH target
-vix run ssh://localhost echo hello
-
-# Run HTTP target
-vix run http://example.com
-
-# Run HTTPS target
+```bash
 vix run https://example.com
 ```
 
-## Common workflows
+These forms delegate to `docker`, `ssh`, or `curl`. They do not use the local C++ single-file build pipeline.
 
-### Run the current project
+## Complete command reference
 
-```bash
-vix run
-```
+The current command help is:
 
-### Run a project from another directory
+```text
+Usage:
+  vix run [target] [options] [-- compiler/linker flags] [--run <args...>]
 
-```bash
-vix run --dir ./apps/api
-```
+Run a C++ file, executable, or a previously built project.
 
-### Run a single C++ file
-
-```bash
-vix run main.cpp
-```
-
-### Run a server file
-
-```bash
-vix run server.cpp --force-server
-```
-
-### Run a CLI tool file
-
-```bash
-vix run tool.cpp --force-script
-```
-
-### Run with app arguments
+Targets:
+  project                    Current project or project directory/name
+  source.cpp                 Single C++ source file
+  app.vix                    Vix manifest
+  ./app                      Executable binary
+  docker://<image>           Docker image
+  container://<image>        Container image
+  ssh://<target>             SSH target
+  http://<target>            HTTP target
 
 Project:
+  -d, --dir <path>           Project directory
+  --preset <name>            Build preset used with --check, default: dev-ninja
+  -j, --jobs <n>             Parallel build jobs used with --check
+  --clean                    Clean/reconfigure when used with --check
+  --check                    Build the project without running it
+  --replay                   Record this run under .vix/runs/
 
-```bash
-vix run api --args --port --args 8080
+Runtime:
+  --cwd <path>               Runtime working directory
+  --env <K=V>                Add or override an environment variable
+  --args <value>             Add one runtime argument, repeatable
+  --run <args...>            Runtime arguments for script mode
+
+Watch:
+  --watch                    Rebuild and restart on file changes
+  --reload                   Alias for --watch
+  --force-server             Treat the program as a long-running server
+  --force-script             Treat the program as a short-lived script
+
+  --dev-mode                 Use the build-ninja project watch layout
+
+Run behavior:
+  --ui                       Enable interactive run progress UI
+  --no-ui                    Disable interactive run progress UI
+  --env-hint                 Show .env hint when .env.example exists
+  --no-env-hint              Disable the .env hint
+  --trace-cache              Trace script cache strategy and decisions
+  --no-trace-cache           Disable script cache tracing
+  --compiler-fingerprint <mode>
+                             Compiler cache fingerprint: fast, strict
+
+Script mode:
+  --dep <git-url>            Temporary Git dependency for single-file run
+  --save                     Save --dep entries into vix.app
+  --auto-deps                Auto-add includes from .vix/deps/*/include
+  --auto-deps=local          Same as --auto-deps
+  --auto-deps=up             Search dependencies in parent directories too
+  --san                      Enable AddressSanitizer and UndefinedBehaviorSanitizer
+  --no-san                   Disable default sanitizers
+  --ubsan                    Enable UndefinedBehaviorSanitizer only
+  --tsan                     Enable ThreadSanitizer only
+  --with-sqlite              Enable SQLite support
+  --with-mysql               Enable MySQL support
+  --local-cache              Use local .vix-scripts cache
+
+Documentation:
+  --docs                     Enable OpenAPI/docs for this run
+  --no-docs                  Disable OpenAPI/docs for this run
+  --docs=<value>             Set OpenAPI/docs: 0, 1, true, false
+
+Output and logging:
+  --clear <mode>             Terminal clearing: auto, always, never
+  --no-clear                 Alias for --clear=never
+  --log-level <level>        trace, debug, info, warn, error, critical, off
+  --loglevel <level>         Alias for --log-level
+  --verbose                  Alias for --log-level=debug
+  -q, --quiet                Alias for --log-level=warn
+  --log-format <format>      kv, json, json-pretty
+  --log-color <mode>         auto, always, never
+  --no-color                 Alias for --log-color=never
+
+Compiler/linker flags:
+  -- [flags...]              Pass flags to the compiler in script mode
+
+Important:
+  Use --run or --args for script runtime arguments.
+  Everything after -- is treated as compiler/linker flags.
+
+Environment:
+  VIX_DOCS                   0 or 1
+  VIX_LOG_LEVEL              trace, debug, info, warn, error, critical, off
+  VIX_LOG_FORMAT             kv, json, json-pretty
+  VIX_COLOR                  auto, always, never
+
+  -h, --help                 Show this help
 ```
 
-Script:
-
-```bash
-vix run main.cpp --run --port 8080
-```
-
-### Run with compiler flags
-
-```bash
-vix run main.cpp -- -O2 -DNDEBUG
-```
-
-### Run with linked libraries
-
-```bash
-vix run main.cpp -- -lssl -lcrypto
-```
-
-### Run with watch mode
-
-```bash
-vix run api --watch
-```
-
-### Run with sanitizers
-
-```bash
-vix run main.cpp --san
-```
-
-### Run with debug logs
-
-```bash
-vix run api --log-level debug
-VIX_LOG_LEVEL=debug vix run api
-```
-
-### Run with OpenAPI docs enabled
-
-```bash
-vix run api --docs
-```
-
-By default, OpenAPI/docs are disabled:
-
-```bash
-vix run api
-```
-
-## Common mistakes
-
-### Passing runtime args after `--` in script mode
-
-Wrong:
-
-```bash
-vix run main.cpp -- --port 8080
-```
-
-Correct:
-
-```bash
-vix run main.cpp --run --port 8080
-```
-
-### Forgetting to enter the project directory
-
-Wrong:
-
-```bash
-vix new api
-vix run
-```
-
-Correct:
-
-```bash
-vix new api
-cd api
-vix run
-```
-
-### Using `VIX_LOG_LEVEL=release`
-
-Wrong:
-
-```bash
-VIX_LOG_LEVEL=release vix run
-```
-
-Correct for release builds:
-
-```bash
-vix run --preset release
-```
-
-`VIX_LOG_LEVEL` controls logging, not the build profile.
-
-### Expecting `vix run` to behave exactly like `vix dev`
-
-`vix run` runs manually.
-
-For continuous reload during development, use:
-
-```bash
-vix dev
-```
-
-Or:
-
-```bash
-vix run --watch
-```
-
-### Passing script compiler flags as runtime args
-
-Wrong:
-
-```bash
-vix run main.cpp --args -O2
-```
-
-Correct:
-
-```bash
-vix run main.cpp -- -O2
-```
-
-### Passing script runtime args as compiler flags
-
-Wrong:
-
-```bash
-vix run main.cpp -- --name Gaspard
-```
-
-Correct:
-
-```bash
-vix run main.cpp --run --name Gaspard
-```
-
-## Troubleshooting
-
-### The program does not receive arguments
-
-For script mode:
-
-```bash
-vix run main.cpp --run arg1 arg2
-```
-
-Or:
-
-```bash
-vix run main.cpp --args arg1 --args arg2
-```
-
-For project mode:
-
-```bash
-vix run api --args arg1 --args arg2
-```
-
-### A compiler flag is treated as an app argument
-
-Use `--` in script mode:
-
-```bash
-vix run main.cpp -- -O2
-```
-
-### A runtime argument is treated as a compiler flag
-
-Use `--run` in script mode:
-
-```bash
-vix run main.cpp --run --port 8080
-```
-
-### The app cannot find files
-
-Set the runtime working directory:
-
-```bash
-vix run api --cwd ./runtime
-```
-
-### Need environment variables
-
-```bash
-vix run api --env APP_ENV=dev --env PORT=8080
-```
-
-### Need hot reload
-
-```bash
-vix run api --watch
-```
-
-Or:
-
-```bash
-vix dev
-```
-
-### Need more details
-
-```bash
-vix run api --verbose
-```
-
-Or:
-
-```bash
-VIX_LOG_LEVEL=debug vix run api
-```
-
-### Need less output
-
-```bash
-vix run api --quiet
-```
-
-### `.env` is missing
-
-If `.env.example` exists and you want Vix to show a hint when `.env` is missing, enable:
-
-```bash
-VIX_SHOW_ENV_HINT=1 vix run
-```
-
-Then create your local environment file:
-
-```bash
-cp .env.example .env
-```
-
-## Best practices
-
-Use `vix run` when you want to build and run something manually.
-
-Use `vix dev` when you are actively editing code and want automatic reload.
-
-Use `vix build` when you only want to compile.
-
-Use `vix check` when you want validation.
-
-Use `vix tests` when you want to run tests.
-
-Use `vix replay` when you want to inspect or reproduce recorded runs.
-
-Use `--run` for script runtime arguments.
-
-Use `--` for script compiler and linker flags.
-
-Use `--env` for run-specific environment variables.
-
-Use `--cwd` when your program depends on runtime files.
-
-Use `--replay` when the run may need to be reproduced later.
-
-## Difference between `vix run`, `vix dev`, and `vix build`
-
-| Command           | Purpose                | Builds | Runs | Watches       | Restarts      |
-| ----------------- | ---------------------- | ------ | ---- | ------------- | ------------- |
-| `vix build`       | Compile only           | yes    | no   | no            | no            |
-| `vix run`         | Build and run manually | yes    | yes  | no by default | no by default |
-| `vix run --watch` | Build, run, watch      | yes    | yes  | yes           | yes           |
-| `vix dev`         | Development loop       | yes    | yes  | yes           | yes           |
+`--dep` and `--save` remain in the command reference because they are still part of the public CLI help. For normal package management, use `vix add` and `vix install`.
 
 ## Related commands
 
-| Command      | Purpose                                         |
-| ------------ | ----------------------------------------------- |
-| `vix dev`    | Run with development reload.                    |
-| `vix build`  | Configure and compile.                          |
-| `vix check`  | Validate build, tests, runtime, and sanitizers. |
-| `vix tests`  | Run tests.                                      |
-| `vix replay` | Inspect and replay previous Vix executions.     |
-| `vix task`   | Run reusable project tasks.                     |
+Use [`vix build`](./build.md) to build a project explicitly.
 
-## Next step
+Use [`vix dev`](./dev.md) for a continuous development workflow.
 
-Continue with development mode.
-
-[Open the vix dev guide](/cli/dev)
+Use [`vix replay`](./replay.md) to inspect recorded runs.

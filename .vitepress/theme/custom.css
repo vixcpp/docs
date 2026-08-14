@@ -763,20 +763,6 @@ code span.cb-sh-comment {
    Plain text / TXT blocks
    Used for file lists, folder layout, raw output notes.
    ════════════════════════════════════════════════ */
-.vp-doc div.language-txt,
-.vp-doc div.language-text,
-.vp-doc div.language-plain,
-.vp-doc div.language-plaintext {
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.035),
-      rgba(255, 255, 255, 0.01)
-    ),
-    var(--cb-bg) !important;
-  border-color: rgba(216, 183, 106, 0.18) !important;
-}
-
 .vp-doc div.language-txt::before,
 .vp-doc div.language-text::before,
 .vp-doc div.language-plain::before,
