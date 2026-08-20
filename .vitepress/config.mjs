@@ -310,7 +310,7 @@ const vixModulesSidebar = {
   collapsed: true,
   items: [
     {
-      text: "Core",
+      text: "HTTP Server",
       collapsed: true,
       items: [
         {
@@ -1346,6 +1346,132 @@ const vixModulesSidebar = {
         {
           text: "API Reference",
           link: "/modules/websocket/api-reference",
+        },
+      ],
+    },
+    {
+      text: "Realtime",
+      collapsed: true,
+      items: [
+        {
+          text: "Overview",
+          link: "/modules/realtime/",
+        },
+        {
+          text: "Quick Start",
+          link: "/modules/realtime/quick-start",
+        },
+        {
+          text: "Core Concepts",
+          link: "/modules/realtime/core-concepts",
+        },
+        {
+          text: "Architecture",
+          link: "/modules/realtime/architecture",
+        },
+        {
+          text: "Configuration",
+          link: "/modules/realtime/configuration",
+        },
+        {
+          text: "Server",
+          link: "/modules/realtime/server",
+        },
+        {
+          text: "Rooms",
+          link: "/modules/realtime/rooms",
+        },
+        {
+          text: "Room State",
+          link: "/modules/realtime/room-state",
+        },
+        {
+          text: "Commands and Results",
+          link: "/modules/realtime/commands-and-results",
+        },
+        {
+          text: "Events",
+          link: "/modules/realtime/events",
+        },
+        {
+          text: "Room Handlers",
+          link: "/modules/realtime/room-handlers",
+        },
+        {
+          text: "Room Manager",
+          link: "/modules/realtime/room-manager",
+        },
+        {
+          text: "Sessions",
+          link: "/modules/realtime/sessions",
+        },
+        {
+          text: "Connections",
+          link: "/modules/realtime/connections",
+        },
+        {
+          text: "Session Resume",
+          link: "/modules/realtime/session-resume",
+        },
+        {
+          text: "Presence",
+          link: "/modules/realtime/presence",
+        },
+        {
+          text: "Event Store",
+          link: "/modules/realtime/event-store",
+        },
+        {
+          text: "Snapshots",
+          link: "/modules/realtime/snapshots",
+        },
+        {
+          text: "Replay and Recovery",
+          link: "/modules/realtime/replay-and-recovery",
+        },
+        {
+          text: "PostgreSQL",
+          link: "/modules/realtime/postgresql",
+        },
+        {
+          text: "Protocol",
+          link: "/modules/realtime/protocol",
+        },
+        {
+          text: "Transport",
+          link: "/modules/realtime/transport",
+        },
+        {
+          text: "WebSocket Integration",
+          link: "/modules/realtime/websocket-integration",
+        },
+        {
+          text: "Room Ownership",
+          link: "/modules/realtime/room-ownership",
+        },
+        {
+          text: "Distributed Presence",
+          link: "/modules/realtime/distributed-presence",
+        },
+        {
+          text: "Metrics",
+          link: "/modules/realtime/metrics",
+        },
+        {
+          text: "Health",
+          link: "/modules/realtime/health",
+        },
+        {
+          text: "Errors",
+          link: "/modules/realtime/errors",
+        },
+        {
+          text: "CMake",
+          link: "/modules/realtime/cmake",
+        },
+        {
+          text: "API Reference",
+          link: "/modules/realtime/api-reference",
         },
       ],
     },

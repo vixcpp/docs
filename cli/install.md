@@ -1,535 +1,49 @@
-# vix install
+# `vix install`
 
-`vix install` installs Vix Registry dependencies.
+`vix install` prepares the dependencies required by a Vix project. It uses exact locked revisions when they already exist, reconciles Git dependencies declared in `vix.app`, reuses cached checkouts, verifies dependency integrity, and generates the CMake integration used by the project build.
 
-Use it when you want to install the exact dependencies pinned in `vix.lock`, generate CMake integration files, or install one package globally.
-
-```bash
-vix install
-```
-
-## Overview
-
-`vix install` has two modes:
-
-```txt
-project mode
-global mode
-```
-
-Project mode installs dependencies for the current project:
+The normal project workflow is:
 
 ```bash
-vix install
-```
-
-Global mode installs one package globally:
-
-```bash
-vix install -g gk/jwt
-```
-
-The command is part of the Vix Registry workflow.
-
-It connects:
-
-```txt
-vix.json
-vix.lock
-registry index
-global package store
-project .vix/deps
-.vix/vix_deps.cmake
-vix.app
-CMake
-```
-
-## Usage
-
-```bash
-vix install
-vix install -g <package>
-vix install --global <package>
-```
-
-## Quick Git Workflows
-
-### Try One File
-
-For a temporary experiment, pass a Git dependency directly to `vix run`:
-
-```bash
-vix run main.cpp --dep https://github.com/fmtlib/fmt
-```
-
-Vix creates a temporary dependency environment, resolves the latest stable Git tag, detects the main CMake target, builds and runs the file, then removes the temporary project files. The current directory is not modified.
-
-A compact version can be written with `@`:
-
-```bash
-vix run main.cpp --dep https://github.com/fmtlib/fmt@11.2.0
-```
-
-For advanced cases use a structured dependency spec:
-
-```bash
-vix run main.cpp \
-  --dep "git=https://github.com/fmtlib/fmt;tag=11.2.0;target=fmt::fmt"
-```
-
-Use `--save` to turn the temporary dependency into a project dependency:
-
-```bash
-vix run main.cpp --dep https://github.com/fmtlib/fmt --save
-```
-
-### Initialize an Existing Folder
-
-`vix init` makes the current directory a minimal Vix project. It does not create a full template like `vix new`.
-
-```bash
-mkdir fmt-test
-cd fmt-test
-cat > main.cpp <<'CPP'
-#include <fmt/format.h>
-
-int main()
-{
-  fmt::print("Hello from fmt!\n");
-}
-CPP
-
-vix init
-vix install https://github.com/fmtlib/fmt
-vix run main.cpp
-```
-
-A generated `vix.app` looks like this:
-
-```toml
-name = "fmt-test"
-type = "executable"
-standard = "c++20"
-sources = ["main.cpp"]
-```
-
-Useful options:
-
-```bash
-vix init --name hello
-vix init --lib
-vix init --standard c++23
-vix init --force
-```
-
-### Git Dependency Autodetection
-
-For common CMake and header-only repositories, this is enough:
-
-```bash
-vix install https://github.com/fmtlib/fmt
-```
-
-When no revision is provided, Vix reads Git tags, keeps SemVer-compatible stable tags, ignores prereleases by default, and chooses the newest stable version. The lockfile stores the exact commit, so later `vix build` and `vix run` do not move to a newer tag automatically.
-
-Vix also tries to detect the main CMake target. For `fmt`, it selects:
-
-```toml
-target = "fmt::fmt"
-```
-
-Explicit options still win when autodetection is ambiguous or when you want another target:
-
-```bash
-vix install https://github.com/fmtlib/fmt \
-  --tag 11.2.0 \
-  --target fmt::fmt-header-only
-```
-
-Header-only repositories without CMake can be detected when they expose one clear include root such as `include/` or `single_include/`. Otherwise declare it explicitly:
-
-```bash
-vix install https://github.com/example/headers \
-  --header-only \
-  --include include
-```
-
-Git dependencies currently support CMake and header-only repositories. Other build systems are not configured automatically.
-
-## Basic examples
-
-```bash
-# Install project dependencies from vix.lock
-vix install
-
-# Install a global package
-vix install -g gk/jwt
-
-# Install a specific global version
-vix install -g gk/jwt@1.0.0
-
-# Install with a semver range
-vix install -g gk/jwt@^1.0.0
-
-# Scoped-style syntax is also accepted
-vix install -g @gk/jwt
-vix install -g @gk/jwt@~1.2.0
-```
-
-## What it does
-
-| Mode         | Command                | Purpose                                             |
-| ------------ | ---------------------- | --------------------------------------------------- |
-| Project mode | `vix install`          | Install exact project dependencies from `vix.lock`. |
-| Global mode  | `vix install -g <pkg>` | Resolve and install one package globally.           |
-
-## Project mode
-
-Run:
-
-```bash
-vix install
-```
-
-Project mode reads:
-
-```txt
-vix.lock
-```
-
-Then it installs the exact locked dependencies.
-It does not choose new versions.
-It does not rewrite dependency ranges.
-It does not behave like `vix update`.
-
-The main purpose is reproducibility:
-
-```txt
-same vix.lock
-same dependency versions
-same commits
-same install result
-```
-
-## Project install outputs
-
-A project install can create:
-
-```txt
-.vix/
-├── deps/
-│   └── ...
-└── vix_deps.cmake
-```
-
-Important outputs:
-
-| Path                  | Purpose                                              |
-| --------------------- | ---------------------------------------------------- |
-| `.vix/deps/`          | Project-local links or copies of installed packages. |
-| `.vix/vix_deps.cmake` | Generated CMake integration for dependencies.        |
-
-Do not edit:
-
-```txt
-.vix/vix_deps.cmake
-```
-
-It is generated by Vix.
-
-## Global mode
-
-Run:
-
-```bash
-vix install -g gk/jwt
-```
-
-or:
-
-```bash
-vix install --global gk/jwt
-```
-
-Global mode resolves one package from the registry, fetches it, prepares its Vix dependencies, builds it with CMake when needed, runs CMake install rules when they exist, and records installed files in the global manifest.
-
-Typical Linux/macOS layout:
-
-```txt
-~/.vix/global/
-├── bin/
-├── include/
-├── lib/
-├── share/
-├── build/
-├── tmp/
-└── installed.json
-```
-
-On Windows the same layout is used under the Vix user root unless `VIX_GLOBAL_PREFIX` is set. Global install does not use `/usr/local` by default and does not require `sudo`.
-
-Global install is useful when you want a package available outside one specific project, including CLI packages installed similarly to npm global commands.
-
-## Global install syntax
-
-Accepted package forms:
-
-```txt
-namespace/name
-namespace/name@version
-namespace/name@range
-@namespace/name
-@namespace/name@version
-@namespace/name@range
-```
-
-Examples:
-
-```bash
-vix install -g gk/jwt
-vix install -g gk/jwt@1.0.0
-vix install -g gk/jwt@^1.0.0
-vix install -g @gk/jwt
-vix install -g @gk/jwt@~1.2.0
-```
-
-## Global executables
-
-If a package installs executables into `bin` through CMake, those files are recorded as global commands. Example:
-
-```bash
-vix install -g vixcpp/ovi
-ovi --version
-ovi --help
-ovi greet Gaspard
-```
-
-Vix installs the real executable under `~/.vix/global/bin`. If that directory is not already in `PATH`, Vix updates the user shell configuration for Bash, Zsh, or Fish. When a user bin directory such as `~/.local/bin` is already in the current `PATH`, Vix also creates a command shim there so the command is available immediately in the current terminal. On Windows, Vix updates the user PATH and handles `.exe`, `.cmd`, and `.bat`.
-
-## CMake install and Vix fallback
-
-Global install prefers the package's CMake install rules:
-
-```bash
-cmake -S <source> -B <build> \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX=<temporary-stage-prefix>
-cmake --build <build> --config Release
-cmake --install <build> --config Release
-```
-
-If a Vix package has dependencies, Vix prepares the package checkout with `.vix/deps` and `.vix/vix_deps.cmake` before configuring it, the same integration used by `vix build`. If CMake install produces no files for a header-only package, Vix falls back to installing headers and keeps the source checkout recorded so `vix run` and `vix build` can use the package's source CMake integration.
-
-A package that provides a CLI should still declare CMake install rules for its executables:
-
-```cmake
-add_executable(ovi_cli src/main.cpp)
-set_target_properties(ovi_cli PROPERTIES OUTPUT_NAME ovi)
-install(TARGETS ovi_cli RUNTIME DESTINATION bin)
-```
-
-## Declaring commands
-
-A package may document and validate expected commands in `vix.json` using `bin`:
-
-```json
-{
-  "bin": {
-    "ovi": "ovi_cli",
-    "ovi-doctor": "ovi_doctor_cli"
-  }
-}
-```
-
-The keys are command names exposed in `bin`; the values are CMake target names for documentation. This field is optional. CMake `install()` still decides what is installed. If `bin` is present, Vix verifies that every declared command was installed. Command names must be plain file names, not paths.
-
-The older explicit form is also accepted:
-
-```json
-{
-  "executables": [{ "name": "ovi", "target": "ovi_cli" }]
-}
-```
-
-## Listing and uninstalling globals
-
-```bash
-vix list -g
-vix uninstall -g vixcpp/ovi
-vix uninstall -g @vixcpp/ovi
-```
-
-Global install and uninstall print a short npm-style result with elapsed time, for example `vixcpp/ovi@0.1.0 installed globally in 1.2s` or `removed vixcpp/ovi@0.1.0 in 90ms`. Uninstall removes only the files and command shims recorded for that package and then removes empty directories left behind. It does not remove unmanaged files from the global prefix.
-
-## Version resolution
-
-When a package version is not provided, Vix selects the latest available version from the registry.
-
-```bash
-vix install -g gk/jwt
-```
-
-When a version range is provided, Vix resolves the highest version that satisfies the range.
-
-```bash
-vix install -g gk/jwt@^1.0.0
-```
-
-Supported range forms include common semver-style inputs such as:
-
-```txt
-1.2.3
-^1.2.3
-~1.2.3
->=1.0.0
-<=2.0.0
->1.0.0
-<2.0.0
-*
-latest
-```
-
-## Registry requirement
-
-`vix install` needs the local registry index.
-
-If the registry has not been synced, Vix reports:
-
-```txt
-registry not synced
-Run: vix registry sync
-```
-
-Fix:
-
-```bash
-vix registry sync
-vix install
-```
-
-For global install:
-
-```bash
-vix registry sync
-vix install -g gk/jwt
-```
-
-## Project install workflow
-
-For a new project:
-
-```bash
-vix new api
-cd api
-vix install
-vix dev
-```
-
-For an existing project:
-
-```bash
-git clone https://github.com/example/api.git
-cd api
-vix install
-vix dev
-```
-
-For CI:
-
-```bash
-vix install
-vix build --build-target all
-vix tests
-```
-
-## Registry dependency workflow
-
-Use `vix add` when adding a new dependency.
-
-```bash
-vix add gk/json@^1.0.0
-```
-
-Then install:
-
-```bash
-vix install
-```
-
-A normal dependency workflow is:
-
-```bash
-vix registry sync
-vix add gk/json@^1.0.0
 vix install
 vix build
 ```
 
-## Difference between `vix add` and `vix install`
+When the project is already up to date, running `vix install` again does not contact Git remotes or recreate dependency integration unnecessarily.
 
-| Command         | Purpose                                                         |
-| --------------- | --------------------------------------------------------------- |
-| `vix add <pkg>` | Add a dependency to the project and update dependency metadata. |
-| `vix install`   | Install dependencies already pinned in `vix.lock`.              |
+## Install project dependencies
 
-Use `vix add` when you want to add something new.
-
-Use `vix install` when the lockfile already exists and you want to install what it says.
-
-## Difference between `vix update` and `vix install`
-
-| Command       | Purpose                                              |
-| ------------- | ---------------------------------------------------- |
-| `vix update`  | Resolve newer versions and rewrite `vix.lock`.       |
-| `vix install` | Install exact versions already pinned in `vix.lock`. |
-
-Use `vix update` when you want newer dependency versions.
-
-Use `vix install` when you want reproducible locked versions.
-
-## Difference between project and global install
-
-| Mode            | Stores packages in                           | Uses `vix.lock` | Generates `.vix/vix_deps.cmake` |
-| --------------- | -------------------------------------------- | --------------- | ------------------------------- |
-| Project install | `.vix/deps/` and global store checkout cache | yes             | yes                             |
-| Global install  | `~/.vix/global/packages/`                    | no              | no                              |
-
-Project install is for building a project.
-
-Global install is for installing one package globally.
-
-## Package cache
-
-Vix stores fetched Git checkouts under:
-
-```txt
-~/.vix/store/git/
-```
-
-A package checkout is stored by package identity and commit.
-
-This means repeated installs can reuse existing package checkouts.
-
-The project then receives links or copies under:
-
-```txt
-.vix/deps/
-```
-
-This keeps project installs fast while keeping dependency state reproducible.
-
-## Git dependencies
-
-Vix can install a dependency directly from a Git repository when the project uses `vix.app`.
+Run the command from the project directory:
 
 ```bash
-vix install https://github.com/fmtlib/fmt --tag 11.2.0 --target fmt::fmt
-vix install https://github.com/nlohmann/json.git --tag v3.12.0 --target nlohmann_json::nlohmann_json
+vix install
 ```
 
-The command adds a structured dependency block to `vix.app`, resolves the requested revision to an exact commit, writes `vix.lock`, fetches the repository into the Git cache, links it into `.vix/deps/`, and regenerates `.vix/vix_deps.cmake`.
+For an existing project with a valid lockfile, Vix installs the exact dependency revisions recorded in `vix.lock`. This is the path normally used after cloning a project and in CI.
 
-Supported revision fields are exclusive:
+```bash
+git clone https://github.com/example/app.git
+cd app
+
+vix install
+vix build
+```
+
+The lockfile is the reproducible dependency state of the project. A dependency pinned to a commit remains on that commit until the project dependency declaration intentionally changes.
+
+## Add a Git dependency
+
+A Git dependency can be installed directly from its repository:
+
+```bash
+vix install https://github.com/fmtlib/fmt \
+  --tag 11.2.0 \
+  --target fmt::fmt
+```
+
+Vix adds the dependency to `vix.app`, resolves the requested revision to an exact commit, records that resolution in `vix.lock`, stores the checkout in the Git cache, and makes the dependency available to the project build.
+
+A typical declaration looks like this:
 
 ```toml
 [dependencies.fmt]
@@ -538,47 +52,81 @@ tag = "11.2.0"
 target = "fmt::fmt"
 ```
 
-```toml
-[dependencies.library]
-git = "https://github.com/example/library"
-branch = "main"
-target = "library::library"
+You can also write the declaration yourself and run:
+
+```bash
+vix install
 ```
 
-```toml
-[dependencies.library]
-git = "https://github.com/example/library"
-rev = "a1b2c3d4e5f6"
-target = "library::library"
+If no lock entry exists for that Git dependency, Vix resolves it and creates the required lock state.
+
+## How manifest and lock state work together
+
+For Git dependencies declared in `vix.app`, `vix install` reconciles the desired dependency state with `vix.lock`.
+
+If a declaration has not changed, Vix preserves the existing exact commit and does not resolve the repository again. If a new dependency is added, only that dependency needs resolution. If the Git URL, tag, branch, or revision changes, Vix resolves the affected dependency while keeping unrelated locked dependencies unchanged.
+
+A change that only affects CMake integration, such as a dependency CMake option, does not require a new Git revision.
+
+This means a project can evolve without turning every install into a full dependency re-resolution.
+
+```text
+vix.app
+   |
+   v
+compare with vix.lock
+   |
+   +-- unchanged -> preserve exact lock entry
+   +-- new       -> resolve dependency
+   +-- changed   -> resolve affected dependency
+   +-- removed   -> remove safe direct dependency state
+   |
+   v
+materialize exact locked state
 ```
 
-For monorepos, select a subdirectory:
+Older lock entries that do not contain enough ownership information may be retained when a manifest entry is removed. Vix prefers preserving an uncertain entry over removing a dependency that may still be required transitively.
+
+## Revision selection
+
+A Git dependency can select a tag, branch, or revision.
+
+### Tag
+
+```toml
+[dependencies.json]
+git = "https://github.com/nlohmann/json.git"
+tag = "v3.12.0"
+target = "nlohmann_json::nlohmann_json"
+```
+
+### Branch
 
 ```toml
 [dependencies.parser]
-git = "https://github.com/company/monorepo"
-tag = "v2.0.0"
-subdirectory = "libs/parser"
+git = "https://github.com/company/parser.git"
+branch = "dev"
 target = "company::parser"
 ```
 
-For header-only repositories without CMake:
+### Revision
 
 ```toml
-[dependencies.sample]
-git = "https://github.com/example/sample-headers"
-tag = "v1.0.0"
-header_only = true
-include = "include"
+[dependencies.parser]
+git = "https://github.com/company/parser.git"
+rev = "a1b2c3d4e5f6"
+target = "company::parser"
 ```
 
-Multiple include directories are written as:
+Tags and branches are resolved to exact commits before they are written to `vix.lock`. Once locked, a normal install uses that exact commit instead of asking the remote for a newer value.
 
-```toml
-includes = ["include", "single_include"]
-```
+Use only one revision selector for a dependency.
 
-CMake options use the nested table form:
+## CMake dependencies
+
+Vix supports Git-hosted CMake projects that can be consumed with `add_subdirectory()` and expose usable CMake targets.
+
+For example:
 
 ```toml
 [dependencies.spdlog]
@@ -592,883 +140,344 @@ SPDLOG_BUILD_EXAMPLE = false
 SPDLOG_BUILD_BENCH = false
 ```
 
-Git dependencies currently support CMake projects and header-only repositories. Vix does not claim universal support for Bazel, Meson, Autotools, Premake, or custom Makefiles.
+Then:
 
-Git dependencies are untrusted code: CMake configure and build scripts may execute code on the machine. Review the repository before adding it.
+```bash
+vix install
+vix build
+```
 
-### Git lockfile entries
+The CMake options are applied before the dependency is added to the project build. The target itself remains responsible for its normal CMake usage requirements, including include directories, compile definitions, compile features, and transitive link dependencies.
 
-A Git dependency is stored in `vix.lock` with `source = "git"` data in JSON form. The lock records the normalized URL, requested revision, resolved commit, targets, include directories, subdirectory, CMake options, and content hash. Branches are resolved to a commit and are not updated by `vix build`.
+This behavior is covered by deterministic compatibility tests for interface libraries, static and shared libraries, alias targets, nested subdirectories, generated headers, CMake options, compile features, transitive dependencies, and public or private compile definitions.
 
-### Git cache
+Vix does not claim that an arbitrary C++ repository can be installed automatically. Meson, Autotools, Bazel, raw Makefiles, and custom build systems are outside the current Git dependency compatibility guarantee.
 
-Registry packages use `~/.vix/store/git/`. Direct Git dependencies use:
+## Monorepos
 
-```txt
+If the CMake project is not at the repository root, select its subdirectory:
+
+```toml
+[dependencies.parser]
+git = "https://github.com/company/monorepo.git"
+tag = "v2.0.0"
+subdirectory = "libs/parser"
+target = "company::parser"
+```
+
+The equivalent command is:
+
+```bash
+vix install https://github.com/company/monorepo.git \
+  --tag v2.0.0 \
+  --name parser \
+  --subdirectory libs/parser \
+  --target company::parser
+```
+
+## Header-only dependencies
+
+A repository that does not provide a CMake target can be installed explicitly as header-only:
+
+```bash
+vix install https://github.com/example/headers.git \
+  --tag v1.0.0 \
+  --header-only \
+  --include include
+```
+
+The corresponding declaration is:
+
+```toml
+[dependencies.headers]
+git = "https://github.com/example/headers.git"
+tag = "v1.0.0"
+header_only = true
+include = "include"
+```
+
+Vix exposes the configured include directory through the generated project integration.
+
+## Lockfile and reproducibility
+
+`vix.lock` records the exact dependency state used by the project. Git entries include the resolved commit and integrity information, along with build integration metadata such as targets, include directories, subdirectories, and CMake options when applicable.
+
+Commit the lockfile:
+
+```bash
+git add vix.lock
+git commit
+```
+
+A normal install should not move an unchanged dependency to another commit.
+
+Use `vix update` when you intentionally want registry dependencies to be resolved again. For direct Git dependencies, change the selector in `vix.app` or install the desired Git revision explicitly.
+
+## Cache behavior
+
+Vix keeps dependency sources outside the project so repeated installs can reuse them.
+
+Direct Git dependencies are stored under:
+
+```text
 ~/.vix/cache/git/
 ```
 
-The cache identity includes the repository URL and resolved commit. The project receives a link or copy under `.vix/deps/<name>/`, so normal builds can run offline after `vix install` or `vix deps` has completed.
+Registry-backed Git checkouts use:
 
-### Removing a Git dependency
-
-```bash
-vix uninstall sample
+```text
+~/.vix/store/git/
 ```
 
-This removes the `[dependencies.sample]` block from `vix.app`, removes the lock entry, removes `.vix/deps/sample`, and leaves the shared Git cache intact.
+The project receives links or copies under:
 
-## Integrity checks
-
-If a dependency in `vix.lock` contains a hash, Vix can verify the checkout content.
-
-If the hash does not match, Vix reports an integrity failure.
-
-Example shape:
-
-```txt
-integrity check failed: gk/json
-expected: ...
-actual:   ...
+```text
+.vix/deps/
 ```
 
-This protects the install from using unexpected dependency contents.
+and the generated CMake integration is written to:
 
-## Generated CMake integration
-
-Project install generates:
-
-```txt
+```text
 .vix/vix_deps.cmake
 ```
 
-This file can:
+Do not edit `.vix/vix_deps.cmake` manually. It is generated from dependency state.
 
-- add package roots to `CMAKE_PREFIX_PATH`
-- add header-only packages as interface targets
-- add CMake-based dependencies with `add_subdirectory`
-- disable dependency tests, examples, benchmarks, and docs
-- bridge package targets to canonical Vix aliases
-- expose aliases such as `gk::json`
+### Warm installs
 
-The canonical alias for a registry package is:
+If the exact checkout already exists in the cache but project integration has been removed, `vix install` can rebuild `.vix/deps` and `.vix/vix_deps.cmake` without resolving the dependency remotely.
 
-```txt
-namespace::name
+### No-op installs
+
+When the manifest, lockfile, cache, dependency links, and generated CMake integration already match, the command returns without remote Git resolution:
+
+```text
+✔ Dependencies already up to date
 ```
 
-For:
+Correct dependency links are left untouched and an identical `.vix/vix_deps.cmake` is not rewritten.
 
-```txt
-gk/json
-```
+Vix still performs the integrity checks required by the current lock state. A no-op install therefore means no dependency state needs to change, not that Vix trusts the existence of a directory without verification.
 
-the alias is:
+## Integrity verification
 
-```txt
-gk::json
-```
+Git dependency lock entries can contain a content hash. Vix verifies the cached checkout before using it.
 
-## Header-only packages
+If the checkout has been modified or corrupted, installation fails instead of silently building different contents under the same lock entry.
 
-Header-only packages expose include directories through an interface target.
-
-Example package:
-
-```txt
-gk/json
-```
-
-Expected alias:
-
-```txt
-gk::json
-```
-
-After `vix install`, use it from CMake through:
-
-```cmake
-target_link_libraries(app PRIVATE gk::json)
-```
-
-For `vix.app`, add the alias to `links`:
-
-```ini
-links = [
-  vix::vix,
-  gk::json,
-]
-```
-
-## Compiled packages
-
-Compiled packages can contain their own `CMakeLists.txt`.
-
-When Vix detects a CMake-based package, it can load the package through generated CMake integration.
-
-Vix also tries to bridge the package’s real CMake target to the canonical registry alias.
-
-For example:
-
-```txt
-gk/http
-```
-
-should be usable as:
-
-```txt
-gk::http
-```
-
-when the dependency exposes a compatible target.
-
-## Dependency order
-
-When dependencies depend on other dependencies, Vix sorts them topologically before generating CMake integration.
-
-This matters because a dependency should be available before another package tries to use it.
-
-If Vix detects a dependency cycle, it reports an error.
-
-Example shape:
-
-```txt
-dependency cycle detected while generating .vix/vix_deps.cmake
-```
-
-## vix.app projects
-
-For `vix.app` projects, `vix install` is simple.
-
-After install, Vix prints a next step like:
-
-```txt
-Dependencies ready
-1 package(s) installed
-CMake integration generated
-
-Next:
-  run vix build
-```
-
-That is because `vix.app` generated CMake can load the generated dependency integration automatically.
-
-A typical `vix.app` dependency flow:
+A recovery path is:
 
 ```bash
-vix add gk/json@^1.0.0
-vix install
-vix build
-```
-
-Then in `vix.app`:
-
-```ini
-deps = [
-  gk/json@^1.0.0,
-]
-
-links = [
-  vix::vix,
-  gk::json,
-]
-```
-
-## CMake projects
-
-For manual CMake projects, Vix may print a next step like:
-
-```cmake
-include(.vix/vix_deps.cmake)
-add_executable(app main.cpp)
-target_link_libraries(app PRIVATE gk::json)
-```
-
-In a real project, add:
-
-```cmake
-include(.vix/vix_deps.cmake)
-```
-
-near the top of your `CMakeLists.txt` after `project(...)`.
-
-Then link only the packages your target actually uses:
-
-```cmake
-target_link_libraries(app PRIVATE gk::json)
-```
-
-## vix.app vs CMake install behavior
-
-| Project type      | What you do after `vix install`                        |
-| ----------------- | ------------------------------------------------------ |
-| `vix.app` project | Run `vix build`.                                       |
-| CMake project     | Include `.vix/vix_deps.cmake` and link needed aliases. |
-
-Vix detects a `vix.app` project when:
-
-```txt
-vix.app exists
-CMakeLists.txt does not exist
-```
-
-If `CMakeLists.txt` exists, Vix treats the project as a CMake project.
-
-## Full `vix.app` example
-
-```ini
-name = api
-type = executable
-standard = c++20
-
-sources = [
-  src/main.cpp,
-]
-
-include_dirs = [
-  src,
-]
-
-deps = [
-  gk/json@^1.0.0,
-]
-
-packages = [
-  vix,
-]
-
-links = [
-  vix::vix,
-  gk::json,
-]
-
-output_dir = bin
-```
-
-Install:
-
-```bash
+vix store gc
 vix install
 ```
 
-Build:
+Do not disable or bypass an integrity failure without understanding why the cached dependency changed.
 
-```bash
-vix build
-```
+## Failure behavior
 
-Run:
+Direct Git installation protects the dependency declaration and lock state from partial publication. If resolution, validation, or materialization fails, the previous `vix.app` and `vix.lock` state is restored.
 
-```bash
-vix run
-```
+Manifest reconciliation also prepares changed lock state before publishing it. If a newly added dependency cannot be resolved, existing valid lock entries remain unchanged.
 
-## Full CMake example
+This protection applies to the project dependency declaration and lock state. Generated project integration can be repaired by running `vix install` again after the underlying failure has been corrected.
 
-```cmake
-cmake_minimum_required(VERSION 3.24)
+## Registry dependencies
 
-project(api LANGUAGES CXX)
-
-include(.vix/vix_deps.cmake)
-
-add_executable(api
-  src/main.cpp
-)
-
-target_compile_features(api PRIVATE cxx_std_20)
-
-target_link_libraries(api PRIVATE
-  gk::json
-)
-```
-
-Install:
-
-```bash
-vix install
-vix build
-```
-
-## Global install example
-
-Install:
+Registry packages are normally added with `vix add`:
 
 ```bash
 vix registry sync
-vix install -g gk/jwt@^1.0.0
+vix add gk/json@^1.0.0
+vix install
 ```
 
-This writes global install state under:
+For registry dependency ranges, `vix install` uses the resolved entries in `vix.lock`. It does not act like `vix update` and does not choose newer registry versions during a normal install.
 
-```txt
-~/.vix/global/
-```
-
-Typical structure:
-
-```txt
-~/.vix/global/
-├── packages/
-│   └── ...
-└── installed.json
-```
-
-The global manifest records information such as:
-
-```json
-{
-  "packages": [
-    {
-      "id": "gk/jwt",
-      "version": "1.0.0",
-      "repo": "https://github.com/...",
-      "tag": "v1.0.0",
-      "commit": "...",
-      "hash": "...",
-      "type": "header-only",
-      "include": "include",
-      "installed_path": "/home/user/.vix/global/packages/gk.jwt"
-    }
-  ]
-}
-```
-
-## Package specification
-
-A package spec has this shape:
-
-```txt
-namespace/name
-```
-
-Optional version or range:
-
-```txt
-namespace/name@version
-namespace/name@range
-```
-
-Examples:
-
-```txt
-gk/json
-gk/json@1.0.0
-gk/json@^1.0.0
-gk/json@~1.2.0
-```
-
-Scoped-style syntax is also accepted:
-
-```txt
-@gk/json
-@gk/json@1.0.0
-```
-
-## Invalid package spec
-
-Wrong:
+Use:
 
 ```bash
-vix install -g jwt
+vix outdated
+vix update
 ```
 
-Correct:
+when you intentionally want to inspect or resolve newer registry versions.
+
+## Global packages
+
+`vix install` can also install one registry package into the Vix-managed user prefix:
 
 ```bash
 vix install -g gk/jwt
 ```
 
-If the package spec is invalid or not found, Vix reports:
-
-```txt
-invalid package spec or package not found: jwt
-Expected: @namespace/name[@version]
-Example: vix install -g @gk/jwt@1.0.0
-```
-
-## Project mode requires `vix.lock`
-
-Project mode installs from:
-
-```txt
-vix.lock
-```
-
-If the lockfile is missing, create it by adding or updating dependencies.
-
-Typical flow:
+A specific version or supported range can be requested:
 
 ```bash
-vix registry sync
-vix add gk/json@^1.0.0
+vix install -g gk/jwt@1.0.0
+vix install -g gk/jwt@^1.0.0
+```
+
+Scoped-style syntax is also accepted:
+
+```bash
+vix install -g @gk/jwt
+```
+
+Global install resolves the package from the registry, prepares its dependencies, builds it with CMake when needed, runs its CMake install rules, and records the installed files.
+
+The default prefix is:
+
+```text
+~/.vix/global/
+```
+
+with state such as:
+
+```text
+~/.vix/global/
+├── bin/
+├── include/
+├── lib/
+├── share/
+└── installed.json
+```
+
+Set `VIX_GLOBAL_PREFIX` when a different global Vix prefix is required.
+
+Global installation is separate from project dependency state. Installing a library with `-g` does not add it to the current project's `vix.lock`.
+
+## Security
+
+A Git dependency is source code from another repository. CMake configure and build logic can execute code on the local machine.
+
+Review repositories you do not trust before installing them.
+
+## Git options
+
+| Option                 | Purpose                                                 |
+| ---------------------- | ------------------------------------------------------- |
+| `--name <name>`        | Set the dependency name stored in `vix.app`.            |
+| `--tag <tag>`          | Resolve a Git tag.                                      |
+| `--branch <branch>`    | Resolve a Git branch to an exact commit.                |
+| `--rev <commit>`       | Use a specific revision or commit.                      |
+| `--target <target>`    | Select the CMake target used by the project.            |
+| `--subdirectory <dir>` | Select a CMake project inside a monorepo.               |
+| `--header-only`        | Treat the repository as a header-only dependency.       |
+| `--include <dir>`      | Set the include directory for a header-only dependency. |
+
+Global mode uses:
+
+```bash
+vix install -g <package>
+vix install --global <package>
+```
+
+`vix i` is an alias for `vix install`. `vix deps` is deprecated.
+
+## Common workflows
+
+### After cloning a project
+
+```bash
+git clone https://github.com/example/app.git
+cd app
+
+vix install
+vix build
+```
+
+### Declare a Git dependency in `vix.app`
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+
+[dependencies.spdlog.cmake]
+SPDLOG_BUILD_TESTS = false
+SPDLOG_BUILD_EXAMPLE = false
+SPDLOG_BUILD_BENCH = false
+```
+
+Then:
+
+```bash
+vix install
+vix build
+```
+
+### Install a Git dependency from the command line
+
+```bash
+vix install https://github.com/nlohmann/json.git \
+  --tag v3.12.0 \
+  --target nlohmann_json::nlohmann_json
+
+vix build
+```
+
+### Restore project integration from cache
+
+If `.vix/deps` or `.vix/vix_deps.cmake` was removed but the locked checkout is still cached:
+
+```bash
 vix install
 ```
 
-or:
+Vix recreates the missing project integration from the cached exact revision.
+
+### CI
+
+For a project whose dependency state is already committed:
 
 ```bash
-vix update
-vix install
-```
-
-## Manual edits to `vix.json`
-
-Avoid manually editing dependency ranges in `vix.json` without updating the lockfile.
-
-If you change dependency ranges manually, run:
-
-```bash
-vix update
-vix install
-```
-
-or use:
-
-```bash
-vix add <package>
-```
-
-so `vix.json` and `vix.lock` stay aligned.
-
-## CI usage
-
-Project install is the right command for CI because it respects `vix.lock`.
-
-Example:
-
-```bash
-vix registry sync
 vix install
 vix build --build-target all
 vix tests
 ```
 
-Release build:
-
-```bash
-vix registry sync
-vix install
-vix build --preset release --build-target all
-vix tests --preset release
-```
-
-With validation:
-
-```bash
-vix registry sync
-vix install
-vix check --tests
-```
-
-## Options
-
-| Option         | Description                   |
-| -------------- | ----------------------------- |
-| `-g, --global` | Install one package globally. |
-| `-h, --help`   | Show command help.            |
-
-## Commands reference
-
-| Command                      | Purpose                                       |
-| ---------------------------- | --------------------------------------------- |
-| `vix install`                | Install project dependencies from `vix.lock`. |
-| `vix install -g <pkg>`       | Install one package globally.                 |
-| `vix install --global <pkg>` | Same as `-g`.                                 |
-
-## Common workflows
-
-### Install project dependencies
-
-```bash
-vix install
-```
-
-### Install after clone
-
-```bash
-git clone https://github.com/example/api.git
-cd api
-vix registry sync
-vix install
-vix build
-```
-
-### Install then run dev mode
-
-```bash
-vix install
-vix dev
-```
-
-### Add and install a dependency
-
-```bash
-vix registry sync
-vix add gk/json@^1.0.0
-vix install
-vix build
-```
-
-### Install a global package
-
-```bash
-vix registry sync
-vix install -g gk/jwt
-```
-
-### Install a specific global version
-
-```bash
-vix install -g gk/jwt@1.0.0
-```
-
-### Install a global semver range
-
-```bash
-vix install -g gk/jwt@^1.0.0
-```
-
-## Common mistakes
-
-### Expecting `vix install` to update dependencies
-
-Wrong expectation:
-
-```txt
-vix install should choose newer versions
-```
-
-Correct model:
-
-```txt
-vix install installs locked versions
-```
-
-Use:
-
-```bash
-vix outdated
-vix update
-```
-
-when you want to inspect and update versions.
-
-### Editing `vix.json` and expecting install to resolve new ranges
-
-If you manually edit dependencies in `vix.json`, update the lockfile first:
-
-```bash
-vix update
-vix install
-```
-
-Better:
-
-```bash
-vix add gk/json@^1.0.0
-vix install
-```
-
-### Forgetting registry sync
-
-If the package cannot be found, run:
-
-```bash
-vix registry sync
-vix install
-```
-
-For global packages:
-
-```bash
-vix registry sync
-vix install -g gk/jwt
-```
-
-### Using global install when the project needs a dependency
-
-Wrong:
-
-```bash
-vix install -g gk/json
-vix build
-```
-
-Correct:
-
-```bash
-vix add gk/json@^1.0.0
-vix install
-vix build
-```
-
-Global install does not add the dependency to your project lockfile.
-
-### Forgetting to link the package
-
-Installing a dependency does not automatically mean your target uses it.
-
-For `vix.app`, add the alias to `links`:
-
-```ini
-links = [
-  vix::vix,
-  gk::json,
-]
-```
-
-For CMake:
-
-```cmake
-target_link_libraries(api PRIVATE gk::json)
-```
-
-### Editing `.vix/vix_deps.cmake`
-
-Wrong:
-
-```txt
-edit .vix/vix_deps.cmake manually
-```
-
-Correct:
-
-```txt
-edit vix.json, vix.lock, vix.app, or CMakeLists.txt
-```
-
-The file is generated and can be replaced by the next install.
-
-### Confusing `deps` and `links` in vix.app
-
-Wrong:
-
-```ini
-deps = [
-  gk::json,
-]
-```
-
-Correct:
-
-```ini
-deps = [
-  gk/json@^1.0.0,
-]
-
-links = [
-  gk::json,
-]
-```
-
-`deps` uses registry package specs.
-
-`links` uses CMake target aliases.
+Registry-backed projects may need `vix registry sync` before operations that require registry resolution. A locked install that can be satisfied from local state does not need to resolve unchanged Git dependencies remotely.
 
 ## Troubleshooting
 
-### Registry not synced
+### Git revision cannot be resolved
 
-Run:
-
-```bash
-vix registry sync
-```
-
-Then try again:
+Check that the repository and selector are valid, then correct the `tag`, `branch`, or `rev` in `vix.app` and run:
 
 ```bash
 vix install
 ```
 
-### Package not found
+### Integrity check fails
 
-Check the package name:
-
-```txt
-namespace/name
-```
-
-Then sync the registry:
+A cached checkout no longer matches the content recorded by the lockfile. Remove stale cache state through the Vix store workflow and install again:
 
 ```bash
-vix registry sync
-```
-
-Try:
-
-```bash
-vix install -g namespace/name
-```
-
-or add it to your project:
-
-```bash
-vix add namespace/name
-```
-
-### No version matches range
-
-If Vix reports:
-
-```txt
-no version matches range: gk/json@^2.0.0
-```
-
-the registry has no compatible version.
-
-Use:
-
-```bash
-vix outdated
-```
-
-or check available versions in the registry.
-
-### Dependency hash mismatch
-
-If integrity verification fails, do not ignore it.
-
-Run:
-
-```bash
-vix registry sync
-vix reset
+vix store gc
 vix install
 ```
 
-If it still fails, the registry entry or package content may be inconsistent.
+### CMake target is not available
 
-### Dependency cycle detected
+Make sure the dependency exposes the target written in `vix.app`:
 
-If Vix reports a dependency cycle, one or more packages depend on each other in a loop.
-
-Fix the package dependency metadata.
-
-### CMake cannot find dependency target
-
-Check that install generated:
-
-```txt
-.vix/vix_deps.cmake
+```toml
+target = "library::library"
 ```
 
-For CMake projects, make sure you included it:
-
-```cmake
-include(.vix/vix_deps.cmake)
-```
-
-For `vix.app`, make sure the dependency alias is in `links`:
-
-```ini
-links = [
-  gk::json,
-]
-```
-
-### Header not found
-
-Check that the dependency exposes the expected include directory.
-
-Then make sure your target links the dependency alias.
-
-Example:
-
-```cmake
-target_link_libraries(api PRIVATE gk::json)
-```
-
-or in `vix.app`:
-
-```ini
-links = [
-  gk::json,
-]
-```
-
-### Compiled package has no CMakeLists.txt
-
-If a package is marked as compiled but has no `CMakeLists.txt`, Vix cannot build it as a CMake dependency.
-
-Fix the package metadata or add a valid package build file.
-
-## Best practices
-
-Commit `vix.json`.
-
-Commit `vix.lock`.
-
-Do not commit `.vix/deps`.
-
-Do not manually edit `.vix/vix_deps.cmake`.
-
-Run `vix registry sync` before adding or resolving dependencies.
-
-Use `vix add` to add dependencies.
-
-Use `vix install` after clone or in CI.
-
-Use `vix update` only when you intentionally want new dependency versions.
-
-Use `deps` for registry specs in `vix.app`.
-
-Use `links` for CMake aliases in `vix.app`.
-
-Prefer canonical aliases:
-
-```txt
-namespace::name
-```
-
-Keep project installs reproducible with `vix.lock`.
+For a monorepo, also verify that `subdirectory` points to the CMake project that defines the target.
 
 ## Related commands
 
-| Command             | Purpose                                        |
-| ------------------- | ---------------------------------------------- |
-| `vix add`           | Add a new dependency to the project.           |
-| `vix update`        | Resolve newer versions and rewrite `vix.lock`. |
-| `vix outdated`      | Check outdated dependencies.                   |
-| `vix remove`        | Remove a dependency.                           |
-| `vix list`          | List installed project dependencies.           |
-| `vix reset`         | Clean and reinstall project dependency state.  |
-| `vix registry sync` | Refresh the registry index.                    |
-| `vix build`         | Build the project after install.               |
-| `vix run`           | Run the app after install.                     |
-| `vix dev`           | Start dev mode after install.                  |
-
-## Next step
-
-Update dependency versions intentionally.
-
-[Open the vix update guide](/cli/update)
-
-## Global Note extensions
-
-`vix install -g` is also the installation path for Vix Note extensions.
-
-```bash
-vix install -g softadastra/pyrelune
-```
-
-The package is resolved from the registry like any other global package. Vix fetches the resolved commit, builds it when needed, runs CMake install rules, copies installed files into the global prefix, and records the package in:
-
-```txt
-~/.vix/global/installed.json
-```
-
-If the resolved registry version contains `extensions.note`, Vix preserves that version-level metadata in the installed manifest. Vix Note reads that installed metadata during global extension discovery.
-
-For executable extensions, the package should install its runtime command under the global `bin/` directory and declare it in `bin`:
-
-```json
-{
-  "bin": {
-    "pyrelune": "pyrelune"
-  }
-}
-```
-
-CMake install rules remain authoritative. If the package declares an executable command but CMake does not install it, global install fails rather than recording a broken command as installed.
+| Command        | Purpose                                                   |
+| -------------- | --------------------------------------------------------- |
+| `vix add`      | Add a registry dependency to the project.                 |
+| `vix update`   | Intentionally resolve newer registry dependency versions. |
+| `vix outdated` | Check for newer registry dependency versions.             |
+| `vix remove`   | Remove a project dependency.                              |
+| `vix list`     | Inspect project dependency state.                         |
+| `vix store`    | Manage local dependency storage.                          |
+| `vix build`    | Build the project after dependencies are ready.           |
+| `vix run`      | Run an existing build or a C++ source file.               |
