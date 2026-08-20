@@ -1,8 +1,8 @@
 # vix update
 
-`vix update` updates project or global packages to newer versions.
+`vix update` re-resolves existing Vix Registry dependencies for a project or updates one global package.
 
-Use it when you want to re-resolve dependency versions and rewrite `vix.lock`.
+Use it when you intentionally want newer Registry versions. Project updates are prepared in memory and published atomically so `vix.json` and `vix.lock` do not end up describing different dependency states.
 
 ```bash
 vix update
@@ -25,17 +25,19 @@ It can update:
 - several project dependencies
 - one global package with `-g` or `--global`
 
-In project mode, it reads dependencies from:
+In project mode, the dependencies selected for update come from:
 
-```txt
+```text
 vix.json
 ```
 
-Then it rewrites:
+The exact resolved application state remains in:
 
-```txt
+```text
 vix.lock
 ```
+
+Module-owned dependencies declared in `vix.module` are not direct update targets of `vix update <package>`. Their active requirements can still participate in the application dependency constraints that must remain compatible.
 
 In global mode, it reuses the global install path:
 
@@ -91,26 +93,33 @@ vix update -g gk/jwt
 
 ## What it does
 
-In project mode, `vix update` performs this flow:
+In project mode, `vix update` performs one project mutation:
 
-```txt
-read vix.json
-read vix.lock
-select dependencies to update
-resolve newer versions from the local registry
-rewrite vix.lock
-optionally run vix install
+```text
+read vix.json and vix.lock
+        |
+        v
+select root Registry requirements to update
+        |
+        v
+resolve requested updates in memory
+        |
+        v
+validate resulting dependency state
+        |
+        v
+publish vix.json + vix.lock together
+        |
+        +-- optional: run vix install
 ```
 
-If you update a dependency with a new explicit range, Vix also updates that dependency requirement in `vix.json`.
-
-Example:
+If you pass a new explicit range, the corresponding requirement in `vix.json` changes only if the complete update can be resolved successfully.
 
 ```bash
 vix update gk/jwt@^1.2.0
 ```
 
-This can update:
+For example:
 
 ```json
 {
@@ -123,7 +132,11 @@ This can update:
 }
 ```
 
-Then Vix rewrites `vix.lock` with the exact resolved version.
+Vix resolves all requested package updates before publishing either authoritative file. If one package fails to resolve, a multi-package update does not leave earlier packages committed while later ones fail.
+
+The root manifest and lockfile are staged and committed through the same project mutation boundary. Project mutation locking also prevents concurrent Vix dependency commands from silently overwriting each other's metadata.
+
+With `--install`, the metadata update is completed first. Vix then releases the project mutation lock before invoking the normal install workflow, avoiding a nested mutation lock.
 
 ## Project mode
 
@@ -133,22 +146,28 @@ Run:
 vix update
 ```
 
-This updates all dependencies already declared in `vix.json`.
+This updates the root Registry dependencies already declared in `vix.json`.
 
 Important rule:
 
-```txt
-vix update updates existing dependencies.
-It does not add new dependencies.
+```text
+vix update changes existing root Registry requirements.
+It does not add a new dependency.
 ```
 
-If a dependency is not already in `vix.json`, use:
+If a Registry dependency is not already in `vix.json`, add it first:
 
 ```bash
 vix add <package>
 ```
 
-first.
+If the dependency belongs to one application module, manage that declaration with the module workflow instead:
+
+```bash
+vix add <package> --module <name>
+```
+
+Direct Git dependencies use `vix install <git-url>` rather than `vix update`.
 
 ## Project dependency source
 
@@ -175,12 +194,14 @@ Current format:
 }
 ```
 
-Each dependency must have:
+Each root Registry dependency must have:
 
-```txt
+```text
 id
 version
 ```
+
+`vix update` selects update targets from this root list. Registry requirements stored in `modules/<name>/vix.module` are not implicitly rewritten by this command.
 
 ## Lockfile source
 
@@ -190,7 +211,7 @@ version
 vix.lock
 ```
 
-It uses the lockfile to know the previous resolved version.
+It uses the lockfile to know the previous exact resolved state before computing the update.
 
 If `vix.lock` is missing, Vix reports an error:
 
@@ -218,7 +239,9 @@ Run:
 vix update
 ```
 
-When no package is specified, Vix updates every dependency from `vix.json`.
+When no package is specified, Vix updates every root Registry dependency from `vix.json`.
+
+All selected updates are resolved before the new manifest and lockfile are published. If one selected package cannot be resolved, Vix does not commit a partially updated subset.
 
 Important behavior:
 
@@ -293,9 +316,9 @@ Run:
 vix update gk/jwt gk/pdf
 ```
 
-Vix updates only those dependencies.
+Vix updates only those root dependencies.
 
-Duplicate targets are de-duplicated internally.
+Duplicate targets are de-duplicated internally. The selected updates are resolved as one mutation, so a failure in one target does not publish successful changes for the others.
 
 ## Scoped-style syntax
 
@@ -326,7 +349,7 @@ Use:
 vix update --dry-run
 ```
 
-Dry run shows what would be checked without changing `vix.json` or `vix.lock`.
+Dry run previews the selected update targets without publishing changes to `vix.json` or `vix.lock`.
 
 Examples:
 
@@ -417,13 +440,15 @@ Use:
 vix update --install
 ```
 
-After rewriting the lockfile, Vix runs:
+After the dependency metadata update succeeds, Vix runs:
 
 ```bash
 vix install
 ```
 
-This regenerates installed dependency state and CMake integration.
+The project mutation lock is released before this install phase begins. This keeps update atomic while allowing `vix install` to use its own normal mutation and recovery rules.
+
+The install phase then reconciles cached dependency materialization and generated CMake integration with the newly committed lock state.
 
 Examples:
 
@@ -489,37 +514,31 @@ missing package spec
 Example: vix update -g @gk/jwt
 ```
 
-## Difference between `vix update` and `vix add`
+## Difference between `vix update`, `vix add`, and `vix install`
 
-| Command            | Purpose                                                      |
-| ------------------ | ------------------------------------------------------------ |
-| `vix add <pkg>`    | Add a new dependency to `vix.json` and rewrite `vix.lock`.   |
-| `vix update <pkg>` | Update an existing dependency already present in `vix.json`. |
+| Command                                 | Purpose                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------- |
+| `vix add <pkg>`                         | Add or change a root Vix Registry requirement.                                  |
+| `vix add <pkg> --module <name>`         | Add or change a module-owned Registry requirement.                              |
+| `vix update`                            | Re-resolve existing root Registry dependencies from `vix.json`.                 |
+| `vix install`                           | Materialize the dependency state described by project manifests and `vix.lock`. |
+| `vix install <git-url>`                 | Add a direct Git dependency.                                                    |
+| `vix install <git-url> --module <name>` | Add a direct Git dependency owned by one module.                                |
 
-Use `vix add` when the dependency is new.
+Use `vix update` for intentional Registry version refreshes of dependencies already declared in the root `vix.json`.
 
-Use `vix update` when the dependency already exists.
+Use `vix add` when a Registry requirement is new or its declaration belongs to one module.
 
-## Difference between `vix update` and `vix install`
-
-| Command       | Purpose                                              |
-| ------------- | ---------------------------------------------------- |
-| `vix update`  | Resolve newer versions and rewrite `vix.lock`.       |
-| `vix install` | Install exact versions already pinned in `vix.lock`. |
-
-After cloning a project, use:
+Use `vix install` after cloning a project because a normal install preserves the exact locked dependency state.
 
 ```bash
+git clone https://github.com/example/api.git
+cd api
+
 vix install
 ```
 
-not:
-
-```bash
-vix update
-```
-
-because install preserves the lockfile.
+Do not use `vix update` as the normal install step after clone.
 
 ## Difference between `vix update` and `vix outdated`
 
@@ -534,24 +553,55 @@ Use `vix update` to change files.
 
 ## Files changed
 
-Project update can change:
+A project update can change:
 
-```txt
+```text
 vix.json
 vix.lock
 ```
 
-`vix.json` changes only when you pass an explicit version or range for a dependency.
-
-Example:
+`vix.json` changes when an explicit requested range is changed, for example:
 
 ```bash
 vix update gk/jwt@^1.2.0
 ```
 
-`vix.lock` is rewritten when update runs normally.
+`vix.lock` records the newly resolved exact dependency state.
 
-Dry run does not change files.
+These files are not published one by one as independent successful operations. Vix stages the project update and commits the authoritative files together. If the update fails before commit, the previous bytes remain authoritative.
+
+`--dry-run` does not change either file.
+
+Module manifests are not rewritten by `vix update`.
+
+## Interaction with application modules
+
+`vix update` does not rewrite module-owned dependency declarations.
+
+For example, this requirement remains owned by `auth`:
+
+```toml
+[deps]
+registry = [
+  "gk/jwt@^1.0.0",
+]
+```
+
+in:
+
+```text
+modules/auth/vix.module
+```
+
+When active application and module requirements refer to the same dependency, the resulting project dependency state must remain compatible. An update should not silently choose a version that violates another active owner.
+
+If a module-owned requirement itself needs to change, use the module dependency workflow:
+
+```bash
+vix add gk/jwt@^1.2.0 --module auth
+```
+
+For direct Git dependencies, use `vix install <git-url>` with the appropriate revision selector.
 
 ## Registry requirement
 
@@ -567,6 +617,8 @@ vix update
 ```
 
 ## Full project update workflow
+
+Use update as an intentional dependency maintenance operation, not as the normal build or clone path.
 
 Check outdated packages:
 
@@ -604,15 +656,18 @@ vix update --install
 vix check --tests
 ```
 
-For production apps:
+For production applications:
 
 ```bash
 vix registry sync
 vix outdated
+vix update --dry-run
 vix update --install
 vix build --preset release
 vix tests --preset release
 ```
+
+Review both `vix.json` and `vix.lock` before committing the update.
 
 ## CI usage
 
@@ -623,7 +678,7 @@ vix install
 vix check --tests
 ```
 
-Use `vix update` in maintenance workflows, not normal build workflows.
+Use `vix update` in dependency-maintenance workflows, not normal CI build workflows. Normal CI should consume the committed lock state with `vix install`.
 
 Example dependency maintenance job:
 
@@ -788,6 +843,18 @@ vix install
 vix build
 ```
 
+### Expecting `vix update` to rewrite module-owned requirements
+
+`vix update` selects root Registry dependencies from `vix.json`.
+
+For a module-owned Registry requirement, change the module declaration with:
+
+```bash
+vix add gk/jwt@^1.2.0 --module auth
+```
+
+For a module-owned direct Git dependency, use `vix install <git-url> --module auth` with the desired selector.
+
 ### Updating blindly before release
 
 Before a release, preview and validate:
@@ -909,6 +976,12 @@ or inspect:
 vix.json
 ```
 
+### One package in a multi-package update fails
+
+A multi-package update is resolved before publication.
+
+If one selected package cannot be resolved, correct the failing requirement and run the update again. Earlier selected packages are not supposed to remain committed as a partial successful update.
+
 ### Install after update failed
 
 Run install manually to see the failure:
@@ -928,17 +1001,17 @@ Common causes:
 
 Use `vix outdated` before `vix update`.
 
-Use `vix update --dry-run` before large dependency updates.
+Use `vix update --dry-run` before large dependency changes.
 
-Use `vix update --install` when you want the project ready immediately after update.
+Use `vix update --install` when you want the project materialized immediately after the metadata update.
+
+Treat `vix update` as a root Registry dependency maintenance command. Use `vix add --module` for module-owned Registry requirements and `vix install <git-url>` for direct Git dependencies.
 
 Run tests after updating.
 
 Commit both `vix.json` and `vix.lock`.
 
-Do not manually edit `vix.lock`.
-
-Use `vix add` for new dependencies.
+Do not edit `vix.lock` manually.
 
 Use `vix install` after cloning a project.
 
@@ -946,17 +1019,18 @@ Use global update only for global packages.
 
 ## Related commands
 
-| Command             | Purpose                                |
-| ------------------- | -------------------------------------- |
-| `vix outdated`      | Check which dependencies are outdated. |
-| `vix install`       | Install exact locked dependencies.     |
-| `vix add`           | Add a new dependency.                  |
-| `vix remove`        | Remove a dependency.                   |
-| `vix list`          | List dependencies.                     |
-| `vix registry sync` | Refresh registry index.                |
-| `vix check`         | Validate after updating.               |
-| `vix build`         | Build after dependency changes.        |
-| `vix tests`         | Run tests after dependency changes.    |
+| Command             | Purpose                                                         |
+| ------------------- | --------------------------------------------------------------- |
+| `vix outdated`      | Check which Registry dependencies are outdated.                 |
+| `vix install`       | Materialize locked dependencies or add a direct Git dependency. |
+| `vix add`           | Add or change a Registry requirement.                           |
+| `vix modules`       | Manage and validate application modules.                        |
+| `vix remove`        | Remove a dependency.                                            |
+| `vix list`          | List dependency state.                                          |
+| `vix registry sync` | Refresh the Registry index.                                     |
+| `vix check`         | Validate after updating.                                        |
+| `vix build`         | Build after dependency changes.                                 |
+| `vix tests`         | Run tests after dependency changes.                             |
 
 ## Next step
 

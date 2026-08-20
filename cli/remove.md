@@ -1,34 +1,39 @@
-# vix remove
+# `vix remove`
 
-`vix remove` removes a package dependency from the current project lockfile.
+`vix remove` removes a resolved package entry from the current project's root `vix.lock`.
 
-Use it when your project no longer needs a locked package dependency.
+Use it when you intentionally want to remove locked project dependency state. The command can also delete the corresponding project-local dependency materialization with `--purge`.
 
 ```bash
 vix remove gk/jwt
 ```
 
-## Overview
+`vix remove` does not remove a package from the Vix Registry, uninstall a global package, or automatically remove every declaration that may still require the dependency.
 
-`vix remove` removes one dependency from:
+## Basic workflow
 
-```txt
-vix.lock
+Remove the locked dependency:
+
+```bash
+vix remove gk/jwt
 ```
 
-It can also delete the project-local dependency folder under:
+Then make sure the dependency is no longer declared by the project or by an application module.
 
-```txt
-.vix/deps/
+Regenerate dependency integration:
+
+```bash
+vix install
+vix build
 ```
 
-when `--purge` is used.
+For broader validation:
 
-It does not remove a package from the Vix Registry.
+```bash
+vix check --tests
+```
 
-It does not uninstall a global package.
-
-It does not currently rewrite `vix.json`.
+If a manifest still requires the dependency, a later `vix install` can resolve it again. Removing lock state and removing a dependency requirement are different operations.
 
 ## Usage
 
@@ -39,164 +44,175 @@ vix remove [@]namespace/name[@version] --purge [-y]
 
 ## Basic examples
 
-```bash
-# Remove a locked dependency
-vix remove gk/jwt
+Remove a locked dependency:
 
-# Scoped-style syntax
+```bash
+vix remove gk/jwt
+```
+
+Scoped-style syntax:
+
+```bash
 vix remove @gk/jwt
-
-# Remove only if the locked version matches
-vix remove gk/jwt@1.0.0
-
-# Scoped-style syntax with version
-vix remove @gk/jwt@1.0.0
-
-# Remove and delete project-local dependency files
-vix remove @gk/jwt --purge
-
-# Remove and purge without confirmation
-vix remove @gk/jwt --purge -y
 ```
 
-## What it does
-
-When you run:
+Remove only when the locked version matches:
 
 ```bash
-vix remove gk/jwt
+vix remove gk/jwt@1.0.0
 ```
 
-Vix does this:
+Remove the lock entry and project-local dependency files:
 
-1. Parses the package target.
-2. Reads `vix.lock`.
-3. Finds the matching dependency in the lockfile.
-4. Removes the first matching dependency entry.
-5. Writes the updated `vix.lock`.
-6. Optionally deletes `.vix/deps/<namespace>.<name>` when `--purge` is used.
-7. Prints a tip to regenerate dependency integration if needed.
+```bash
+vix remove gk/jwt --purge
+```
 
-## Important behavior
+Skip purge confirmation:
 
-`vix remove` currently removes from:
+```bash
+vix remove gk/jwt --purge -y
+```
 
-```txt
+## What `vix remove` changes
+
+Without `--purge`, the authoritative file changed by the command is:
+
+```text
 vix.lock
 ```
 
-It does not remove the dependency declaration from:
+With `--purge`, the command can also remove:
 
-```txt
-vix.json
+```text
+.vix/deps/<namespace>.<name>
 ```
 
-So after removing a dependency, check whether `vix.json` still contains it.
+For example:
 
-If it is still declared there, remove it manually or use the dependency workflow that matches your project.
+```text
+gk/jwt -> .vix/deps/gk.jwt
+```
+
+The dependency's source cache or Registry metadata is not removed.
+
+## What `vix remove` does not change
+
+`vix remove` does not currently remove the dependency requirement from:
+
+```text
+vix.json
+vix.app
+modules/<name>/vix.module
+```
+
+That distinction is important.
+
+For example, if `vix.json` still contains:
+
+```json
+{
+  "deps": [
+    {
+      "id": "gk/jwt",
+      "version": "^1.0.0"
+    }
+  ]
+}
+```
+
+then removing only the lock entry does not mean the project no longer requires `gk/jwt`.
+
+Likewise, an application module may still own the requirement in:
+
+```text
+modules/auth/vix.module
+```
+
+Before running `vix install` again, make sure the dependency declaration that caused the requirement has also been removed when that is your intent.
 
 ## Package format
 
-A package target uses this format:
+A package target uses:
 
-```txt
+```text
 namespace/name
 ```
 
 Examples:
 
-```txt
+```text
 gk/jwt
 gk/json
 ```
 
 Scoped-style syntax is also accepted:
 
-```txt
+```text
 @namespace/name
 ```
 
-Example:
+For example:
 
-```txt
-@gk/jwt
+```bash
+vix remove @gk/jwt
 ```
 
 Both forms refer to the same dependency id:
 
-```txt
+```text
 gk/jwt
 ```
 
 ## Version matching
 
-You can pass a version:
+A version can be included in the removal target:
 
 ```bash
 vix remove gk/jwt@1.0.0
 ```
 
-When a version is provided, Vix removes the dependency only if the locked dependency matches that version.
+When a version is provided, Vix removes the dependency only when the locked entry matches that version.
 
-Vix checks:
+The comparison can use the locked version or tag representation. A lock entry whose tag is:
 
-```txt
-version
-tag
-```
-
-If the lockfile uses a tag like:
-
-```txt
+```text
 v1.0.0
 ```
 
-then this still matches:
+can still match:
 
 ```bash
 vix remove gk/jwt@1.0.0
 ```
 
+Use a version-qualified remove when you want to avoid removing a different locked version accidentally.
+
 ## Lockfile requirement
 
-`vix remove` requires:
+`vix remove` operates on:
 
-```txt
+```text
 vix.lock
 ```
 
-If the lockfile is missing, Vix reports:
+If the lockfile is missing, the command cannot remove a locked dependency.
 
-```txt
-missing lock file: /path/to/project/vix.lock
-Run: vix add <pkg>@<version> first
+Restore the project lockfile from version control when appropriate, or rebuild valid dependency state through the normal dependency workflow.
+
+For an existing project after clone:
+
+```bash
+vix install
 ```
 
-This command is lockfile-based.
+For a dependency that has never been declared:
 
-## Lockfile format
-
-`vix remove` expects a lockfile with:
-
-```json
-{
-  "dependencies": [
-    {
-      "id": "gk/jwt",
-      "version": "1.0.0"
-    }
-  ]
-}
+```bash
+vix add <package>
 ```
 
-If the lockfile does not contain a `dependencies` array, Vix reports:
-
-```txt
-invalid lock: missing 'dependencies' array
-Tip: regenerate lock by re-adding dependencies
-```
-
-## Remove from lockfile
+## Remove from the lockfile
 
 Run:
 
@@ -204,103 +220,169 @@ Run:
 vix remove gk/jwt
 ```
 
-Example output shape:
+The matching dependency is removed from the root lockfile.
 
-```txt
-Remove
-id: gk/jwt
-✔ removed from vix.lock: gk/jwt
-✔ lock:  /home/user/api/vix.lock
-⚠ Tip: run 'vix install' to regenerate .vix/vix_deps.cmake if needed.
-```
+After the change, the remaining entries still represent the exact locked dependency state that has not been removed.
 
-## Remove with version
-
-Run:
+A normal next step is:
 
 ```bash
-vix remove gk/jwt@1.0.0
+vix install
 ```
 
-Example output shape:
+This reconciles project-local dependency materialization and generated integration with the current manifests and lockfile.
 
-```txt
-Remove
-id: gk/jwt
-version: 1.0.0
-✔ removed from vix.lock: gk/jwt
-✔ lock:  /home/user/api/vix.lock
-⚠ Tip: run 'vix install' to regenerate .vix/vix_deps.cmake if needed.
+## Removing dependency requirements
+
+A lockfile entry and a dependency requirement are not the same thing.
+
+The project may have a root Registry requirement in:
+
+```text
+vix.json
 ```
 
-If the dependency exists but the version does not match, Vix reports:
+A `vix.app` project may also contain root build dependency declarations such as:
 
-```txt
-dependency not found in lock: gk/jwt
-Tip: use 'vix list' to check current deps
+```toml
+deps = [
+  "gk/jwt@^1.0.0",
+]
+
+links = [
+  "gk::jwt",
+]
 ```
+
+An application module can own Registry dependencies in:
+
+```toml
+[deps]
+registry = [
+  "gk/jwt@^1.0.0",
+]
+
+links = [
+  "gk::jwt",
+]
+```
+
+or direct Git dependencies in:
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+```
+
+If the dependency should disappear permanently from the project, remove the declaration from the manifest that owns it as well as any CMake link or source usage that depends on it.
+
+Then run:
+
+```bash
+vix install
+vix build
+```
+
+## Application module dependencies
+
+Module-owned dependencies use the same root `vix.lock` as application-owned dependencies.
+
+```text
+vix.app
+  |
+  +-- auth
+  |     |
+  |     +-- modules/auth/vix.module
+  |
+  v
+root vix.lock
+```
+
+There is no separate lockfile per module.
+
+`vix remove` does not currently take a `--module` option. Removing a lock entry therefore does not identify or rewrite the module manifest that may own the dependency requirement.
+
+For a module-owned Registry dependency, update the corresponding `vix.module` declaration when the module no longer needs the package.
+
+For a module-owned direct Git dependency, remove the structured `[dependencies.<name>]` declaration from that module manifest when the dependency is no longer required.
+
+After changing module dependency declarations:
+
+```bash
+vix modules check
+vix install
+vix build
+```
+
+## Shared dependencies
+
+One locked dependency can satisfy requirements from more than one active owner.
+
+For example:
+
+```text
+auth
+  +-- gk/json
+
+billing
+  +-- gk/json
+```
+
+Removing the shared lock entry does not remove those requirements from either module.
+
+If another active manifest still requires the dependency, `vix install` can resolve the dependency again because the active application graph still needs it.
+
+Before removing shared dependency state permanently, inspect every owner that still declares the dependency.
 
 ## Purge project-local files
 
-Use `--purge` to delete the project-local dependency folder.
+Use `--purge` when the project-local materialized dependency should also be deleted.
 
 ```bash
 vix remove gk/jwt --purge
 ```
 
-For package:
+For:
 
-```txt
+```text
 gk/jwt
 ```
 
-Vix deletes:
+the project-local path is:
 
-```txt
+```text
 .vix/deps/gk.jwt
 ```
 
-The folder format is:
+The general shape is:
 
-```txt
+```text
 .vix/deps/<namespace>.<name>
 ```
 
 Examples:
 
-| Package        | Project-local dependency folder |
-| -------------- | ------------------------------- |
-| `gk/jwt`       | `.vix/deps/gk.jwt`              |
-| `gk/json`      | `.vix/deps/gk.json`             |
-| `adastra/http` | `.vix/deps/adastra.http`        |
+| Package        | Project-local directory  |
+| -------------- | ------------------------ |
+| `gk/jwt`       | `.vix/deps/gk.jwt`       |
+| `gk/json`      | `.vix/deps/gk.json`      |
+| `adastra/http` | `.vix/deps/adastra.http` |
 
 ## Purge confirmation
 
-When `--purge` is used, Vix asks for confirmation before deleting files.
+`--purge` deletes project-local files, so Vix asks for explicit confirmation.
 
-Example:
+The confirmation token is:
 
-```txt
-This will also delete files from this project:
-/home/user/api/.vix/deps/gk.jwt
-Type DELETE to confirm:
-```
-
-You must type:
-
-```txt
+```text
 DELETE
 ```
 
-If you type anything else, Vix cancels:
+If the confirmation is not provided, the purge is cancelled.
 
-```txt
-cancelled
-```
-
-## Skip purge confirmation
-
-Use `-y` or `--yes`:
+For automation where the deletion is already intentional, use:
 
 ```bash
 vix remove gk/jwt --purge -y
@@ -312,50 +394,69 @@ or:
 vix remove gk/jwt --purge --yes
 ```
 
-This skips confirmation and deletes the project-local dependency folder if it exists.
+## What purge does not delete
 
-## What `--purge` does not delete
+`--purge` only targets the project-local dependency materialization under:
 
-`--purge` deletes the project-local dependency folder under:
-
-```txt
+```text
 .vix/deps/
 ```
 
-It does not delete the global Git store.
+It does not delete:
 
-It does not delete registry metadata.
+- the shared Git store
+- Registry metadata
+- globally installed packages
+- dependency declarations in project manifests
 
-It does not delete a globally installed package.
+This means another project can continue to reuse shared cached dependency data.
 
-For global packages, use the global uninstall workflow.
+## Atomic removal
 
-## What files are affected
+Project dependency mutations are published through one project mutation boundary.
 
-`vix remove` can affect:
+For a normal removal, Vix prepares the new lockfile state before making it authoritative.
 
-```txt
+For a purge, project-local deletion is coordinated with the same mutation workflow rather than being treated as an unrelated best-effort cleanup.
+
+If publication is interrupted, Vix can recover incomplete project mutation state before a later mutation proceeds.
+
+This prevents a failed remove operation from silently leaving partially published authoritative dependency metadata.
+
+Project mutations are also serialized so concurrent Vix commands do not overwrite the same project dependency state without coordination.
+
+## After removing a dependency
+
+The complete cleanup depends on where the dependency was declared.
+
+For a root Registry dependency:
+
+```text
+vix.json
 vix.lock
-.vix/deps/<namespace>.<name>   # only with --purge
 ```
 
-It may require regenerating:
+For a `vix.app` application that also links the package directly:
 
-```txt
-.vix/vix_deps.cmake
+```text
+vix.app
 ```
 
-That is why Vix prints:
+For a module-owned dependency:
 
-```bash
-vix install
+```text
+modules/<name>/vix.module
 ```
 
-after removal.
+For a manual CMake project:
 
-## After removing a package
+```text
+CMakeLists.txt
+```
 
-After removing a dependency, validate the project.
+Source code may also still contain includes or symbols from the dependency.
+
+After cleanup:
 
 ```bash
 vix install
@@ -363,40 +464,31 @@ vix build
 vix check --tests
 ```
 
-If your source code still includes headers from the removed package, the build will fail.
+## Using remove with `vix.app`
 
-Remove those includes and target links.
+If the application directly uses the package, remove obsolete root dependency declarations.
 
-## Using remove with vix.app
+Before:
 
-For `vix.app` projects, check these places after removal:
-
-```txt
-vix.lock
-vix.json
-vix.app
-```
-
-If the package is still declared in `vix.app`, remove it from:
-
-```ini
+```toml
 deps = [
-  gk/jwt@^1.0.0,
+  "gk/jwt@^1.0.0",
 ]
 
 links = [
-  gk::jwt,
+  "vix::vix",
+  "gk::jwt",
 ]
 ```
 
-Example cleanup:
+After:
 
-```ini
+```toml
 deps = [
 ]
 
 links = [
-  vix::vix,
+  "vix::vix",
 ]
 ```
 
@@ -407,11 +499,13 @@ vix install
 vix build
 ```
 
+If a module owns the dependency instead, change that module's `vix.module` rather than moving the dependency into the root application manifest.
+
 ## Using remove with CMake
 
-For CMake projects, remove the dependency link if the target is no longer used.
+For a CMake-first project, remove target links that are no longer needed.
 
-Example before:
+Before:
 
 ```cmake
 target_link_libraries(api PRIVATE
@@ -419,14 +513,7 @@ target_link_libraries(api PRIVATE
 )
 ```
 
-After:
-
-```cmake
-target_link_libraries(api PRIVATE
-)
-```
-
-Then regenerate dependency integration if needed:
+After cleanup, regenerate dependency integration if the project uses Vix-managed dependencies:
 
 ```bash
 vix install
@@ -435,82 +522,48 @@ vix build
 
 ## Difference between `vix remove` and `vix uninstall`
 
-| Command                  | Purpose                                              |
-| ------------------------ | ---------------------------------------------------- |
-| `vix remove <pkg>`       | Remove a locked dependency from the current project. |
-| `vix uninstall -g <pkg>` | Remove a globally installed package.                 |
+| Command                  | Purpose                                                  |
+| ------------------------ | -------------------------------------------------------- |
+| `vix remove <pkg>`       | Remove locked dependency state from the current project. |
+| `vix uninstall -g <pkg>` | Remove a globally installed package.                     |
 
-Use `vix remove` for project dependencies.
+Use `vix remove` for project dependency state.
 
-Use `vix uninstall -g` for global packages.
+Use `vix uninstall -g` for a package installed into the Vix-managed global prefix.
 
-## Difference between `vix remove` and manual cleanup
+## Difference between remove and declaration cleanup
 
-| Action                         | Result                                                         |
-| ------------------------------ | -------------------------------------------------------------- |
-| `vix remove <pkg>`             | Updates `vix.lock`.                                            |
-| `vix remove <pkg> --purge`     | Updates `vix.lock` and deletes `.vix/deps/<namespace>.<name>`. |
-| manual delete from `.vix/deps` | Deletes files but leaves lockfile unchanged.                   |
-| manual edit of `vix.lock`      | Not recommended.                                               |
+These operations affect different layers.
 
-Prefer `vix remove`.
+| Action                          | Effect                                                              |
+| ------------------------------- | ------------------------------------------------------------------- |
+| `vix remove <pkg>`              | Removes the matching root lock entry.                               |
+| `vix remove <pkg> --purge`      | Removes the lock entry and project-local materialization.           |
+| remove from `vix.json`          | Removes a root Registry requirement.                                |
+| remove from `vix.app`           | Removes root application build declarations.                        |
+| remove from `vix.module`        | Removes a module-owned dependency requirement.                      |
+| remove CMake target linkage     | Removes manual build usage.                                         |
+| delete `.vix/deps/...` manually | Deletes materialized files without changing authoritative metadata. |
 
-## Full workflow
-
-Remove the dependency:
-
-```bash
-vix remove gk/jwt
-```
-
-Regenerate dependency integration:
-
-```bash
-vix install
-```
-
-Remove usage from source code, `vix.app`, or CMake.
-
-Validate:
-
-```bash
-vix build
-vix check --tests
-```
-
-## Full purge workflow
-
-```bash
-vix remove gk/jwt --purge -y
-vix install
-vix build
-vix check --tests
-```
-
-Use `--purge` when you want to clean project-local dependency files too.
-
-## Options
-
-| Option       | Description                                                      |
-| ------------ | ---------------------------------------------------------------- |
-| `--purge`    | Delete local package files under `.vix/deps/<namespace>.<name>`. |
-| `-y`         | Skip confirmation when using `--purge`.                          |
-| `--yes`      | Same as `-y`.                                                    |
-| `-h, --help` | Show command help.                                               |
-
-## Commands reference
-
-| Command                         | Description                                                 |
-| ------------------------------- | ----------------------------------------------------------- |
-| `vix remove gk/jwt`             | Remove `gk/jwt` from `vix.lock`.                            |
-| `vix remove @gk/jwt`            | Same using scoped-style syntax.                             |
-| `vix remove gk/jwt@1.0.0`       | Remove only if version matches.                             |
-| `vix remove @gk/jwt --purge`    | Remove and ask before deleting project-local files.         |
-| `vix remove @gk/jwt --purge -y` | Remove and delete project-local files without confirmation. |
+Dependency cleanup is complete only when the project no longer declares or uses the dependency at the layers that apply to that project.
 
 ## Common workflows
 
-### Remove a dependency
+### Remove locked state
+
+```bash
+vix remove gk/jwt
+```
+
+### Remove and purge local materialization
+
+```bash
+vix remove gk/jwt --purge -y
+```
+
+### Remove a root dependency completely
+
+Remove the root requirement from the appropriate project manifest, then:
 
 ```bash
 vix remove gk/jwt
@@ -518,29 +571,23 @@ vix install
 vix build
 ```
 
-### Remove a scoped dependency
+### Remove a module-owned dependency completely
+
+Remove the dependency declaration from:
+
+```text
+modules/<name>/vix.module
+```
+
+Then run:
 
 ```bash
-vix remove @gk/jwt
+vix modules check
 vix install
 vix build
 ```
 
-### Remove a specific version
-
-```bash
-vix remove gk/jwt@1.0.0
-vix install
-vix build
-```
-
-### Remove and purge files
-
-```bash
-vix remove @gk/jwt --purge -y
-vix install
-vix build
-```
+If a matching direct lock entry still needs explicit cleanup, use `vix remove` according to the current lock state.
 
 ### Remove and validate
 
@@ -550,108 +597,98 @@ vix install
 vix check --tests
 ```
 
+## Options
+
+| Option       | Description                                                                 |
+| ------------ | --------------------------------------------------------------------------- |
+| `--purge`    | Delete project-local dependency files under `.vix/deps/<namespace>.<name>`. |
+| `-y, --yes`  | Skip confirmation when using `--purge`.                                     |
+| `-h, --help` | Show command help.                                                          |
+
+## Commands reference
+
+| Command                        | Description                                                     |
+| ------------------------------ | --------------------------------------------------------------- |
+| `vix remove gk/jwt`            | Remove `gk/jwt` from the root lockfile.                         |
+| `vix remove @gk/jwt`           | Same operation using scoped-style syntax.                       |
+| `vix remove gk/jwt@1.0.0`      | Remove only when the locked version matches.                    |
+| `vix remove gk/jwt --purge`    | Remove lock state and ask before deleting project-local files.  |
+| `vix remove gk/jwt --purge -y` | Remove lock state and project-local files without confirmation. |
+
 ## Common mistakes
+
+### Removing only the lock entry while the dependency is still declared
+
+If `vix.json`, `vix.app`, or a module manifest still requires the dependency, a later install can resolve it again.
+
+Check the owning declaration before considering the dependency removed from the project.
+
+### Expecting `vix remove` to remove a module declaration
+
+`vix remove` has no module ownership selector.
+
+For a module-owned dependency, update:
+
+```text
+modules/<name>/vix.module
+```
+
+and then validate the module graph.
 
 ### Expecting remove to unpublish a package
 
-`vix remove` only affects the current project.
+`vix remove` affects the current project only.
 
-It does not remove anything from the registry.
+It does not remove anything from the Vix Registry.
 
-### Expecting remove to uninstall global packages
+### Expecting remove to uninstall a global package
 
-Wrong:
-
-```bash
-vix remove gk/jwt
-```
-
-when you mean a global install.
-
-Use the global uninstall command instead:
+Use:
 
 ```bash
 vix uninstall -g gk/jwt
 ```
 
-### Expecting remove to update `vix.json`
+for a global installation.
 
-The current command removes from `vix.lock`.
+### Forgetting build linkage
 
-Check `vix.json` after removal.
+If the application or a module still links:
 
-If the dependency is still declared there, remove or update it intentionally.
-
-### Forgetting to update `vix.app`
-
-For `vix.app` projects, also remove unused entries from:
-
-```txt
-deps
-links
+```text
+gk::jwt
 ```
 
-### Forgetting to update CMake
+remove that obsolete link relationship when the dependency is no longer used.
 
-For CMake projects, remove unused target links such as:
+For manual CMake projects, remove corresponding `target_link_libraries(...)` entries.
 
-```cmake
-target_link_libraries(api PRIVATE gk::jwt)
-```
+### Forgetting source usage
 
-### Forgetting to update source code
+Remove includes and symbols that came from the dependency.
 
-After removing a dependency, remove includes such as:
+For example:
 
 ```cpp
 #include <jwt/api.hpp>
 ```
 
-Then run:
+Then validate:
 
 ```bash
+vix build
 vix check --tests
 ```
 
-### Forgetting to regenerate dependency integration
+### Editing `vix.lock` manually
 
-After changing dependency state, run:
+Do not manually edit the lockfile.
 
-```bash
-vix install
-```
-
-This regenerates:
-
-```txt
-.vix/vix_deps.cmake
-```
-
-### Using wrong package format
-
-Wrong:
-
-```bash
-vix remove jwt
-```
-
-Correct:
-
-```bash
-vix remove gk/jwt
-```
+Use Vix dependency commands so lock state changes go through the same validation and project mutation behavior as other dependency operations.
 
 ## Troubleshooting
 
 ### Missing package id
-
-If you run:
-
-```bash
-vix remove
-```
-
-Vix reports a missing package id and shows help.
 
 Use:
 
@@ -665,146 +702,92 @@ Example:
 vix remove gk/jwt
 ```
 
-### Package id cannot be empty
+### Invalid package id
 
-Use a valid package id:
-
-```txt
-namespace/name
-```
-
-Valid:
+Valid forms include:
 
 ```bash
 vix remove gk/jwt
 vix remove @gk/jwt
+vix remove gk/jwt@1.0.0
 ```
 
-Invalid:
+A package id must contain its namespace and name.
+
+### Missing lockfile
+
+If the project should already have dependency state, restore the committed `vix.lock`.
+
+For a valid project whose manifests already declare dependencies, the normal materialization command is:
 
 ```bash
-vix remove jwt
-vix remove @/jwt
-vix remove gk/
+vix install
 ```
-
-### Missing lock file
-
-If Vix reports:
-
-```txt
-missing lock file
-```
-
-the project has no `vix.lock`.
-
-Check the current directory.
-
-If this is a Vix project with dependencies, recreate dependency state:
-
-```bash
-vix add <pkg>
-```
-
-or restore `vix.lock` from version control.
-
-### Invalid lockfile
-
-If Vix reports:
-
-```txt
-invalid lock: missing 'dependencies' array
-```
-
-regenerate the lockfile by re-adding dependencies or restoring a valid lockfile.
 
 ### Dependency not found in lock
 
-If Vix reports:
-
-```txt
-dependency not found in lock: gk/jwt
-```
-
-check current dependencies:
+Inspect the current dependency state:
 
 ```bash
 vix list
 ```
 
-The package may already be removed, or the id may be different.
+The dependency may already be absent, may use a different id, or may be represented by a different current lock entry.
 
 ### Purge cancelled
 
-When using `--purge`, type exactly:
+Type exactly:
 
-```txt
+```text
 DELETE
 ```
 
-or pass:
+or, when intentional automation should skip confirmation:
 
 ```bash
--y
+vix remove gk/jwt --purge -y
 ```
 
-if you intentionally want to skip confirmation.
+### Project-local files cannot be deleted
 
-### Failed to delete project-local files
+Check filesystem permissions and ownership for the materialized dependency path.
 
-If Vix reports:
-
-```txt
-failed to delete: .vix/deps/gk.jwt
-```
-
-check permissions:
-
-```bash
-ls -ld .vix/deps/gk.jwt
-```
-
-Then fix ownership or remove manually if needed.
+After correcting the filesystem problem, retry the removal or cleanup.
 
 ## Best practices
 
-Use `vix list` before removing dependencies.
+Use `vix list` before removing dependency state when you are unsure of the current locked id or version.
 
-Remove the dependency from source code before or after running `vix remove`.
+Remove the dependency requirement from the manifest that owns it when the project should no longer resolve that dependency.
 
-For `vix.app`, remove unused package specs from `deps`.
+Do not create or edit per-module lockfiles. Module-owned dependencies share the root `vix.lock`.
 
-For `vix.app`, remove unused CMake aliases from `links`.
+Run `vix modules check` after changing module-owned dependency declarations.
 
-For CMake, remove unused `target_link_libraries` entries.
+Run `vix install` after dependency declaration or lock changes when project-local integration needs reconciliation.
 
-Run `vix install` after removing dependencies.
+Run `vix build` and tests before committing dependency removals.
 
-Run `vix build` after removal.
-
-Run `vix check --tests` before committing.
-
-Use `--purge` when you want to clean `.vix/deps`.
+Use `--purge` only when project-local materialized files should also be deleted.
 
 Do not manually edit `vix.lock`.
 
-Do not confuse project dependencies with global packages.
-
 ## Related commands
 
-| Command         | Purpose                                  |
-| --------------- | ---------------------------------------- |
-| `vix add`       | Add a project dependency.                |
-| `vix install`   | Install dependencies from `vix.lock`.    |
-| `vix update`    | Update dependency versions.              |
-| `vix outdated`  | Check outdated dependencies.             |
-| `vix list`      | List project dependencies.               |
-| `vix install`   | Regenerate dependency integration files. |
-| `vix uninstall` | Remove Vix or a global package.          |
-| `vix check`     | Validate after removing dependencies.    |
+| Command         | Purpose                                                                              |
+| --------------- | ------------------------------------------------------------------------------------ |
+| `vix add`       | Add or change a Vix Registry requirement.                                            |
+| `vix install`   | Reconcile project manifests, locked dependency state, and materialized dependencies. |
+| `vix update`    | Re-resolve existing root Registry dependencies.                                      |
+| `vix outdated`  | Inspect outdated Registry dependencies.                                              |
+| `vix modules`   | Manage and validate application modules.                                             |
+| `vix list`      | Inspect project dependency state.                                                    |
+| `vix uninstall` | Remove Vix itself or a globally installed package.                                   |
+| `vix check`     | Validate the project after dependency changes.                                       |
+| `vix build`     | Build after dependency cleanup.                                                      |
 
 ## Next step
 
-List project dependencies.
+Inspect the current dependency state before or after a removal.
 
-[Open the vix list guide](/cli/list)
+[Open the `vix list` guide](/cli/list)

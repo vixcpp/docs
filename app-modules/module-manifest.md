@@ -1,8 +1,8 @@
 # Module Manifest
 
-Each application module contains a `vix.module` file. This file describes the module itself: its name, its kind, its exported include directory, its route prefix when the module is routed, module-owned registry dependencies, and whether module tests are enabled.
+Each application module contains a `vix.module` file. This file describes the module itself: its name, its kind, its exported include directory, its route prefix when the module is routed, module-owned external dependencies, and whether module tests are enabled.
 
-The module manifest belongs to the module directory. It is different from the root `vix.app` file. The root manifest describes the application and decides which modules are active. The module manifest describes one module from inside its own folder, including registry packages that are used by that module rather than by the application shell as a whole.
+The module manifest belongs to the module directory. It is different from the root `vix.app` file. The root manifest describes the application and decides which modules are active. The module manifest describes one module from inside its own folder, including registry and Git dependencies that belong to that module rather than to the application shell as a whole.
 
 ```txt
 modules/auth/
@@ -288,6 +288,139 @@ vix add gk/jwt@^1.0.0 --module auth
 
 When the module is enabled in `vix.app`, Vix includes its registry dependencies in the application dependency resolution and writes the exact resolved graph to the root `vix.lock`. During the generated `vix.app` build, Vix also passes the declared link targets to the module CMake target. A disabled module can keep its dependency metadata on disk, but those dependencies are not part of the active application graph until the module is enabled.
 
+## `[dependencies.<name>]`
+
+Structured Git dependencies that belong to one module are declared under `[dependencies.<name>]`.
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+```
+
+This keeps the dependency close to the module that uses it while preserving a single dependency state for the application.
+
+The easiest way to add one is:
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  --module auth
+```
+
+The short form is:
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  -m auth
+```
+
+Vix writes the Git declaration to `modules/auth/vix.module`. The exact resolved commit still belongs to the root `vix.lock`, and the dependency uses the same shared Git cache as root application dependencies.
+
+```text
+modules/auth/vix.module
+        |
+        +-- desired Git dependency
+        |
+        v
+root vix.lock
+        |
+        +-- exact resolved dependency state
+```
+
+A module does not receive its own lockfile or cache directory.
+
+### Revision selection
+
+A module Git dependency can select a tag, branch, or exact revision.
+
+Tag:
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+```
+
+Branch:
+
+```toml
+[dependencies.parser]
+git = "https://github.com/company/parser.git"
+branch = "dev"
+target = "company::parser"
+```
+
+Revision:
+
+```toml
+[dependencies.parser]
+git = "https://github.com/company/parser.git"
+rev = "a1b2c3d4e5f6"
+target = "company::parser"
+```
+
+Use only one revision selector for the same dependency. Tags and branches are resolved to exact commits before the dependency state is written to `vix.lock`.
+
+### Monorepo dependencies
+
+If the dependency's CMake project is inside a repository subdirectory, use `subdirectory`.
+
+```toml
+[dependencies.parser]
+git = "https://github.com/company/monorepo.git"
+tag = "v2.0.0"
+subdirectory = "libs/parser"
+target = "company::parser"
+```
+
+The `target` field identifies the CMake target used by the owning module.
+
+### Dependency CMake options
+
+CMake options for one Git dependency are stored in a nested `.cmake` table.
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+
+[dependencies.spdlog.cmake]
+SPDLOG_BUILD_TESTS = false
+SPDLOG_BUILD_EXAMPLE = false
+SPDLOG_BUILD_BENCH = false
+```
+
+Vix applies these options before the dependency is added to the generated CMake graph.
+
+### Ownership and conflict behavior
+
+A dependency declared in one module belongs to that module's generated CMake target. It is not automatically attached to sibling modules or to the application target.
+
+For example:
+
+```text
+auth
+   +-- spdlog::spdlog
+
+billing
+   +-- no spdlog dependency
+```
+
+If two enabled modules declare the same compatible dependency, Vix can reuse one exact resolved dependency state while preserving both module owners.
+
+If active owners require incompatible revisions or incompatible CMake configuration for the same effective Git dependency, Vix rejects the conflict instead of choosing whichever declaration was processed last.
+
+The same conflict rules apply between a root application dependency in `vix.app` and a module dependency in `vix.module`.
+
+Disabled modules keep their declarations on disk, but their external dependencies do not constrain the active application dependency graph until those modules are enabled.
+
 ## `[tests]`
 
 The `[tests]` section records whether the module has tests enabled.
@@ -309,7 +442,7 @@ The test section does not mean test files are part of the main application targe
 
 ## What does not belong in vix.module
 
-The module manifest should stay focused on module metadata. It should not become a second application manifest, even though it may declare registry packages used by the module itself.
+The module manifest should stay focused on module metadata. It should not become a second application manifest, even though it may declare registry and Git dependencies used by the module itself.
 
 Application-level activation belongs in `vix.app`.
 
@@ -340,7 +473,7 @@ target_link_libraries(api_projects
 )
 ```
 
-The `vix.module` file should describe the module itself. It should not duplicate the full application graph. Registry dependencies are different: they can live in `vix.module` when they are part of the module implementation, because that keeps package ownership close to the code that uses it.
+The `vix.module` file should describe the module itself. It should not duplicate the full application graph. External dependencies are different: registry and Git dependencies can live in `vix.module` when they belong to the module implementation, because that keeps dependency ownership close to the code that uses it.
 
 ## Example: simple module
 
@@ -466,7 +599,24 @@ links = [
 enabled = true
 ```
 
-You can edit the generated manifest when the module needs a different route prefix or when the module kind changes. After editing it, run the module checks.
+You can edit the generated manifest when the module needs a different route prefix, when the module kind changes, or when the module needs a structured Git dependency. For package installation, prefer the CLI commands because they also update the dependency state safely.
+
+Registry dependency:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+Git dependency:
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  --module auth
+```
+
+After editing module metadata manually, run the module checks.
 
 ```bash
 vix modules check
@@ -480,12 +630,16 @@ Another mistake is declaring a route prefix that another module already owns. Th
 
 A third mistake is using `[exports]` to expose private implementation folders. Public headers should live under `include/<module>/`. Implementation files under `src/` should remain private to the module target.
 
+Another mistake is creating a lockfile or dependency cache inside a module directory. Module ownership is logical and build-level ownership. The application still uses the root `vix.lock` and the shared Vix dependency cache.
+
+When multiple active modules use the same Git source, keep their revision and CMake requirements compatible. Vix rejects incompatible active requirements instead of silently selecting one.
+
 ## Recommended rule
 
-Keep `vix.module` small. It should tell the reader what the module is, what it exposes, which route prefix it owns when it is routed, which registry packages are part of the module implementation, and whether it has tests. The application graph belongs in `vix.app`; the module metadata belongs in `vix.module`.
+Keep `vix.module` small. It should tell the reader what the module is, what it exposes, which route prefix it owns when it is routed, which external dependencies belong to the module, and whether it has tests. The application graph and module activation belong in `vix.app`; module metadata and module-owned dependency declarations belong in `vix.module`. Exact resolved dependency state belongs in the root `vix.lock`.
 
 ## Next step
 
-Continue with tests to see how module tests are generated and how they fit into the normal Vix validation workflow.
+Continue with dependency checks to see how module dependencies, the active module graph, and validation work together.
 
-[Tests](/app-modules/tests)
+[Dependencies and Checks](/app-modules/dependencies-and-checks)

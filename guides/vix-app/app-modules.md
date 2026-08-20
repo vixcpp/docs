@@ -1,8 +1,8 @@
 # App Modules
 
-App modules let one Vix application grow as a set of clear internal parts. They are useful when a backend starts to contain features such as authentication, projects, builds, packages, logs, registry, deployments, or billing, and those features need their own structure without turning the main `src/` directory into one large folder.
+App modules let one Vix application grow as a set of clear internal parts. They are useful when a backend starts to contain features such as authentication, projects, builds, packages, logs, registry, deployments, or billing, and those features need their own structure, dependency ownership, and public boundaries.
 
-A module is declared in `vix.app`, enabled or disabled from the same file, and checked through the normal Vix CLI workflow.
+A module is declared in `vix.app`, enabled or disabled from the same file, and checked through the normal Vix CLI workflow. External dependencies that belong to one module can be declared in that module's `vix.module` while exact resolution remains in the application's root `vix.lock`.
 
 ```bash
 vix modules list
@@ -10,7 +10,7 @@ vix modules check
 vix build
 ```
 
-The important idea is simple: the application remains one application, but its internal features can be organized as modules with explicit names and dependencies.
+The application remains one application, but its internal features can be organized as modules with explicit names, module-to-module dependencies, and ownership of external dependencies.
 
 ## Why app modules exist
 
@@ -98,7 +98,28 @@ Then run the module checks.
 vix modules check
 ```
 
-The module commands keep the file structure and manifest declarations aligned. The goal is not to make the developer manage generated build wiring by hand, but to keep the project organized through Vix.
+If one module needs an external dependency, keep it owned by that module.
+
+Registry package:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+Direct Git dependency:
+
+```bash
+vix install https://github.com/gabime/spdlog   --tag v1.15.3   --target spdlog::spdlog   --module auth
+```
+
+Then validate and build:
+
+```bash
+vix modules check
+vix build
+```
+
+The module commands keep the file structure, manifest declarations, and dependency ownership aligned without forcing the developer to manage generated application wiring by hand.
 
 ## Module path
 
@@ -180,6 +201,8 @@ depends = [
 
 This is useful when a feature is being prepared but should not be part of the current build yet. The declaration stays visible, but the module is not active.
 
+A disabled module can also keep Registry or Git dependency declarations in its `vix.module`. Those requirements remain inactive until the module is enabled, so unused features do not constrain the active application dependency graph.
+
 You can enable or disable a module through the CLI.
 
 ```bash
@@ -210,6 +233,30 @@ depends = []
 ```
 
 Dependencies should be explicit. When one module uses another module, the relationship belongs in `vix.app`, because the manifest is the place where the application architecture is described.
+
+The active module graph is validated before generated project integration uses it. Unknown dependencies, self-dependencies, enabled modules depending on disabled modules, dependency cycles, ambiguous normalized identities, and conflicting module paths are rejected.
+
+A valid graph also has a deterministic dependency-first order. For example:
+
+```text
+auth
+  ^
+  |
+projects
+  ^
+  |
+builds
+```
+
+is ordered as:
+
+```text
+auth
+projects
+builds
+```
+
+The order comes from the dependency graph rather than from the physical order of sections in `vix.app`.
 
 ## Public and private module code
 
@@ -437,11 +484,11 @@ billing
 
 Do not create a module for every small helper file. A small utility can stay in the main application or in a shared internal library. Modules are most useful when they represent real application features.
 
-## Modules and registry dependencies
+## Modules and external dependencies
 
 An app module is part of the same application. It gives a feature a clear place in the source tree and a declared position in the application graph.
 
-```ini
+```toml
 [module.auth]
 enabled = true
 path = "modules/auth"
@@ -449,15 +496,19 @@ kind = "backend"
 depends = []
 ```
 
-Registry dependencies come from outside the project and are resolved by Vix. If a package is used by the application shell, keep it in the root dependency list. If a package belongs to one module, declare it in that module with `vix add --module`.
+External dependencies can belong to the application shell or to one specific module. Module ownership keeps the declaration close to the feature that uses it without creating a separate package universe for that module.
+
+### Registry dependencies
+
+If a Registry package belongs to one module, use:
 
 ```bash
 vix add gk/jwt@^1.0.0 --module auth
 ```
 
-The command writes the dependency to `modules/auth/vix.module`.
+The command writes the requirement to `modules/auth/vix.module`.
 
-```ini
+```toml
 [deps]
 registry = [
   "gk/jwt@^1.0.0",
@@ -468,7 +519,93 @@ links = [
 ]
 ```
 
-When `auth` is enabled in `vix.app`, Vix includes those registry dependencies in the application dependency resolution and links the declared targets into the generated module target. This keeps package ownership close to the feature that uses it while preserving one root `vix.lock` for the application build.
+When `auth` is enabled, its Registry requirements participate in the active application dependency graph.
+
+### Git dependencies
+
+A direct Git dependency can also belong to one module.
+
+```bash
+vix install https://github.com/gabime/spdlog   --tag v1.15.3   --target spdlog::spdlog   --module auth
+```
+
+The short form is:
+
+```bash
+vix install https://github.com/gabime/spdlog   --tag v1.15.3   --target spdlog::spdlog   -m auth
+```
+
+Vix records the declaration in the module manifest.
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+```
+
+CMake options can remain attached to that dependency:
+
+```toml
+[dependencies.spdlog.cmake]
+SPDLOG_BUILD_TESTS = false
+SPDLOG_BUILD_EXAMPLE = false
+```
+
+The module must already be declared, enabled, present on disk, and have valid module metadata. Vix validates those conditions before remote Git work begins.
+
+### One root lockfile
+
+Module-owned dependencies still use the application's root dependency state.
+
+```text
+vix.app
+  |
+  +-- auth
+  |     |
+  |     +-- modules/auth/vix.module
+  |            |
+  |            +-- external dependencies
+  |
+  v
+root vix.lock
+```
+
+There is no per-module lockfile. Exact Registry versions and Git revisions remain part of the root `vix.lock`.
+
+Direct Git dependencies also use the shared Vix Git cache. Ownership changes generated linkage and active requirements, not physical checkout storage.
+
+### Shared dependencies
+
+More than one active owner can require the same compatible dependency.
+
+```text
+auth
+  +-- spdlog
+
+billing
+  +-- spdlog
+```
+
+Vix can preserve both owners while resolving one effective dependency state.
+
+The same rule applies when the application shell and a module both require the same dependency.
+
+### Conflicts
+
+All active application and module requirements are analyzed together.
+
+If active owners require incompatible versions, incompatible Git revisions, or incompatible CMake configuration for the same effective dependency, Vix rejects the change rather than allowing the last declaration to win.
+
+For Git dependencies at the repository root, an omitted subdirectory and:
+
+```toml
+subdirectory = "."
+```
+
+are treated as the same source location for conflict analysis.
+
+A failed dependency mutation does not publish a partially updated module manifest and root lock state. Vix prepares the prospective state first and preserves the previous authoritative metadata if validation, resolution, materialization, or publication fails.
 
 ## Modules versus libraries
 
@@ -509,6 +646,10 @@ The second mistake is reaching into another module’s private `src/` directory.
 
 The third mistake is keeping a disabled module as a dependency of an enabled module. If an enabled module depends on another module, that dependency should also be enabled, otherwise the application structure no longer matches the build intent.
 
+Another mistake is creating a lockfile or dependency cache inside each module. Module ownership is logical and build-level ownership. Exact dependency state remains in the root `vix.lock`, and Git checkouts remain in the shared Vix cache.
+
+Do not rely on module declaration order to resolve dependency conflicts. Active requirements must be compatible before Vix publishes a new dependency state.
+
 ## Checking modules
 
 After editing module declarations, run:
@@ -517,13 +658,15 @@ After editing module declarations, run:
 vix modules check
 ```
 
+The check validates the active module graph, including unknown dependencies, self-dependencies, enabled-to-disabled relationships, cycles, normalized identity collisions, conflicting paths, route prefix conflicts, and public/private boundary rules.
+
 Then build the application.
 
 ```bash
 vix build
 ```
 
-When `vix.app` changes, Vix treats it as a configuration change. The application wiring can be refreshed before the next build or dev restart, which is what keeps the module workflow reliable during development.
+When `vix.app` changes, Vix treats it as a configuration change. The application wiring can be refreshed before the next build or development restart.
 
 ## Recommended order in `vix.app`
 
@@ -569,6 +712,6 @@ This order makes the file easy to read. The top of the manifest describes the ap
 
 ## Next step
 
-Continue with best practices to see how to keep `vix.app` readable as an application grows.
+Continue with the module dependency guide for the detailed validation and ownership rules.
 
-[Best Practices](/guides/vix-app/best-practices)
+[Dependencies and Checks](/app-modules/dependencies-and-checks)

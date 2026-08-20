@@ -1,6 +1,6 @@
 # CLI Workflow
 
-`vix modules` is the command group used to create and maintain application modules. It gives a project a repeatable workflow for initializing module support, adding module skeletons, listing declared modules, enabling or disabling them, and checking that the module structure still respects the project boundaries.
+`vix modules` is the command group used to create and maintain application modules. It gives a project a repeatable workflow for initializing module support, adding module skeletons, listing declared modules, enabling or disabling them, checking the module graph, and keeping module-owned dependencies explicit.
 
 The command is useful in two different situations. In a `vix.app` project, it works with the application manifest and keeps active modules declared from the project root. In an existing CMake project, it can create the same `modules/` structure and connect module targets through CMake without requiring the project to adopt the full Vix application template.
 
@@ -21,17 +21,30 @@ disable <name>       Disable a module in vix.app
 check                Validate module structure and dependencies
 ```
 
-Most projects only need a simple sequence at the beginning.
+Most projects only need a small sequence at the beginning.
 
 ```bash
 vix modules init
 vix modules add auth
-vix modules list
 vix modules check
 vix build
 ```
 
-This initializes the module layer, creates the first module, verifies the manifest state, validates the module structure, and then builds the application.
+This initializes the module layer, creates the first module, validates the module structure, and then builds the application.
+
+When the module needs an external dependency, keep that dependency owned by the module.
+
+Registry package:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+Direct Git dependency:
+
+```bash
+vix install https://github.com/gabime/spdlog   --tag v1.15.3   --target spdlog::spdlog   --module auth
+```
 
 ## Initialize module support
 
@@ -171,6 +184,59 @@ In that case, connect the module manually from your build file.
 target_link_libraries(api PRIVATE api::auth)
 ```
 
+## Add a dependency to one module
+
+A module can own external dependencies independently from sibling modules.
+
+For a Registry package, use `vix add --module`:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+Vix records the Registry requirement in `modules/auth/vix.module`.
+
+For a direct Git dependency, use `vix install --module`:
+
+```bash
+vix install https://github.com/gabime/spdlog   --tag v1.15.3   --target spdlog::spdlog   --module auth
+```
+
+The short form is:
+
+```bash
+vix install https://github.com/gabime/spdlog   --tag v1.15.3   --target spdlog::spdlog   -m auth
+```
+
+The Git declaration is stored in the target module's `vix.module`.
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+```
+
+The application still has one root `vix.lock` and one shared dependency cache. `--module` changes ownership and generated linkage, not the physical storage model.
+
+```text
+modules/auth/vix.module
+        |
+        +-- module-owned dependency
+        |
+        v
+root vix.lock
+```
+
+The target module must already be declared and enabled. Vix rejects an unknown, disabled, missing, or invalid module before attempting Git resolution.
+
+After adding the dependency:
+
+```bash
+vix modules check
+vix build
+```
+
 ## List modules
 
 Use `list` to inspect modules declared in `vix.app`.
@@ -229,9 +295,11 @@ Run `check` after changing module declarations, module dependencies, route prefi
 vix modules check
 ```
 
-The check command validates the parts of the module system that matter for long-term maintenance. It verifies that declared modules exist on disk, that enabled modules have their `CMakeLists.txt` and `vix.module` files, that enabled modules do not depend on disabled modules, and that declared dependencies do not form cycles.
+The check command validates the parts of the module system that matter for long-term maintenance. It verifies declared module identity and paths, required files for enabled modules, unknown and self-dependencies, enabled modules depending on disabled modules, and dependency cycles.
 
-It also checks boundaries. Public headers should not include private implementation paths from `src/`, and cross-module usage should be expressed through explicit dependencies instead of hidden include relationships.
+It also rejects ambiguous module identities, such as names that normalize to the same generated CMake target identity, and conflicting module paths.
+
+Boundary checks remain part of the workflow. Public headers should not include private implementation paths from `src/`, and cross-module usage should be expressed through explicit dependencies instead of hidden include relationships.
 
 For backend modules, the check command also catches duplicate route prefixes declared in module metadata.
 
@@ -326,7 +394,56 @@ depends = []
 
 The generated build uses the enabled modules from the manifest. A module folder can exist without being active, and a disabled module can remain declared without being wired into the application target.
 
+A disabled module can also keep dependency declarations in its `vix.module`. Those external requirements remain inactive until the module is enabled.
+
+The active module graph is validated before generated project integration uses it. The graph has a deterministic dependency-first order, so build generation does not depend on the physical order of module declarations in `vix.app`.
+
 This is the preferred workflow for Vix application projects because the module graph is visible from the same file that describes the application target.
+
+## Dependency conflicts
+
+Application-owned and module-owned external dependencies participate in one active dependency graph.
+
+Compatible owners can share the same resolved dependency:
+
+```text
+application
+auth
+billing
+   |
+   +-- same compatible dependency
+```
+
+Incompatible active requirements are rejected before the new dependency state is published.
+
+Examples include:
+
+```text
+auth    -> repository X at revision A
+billing -> repository X at revision B
+```
+
+or incompatible CMake option values for the same effective Git dependency.
+
+Vix does not choose the last declaration that happened to be processed. The active requirements must have one compatible resolution.
+
+## Safe project mutations
+
+Commands that change module or dependency metadata publish their changes through one project mutation boundary.
+
+This includes:
+
+```bash
+vix modules add auth
+vix modules enable auth
+vix modules disable auth
+vix add gk/jwt@^1.0.0 --module auth
+vix install <git-url> --module auth
+```
+
+If validation, dependency resolution, materialization, or metadata publication fails, Vix preserves the previous authoritative project state instead of leaving partially updated manifests and lock state.
+
+Project mutations are also serialized so concurrent Vix commands cannot silently overwrite the same project metadata.
 
 ## Common workflow
 
@@ -339,6 +456,18 @@ vix modules add projects
 vix modules list
 vix modules check
 vix build
+```
+
+Add module-owned dependencies when a feature needs them:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+or:
+
+```bash
+vix install https://github.com/gabime/spdlog   --tag v1.15.3   --target spdlog::spdlog   --module auth
 ```
 
 Then edit `vix.app` when one module depends on another.
@@ -362,6 +491,6 @@ vix build
 
 ## Next step
 
-Continue with the module layout guide to understand the files created under `modules/<name>/` and the public/private boundary that the module system expects.
+Continue with `vix modules` to see the complete command reference and validation behavior.
 
-[Module Layout](/app-modules/module-layout)
+[`vix modules`](/cli/modules)

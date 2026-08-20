@@ -1,6 +1,6 @@
 # vix add
 
-`vix add` adds a Vix Registry package to the current project.
+`vix add` adds or changes a Vix Registry dependency requirement for the current project or for one application module.
 
 Use it when the application itself needs a package, or when an application module needs a registry package that should stay declared with that module.
 
@@ -10,19 +10,24 @@ vix add gk/jwt
 
 ## Overview
 
-`vix add` is the command for declaring a new dependency requirement.
+`vix add` is the command for declaring or changing a Vix Registry dependency requirement.
 
-For a normal project dependency, it resolves the package from the local registry index, chooses the correct version, updates `vix.json`, resolves the full dependency graph, and rewrites `vix.lock`. In a modular `vix.app` project, the same command can also attach a dependency to a specific module. In that case the dependency is written to the module's own `vix.module` file, while the root lockfile still records the resolved package graph used by the application build.
+For a root project dependency, it resolves the package from the local registry index, updates `vix.json`, resolves the active project dependency graph, and updates the root `vix.lock`. In a modular `vix.app` project, `--module` stores the requirement in that module's `vix.module` instead. The application still has one root lockfile and one shared dependency graph.
 
-This distinction matters because application modules are meant to keep feature ownership visible. A JWT package used only by `auth` should not have to look like a dependency of the whole application shell. The module can declare that it needs the registry package and the CMake target that should be linked, while Vix still resolves everything from the project root.
+This distinction keeps dependency ownership visible. A JWT package used only by `auth` can remain declared with `auth`, while Vix still resolves all active application and module requirements together from the project root.
 
-```txt
+```text
 vix add
-  -> resolve package
-  -> update vix.json or modules/<name>/vix.module
-  -> resolve project dependencies
-  -> fetch pinned package commits
-  -> rewrite vix.lock
+  |
+  +-- root dependency   -> vix.json
+  |
+  +-- module dependency -> modules/<name>/vix.module
+  |
+  v
+resolve active dependency requirements
+  |
+  v
+root vix.lock
 ```
 
 ## Usage
@@ -73,12 +78,14 @@ Vix does this:
 2. Parses the package spec.
 3. Finds the package in the local registry index.
 4. Resolves the requested version or range.
-5. Updates `vix.json`, or updates `modules/<name>/vix.module` when `--module` is used.
-6. Resolves all project dependencies.
+5. Builds the prospective root or module requirement state in memory.
+6. Resolves the active project dependency constraints.
 7. Fetches required package repositories at pinned commits.
 8. Computes package content hashes.
-9. Rewrites `vix.lock`.
+9. Publishes the affected manifest and root `vix.lock` as one project mutation.
 10. Prints the resolved package and dependency count.
+
+If resolution or publication fails, Vix does not leave the manifest and lockfile describing different dependency states.
 
 ## Registry requirement
 
@@ -188,19 +195,21 @@ modules/<name>/vix.module
 vix.lock
 ```
 
-It does not directly edit `vix.app`. The module must already be declared there for the generated `vix.app` build to treat it as part of the active application graph.
+It does not directly edit `vix.app`. The module must already be declared there for the generated `vix.app` build to treat it as part of the application graph.
+
+There is no per-module `vix.lock`. Module ownership changes where the dependency requirement is declared and which module target consumes it, while exact resolution remains in the root lockfile.
 
 ## Module dependencies
 
-Use `--module` when the package is owned by one application module.
+Use `--module` when a Registry package belongs to one application module.
 
 ```bash
 vix add gk/jwt@^1.0.0 --module auth
 ```
 
-The command writes the registry dependency and the link target into the module manifest.
+The requirement is stored in the module manifest.
 
-```ini
+```toml
 [deps]
 registry = [
   "gk/jwt@^1.0.0",
@@ -211,24 +220,78 @@ links = [
 ]
 ```
 
-If `--link` is not provided, Vix derives the link target from the package id by using the namespace and package name as a CMake namespace target. For `gk/jwt`, the default target is `gk::jwt`. Use `--link` when the package exports a different CMake target name.
+If `--link` is omitted, Vix derives the conventional CMake target from the Registry package id. For `gk/jwt`, that target is:
 
-```bash
-vix add gk/jwt@^1.0.0 --module auth --link gk::jwt
+```text
+gk::jwt
 ```
 
-When the module is enabled in `vix.app`, Vix includes the module registry dependencies in the project dependency resolution and injects the declared module links into the generated module target. The dependency still appears in the root `vix.lock`, because the lockfile belongs to the application build, not to an individual module.
+Use an explicit target when the package exports a different target:
 
-After adding a module dependency, build from the project root.
+```bash
+vix add gk/jwt@^1.0.0 \
+  --module auth \
+  --link gk::jwt
+```
+
+When the module is active, its Registry requirement participates in the same dependency constraint analysis as root application requirements and requirements from other active modules.
+
+The module target receives the module-owned link targets. They are not automatically attached to sibling modules or to the application target.
+
+```text
+auth
+  +-- gk::jwt
+
+billing
+  +-- no gk::jwt ownership
+```
+
+The Registry requirement list and CMake link list represent different information. A Registry requirement identifies what must be resolved. A link entry identifies a target consumed by the module. Do not assume that the two arrays form a positional one-to-one mapping.
+
+After adding a module dependency:
 
 ```bash
 vix modules check
 vix build
 ```
 
-The module check command also validates that a module does not declare registry dependencies without link targets, or link targets without registry dependencies. That rule keeps the module manifest understandable: the registry list says what package is installed, and the links list says what the module target uses at build time.
+### Module dependency constraints
 
-For root-level dependencies, you still need to link the package in `vix.app` or CMake when your code uses it. For module-level dependencies, keep the link target in the module's `[deps]` section.
+Active root and module Registry requirements are analyzed together.
+
+For example:
+
+```text
+application -> gk/json@^1.0.0
+auth        -> gk/json@^1.2.0
+```
+
+Vix selects an available version that satisfies all active compatible requirements.
+
+If no available version can satisfy the active requirements, the operation fails instead of allowing one owner to overwrite another owner's requirement.
+
+A disabled module can keep its Registry dependency metadata on disk. Its requirements do not constrain the active application dependency graph until the module becomes active.
+
+### Registry versus direct Git dependencies
+
+`vix add` is the Registry workflow.
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+For a direct Git repository, use `vix install`:
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  --module auth
+```
+
+The Git form is stored as a structured `[dependencies.<name>]` entry in `vix.module`.
+
+Do not use `vix add` as a synonym for direct Git installation.
 
 ## `vix.json`
 
@@ -260,9 +323,9 @@ After the second command, the `gk/jwt` entry is updated instead of duplicated.
 
 ## `vix.lock`
 
-`vix.lock` stores exact resolved versions.
+`vix.lock` stores the exact resolved dependency state for the application.
 
-It is rewritten after dependency resolution.
+Root and module-owned Registry requirements resolve into this same root lockfile. Vix updates it after successful dependency resolution.
 
 Example shape:
 
@@ -651,14 +714,26 @@ vix build
 
 ## Difference between `vix add` and `vix install`
 
-| Command         | Purpose                                                        |
-| --------------- | -------------------------------------------------------------- |
-| `vix add <pkg>` | Add or change a dependency requirement and rewrite `vix.lock`. |
-| `vix install`   | Install dependencies already pinned in `vix.lock`.             |
+The commands overlap in dependency workflows, but they do different jobs.
 
-Use `vix add` when changing dependencies.
+| Command                                 | Purpose                                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------------------------- |
+| `vix add <pkg>`                         | Add or change a Vix Registry requirement.                                               |
+| `vix add <pkg> --module <name>`         | Add or change a Registry requirement owned by one module.                               |
+| `vix install`                           | Materialize the dependency state already described by project manifests and `vix.lock`. |
+| `vix install <git-url>`                 | Add a direct Git dependency to the application.                                         |
+| `vix install <git-url> --module <name>` | Add a direct Git dependency owned by one module.                                        |
 
-Use `vix install` after clone or when the lockfile already exists.
+Use `vix add` when the dependency comes from the Vix Registry.
+
+Use `vix install <git-url>` when the dependency is a direct Git repository.
+
+After cloning an existing project, a normal reproducible workflow is:
+
+```bash
+vix install
+vix build
+```
 
 ## Difference between `vix add` and `vix update`
 
@@ -682,6 +757,28 @@ If you do not know the exact package name, search first:
 vix search jwt
 vix add gk/jwt
 ```
+
+## Atomic dependency updates
+
+`vix add` updates project dependency metadata through one project mutation boundary.
+
+For a root dependency, the relevant authoritative files are:
+
+```text
+vix.json
+vix.lock
+```
+
+For a module dependency:
+
+```text
+modules/<name>/vix.module
+vix.lock
+```
+
+Vix resolves the prospective dependency state before publishing the new metadata. If resolution, repository materialization, or metadata publication fails, the previous project state is preserved.
+
+Project mutations are serialized so concurrent Vix commands cannot silently overwrite the same dependency metadata.
 
 ## Full workflow
 
@@ -732,22 +829,21 @@ vix add [@]namespace/name[@version] -m <name>
 vix add [@]namespace/name[@version] --module <name> --link <target>
 ```
 
-| Option              | Description |
-| ------------------- | ----------- |
+| Option                | Description                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------- |
 | `-m, --module <name>` | Add the dependency to `modules/<name>/vix.module` instead of the root dependency list. |
-| `--module <name>`   | Long form of `-m`. |
-| `--link <target>`   | Set the CMake target linked by the module dependency. |
-| `-h, --help`        | Show help. |
+| `--link <target>`     | Set the CMake target linked by the module dependency.                                  |
+| `-h, --help`          | Show help.                                                                             |
 
 ## Commands reference
 
-| Command                                      | Description |
-| -------------------------------------------- | ----------- |
-| `vix add gk/jwt`                             | Add latest available version to the root dependency list. |
-| `vix add gk/jwt@1.0.0`                       | Add exact version. |
-| `vix add gk/jwt@^1.0.0`                      | Add compatible range. |
-| `vix add @gk/jwt`                            | Add using scoped-style syntax. |
-| `vix add gk/jwt@^1.0.0 --module auth`        | Add the dependency to the `auth` module. |
+| Command                                              | Description                                                      |
+| ---------------------------------------------------- | ---------------------------------------------------------------- |
+| `vix add gk/jwt`                                     | Add latest available version to the root dependency list.        |
+| `vix add gk/jwt@1.0.0`                               | Add exact version.                                               |
+| `vix add gk/jwt@^1.0.0`                              | Add compatible range.                                            |
+| `vix add @gk/jwt`                                    | Add using scoped-style syntax.                                   |
+| `vix add gk/jwt@^1.0.0 --module auth`                | Add the dependency to the `auth` module.                         |
 | `vix add gk/jwt@^1.0.0 --module auth --link gk::jwt` | Add the dependency to `auth` with an explicit CMake link target. |
 
 ## Common workflows
@@ -791,6 +887,16 @@ vix add gk/jwt
 vix install
 vix check --tests
 ```
+
+### Add a Registry package to one module
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+vix modules check
+vix build
+```
+
+For a direct Git dependency owned by the module, use `vix install <git-url> --module auth` instead.
 
 ## Common mistakes
 
@@ -855,6 +961,31 @@ links = [
   gk::json,
 ]
 ```
+
+### Using `vix add` for a direct Git repository
+
+`vix add` resolves Vix Registry package ids.
+
+For a Registry package:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+For a direct Git repository:
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  --module auth
+```
+
+### Creating a per-module lockfile
+
+Do not create `modules/<name>/vix.lock`.
+
+The root `vix.lock` is the exact dependency state for the whole application, including active module-owned dependencies.
 
 ### Confusing package specs and CMake aliases
 
@@ -1010,44 +1141,47 @@ If it still fails, inspect the dependency package’s `vix.json`.
 
 ## Best practices
 
-Run `vix registry sync` before adding packages.
+Run `vix registry sync` before adding Registry packages when the local index may be stale.
 
-Use `vix search` when you do not know the exact package id.
+Use `vix search` when you do not know the exact Registry package id.
 
-Use version ranges for libraries that can accept compatible updates.
-Use exact versions when you need strict reproducibility.
+Use version ranges when compatible updates are acceptable. Use exact versions when the project requires an exact declared requirement.
 
-Commit `vix.json`.
+Keep dependencies owned by the narrowest appropriate scope. If only `auth` needs a Registry package, prefer:
 
-Commit `vix.lock`.
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
 
-Do not commit `.vix/deps`.
+Do not create per-module lockfiles or caches.
+
+Commit the dependency manifests and root `vix.lock`.
 
 Do not edit `vix.lock` manually.
 
-Run `vix install` after adding dependencies.
+Run module checks after changing module-owned dependencies:
 
-Run `vix build` and `vix tests` after adding dependencies.
+```bash
+vix modules check
+vix build
+```
 
-For `vix.app`, keep `deps` and `links` aligned.
-
-Use registry package specs in `deps`.
-
-Use CMake aliases in `links`.
+Use `vix install <git-url>` for direct Git dependencies rather than treating Git repositories as Registry package ids.
 
 ## Related commands
 
-| Command             | Purpose                               |
-| ------------------- | ------------------------------------- |
-| `vix search`        | Search the local registry index.      |
-| `vix install`       | Install dependencies from `vix.lock`. |
-| `vix update`        | Re-resolve dependency versions.       |
-| `vix outdated`      | Check outdated dependencies.          |
-| `vix remove`        | Remove dependencies.                  |
-| `vix list`          | List dependencies.                    |
-| `vix registry sync` | Refresh the local registry index.     |
-| `vix build`         | Build after dependency changes.       |
-| `vix tests`         | Run tests after dependency changes.   |
+| Command             | Purpose                                                         |
+| ------------------- | --------------------------------------------------------------- |
+| `vix search`        | Search the local Registry index.                                |
+| `vix install`       | Materialize locked dependencies or add a direct Git dependency. |
+| `vix modules`       | Manage and validate application modules.                        |
+| `vix update`        | Re-resolve Registry dependency versions.                        |
+| `vix outdated`      | Check outdated Registry dependencies.                           |
+| `vix remove`        | Remove dependencies.                                            |
+| `vix list`          | List dependency state.                                          |
+| `vix registry sync` | Refresh the local Registry index.                               |
+| `vix build`         | Build after dependency changes.                                 |
+| `vix tests`         | Run tests after dependency changes.                             |
 
 ## Next step
 

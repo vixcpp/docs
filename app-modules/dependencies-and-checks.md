@@ -1,14 +1,17 @@
 # Dependencies and Checks
 
-Application modules are useful only when their boundaries remain visible. A module should be able to use another module, but that relationship should not be hidden in random include paths or private implementation details. When `projects` depends on `auth`, the project should say so clearly.
+Application modules are useful only when their boundaries remain visible. Vix keeps two different kinds of dependency relationships explicit:
 
-Vix keeps this relationship visible in two places. In a `vix.app` project, the application manifest describes the module graph. In the module build files, CMake describes the target relationship. The manifest makes the architecture readable from the project root, while CMake makes the dependency correct for the build.
+1. module-to-module dependencies, such as `projects` depending on `auth`
+2. external dependencies owned by one module, such as `auth` using a JWT or logging library
 
-## Module dependencies in vix.app
+The root `vix.app` describes the active module graph. Each module's `vix.module` can describe external dependencies that belong to that module. The root `vix.lock` still records the exact dependency state for the application as a whole.
 
-In a `vix.app` project, dependencies are declared with the `depends` field.
+## Module dependencies in `vix.app`
 
-```ini
+In a `vix.app` project, module-to-module dependencies are declared with `depends`.
+
+```toml
 [module.auth]
 enabled = true
 path = "modules/auth"
@@ -24,11 +27,25 @@ depends = [
 ]
 ```
 
-This says that `projects` depends on `auth`. The dependency is declared by module name, not by target name. A developer reading the manifest can understand the relationship without opening the module source files.
+This says that `projects` depends on `auth`. The relationship is declared by module name, so the application architecture is visible from the root manifest.
 
-This becomes more useful as the application grows.
+A larger graph may look like this:
 
-```ini
+```toml
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = []
+
+[module.projects]
+enabled = true
+path = "modules/projects"
+kind = "backend"
+depends = [
+  "auth",
+]
+
 [module.builds]
 enabled = true
 path = "modules/builds"
@@ -46,11 +63,25 @@ depends = [
 ]
 ```
 
-Here, `builds` and `packages` depend on `projects`, and `projects` depends on `auth`. The manifest becomes a small map of the application’s internal feature graph.
+The dependency direction is:
 
-## Build dependencies
+```text
+auth
+  ^
+  |
+projects
+  ^
+  |
+  +---- builds
+  |
+  +---- packages
+```
 
-The manifest describes the architecture, but the module target still needs the correct build relationship. When one module uses another module, the module `CMakeLists.txt` should link the dependency explicitly.
+Vix validates this graph before generated project integration relies on it.
+
+## Build dependencies between modules
+
+The manifest describes the architecture, but the CMake targets still express the actual C++ build relationship.
 
 ```cmake
 target_link_libraries(api_projects
@@ -59,50 +90,206 @@ target_link_libraries(api_projects
 )
 ```
 
-The target name `api_projects` is the real module target. The alias `api::auth` is the public target name exported by the `auth` module.
-
-This matters when a public header from one module includes a public header from another module.
+The include and target dependency should tell the same story.
 
 ```cpp
 #include <auth/api.hpp>
 ```
 
-The include shows what the code uses. The target link shows what the build depends on. Both should tell the same story.
+If a public header in `projects` uses the public API from `auth`, the module target should expose the corresponding target dependency.
 
-## Public headers and private implementation
+Public headers belong under the module's exported include directory.
 
-A module has a public side and a private side.
-
-```txt
+```text
 modules/auth/
   include/auth/      public headers
   src/               private implementation
 ```
 
-Public headers are allowed to be used by other modules.
+Other modules may include public headers:
 
 ```cpp
 #include <auth/api.hpp>
 ```
 
-Private implementation files under `src/` should not be included by another module. They belong to the module target, but they are not part of the module’s public interface.
-
-Avoid this from a public header:
+They should not include another module's private implementation.
 
 ```cpp
-#include "../src/AuthStore.hpp"
+#include "../../auth/src/AuthStore.hpp"
 ```
 
-If another module needs something from `auth`, expose that behavior through a public header under `include/auth/`, then declare the dependency.
+If a type must be shared, move it into a public header and declare the module dependency explicitly.
 
-```cmake
-target_link_libraries(api_projects
-  PUBLIC
-    api::auth
-)
+## External dependencies owned by a module
+
+An external dependency can belong to one module instead of the application target.
+
+For a Registry package:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
 ```
 
-This keeps implementation details inside the module that owns them.
+The module manifest records the Registry requirement and the CMake targets used by the module.
+
+```toml
+[deps]
+registry = [
+  "gk/jwt@^1.0.0",
+]
+
+links = [
+  "gk::jwt",
+]
+```
+
+For a direct Git dependency:
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  --module auth
+```
+
+The Git dependency is recorded in `modules/auth/vix.module`.
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+```
+
+CMake options can remain with the dependency:
+
+```toml
+[dependencies.spdlog.cmake]
+SPDLOG_BUILD_TESTS = false
+SPDLOG_BUILD_EXAMPLE = false
+SPDLOG_BUILD_BENCH = false
+```
+
+The dependency belongs to `auth` for generated linkage. It is not automatically attached to sibling modules or to the application target.
+
+```text
+auth
+  +-- spdlog::spdlog
+
+billing
+  +-- no spdlog dependency
+```
+
+This is ownership, not separate physical storage.
+
+## One application dependency state
+
+Module-owned dependencies still participate in the application's dependency state.
+
+```text
+vix.app
+  |
+  +-- auth
+  |     |
+  |     +-- modules/auth/vix.module
+  |            |
+  |            +-- external dependencies
+  |
+  +-- projects
+  |
+  v
+root vix.lock
+```
+
+Vix does not create a lockfile for each module. Exact resolved versions and Git revisions remain in the root `vix.lock`.
+
+Module-owned Git dependencies also use the normal shared Vix cache. Two compatible owners can therefore reuse the same resolved dependency and cached checkout.
+
+## Active and inactive dependency owners
+
+Only enabled modules participate in the active application graph.
+
+A disabled module can keep its dependency declarations on disk:
+
+```toml
+[module.analytics]
+enabled = false
+path = "modules/analytics"
+kind = "backend"
+depends = []
+```
+
+Its `vix.module` may still declare Registry or Git dependencies, but those requirements do not constrain the active application dependency graph until the module is enabled.
+
+This allows a project to keep inactive feature metadata without forcing unused dependencies into the active build.
+
+## Shared external dependencies
+
+Multiple active modules can depend on the same external package.
+
+```text
+auth
+  +-- spdlog
+
+billing
+  +-- spdlog
+```
+
+When their requirements are compatible, Vix can resolve one effective dependency state while preserving both owners.
+
+The same principle applies when the root application and one or more modules use the same external dependency.
+
+Ownership and resolution are separate questions:
+
+```text
+who uses it?
+  -> root application, auth, billing
+
+what exact dependency state is valid for all active owners?
+  -> one compatible resolution
+```
+
+A shared dependency does not require a separate checkout or lock entry for every owner.
+
+## Dependency conflicts
+
+Vix analyzes active requirements before publishing a new dependency state.
+
+If two active owners require incompatible versions or Git revisions of the same dependency, installation fails instead of using last-write-wins behavior.
+
+For example:
+
+```text
+auth
+  -> repository X at revision A
+
+billing
+  -> repository X at revision B
+```
+
+If those requirements cannot be represented by one effective dependency state, Vix rejects the change.
+
+The same applies between the root application and a module:
+
+```text
+application
+  -> repository X at revision A
+
+auth
+  -> repository X at revision B
+```
+
+CMake configuration is also part of the compatibility check for the same effective Git dependency. If two active owners require incompatible CMake option values, Vix rejects the conflict.
+
+For repository-root Git dependencies, an omitted subdirectory and:
+
+```toml
+subdirectory = "."
+```
+
+refer to the same source location for conflict analysis.
+
+The goal is deterministic behavior. An installation must not depend on which manifest happened to be processed last.
 
 ## The check command
 
@@ -112,56 +299,43 @@ This keeps implementation details inside the module that owns them.
 vix modules check
 ```
 
-The command is not a replacement for compilation. It catches structural problems before the build becomes the only signal. This is especially useful in larger backends, where a broken module graph can be harder to understand once the compiler starts reporting errors from generated files or indirect includes.
+The command is not a replacement for compilation. It catches structural problems before generated build files or compiler diagnostics become the first signal.
 
-Run it after changing module declarations, dependencies, module folders, route prefixes, or public headers.
+Run it after changing:
+
+- module declarations
+- `depends` relationships
+- module paths
+- enabled or disabled state
+- route prefixes
+- public module boundaries
+- module dependency metadata
+
+A normal local workflow is:
 
 ```bash
 vix modules check
 vix build
 ```
 
-For a stronger local workflow, run the project check after the module check.
+For broader project validation:
 
 ```bash
 vix modules check
 vix check --tests --run
 ```
 
-## What the check validates
+## What the module graph check validates
 
-In a `vix.app` project, the check command reads the module declarations from the root manifest and compares them with the filesystem.
+For `vix.app` projects, Vix builds one validated module graph from the module declarations.
 
-It verifies that declared modules have folders.
+It verifies the identity, path, active state, and dependency relationships of the declared modules before the graph is used for project resolution and generated CMake integration.
 
-```ini
-[module.auth]
-enabled = true
-path = "modules/auth"
-kind = "backend"
-depends = []
-```
+### Unknown dependencies
 
-The path must exist.
+A module cannot depend on a module that is not declared.
 
-```txt
-modules/auth/
-```
-
-For enabled modules, the command also expects the module build and metadata files to exist.
-
-```txt
-modules/auth/CMakeLists.txt
-modules/auth/vix.module
-```
-
-A disabled module may remain declared and may remain on disk, but an enabled module must be complete enough to be loaded by the generated build.
-
-## Undeclared dependencies
-
-A module should not depend on a module that is not declared in `vix.app`.
-
-```ini
+```toml
 [module.projects]
 enabled = true
 path = "modules/projects"
@@ -171,11 +345,11 @@ depends = [
 ]
 ```
 
-If `auth` has no module declaration, the dependency is incomplete. The check command reports this because the application manifest no longer describes a valid module graph.
+If `auth` has no module declaration, the graph is invalid.
 
-Fix it by declaring the dependency target as a module.
+Declare the missing module:
 
-```ini
+```toml
 [module.auth]
 enabled = true
 path = "modules/auth"
@@ -183,11 +357,29 @@ kind = "backend"
 depends = []
 ```
 
-## Enabled modules depending on disabled modules
+### Self-dependencies
 
-An enabled module cannot depend on a disabled module.
+A module cannot depend on itself.
 
-```ini
+Invalid:
+
+```toml
+[module.auth]
+enabled = true
+path = "modules/auth"
+kind = "backend"
+depends = [
+  "auth",
+]
+```
+
+A self-dependency does not add useful architecture and would make the graph invalid.
+
+### Enabled modules depending on disabled modules
+
+An enabled module cannot require a disabled module.
+
+```toml
 [module.auth]
 enabled = false
 path = "modules/auth"
@@ -203,25 +395,27 @@ depends = [
 ]
 ```
 
-This state is unsafe because `projects` is active, but the module it needs is not active. The fix is to enable the dependency or disable the dependent module.
+Here `projects` is active while `auth` is not.
+
+Enable the required module:
 
 ```bash
 vix modules enable auth
 ```
 
-or:
+or disable the dependent feature:
 
 ```bash
 vix modules disable projects
 ```
 
-The right choice depends on the feature state. The important rule is that the active module graph must be complete.
+The active graph must be complete.
 
-## Dependency cycles
+### Dependency cycles
 
-Module dependencies should form a readable direction. A cycle usually means two features know too much about each other.
+Module dependencies must form an acyclic graph.
 
-```ini
+```toml
 [module.auth]
 enabled = true
 path = "modules/auth"
@@ -239,90 +433,120 @@ depends = [
 ]
 ```
 
-This creates a cycle.
+This produces:
 
-```txt
+```text
 auth -> projects -> auth
 ```
 
-The check command reports circular dependencies because they make the module graph harder to reason about and can also create build-level problems.
+Vix reports the cycle instead of producing a dependency order from an invalid graph.
 
-The fix is usually to move shared behavior into a lower-level module or to change the public API so only one direction is needed.
+A common fix is to move shared behavior into a lower-level module.
 
-```txt
-auth
-projects -> auth
-```
-
-or:
-
-```txt
+```text
 identity
-auth -> identity
-projects -> identity
+  ^     ^
+  |     |
+auth  projects
 ```
 
-The best shape depends on the application, but the dependency direction should remain clear.
+The correct design depends on the application, but the graph must have a clear direction.
 
-## Cross-module includes
+### Module identity collisions
 
-When a public header includes another module, that module relationship should be declared.
+Different module names can normalize to the same generated CMake identity.
 
-```cpp
-#include <auth/api.hpp>
+For example:
+
+```text
+foo-bar
+foo_bar
 ```
 
-If this include appears in a public header from `projects`, then `projects` should link to `auth`.
+These names cannot safely coexist when they would produce the same generated target identity.
 
-```cmake
-target_link_libraries(api_projects
-  PUBLIC
-    api::auth
-)
+Case-only collisions are also rejected when they would make module identity ambiguous.
+
+```text
+Auth
+auth
 ```
 
-This is one of the main checks that protects the module boundary. Including another module’s public header is allowed, but the dependency must be visible to the build.
+Choose module names that remain distinct after normalization.
 
-Without the explicit dependency, the project may compile by accident because of include path leakage. That kind of dependency becomes fragile as the codebase grows.
+### Invalid or duplicate module paths
 
-## Private includes
+A module path must identify a valid module directory inside the project.
 
-Public headers should not include private implementation paths.
+Vix rejects unsafe or conflicting path declarations, including different modules that resolve to the same effective module location.
 
-```cpp
-#include "../../auth/src/AuthStore.hpp"
+For example, two declarations must not both represent:
+
+```text
+modules/auth
 ```
 
-That include reaches into another module’s private implementation. It means the public API of the current module now depends on a file that the other module did not expose as public.
+The graph should provide one unambiguous module identity for each module directory.
 
-Move the shared type or function into a public header.
+### Missing module files
 
-```txt
-modules/auth/include/auth/AuthStore.hpp
+An enabled module needs the files required by the module system.
+
+```text
+modules/auth/
+  CMakeLists.txt
+  vix.module
 ```
 
-Then include it through the module public path.
+If an enabled module cannot be loaded because its directory or required metadata is missing, validation fails before generated project integration relies on it.
 
-```cpp
-#include <auth/AuthStore.hpp>
+This often happens after a manual move, an incomplete merge, or editing `vix.app` without creating the module.
+
+For a new module, prefer:
+
+```bash
+vix modules add auth
 ```
 
-And declare the module dependency.
+Then run:
 
-```cmake
-target_link_libraries(api_projects
-  PUBLIC
-    api::auth
-)
+```bash
+vix modules check
 ```
 
-This keeps the dependency explicit and keeps private implementation files private.
+## Dependency order
+
+A valid module graph has a deterministic dependency-first order.
+
+For:
+
+```text
+auth
+  ^
+  |
+projects
+  ^
+  |
+builds
+```
+
+the dependency order is:
+
+```text
+auth
+projects
+builds
+```
+
+This order is derived from the validated graph rather than from the physical order of module declarations in `vix.app`.
+
+The exact declaration order can therefore remain focused on readability while dependency relationships determine the graph order.
 
 ## Route prefix conflicts
 
-Backend modules can declare a route prefix in `vix.module`.
+Routed modules can declare a route prefix in `vix.module`.
 
-```ini
+```toml
 name = "auth"
 kind = "backend"
 
@@ -333,95 +557,61 @@ prefix = "/api/auth"
 enabled = true
 ```
 
-The route prefix tells the project which HTTP namespace the module owns. Two routed modules should not use the same prefix.
+Two active routed modules should not claim the same prefix.
 
-```ini
-[routes]
-prefix = "/api/auth"
+```text
+auth   -> /api/auth
+users  -> /api/auth
 ```
 
-If both `auth` and `users` declare `/api/auth`, the check command reports the conflict. This prevents route ownership from becoming ambiguous.
+`vix modules check` reports the conflict so HTTP route ownership remains unambiguous.
 
-Use clear prefixes that match the module responsibility.
+Prefer prefixes that reflect module responsibility:
 
-```txt
+```text
 auth      -> /api/auth
 projects  -> /api/projects
 builds    -> /api/builds
 packages  -> /api/packages
 ```
 
-The prefix does not need to expose every route in the module. It only gives the module a stable HTTP namespace.
+The prefix describes the module's route namespace. The module code still performs the actual route registration.
 
-## Missing module files
+## Public and private module boundaries
 
-An enabled module should have the files needed by the module system.
+Vix also checks module boundary rules around public headers and implementation files.
 
-```txt
-modules/auth/
-  CMakeLists.txt
-  vix.module
+Public headers belong under exported include directories:
+
+```text
+modules/auth/include/auth/
 ```
 
-If a module is declared and enabled but the folder is incomplete, `vix modules check` reports it before the build reaches a more confusing error.
+Private implementation belongs under:
 
-This usually happens after moving folders manually, resolving a bad merge, or editing `vix.app` before creating the actual module skeleton.
-
-The fix is to create the module through the CLI or restore the missing files.
-
-```bash
-vix modules add auth
+```text
+modules/auth/src/
 ```
 
-If the module already exists but is incomplete, restore the missing `CMakeLists.txt` or `vix.module` from the module skeleton and then run the check again.
+A public header from another module may include:
 
-```bash
-vix modules check
+```cpp
+#include <auth/api.hpp>
 ```
 
-## Folder exists but is not declared
+but should not reach into:
 
-In a `vix.app` project, a module folder can exist without being declared in the manifest.
-
-```txt
-modules/billing/
+```cpp
+#include "../../auth/src/AuthStore.hpp"
 ```
 
-If `billing` is not declared in `vix.app`, it is not part of the active module graph. The check command warns about this state because it may be intentional during migration, but it may also mean the module was created or copied without being registered.
+Cross-module public includes should correspond to explicit module target dependencies. This prevents accidental success caused by leaked include paths.
 
-Add the declaration when the module should belong to the application.
+## CMake-first projects
 
-```ini
-[module.billing]
-enabled = true
-path = "modules/billing"
-kind = "backend"
-depends = [
-  "auth",
-]
-```
+In a CMake-first project, CMake remains the source of truth for which module targets are loaded and linked.
 
-If the folder is not meant to be active yet, keep it disabled but declared.
-
-```ini
-[module.billing]
-enabled = false
-path = "modules/billing"
-kind = "backend"
-depends = [
-  "auth",
-]
-```
-
-This makes the project state explicit.
-
-## Checks in CMake projects
-
-In a CMake-first project, the check command still protects the module layout. It scans module public headers and validates public/private boundaries and cross-module include relationships.
-
-The active state is usually controlled by CMake in this mode. A module is active when the project loads and links the module target. `vix modules enable`, `disable`, and `list` are mainly useful for `vix.app` projects because they operate on module sections in the manifest.
-
-For CMake projects, the most important habit is to keep module dependencies visible in target links.
+Keep module relationships explicit:
 
 ```cmake
 target_link_libraries(api_projects
@@ -430,34 +620,98 @@ target_link_libraries(api_projects
 )
 ```
 
-This gives the check command and the build system the same dependency information.
+`vix modules check` can still validate module layout and boundary rules that are visible from the project structure. Commands that modify `vix.app` module activation, such as `enable` and `disable`, apply to projects that use module declarations in `vix.app`.
+
+## Dependency mutations are transactional
+
+Commands that change project dependency state publish their metadata through one project mutation boundary.
+
+This includes workflows such as:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+```
+
+and:
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  --module auth
+```
+
+Vix prepares and validates the prospective state before authoritative metadata is published. If resolution, materialization, or metadata publication fails, the previous manifest and lock state is preserved.
+
+This matters for module dependencies because one user action can affect both a module manifest and the root dependency state. A failed command should not leave one file updated while the other still describes the old graph.
+
+Project mutations are also serialized so concurrent Vix commands cannot silently overwrite the same project metadata.
 
 ## Recommended workflow
 
-Run module checks before builds when the module graph changes.
+After changing the module graph:
 
 ```bash
 vix modules check
 vix build
 ```
 
-Run the full project check before a commit.
+After adding a Registry dependency to one module:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+vix modules check
+vix build
+```
+
+After adding a direct Git dependency to one module:
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  --module auth
+
+vix modules check
+vix build
+```
+
+Before committing a broader project change:
 
 ```bash
 vix modules check
 vix check --tests --run
 ```
 
-For CMake projects with a custom target name, pass the project prefix when needed.
+For CMake projects with a custom project prefix, pass it when needed:
 
 ```bash
 vix modules check --project api
 ```
 
-The check command is most useful when it becomes part of the normal development rhythm. It keeps the module layer honest while the application grows.
+## Common mistakes
+
+A module dependency in `vix.app` and an external dependency in `vix.module` are different relationships.
+
+Use `depends` for another application module:
+
+```toml
+[module.projects]
+depends = [
+  "auth",
+]
+```
+
+Use `[deps]` or `[dependencies.<name>]` for external packages owned by the module.
+
+Do not create per-module lockfiles or caches. Module dependency ownership is part of the application dependency graph, while exact dependency resolution remains in the root `vix.lock`.
+
+Do not rely on declaration order to resolve conflicts. Active dependency requirements must be compatible.
+
+Do not use sibling include paths as a substitute for declaring a module dependency.
 
 ## Next step
 
-Continue with generated registration to understand how enabled modules are connected to the application startup flow in `vix.app` projects.
+Continue with the CLI workflow to see how module creation, dependency installation, validation, enabling, and disabling fit together.
 
-[Generated Registration](/app-modules/generated-registration)
+[CLI Workflow](/app-modules/cli-workflow)

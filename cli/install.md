@@ -1,6 +1,6 @@
 # `vix install`
 
-`vix install` prepares the dependencies required by a Vix project. It uses exact locked revisions when they already exist, reconciles Git dependencies declared in `vix.app`, reuses cached checkouts, verifies dependency integrity, and generates the CMake integration used by the project build.
+`vix install` prepares the dependencies required by a Vix project. It uses exact locked revisions when they already exist, reconciles Git dependencies declared by the application and its enabled modules, reuses cached checkouts, verifies dependency integrity, and generates the CMake integration used by the project build.
 
 The normal project workflow is:
 
@@ -60,25 +60,107 @@ vix install
 
 If no lock entry exists for that Git dependency, Vix resolves it and creates the required lock state.
 
+## Install a Git dependency for one application module
+
+A Git dependency can belong to one application module instead of the application target itself.
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  --module auth
+```
+
+The short form is:
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  -m auth
+```
+
+Vix records the declaration in that module's `vix.module` file instead of adding it to the root `vix.app`.
+
+```toml
+[dependencies.spdlog]
+git = "https://github.com/gabime/spdlog"
+tag = "v1.15.3"
+target = "spdlog::spdlog"
+```
+
+The dependency still participates in the application's single dependency graph. Its exact resolved revision is stored in the root `vix.lock`, and its checkout uses the same shared Vix Git cache as other project dependencies.
+
+```text
+vix.app
+   |
+   +-- module auth
+   |      |
+   |      +-- modules/auth/vix.module
+   |             |
+   |             +-- spdlog
+   |
+   v
+root vix.lock
+```
+
+`--module` controls dependency ownership and CMake linkage. It does not create a private lockfile, private cache, or vendor directory inside the module.
+
+The target module must already be declared and enabled in `vix.app`, and its `vix.module` must be valid. Vix validates those conditions before attempting Git resolution. An unknown, disabled, missing, or invalid module is rejected without contacting the requested repository.
+
+Installing a module dependency validates the dependency and module structure without requiring the application to be build-complete. Build-specific requirements, such as application source files, are still validated by `vix build`.
+
+### Module dependency isolation
+
+A target declared by one module is linked to that module, not automatically to the application target or sibling modules.
+
+For example:
+
+```text
+auth
+   +-- spdlog::spdlog
+
+billing
+   +-- no spdlog dependency
+```
+
+If another active module declares the same compatible Git dependency, Vix can reuse the same resolved dependency and cached checkout while preserving both module owners.
+
+### Module dependency conflicts
+
+All active application and module requirements participate in the same dependency constraint set. Vix rejects incompatible requirements instead of letting the last declaration win.
+
+For example, if `auth` requires one revision of a repository and `billing` requires a different incompatible revision of the same repository, installation fails before the new module declaration or lock state is published.
+
+The same rule applies when the application itself and a module request incompatible revisions. Conflicting CMake configuration for the same effective Git dependency is also rejected when the dependency cannot be represented safely in one CMake graph.
+
+Repository-root dependencies treat an omitted subdirectory and `subdirectory = "."` as the same source location for conflict analysis.
+
 ## How manifest and lock state work together
 
-For Git dependencies declared in `vix.app`, `vix install` reconciles the desired dependency state with `vix.lock`.
+For Git dependencies declared in `vix.app` or by enabled application modules, `vix install` reconciles the desired dependency state with the root `vix.lock`.
 
-If a declaration has not changed, Vix preserves the existing exact commit and does not resolve the repository again. If a new dependency is added, only that dependency needs resolution. If the Git URL, tag, branch, or revision changes, Vix resolves the affected dependency while keeping unrelated locked dependencies unchanged.
+If a declaration has not changed, Vix preserves the existing exact commit and does not resolve the repository again. If a new dependency is added, only that dependency needs resolution. If the Git URL, tag, branch, revision, or source subdirectory changes, Vix resolves the affected dependency while keeping unrelated locked dependencies unchanged.
+
+Module-owned requirements are combined with application-owned requirements before resolution. Compatible owners share one exact dependency state. Incompatible active requirements fail before the new authoritative metadata is published.
 
 A change that only affects CMake integration, such as a dependency CMake option, does not require a new Git revision.
 
 This means a project can evolve without turning every install into a full dependency re-resolution.
 
 ```text
-vix.app
+vix.app + enabled module manifests
    |
    v
-compare with vix.lock
+collect active dependency requirements
+   |
+   v
+compare with root vix.lock
    |
    +-- unchanged -> preserve exact lock entry
    +-- new       -> resolve dependency
    +-- changed   -> resolve affected dependency
+   +-- conflict  -> fail before publication
    +-- removed   -> remove safe direct dependency state
    |
    v
@@ -202,6 +284,8 @@ Vix exposes the configured include directory through the generated project integ
 
 `vix.lock` records the exact dependency state used by the project. Git entries include the resolved commit and integrity information, along with build integration metadata such as targets, include directories, subdirectories, and CMake options when applicable.
 
+Application modules do not have separate lockfiles. A Git dependency declared in `modules/<name>/vix.module` is still pinned in the root `vix.lock`, so the application has one reproducible dependency state.
+
 Commit the lockfile:
 
 ```bash
@@ -215,7 +299,7 @@ Use `vix update` when you intentionally want registry dependencies to be resolve
 
 ## Cache behavior
 
-Vix keeps dependency sources outside the project so repeated installs can reuse them.
+Vix keeps dependency sources outside the project so repeated installs can reuse them. Module-owned Git dependencies use the same cache as root Git dependencies, so ownership does not create duplicate repository storage.
 
 Direct Git dependencies are stored under:
 
@@ -249,7 +333,7 @@ If the exact checkout already exists in the cache but project integration has be
 
 ### No-op installs
 
-When the manifest, lockfile, cache, dependency links, and generated CMake integration already match, the command returns without remote Git resolution:
+When the application or module declaration, lockfile, cache, dependency links, and generated CMake integration already match, the command returns without remote Git resolution:
 
 ```text
 ✔ Dependencies already up to date
@@ -276,11 +360,15 @@ Do not disable or bypass an integrity failure without understanding why the cach
 
 ## Failure behavior
 
-Direct Git installation protects the dependency declaration and lock state from partial publication. If resolution, validation, or materialization fails, the previous `vix.app` and `vix.lock` state is restored.
+Direct Git installation protects dependency declarations and lock state from partial publication. Root-owned Git installation preserves the previous `vix.app` and `vix.lock` state when resolution, validation, materialization, or metadata publication fails.
+
+For a module-owned Git dependency, the same guarantee applies to `modules/<name>/vix.module` and the root `vix.lock`. A failed installation restores the previous manifest bytes, and a lockfile that did not exist before the operation is not left behind.
+
+Project metadata mutations are serialized so two Vix commands cannot silently overwrite each other's dependency state. If an interruption occurs while multiple metadata files are being published, Vix recovers incomplete transaction state before the next project mutation.
 
 Manifest reconciliation also prepares changed lock state before publishing it. If a newly added dependency cannot be resolved, existing valid lock entries remain unchanged.
 
-This protection applies to the project dependency declaration and lock state. Generated project integration can be repaired by running `vix install` again after the underlying failure has been corrected.
+Generated project integration can be repaired by running `vix install` again after the underlying failure has been corrected.
 
 ## Registry dependencies
 
@@ -291,6 +379,15 @@ vix registry sync
 vix add gk/json@^1.0.0
 vix install
 ```
+
+When a registry package belongs to one application module, use `vix add --module`:
+
+```bash
+vix add gk/jwt@^1.0.0 --module auth
+vix install
+```
+
+`vix add --module` changes the module's registry dependency declaration. `vix install <git-url> --module` is the corresponding workflow for a direct Git dependency.
 
 For registry dependency ranges, `vix install` uses the resolved entries in `vix.lock`. It does not act like `vix update` and does not choose newer registry versions during a normal install.
 
@@ -347,6 +444,14 @@ Set `VIX_GLOBAL_PREFIX` when a different global Vix prefix is required.
 
 Global installation is separate from project dependency state. Installing a library with `-g` does not add it to the current project's `vix.lock`.
 
+## Git progress
+
+When a direct Git dependency requires remote work, Vix reports the operation phase as soon as resolution or connection begins instead of remaining silent until the transfer is already underway.
+
+When Git provides measurable object progress, Vix reports that real Git phase, such as receiving objects. The percentage describes Git's reported object progress and is not presented as a fabricated overall install percentage.
+
+Interactive terminals can update the current progress line. Redirected output and non-interactive environments use stable log lines without terminal cursor-control sequences. A warm no-op install does not start progress output when no remote work is required.
+
 ## Security
 
 A Git dependency is source code from another repository. CMake configure and build logic can execute code on the local machine.
@@ -355,16 +460,18 @@ Review repositories you do not trust before installing them.
 
 ## Git options
 
-| Option                 | Purpose                                                 |
-| ---------------------- | ------------------------------------------------------- |
-| `--name <name>`        | Set the dependency name stored in `vix.app`.            |
-| `--tag <tag>`          | Resolve a Git tag.                                      |
-| `--branch <branch>`    | Resolve a Git branch to an exact commit.                |
-| `--rev <commit>`       | Use a specific revision or commit.                      |
-| `--target <target>`    | Select the CMake target used by the project.            |
-| `--subdirectory <dir>` | Select a CMake project inside a monorepo.               |
-| `--header-only`        | Treat the repository as a header-only dependency.       |
-| `--include <dir>`      | Set the include directory for a header-only dependency. |
+| Option                 | Purpose                                                              |
+| ---------------------- | -------------------------------------------------------------------- |
+| `--name <name>`        | Set the dependency name stored in the owning manifest.               |
+| `--tag <tag>`          | Resolve a Git tag.                                                   |
+| `--branch <branch>`    | Resolve a Git branch to an exact commit.                             |
+| `--rev <commit>`       | Use a specific revision or commit.                                   |
+| `--target <target>`    | Select the CMake target used by the project or owning module.        |
+| `--subdirectory <dir>` | Select a CMake project inside a monorepo.                            |
+| `--module <name>`      | Declare the direct Git dependency in one enabled application module. |
+| `-m <name>`            | Short form of `--module <name>`.                                     |
+| `--header-only`        | Treat the repository as a header-only dependency.                    |
+| `--include <dir>`      | Set the include directory for a header-only dependency.              |
 
 Global mode uses:
 
@@ -418,6 +525,20 @@ vix install https://github.com/nlohmann/json.git \
 vix build
 ```
 
+### Install a Git dependency for one module
+
+```bash
+vix install https://github.com/gabime/spdlog \
+  --tag v1.15.3 \
+  --target spdlog::spdlog \
+  --module auth
+
+vix modules check
+vix build
+```
+
+The dependency declaration is stored in `modules/auth/vix.module`, while its exact revision remains part of the root `vix.lock`.
+
 ### Restore project integration from cache
 
 If `.vix/deps` or `.vix/vix_deps.cmake` was removed but the locked checkout is still cached:
@@ -461,7 +582,7 @@ vix install
 
 ### CMake target is not available
 
-Make sure the dependency exposes the target written in `vix.app`:
+Make sure the dependency exposes the target written in the owning manifest:
 
 ```toml
 target = "library::library"
@@ -469,15 +590,33 @@ target = "library::library"
 
 For a monorepo, also verify that `subdirectory` points to the CMake project that defines the target.
 
+### Module dependency cannot be installed
+
+For `vix install <git-url> --module <name>`, verify that the module:
+
+- is declared in `vix.app`
+- is enabled
+- has an accessible module directory
+- has a valid `vix.module`
+
+Vix validates these conditions before attempting Git resolution.
+
+### Git dependency requirements conflict
+
+If two active owners request incompatible revisions or incompatible CMake configuration for the same effective Git dependency, Vix rejects the change instead of choosing one declaration.
+
+Keep the application and module requirements compatible, then run the install again.
+
 ## Related commands
 
-| Command        | Purpose                                                   |
-| -------------- | --------------------------------------------------------- |
-| `vix add`      | Add a registry dependency to the project.                 |
-| `vix update`   | Intentionally resolve newer registry dependency versions. |
-| `vix outdated` | Check for newer registry dependency versions.             |
-| `vix remove`   | Remove a project dependency.                              |
-| `vix list`     | Inspect project dependency state.                         |
-| `vix store`    | Manage local dependency storage.                          |
-| `vix build`    | Build the project after dependencies are ready.           |
-| `vix run`      | Run an existing build or a C++ source file.               |
+| Command        | Purpose                                                     |
+| -------------- | ----------------------------------------------------------- |
+| `vix add`      | Add a registry dependency to the project or one module.     |
+| `vix modules`  | Create, inspect, enable, disable, and validate app modules. |
+| `vix update`   | Intentionally resolve newer registry dependency versions.   |
+| `vix outdated` | Check for newer registry dependency versions.               |
+| `vix remove`   | Remove a project dependency.                                |
+| `vix list`     | Inspect project dependency state.                           |
+| `vix store`    | Manage local dependency storage.                            |
+| `vix build`    | Build the project after dependencies are ready.             |
+| `vix run`      | Run an existing build or a C++ source file.                 |
