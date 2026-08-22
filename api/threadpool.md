@@ -220,9 +220,9 @@ The complete ThreadPool documentation is available in the dedicated section:
 
 - [ThreadPool overview](/modules/threadpool/)
 - [Quick start](/modules/threadpool/quick-start)
-- [Concepts](/modules/threadpool/concepts)
+- [Concepts](/modules/threadpool/core-concepts)
 - [Tasks](/modules/threadpool/tasks)
-- [Futures](/modules/threadpool/futures)
+- [Futures](/modules/threadpool/futures-and-promises)
 - [Cancellation](/modules/threadpool/cancellation)
 - [Timeouts](/modules/threadpool/timeouts)
 - [Priorities](/modules/threadpool/priorities)
@@ -230,8 +230,8 @@ The complete ThreadPool documentation is available in the dedicated section:
 - [Parallel for](/modules/threadpool/parallel-for)
 - [Parallel map](/modules/threadpool/parallel-map)
 - [Parallel reduce](/modules/threadpool/parallel-reduce)
-- [Metrics](/modules/threadpool/metrics)
-- [Shutdown](/modules/threadpool/shutdown)
+- [Metrics](/modules/threadpool/metrics-and-statistics)
+- [Shutdown](/modules/threadpool/lifecycle-and-shutdown)
 - [API reference](/modules/threadpool/api-reference)
 - [Recommended usage](#recommended-usage)
 
