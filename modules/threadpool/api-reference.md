@@ -647,7 +647,7 @@ bool is_failure(TaskResult result) noexcept;
 const char* to_string(TaskResult result) noexcept;
 ```
 
-## Future<T>
+## `Future<T>`
 
 Header:
 
@@ -696,7 +696,7 @@ Futures are move-only.
 
 See [Futures and Promises](/modules/threadpool/futures-and-promises).
 
-## Promise<T>
+## `Promise<T>`
 
 Header:
 
@@ -748,7 +748,7 @@ Promises are move-only.
 
 See [Futures and Promises](/modules/threadpool/futures-and-promises).
 
-## SharedState<T>
+## `SharedState<T>`
 
 Header:
 
@@ -772,7 +772,7 @@ retrieval state
 
 It is publicly available for advanced integrations, but ordinary application code should normally use `Promise<T>` and `Future<T>` rather than manipulating shared state directly.
 
-## TaskHandle<T>
+## `TaskHandle<T>`
 
 Header:
 
