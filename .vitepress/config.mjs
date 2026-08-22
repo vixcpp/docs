@@ -1090,64 +1090,171 @@ const vixModulesSidebar = {
           link: "/modules/threadpool/quick-start",
         },
         {
-          text: "Installation",
-          link: "/modules/threadpool/installation",
+          text: "Core Concepts",
+          link: "/modules/threadpool/core-concepts",
         },
         {
-          text: "Concepts",
-          link: "/modules/threadpool/concepts",
+          text: "Architecture",
+          link: "/modules/threadpool/architecture",
         },
+        {
+          text: "Configuration",
+          link: "/modules/threadpool/configuration",
+        },
+
+        {
+          text: "Execution",
+          collapsed: true,
+          items: [
+            {
+              text: "Executors",
+              link: "/modules/threadpool/executors",
+            },
+            {
+              text: "Thread Pool",
+              link: "/modules/threadpool/thread-pool",
+            },
+            {
+              text: "Execution Model",
+              link: "/modules/threadpool/execution-model",
+            },
+          ],
+        },
+
         {
           text: "Tasks",
-          link: "/modules/threadpool/tasks",
+          collapsed: true,
+          items: [
+            {
+              text: "Tasks and Options",
+              link: "/modules/threadpool/tasks",
+            },
+            {
+              text: "Task Handles",
+              link: "/modules/threadpool/task-handles",
+            },
+            {
+              text: "Futures and Promises",
+              link: "/modules/threadpool/futures-and-promises",
+            },
+            {
+              text: "Task Results and Status",
+              link: "/modules/threadpool/task-results-and-status",
+            },
+          ],
         },
+
         {
-          text: "Futures",
-          link: "/modules/threadpool/futures",
+          text: "Scheduling",
+          collapsed: true,
+          items: [
+            {
+              text: "Scheduling Model",
+              link: "/modules/threadpool/scheduling",
+            },
+            {
+              text: "Priorities",
+              link: "/modules/threadpool/priorities",
+            },
+            {
+              text: "Worker Affinity",
+              link: "/modules/threadpool/worker-affinity",
+            },
+            {
+              text: "Queue and Rejection Policies",
+              link: "/modules/threadpool/queue-and-rejection",
+            },
+          ],
         },
+
         {
-          text: "Cancellation",
-          link: "/modules/threadpool/cancellation",
+          text: "Cancellation and Time",
+          collapsed: true,
+          items: [
+            {
+              text: "Cancellation",
+              link: "/modules/threadpool/cancellation",
+            },
+            {
+              text: "Deadlines",
+              link: "/modules/threadpool/deadlines",
+            },
+            {
+              text: "Timeouts",
+              link: "/modules/threadpool/timeouts",
+            },
+          ],
         },
+
         {
-          text: "Timeouts",
-          link: "/modules/threadpool/timeouts",
+          text: "Structured Work",
+          collapsed: true,
+          items: [
+            {
+              text: "Scopes",
+              link: "/modules/threadpool/scopes",
+            },
+            {
+              text: "Task Groups",
+              link: "/modules/threadpool/task-groups",
+            },
+            {
+              text: "Synchronization",
+              link: "/modules/threadpool/synchronization",
+            },
+          ],
         },
+
         {
-          text: "Priorities",
-          link: "/modules/threadpool/priorities",
+          text: "Parallel Algorithms",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/threadpool/parallel-algorithms",
+            },
+            {
+              text: "Parallel For",
+              link: "/modules/threadpool/parallel-for",
+            },
+            {
+              text: "Parallel For Each",
+              link: "/modules/threadpool/parallel-for-each",
+            },
+            {
+              text: "Parallel Map",
+              link: "/modules/threadpool/parallel-map",
+            },
+            {
+              text: "Parallel Reduce",
+              link: "/modules/threadpool/parallel-reduce",
+            },
+            {
+              text: "Parallel Pipeline",
+              link: "/modules/threadpool/parallel-pipeline",
+            },
+          ],
         },
-        {
-          text: "Task Groups",
-          link: "/modules/threadpool/task-groups",
-        },
-        {
-          text: "Shutdown",
-          link: "/modules/threadpool/shutdown",
-        },
-        {
-          text: "Metrics",
-          link: "/modules/threadpool/metrics",
-        },
+
         {
           text: "Periodic Tasks",
           link: "/modules/threadpool/periodic-tasks",
         },
         {
-          text: "Parallel For",
-          link: "/modules/threadpool/parallel-for",
+          text: "Metrics and Statistics",
+          link: "/modules/threadpool/metrics-and-statistics",
         },
         {
-          text: "Parallel Map",
-          link: "/modules/threadpool/parallel-map",
+          text: "Lifecycle and Shutdown",
+          link: "/modules/threadpool/lifecycle-and-shutdown",
         },
         {
-          text: "Parallel Reduce",
-          link: "/modules/threadpool/parallel-reduce",
+          text: "Errors",
+          link: "/modules/threadpool/errors",
         },
         {
-          text: "Best Practices",
-          link: "/modules/threadpool/best-practices",
+          text: "CMake",
+          link: "/modules/threadpool/cmake",
         },
         {
           text: "API Reference",
