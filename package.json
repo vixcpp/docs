@@ -8,9 +8,10 @@
   },
   "scripts": {
     "dev": "vitepress dev .",
-    "build": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitepress build .",
+    "build": "NODE_OPTIONS=\"--max-old-space-size=6144\" vitepress build .",
     "preview": "vitepress preview .",
-    "deploy": "npm run build && node scripts/deploy.mjs"
+    "deploy": "npm run build && node scripts/deploy.mjs",
+    "build:local": "NODE_OPTIONS=\"--max-old-space-size=8192\" vitepress build ."
   },
   "repository": {
     "type": "git",
