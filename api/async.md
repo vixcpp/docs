@@ -1263,7 +1263,7 @@ std::move(t).start(ctx.get_scheduler());
 | [Timers](/modules/async/timers)             | Learn timer sleeps and callbacks. |
 | [Cancellation](/modules/async/cancellation) | Learn cooperative cancellation.   |
 | [Thread pool](/modules/async/thread-pool)   | Learn background work.            |
-| [when_all / when_any](/modules/async/when)  | Learn task composition.           |
+| [when_all / when_any](/modules/async/when-all-and-when-any)  | Learn task composition.           |
 | [Signals](/modules/async/signals)           | Learn signal handling.            |
 | [TCP](/modules/async/tcp)                   | Learn TCP streams and listeners.  |
 | [UDP](/modules/async/udp)                   | Learn UDP sockets.                |
