@@ -1028,48 +1028,128 @@ const vixModulesSidebar = {
           link: "/modules/async/",
         },
         {
-          text: "io_context",
-          link: "/modules/async/io-context",
+          text: "Quick Start",
+          link: "/modules/async/quick-start",
         },
         {
-          text: "Tasks",
-          link: "/modules/async/tasks",
+          text: "Core Concepts",
+          link: "/modules/async/core-concepts",
         },
         {
-          text: "Spawn",
-          link: "/modules/async/spawn",
+          text: "Architecture",
+          link: "/modules/async/architecture",
         },
+
         {
-          text: "Timers",
-          link: "/modules/async/timers",
+          text: "Runtime",
+          collapsed: true,
+          items: [
+            {
+              text: "io_context",
+              link: "/modules/async/io-context",
+            },
+            {
+              text: "Scheduler",
+              link: "/modules/async/scheduler",
+            },
+            {
+              text: "Execution Model",
+              link: "/modules/async/execution-model",
+            },
+          ],
         },
+
         {
-          text: "Cancellation",
-          link: "/modules/async/cancellation",
+          text: "Coroutines",
+          collapsed: true,
+          items: [
+            {
+              text: "Tasks",
+              link: "/modules/async/tasks",
+            },
+            {
+              text: "Spawn and Detached Tasks",
+              link: "/modules/async/spawn",
+            },
+            {
+              text: "Task Composition",
+              link: "/modules/async/task-composition",
+            },
+            {
+              text: "when_all and when_any",
+              link: "/modules/async/when-all-and-when-any",
+            },
+          ],
         },
+
         {
-          text: "Thread pool",
-          link: "/modules/async/thread-pool",
+          text: "Cancellation and Time",
+          collapsed: true,
+          items: [
+            {
+              text: "Cancellation",
+              link: "/modules/async/cancellation",
+            },
+            {
+              text: "Timers",
+              link: "/modules/async/timers",
+            },
+          ],
         },
+
         {
-          text: "when_all / when_any",
-          link: "/modules/async/when",
+          text: "CPU Work",
+          collapsed: true,
+          items: [
+            {
+              text: "Thread Pool",
+              link: "/modules/async/thread-pool",
+            },
+            {
+              text: "CPU Offloading",
+              link: "/modules/async/cpu-offloading",
+            },
+          ],
         },
+
+        {
+          text: "Networking",
+          collapsed: true,
+          items: [
+            {
+              text: "Overview",
+              link: "/modules/async/networking",
+            },
+            {
+              text: "TCP",
+              link: "/modules/async/tcp",
+            },
+            {
+              text: "UDP",
+              link: "/modules/async/udp",
+            },
+            {
+              text: "DNS",
+              link: "/modules/async/dns",
+            },
+          ],
+        },
+
         {
           text: "Signals",
           link: "/modules/async/signals",
         },
         {
-          text: "TCP",
-          link: "/modules/async/tcp",
+          text: "Lifecycle and Shutdown",
+          link: "/modules/async/lifecycle-and-shutdown",
         },
         {
-          text: "UDP",
-          link: "/modules/async/udp",
+          text: "Errors",
+          link: "/modules/async/errors",
         },
         {
-          text: "DNS",
-          link: "/modules/async/dns",
+          text: "CMake",
+          link: "/modules/async/cmake",
         },
         {
           text: "API Reference",
